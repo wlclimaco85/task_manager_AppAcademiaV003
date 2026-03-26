@@ -182,18 +182,12 @@ class _CustomComboBoxDietaitensForm
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-<<<<<<< HEAD
               imput(key, "Refeição", null, TextInputType.text, 'nome'),
               imput(
                   key, "Quantidade", null, TextInputType.number, 'quantidade'),
               //const SelectedFormUniMed(),
               selected(
                   key, "Unidade Medida", null, TextInputType.text, 'diaAtene'),
-=======
-              imput(key, "Refeição", null, TextInputType.text, 'refeicao'),
-              imput(key, "Quantidade", null, TextInputType.number, 'qtdAula'),
-              const SelectedFormUniMed(),
->>>>>>> 9b735aa89bcba0e01ebefb5db433f3bfeceb73d9
             ],
           ),
         ),
