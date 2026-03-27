@@ -13,8 +13,8 @@ import '../../data/models/login_model.dart';
 
 class ExameScreen extends StatefulWidget {
   const ExameScreen({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<ExameScreen> createState() => _ExameScreenState();
@@ -60,7 +60,7 @@ class _ExameScreenState extends State<ExameScreen> {
     if (mounted) {
       setState(() {});
     }
-    Data userInfo = AuthUtility.userInfo.data!;
+    Data userInfo = AuthUtility.userInfo?.data ?? Data();
 
     Map<String, dynamic> af = {};
     af["id"] = userInfo.id;
@@ -149,8 +149,7 @@ class _ExameScreenState extends State<ExameScreen> {
     return Scaffold(
       //  floatingActionButton: getHomeFab(context, listModels, refreshPage),
       backgroundColor: const Color(0xFF340A9C),
-      appBar: userBanner(
-        context,
+      appBar: UserBannerAppBar(
         onTapped: () {
           Navigator.push(
               context,

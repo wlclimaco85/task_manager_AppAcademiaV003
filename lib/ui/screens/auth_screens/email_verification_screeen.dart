@@ -10,7 +10,7 @@ import 'package:task_manager_flutter/ui/widgets/screen_background.dart';
 import 'package:task_manager_flutter/ui/widgets/signup_button.dart';
 
 class EmailVarificationScreeen extends StatefulWidget {
-  const EmailVarificationScreeen({Key? key}) : super(key: key);
+  const EmailVarificationScreeen({super.key});
 
   @override
   State<EmailVarificationScreeen> createState() =>

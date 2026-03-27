@@ -89,7 +89,7 @@ class _MedicamentosModalAddState extends State<MedicamentosModalAdd> {
       //String base64Images = base64Encode(imageBytes);
       base64Imagess = base64Encode(bytess);
     }
-    Data userInfo = AuthUtility.userInfo.data!;
+    Data userInfo = AuthUtility.userInfo?.data ?? Data();
 
     Map<String, dynamic> af = {};
     af["id"] = userInfo.id;
@@ -186,7 +186,7 @@ class _MedicamentosModalAddState extends State<MedicamentosModalAdd> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: userBanner(context, onTapped: () {
+      appBar: UserBannerAppBar(onTapped: () {
         Navigator.push(
             context,
             MaterialPageRoute(
@@ -198,7 +198,7 @@ class _MedicamentosModalAddState extends State<MedicamentosModalAdd> {
           padding: const EdgeInsets.all(18),
           child: Container(
             alignment: Alignment.topCenter,
-            color: CustomColors().getAppFundoPage(),
+            color: CustomColors().getLightGreenBackground(),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -296,7 +296,7 @@ class _MedicamentosModalAddState extends State<MedicamentosModalAdd> {
                         child: Container(
                           padding: const EdgeInsets.all(18),
                           decoration: BoxDecoration(
-                            color: CustomColors().getAppFundoImput(),
+                            color: CustomColors().getLightGreenBackground(),
                             borderRadius: const BorderRadius.only(
                               topRight: Radius.circular(8),
                               bottomRight: Radius.circular(8),

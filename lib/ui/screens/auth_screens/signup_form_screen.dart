@@ -3,6 +3,7 @@ import 'package:task_manager_flutter/data/utils/api_links.dart';
 import 'package:task_manager_flutter/ui/widgets/dynamic_form.dart';
 import 'package:task_manager_flutter/data/models/network_response.dart';
 import 'package:task_manager_flutter/data/services/network_caller.dart';
+import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 
 class SignUpFormScreen extends StatefulWidget {
   const SignUpFormScreen({super.key});
@@ -73,10 +74,22 @@ class _SignUpFormScreenState extends State<SignUpFormScreen> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
       theme: ThemeData(
-      
-        primarySwatch: Colors.blue,
+        useMaterial3: true, // Opcional: para usar Material 3
+        colorScheme: const ColorScheme.light(
+          primary: GridColors.primary, // Vermelho da logo
+          secondary: GridColors.secondary, // Verde da logo
+          surface: GridColors.card, // Verde para fundo
+          onPrimary: GridColors.textPrimary, // Branco para texto sobre vermelho
+          onSecondary: GridColors.textPrimary, // Branco para texto sobre verde
+          onSurface: GridColors.textSecondary, // Branco para texto sobre verde
+          error: GridColors.error, // Vermelho para errors
+        ),
+        // Você também pode personalizar componentes específicos
+        appBarTheme: const AppBarTheme(
+          backgroundColor: GridColors.primary,
+          foregroundColor: GridColors.textPrimary,
+        ),
       ),
       home: const DynamicForm(),
     );
@@ -229,4 +242,4 @@ class _SignUpFormScreenState extends State<SignUpFormScreen> {
       )),
     ); 
   } */
-} 
+}

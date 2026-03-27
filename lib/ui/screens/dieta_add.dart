@@ -30,7 +30,7 @@ class _DietaModalAddState extends State<DietaModalAdd> {
   XFile? pickImage;
   String? base64Image;
   bool _signUpInProgress = false;
-  List<Map<String, dynamic>> _dataArrayMain = []; //add this
+  final List<Map<String, dynamic>> _dataArrayMain = []; //add this
 
   @override
   void initState() {
@@ -89,7 +89,7 @@ class _DietaModalAddState extends State<DietaModalAdd> {
       //String base64Images = base64Encode(imageBytes);
       base64Imagess = base64Encode(bytess);
     }
-    Data userInfo = AuthUtility.userInfo.data!;
+    Data userInfo = AuthUtility.userInfo?.data ?? Data();
 
     NumberToDieta myObjectInstanced = NumberToDieta();
     List<Map<String, dynamic>> dayNamed = myObjectInstanced.test();
@@ -186,7 +186,7 @@ class _DietaModalAddState extends State<DietaModalAdd> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: userBanner(context, onTapped: () {
+      appBar: UserBannerAppBar(onTapped: () {
         Navigator.push(
             context,
             MaterialPageRoute(
@@ -198,7 +198,7 @@ class _DietaModalAddState extends State<DietaModalAdd> {
           padding: const EdgeInsets.all(18),
           child: Container(
             alignment: Alignment.topCenter,
-            color: CustomColors().getAppFundoPage(),
+            color: CustomColors().getLightGreenBackground(),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,

@@ -1,7 +1,9 @@
 // Copyright 2019 Aleksander Woźniak
 // SPDX-License-Identifier: Apache-2.0
 
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:task_manager_flutter/data/models/auth_utility.dart';
 
 /// Signature for a function that creates a widget for a given `day`.
 typedef DayBuilder = Widget? Function(BuildContext context, DateTime day);
@@ -51,4 +53,40 @@ bool isSameDay(DateTime? a, DateTime? b) {
   }
 
   return a.year == b.year && a.month == b.month && a.day == b.day;
+}
+
+dynamic pegarEmpresaLogada() {
+  final user = AuthUtility.userInfo?.login;
+  final empresaId = user?.empresa?.id;
+
+  // Debug para verificar o que está retornando
+  print('Usuário: ${AuthUtility.userInfo}');
+  print('Empresa ID: $empresaId');
+
+  // Se 0 não for um valor válido, retorne null
+  return (empresaId != null && empresaId != 0) ? empresaId : null;
+}
+
+dynamic pegarParceiroLogada() {
+  final user = AuthUtility.userInfo?.login;
+  final empresaId = user?.parceiro?.id;
+
+  // Debug para verificar o que está retornando
+  print('Usuário: ${AuthUtility.userInfo}');
+  print('Empresa ID: $empresaId');
+
+  // Se 0 não for um valor válido, retorne null
+  return (empresaId != null && empresaId != 0) ? empresaId : null;
+}
+
+int? pegarUsuarioLogado() {
+  final user = AuthUtility.userInfo?.login;
+  final empresaId = user?.id;
+
+  // Debug para verificar o que está retornando
+  print('Usuário: ${AuthUtility.userInfo}');
+  print('Empresa ID: $empresaId');
+
+  // Retorna null se for 0 ou null
+  return (empresaId != null && empresaId != 0) ? empresaId : null;
 }

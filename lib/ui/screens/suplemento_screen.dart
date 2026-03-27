@@ -11,8 +11,8 @@ import 'package:task_manager_flutter/ui/screens/suplemento_add.dart';
 
 class SuplementoScreen extends StatefulWidget {
   const SuplementoScreen({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<SuplementoScreen> createState() => _SuplementoScreenState();
@@ -92,19 +92,15 @@ class _SuplementoScreenState extends State<SuplementoScreen> {
                 ListItensSuplemento(
                     nome: element['nome'] ?? "",
                     marca: element['marca'] ?? "",
-                    dataIni:
-                        element['dtInicio'] ?? "",
-                    dataFin:
-                        element['dtFinal'] ?? "",
+                    dataIni: element['dtInicio'] ?? "",
+                    dataFin: element['dtFinal'] ?? "",
                     dataVal: element['dtVal'] ?? "",
-                    porcao:
-                        element['dosagem'] ?? "",
+                    porcao: element['dosagem'] ?? "",
                     foto: element['foto'],
                     id: element['id'],
                     valor: element['valor'] ?? "",
                     sabor: element['sabor'] ?? "",
-                    tamanho:
-                        element['tamanho'] ?? ""),
+                    tamanho: element['tamanho'] ?? ""),
               ],
             ),
           );
@@ -152,8 +148,7 @@ class _SuplementoScreenState extends State<SuplementoScreen> {
     return Scaffold(
       //  floatingActionButton: getHomeFab(context, listModels, refreshPage),
       backgroundColor: const Color(0xFF340A9C),
-      appBar: userBanner(
-        context,
+      appBar: UserBannerAppBar(
         onTapped: () {
           Navigator.push(
               context,

@@ -6,14 +6,14 @@ import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 
 class ListItensExames extends StatelessWidget {
   ListItensExames({
-    Key? key,
+    super.key,
     required this.nome,
     required this.medico,
     required this.dataExame,
     required this.dataEntrega,
     required this.dataConsulta,
     required this.laudo,
-  }) : super(key: key);
+  });
 
   final String nome;
   final String dataExame;
@@ -44,7 +44,7 @@ class ListItensExames extends StatelessWidget {
               Flexible(
                 child: Container(
                   height: 180,
-                  color: CustomColors().getAppFundoPage(),
+                  color: CustomColors().getLightGreenBackground(),
                   child: Column(
                     children: [
                       Column(

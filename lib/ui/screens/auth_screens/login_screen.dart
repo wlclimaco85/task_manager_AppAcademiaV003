@@ -7,9 +7,6 @@ import 'package:task_manager_flutter/data/services/network_caller.dart';
 import 'package:task_manager_flutter/data/utils/api_links.dart';
 import 'package:task_manager_flutter/ui/screens/auth_screens/email_verification_screeen.dart';
 import 'package:task_manager_flutter/ui/screens/bottom_navbar_screen.dart';
-import 'package:task_manager_flutter/ui/widgets/custom_password_text_field.dart';
-import 'package:task_manager_flutter/ui/widgets/custom_text_form_field.dart';
-import 'package:task_manager_flutter/ui/screens/auth_screens/signup_form_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -28,21 +25,26 @@ class _LoginScreenState extends State<LoginScreen>
 
   bool _loginInProgress = false;
 
+  // Usei as cores extraídas da sua logo:
+  // Verde:  #005826  -> Color(0xFF005826)
+  // Vermelho: #93070A -> Color(0xFF93070A)
+  static const Color _logoGreen = Color(0xFF005826);
+  static const Color _logoRed = Color(0xFF93070A);
+
+  bool _obscurePassword = true;
+
   Future<void> login() async {
-    _loginInProgress = true;
-    if (mounted) {
-      setState(() {});
-    }
+    setState(() => _loginInProgress = true);
+
     Map<String, dynamic> requestBody = {
       "email": _emailController.text.trim(),
       "password": _passwordController.text
     };
     final NetworkResponse response =
         await NetworkCaller().postRequest(ApiLinks.login, requestBody);
-    _loginInProgress = false;
-    if (mounted) {
-      setState(() {});
-    }
+
+    setState(() => _loginInProgress = false);
+
     if (response.isSuccess) {
       LoginModel model = LoginModel.fromJson(response.body!);
       await AuthUtility.setUserInfo(model);
@@ -56,7 +58,10 @@ class _LoginScreenState extends State<LoginScreen>
       if (mounted) {
         _passwordController.clear();
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Incorrect email or password')));
+          SnackBar(
+            content: Text("Incorrect email or password - ${ApiLinks.login}"),
+          ),
+        );
       }
     }
   }
@@ -83,10 +88,39 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
+  InputDecoration _buildInputDecoration({
+    required String hintText,
+    IconData? prefixIcon,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: const TextStyle(color: Colors.white70),
+      labelStyle: const TextStyle(color: Colors.white),
+      filled: false, // SEM fundo branco
+      prefixIcon:
+          prefixIcon != null ? Icon(prefixIcon, color: Colors.white) : null,
+      suffixIcon: suffixIcon,
+      // bordas vermelhas da logo
+      enabledBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: _logoRed, width: 2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: _logoRed, width: 2.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.red.shade700, width: 2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF340A9C),
+      backgroundColor: _logoGreen, // fundo com a cor exata da logo
       body: Container(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -102,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen>
                         bottom: 32,
                       ),
                       child: Image.asset(
-                        "assets/images/logoforafitn1.png",
+                        "assets/images/Logo contabilidade_page-0001.jpg",
                         height: 260,
                         fit: BoxFit.contain,
                       ),
@@ -115,72 +149,82 @@ class _LoginScreenState extends State<LoginScreen>
                           const SizedBox(height: 16),
                           Form(
                             key: _formKey,
-                            child: CustomTextFormField(
-                                hintText: "Email",
-                                controller: _emailController,
-                                textInputType: TextInputType.emailAddress,
-                                validator: (value) {
-                                  if (value!.isEmpty) {
-                                    return "Please enter email";
-                                  }
-                                  return null;
-                                }),
+                            child: Column(
+                              children: [
+                                // Campo Email (sem fundo branco, texto visível)
+                                TextFormField(
+                                  controller: _emailController,
+                                  style: const TextStyle(color: Colors.white),
+                                  keyboardType: TextInputType.emailAddress,
+                                  decoration: _buildInputDecoration(
+                                    hintText: "Email",
+                                    prefixIcon: Icons.email,
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return "Please enter email";
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 12),
+                                // Campo Senha (com eye toggle visível)
+                                TextFormField(
+                                  controller: _passwordController,
+                                  obscureText: _obscurePassword,
+                                  style: const TextStyle(color: Colors.white),
+                                  decoration: _buildInputDecoration(
+                                    hintText: "Password",
+                                    prefixIcon: Icons.lock,
+                                    suffixIcon: IconButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          _obscurePassword = !_obscurePassword;
+                                        });
+                                      },
+                                      icon: Icon(
+                                        _obscurePassword
+                                            ? Icons.visibility_off
+                                            : Icons.visibility,
+                                        color: Colors.white, // ícone visível
+                                      ),
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return "Please enter password";
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: 12),
-                          CustomPasswordTextFormField(
-                            hintText: "Password",
-                            controller: _passwordController,
-                            obscureText: true,
-                            validator: (value) {
-                              if (value!.isEmpty) {
-                                return "Please enter password";
-                              }
-                              return null;
-                            },
-                            textInputType: TextInputType.visiblePassword,
-                          ),
-                          const SizedBox(
-                            height: 16,
-                          ),
+                          const SizedBox(height: 16),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFA903A),
-                              minimumSize: const Size.fromHeight(50), // NEW
+                              backgroundColor: _logoRed, // vermelho da logo
+                              minimumSize: const Size.fromHeight(50),
                             ),
-                            onPressed: () {
-                              login();
-                            },
-                            child: const Text(
-                              'Acessar',
-                              style:
-                                  TextStyle(fontSize: 24, color: Colors.white),
-                            ),
+                            onPressed: _loginInProgress ? null : () => login(),
+                            child: _loginInProgress
+                                ? const SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2.5,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Acessar',
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                           ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFA903A),
-                              minimumSize: const Size.fromHeight(50), // NEW
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const SignUpFormScreen()),
-                              );
-                            },
-                            child: const Text(
-                              'Criar Conta',
-                              style:
-                                  TextStyle(fontSize: 24, color: Colors.white),
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 40,
-                          ),
+                          const SizedBox(height: 40),
                           Center(
                             child: TextButton(
                               onPressed: () {
@@ -193,7 +237,7 @@ class _LoginScreenState extends State<LoginScreen>
                               child: const Text(
                                 "Esqueceu a Senha?",
                                 style: TextStyle(
-                                    color: Color(0xFFFA903A),
+                                    color: Colors.white,
                                     letterSpacing: .7,
                                     fontSize: 20),
                               ),

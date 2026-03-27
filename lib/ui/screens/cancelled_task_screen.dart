@@ -7,9 +7,10 @@ class CancelledTaskScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TaskScreen(
+    return TaskScreens(
       apiLink: ApiLinks.cancelledTaskStatus,
       screenStatus: "Cancelled",
     );
   }
 }
+

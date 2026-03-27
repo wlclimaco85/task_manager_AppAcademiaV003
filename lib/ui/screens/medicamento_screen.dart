@@ -13,8 +13,8 @@ import '../../data/models/login_model.dart';
 
 class Medicamentoscreen extends StatefulWidget {
   const Medicamentoscreen({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<Medicamentoscreen> createState() => _MedicamentoscreenState();
@@ -60,7 +60,7 @@ class _MedicamentoscreenState extends State<Medicamentoscreen> {
     if (mounted) {
       setState(() {});
     }
-    Data userInfo = AuthUtility.userInfo.data!;
+    Data userInfo = AuthUtility.userInfo?.data ?? Data();
 
     Map<String, dynamic> af = {};
     af["id"] = userInfo.id;
@@ -142,8 +142,7 @@ class _MedicamentoscreenState extends State<Medicamentoscreen> {
     return Scaffold(
       //  floatingActionButton: getHomeFab(context, listModels, refreshPage),
       backgroundColor: const Color(0xFF340A9C),
-      appBar: userBanner(
-        context,
+      appBar: UserBannerAppBar(
         onTapped: () {
           Navigator.push(
               context,

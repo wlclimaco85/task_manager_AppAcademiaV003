@@ -7,10 +7,11 @@ class NewTaskScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TaskScreen(
+    return TaskScreens(
       screenStatus: "New",
       apiLink: ApiLinks.newTaskStatus,
       showAllSummeryCard: true,
     );
   }
 }
+

@@ -11,8 +11,8 @@ import 'package:task_manager_flutter/ui/widgets/itens_list_personal.dart';
 
 class PersonalScreen extends StatefulWidget {
   const PersonalScreen({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<PersonalScreen> createState() => _PersonalScreenState();
@@ -41,8 +41,8 @@ class _PersonalScreenState extends State<PersonalScreen> {
 
   bool _addNewTaskLoading = false;
 
-  void onPresseds() => Navigator.push(context,
-            MaterialPageRoute(builder: (context) => const HomeModalAdd()));
+  void onPresseds() => Navigator.push(
+      context, MaterialPageRoute(builder: (context) => const HomeModalAdd()));
 
   Future<void> findAllPersonal() async {
     _isLoading = true;
@@ -69,7 +69,10 @@ class _PersonalScreenState extends State<PersonalScreen> {
         List<dynamic> datas = data['personalDto'];
         mywidgets = [];
         mywidgets.add(InputBuscarField(
-            hint: "Buscar Personal ", obscure: false, icon: Icons.person_outline, onPresseds: onPresseds));
+            hint: "Buscar Personal ",
+            obscure: false,
+            icon: Icons.person_outline,
+            onPresseds: onPresseds));
         for (var element in datas) {
           mywidgets.add(
             Row(
@@ -123,10 +126,9 @@ class _PersonalScreenState extends State<PersonalScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-    //  floatingActionButton: getHomeFab(context, listModels, refreshPage),
+      //  floatingActionButton: getHomeFab(context, listModels, refreshPage),
       backgroundColor: const Color(0xFF340A9C),
-      appBar: userBanner(
-        context,
+      appBar: UserBannerAppBar(
         onTapped: () {
           Navigator.push(
               context,

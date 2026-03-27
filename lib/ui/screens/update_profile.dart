@@ -1,18 +1,16 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:task_manager_flutter/data/models/auth_utility.dart';
-import 'package:task_manager_flutter/data/models/network_response.dart';
-import 'package:task_manager_flutter/data/services/network_caller.dart';
-import 'package:task_manager_flutter/data/utils/api_links.dart';
-import 'package:task_manager_flutter/ui/widgets/custom_button.dart';
-import 'package:task_manager_flutter/ui/widgets/custom_password_text_field.dart';
-import 'package:task_manager_flutter/ui/widgets/custom_text_form_field.dart';
-import 'package:task_manager_flutter/ui/widgets/screen_background.dart';
-import 'package:task_manager_flutter/ui/widgets/user_banners.dart';
+import '../../data/models/login_model.dart';
 import 'dart:async';
 import 'dart:io';
-import '../../data/models/login_model.dart';
+import 'dart:convert';
+import 'package:task_manager_flutter/data/services/parceiro_caller.dart';
+import 'package:task_manager_flutter/data/models/parceiro_model.dart';
+import 'package:task_manager_flutter/ui/widgets/localizacao_screen.dart';
+import 'package:task_manager_flutter/data/constants/custom_colors.dart';
+
+int idParceiro = AuthUtility.userInfo?.data!.id ?? 0;
 
 class UpdateProfileScreen extends StatefulWidget {
   const UpdateProfileScreen({super.key});
@@ -22,35 +20,74 @@ class UpdateProfileScreen extends StatefulWidget {
 }
 
 class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
-  Data userInfo = AuthUtility.userInfo.data!;
+  Data userInfo = AuthUtility.userInfo?.data ?? Data();
+  final TextEditingController _nomeController = TextEditingController();
+  final TextEditingController _cpfController = TextEditingController();
+  final TextEditingController _codProdutorController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-
-  final TextEditingController _firstNameController = TextEditingController();
-
-  final TextEditingController _lastNameController = TextEditingController();
-
-  final TextEditingController _phoneNumberController = TextEditingController();
-
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _telefone1Controller = TextEditingController();
+  final TextEditingController _telefone2Controller = TextEditingController();
+  final TextEditingController _razaoSocialController = TextEditingController();
+  final TextEditingController _incrMunController = TextEditingController();
+  final TextEditingController _statusController = TextEditingController();
+  final TextEditingController _fotoController = TextEditingController();
+  final TextEditingController _ruaController = TextEditingController();
+  final TextEditingController _numeroController = TextEditingController();
+  final TextEditingController _bairroController = TextEditingController();
+  final TextEditingController _cidadeController = TextEditingController();
+  final TextEditingController _estadoController = TextEditingController();
+  final TextEditingController _cepController = TextEditingController();
+  final TextEditingController _senhaController = TextEditingController();
+  final TextEditingController _confirmSenhaController = TextEditingController();
+  final TextEditingController _parceiroIdController = TextEditingController();
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  bool _signUpInProgress = false;
+  bool _isSubmitting = false;
+  bool _senhaVisible = false;
+  bool _confirmSenhaVisible = false;
 
   XFile? pickImage;
   String? base64Image;
-  File? image;
 
-  //late List<XFile> = [];
   @override
   void initState() {
     super.initState();
     _emailController.text =
-        AuthUtility.userInfo.data?.codDadosPessoal?.email ?? "";
-    _firstNameController.text =
-        AuthUtility.userInfo.data?.codDadosPessoal?.nome ?? "";
-    _lastNameController.text =
-        AuthUtility.userInfo.data?.codDadosPessoal?.cpf ?? "";
-    _phoneNumberController.text = AuthUtility.userInfo.data?.mobile ?? "";
+        AuthUtility.userInfo?.data?.codDadosPessoal?.email ?? "";
+    _nomeController.text =
+        AuthUtility.userInfo?.data?.codDadosPessoal?.nome ?? "";
+    _cpfController.text =
+        AuthUtility.userInfo?.data?.codDadosPessoal?.cpf ?? "";
+    _telefone1Controller.text = AuthUtility.userInfo?.data?.mobile ?? "";
+    _telefone2Controller.text =
+        AuthUtility.userInfo?.data?.codDadosPessoal?.telefone2 ?? "";
+    _parceiroIdController.text =
+        AuthUtility.userInfo?.data?.id?.toString() ?? "";
+
+    _cpfController.text =
+        AuthUtility.userInfo?.data?.codDadosPessoal?.cpf ?? "";
+    _codProdutorController.text =
+        AuthUtility.userInfo?.data?.codDadosPessoal?.codProdutor ?? "";
+    _razaoSocialController.text =
+        AuthUtility.userInfo?.data?.codDadosPessoal?.razaoSocial ?? "";
+    _incrMunController.text =
+        AuthUtility.userInfo?.data?.codDadosPessoal?.incrMun ?? "";
+    _fotoController.text =
+        AuthUtility.userInfo?.data?.codDadosPessoal?.photo ?? "";
+    _ruaController.text = utf8.decode(
+        (AuthUtility.userInfo?.data?.codDadosPessoal?.logradouro ?? "")
+            .runes
+            .toList());
+    _numeroController.text =
+        AuthUtility.userInfo?.data?.codDadosPessoal?.numero ?? "";
+    _bairroController.text =
+        AuthUtility.userInfo?.data?.codDadosPessoal?.bairro ?? "";
+    _cidadeController.text =
+        AuthUtility.userInfo?.data?.codDadosPessoal?.cidade ?? "";
+    _estadoController.text =
+        AuthUtility.userInfo?.data?.codDadosPessoal?.estado ?? "";
+    _cepController.text =
+        AuthUtility.userInfo?.data?.codDadosPessoal?.cep ?? "";
   }
 
   Future<XFile?> getLostData() async {
@@ -69,243 +106,351 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
     return null;
   }
 
-  Future<void> updateProfile() async {
-    _signUpInProgress = true;
-    if (mounted) {
-      setState(() {});
+  Future<void> sendProfileData() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    if (pickImage != null) {
+      final bytes = await File(pickImage!.path).readAsBytes();
+      base64Image = base64Encode(bytes);
     }
+
     Map<String, dynamic> requestBody = {
+      "id": _parceiroIdController.text.trim(),
+      "nome": _nomeController.text.trim(),
+      "cpf": _cpfController.text.trim(),
+      "codProdutor": _codProdutorController.text.trim(),
       "email": _emailController.text.trim(),
-      "firstName": _firstNameController.text.trim(),
-      "lastName": _lastNameController.text.trim(),
-      "phoneNumber": _phoneNumberController.text.trim(),
-      "photos": ""
+      "telefone1": _telefone1Controller.text.trim(),
+      "telefone2": _telefone2Controller.text.trim(),
+      "razaoSocial": _razaoSocialController.text.trim(),
+      "incrMun": _incrMunController.text.trim(),
+      "status": _statusController.text.trim(),
+      "foto": base64Image ?? "",
+      "endereco": {
+        "rua": _ruaController.text.trim(),
+        "numero": _numeroController.text.trim(),
+        "bairro": _bairroController.text.trim(),
+        "pais": {"id": paisSelecionado!.id ?? 0},
+        "cidade": {"id": cidadeSelecionada!.id ?? 0},
+        "estado": {"id": estadoSelecionado!.id ?? 0},
+        "cep": _cepController.text.trim(),
+      },
+      "senha": _senhaController.text.trim(),
     };
-    if (_passwordController.text.isNotEmpty) {
-      requestBody["password"] = _passwordController.text;
-    }
-    final NetworkResponse response =
-        await NetworkCaller().postRequest(ApiLinks.profileUpdate, requestBody);
-    _signUpInProgress = false;
-    if (mounted) {
-      setState(() {});
-    }
-    if (response.isSuccess) {
-      userInfo.firstName = _firstNameController.text.trim();
-      userInfo.lastName = _lastNameController.text.trim();
-      userInfo.mobile = _phoneNumberController.text.trim();
-      _passwordController.clear();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Profile update Successful"),
-          ),
-        );
-      }
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Profile update Failed"),
-          ),
-        );
-      }
+
+    try {
+      bool result = await ParceiroCaller().updateParceiro(context, requestBody);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    } finally {
+      setState(() {
+        _isSubmitting = false;
+      });
     }
   }
+
+  Pais? paisSelecionado;
+  Estado? estadoSelecionado;
+  Cidade? cidadeSelecionada;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white54,
-      appBar: userBanner(context),
-      body: ScreenBackground(
-          child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(
-                  height: 50,
-                ),
-                const Text(
-                  "Update Profile",
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(
-                  height: 16,
-                ),
-                InkWell(
-                  onTap: () {
-                    imagePicked();
-                  },
-                  child: Row(children: [
-                    Container(
+      backgroundColor: CustomColors().getLightGreenBackground(),
+      appBar: AppBar(
+        title: const Text("Update Profile"),
+        backgroundColor: CustomColors().getLightGreenBackground(),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CustomTextFormField(
+                hintText: "Nome",
+                controller: _nomeController,
+                validator: (value) =>
+                    value == null || value.isEmpty ? "Nome obrigatório" : null,
+              ),
+              CustomTextFormField(
+                hintText: "CPF",
+                controller: _cpfController,
+                validator: (value) =>
+                    value == null || value.isEmpty ? "CPF obrigatório" : null,
+              ),
+              CustomTextFormField(
+                hintText: "Email",
+                controller: _emailController,
+                validator: (value) =>
+                    value == null || value.isEmpty ? "Email obrigatório" : null,
+              ),
+              CustomTextFormField(
+                hintText: "Telefone",
+                controller: _telefone1Controller,
+                validator: (value) => value == null || value.isEmpty
+                    ? "Telefone obrigatório"
+                    : null,
+              ),
+              const SizedBox(height: 16),
+              CustomTextFormField(
+                hintText: "Telefone2",
+                controller: _telefone2Controller,
+              ),
+              const SizedBox(height: 16),
+              CustomTextFormField(
+                hintText: "Cod. Produtor",
+                controller: _codProdutorController,
+              ),
+              const SizedBox(height: 16),
+              CustomTextFormField(
+                  hintText: "Razão Social", controller: _razaoSocialController),
+              const SizedBox(height: 16),
+              InkWell(
+                onTap: imagePicked,
+                child: Row(children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: const BoxDecoration(
+                      color: Colors.grey,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(8),
+                        bottomLeft: Radius.circular(8),
+                      ),
+                    ),
+                    child: const Text("Photos"),
+                  ),
+                  Expanded(
+                    child: Container(
                       padding: const EdgeInsets.all(16),
-                      decoration: const BoxDecoration(
-                        color: Colors.grey,
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(8),
-                          bottomLeft: Radius.circular(8),
+                      decoration: BoxDecoration(
+                        color: CustomColors().getLightGreenBackground(),
+                        borderRadius: const BorderRadius.only(
+                          topRight: Radius.circular(8),
+                          bottomRight: Radius.circular(8),
                         ),
                       ),
-                      child: const Text("Photos"),
-                    ),
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF3F1D9D),
-                          borderRadius: BorderRadius.only(
-                            topRight: Radius.circular(8),
-                            bottomRight: Radius.circular(8),
-                          ),
-                        ),
-                        child: Text(
-                          pickImage?.name ?? "",
-                          maxLines: 1,
-                          style:
-                              const TextStyle(overflow: TextOverflow.ellipsis),
-                        ),
+                      child: Text(
+                        pickImage?.name ?? "",
+                        maxLines: 1,
+                        style: const TextStyle(overflow: TextOverflow.ellipsis),
                       ),
                     ),
-                  ]),
-                ),
-                const SizedBox(
-                  height: 16,
-                ),
-                CustomTextFormField(
-                  hintText: "Email",
-                  readOnly: true,
-                  controller: _emailController,
-                  textInputType: TextInputType.text,
-                  validator: (value) {
-                    if (value?.isEmpty ?? true) {
-                      return "Please enter email";
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(
-                  height: 8,
-                ),
-                CustomTextFormField(
-                  hintText: "First Name",
-                  controller: _firstNameController,
-                  textInputType: TextInputType.text,
-                  validator: (value) {
-                    if (value?.isEmpty ?? true) {
-                      return "Please enter first name";
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(
-                  height: 8,
-                ),
-                CustomTextFormField(
-                  hintText: "Last Name",
-                  controller: _lastNameController,
-                  textInputType: TextInputType.text,
-                  validator: (value) {
-                    if (value?.isEmpty ?? true) {
-                      return "Please enter last name";
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(
-                  height: 8,
-                ),
-                CustomTextFormField(
-                  hintText: "Phone Number",
-                  controller: _phoneNumberController,
-                  textInputType: TextInputType.phone,
-                  validator: (value) {
-                    if (value?.isEmpty ?? true && value?.length != 11) {
-                      return "Please enter phone number";
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(
-                  height: 8,
-                ),
-                CustomPasswordTextFormField(
-                  obscureText: true,
-                  hintText: "Password",
-                  controller: _passwordController,
-                  textInputType: TextInputType.text,
-                  validator: (value) {
-                    if (value?.isEmpty ?? true) {
-                      return "Please enter password";
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(
-                  height: 16,
-                ),
-                Visibility(
-                  visible: _signUpInProgress == false,
-                  replacement:
-                      const Center(child: CupertinoActivityIndicator()),
-                  child: CustomButton(
-                      onPresse: () {
-                        updateProfile();
-                      },
-                      labels: "teste"),
-                ),
-              ],
-            ),
+                  ),
+                ]),
+              ),
+              const SizedBox(height: 16),
+              CustomTextFormField(
+                hintText: "Inscr. Municipal",
+                controller: _incrMunController,
+              ),
+              CustomTextFormField(
+                hintText: "CEP",
+                controller: _cepController,
+                validator: (value) =>
+                    value == null || value.isEmpty ? "CEP obrigatório" : null,
+              ),
+              CustomTextFormField(
+                hintText: "Rua",
+                controller: _ruaController,
+                validator: (value) =>
+                    value == null || value.isEmpty ? "Rua obrigatória" : null,
+              ),
+              CustomTextFormField(
+                hintText: "Número",
+                controller: _numeroController,
+                validator: (value) => value == null || value.isEmpty
+                    ? "Número obrigatório"
+                    : null,
+              ),
+              const SizedBox(height: 16),
+              LocalizacaoWidget(
+                required: true,
+                onChanged: (pais, estado, cidade) {
+                  paisSelecionado = pais;
+                  estadoSelecionado = estado;
+                  cidadeSelecionada = cidade;
+                },
+              ),
+              const SizedBox(height: 16),
+              CustomPasswordTextFormField(
+                hintText: "Senha",
+                controller: _senhaController,
+                obscureText: !_senhaVisible,
+                togglePasswordVisibility: () {
+                  setState(() {
+                    _senhaVisible = !_senhaVisible;
+                  });
+                },
+              ),
+              CustomPasswordTextFormField(
+                hintText: "Repetir Senha",
+                controller: _confirmSenhaController,
+                obscureText: !_confirmSenhaVisible,
+                togglePasswordVisibility: () {
+                  setState(() {
+                    _confirmSenhaVisible = !_confirmSenhaVisible;
+                  });
+                },
+                validator: (value) {
+                  if (value != _senhaController.text) {
+                    return "As senhas não coincidem";
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
           ),
         ),
-      )),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _isSubmitting ? null : sendProfileData,
+        label: _isSubmitting
+            ? const CircularProgressIndicator(
+                color: Colors.white,
+              )
+            : const Text('Gravar'),
+        icon: const Icon(Icons.save),
+        backgroundColor: _isSubmitting ? Colors.grey : Colors.green,
+      ),
     );
   }
 
   void imagePicked() async {
     showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('Pick Image From:'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  onTap: () async {
-                    pickImage = await ImagePicker()
-                        .pickImage(source: ImageSource.camera);
-                    if (pickImage != null) {
-                      setState(() {});
-                      if (mounted) {
-                        Navigator.pop(context);
-                      }
-                    } else {}
-                  },
-                  leading: const Icon(Icons.camera),
-                  title: const Text('Camera'),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.image),
-                  onTap: () async {
-                    pickImage = await ImagePicker()
-                        .pickImage(source: ImageSource.gallery);
-                    if (pickImage != null) {
-                      setState(() {});
-                      if (mounted) {
-                        Navigator.pop(context);
-                      }
-                    } else {}
-                  },
-                  title: const Text('Gallery'),
-                )
-              ],
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Pick Image From:'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                onTap: () async {
+                  pickImage =
+                      await ImagePicker().pickImage(source: ImageSource.camera);
+                  if (pickImage != null) {
+                    setState(() {});
+                    if (mounted) {
+                      Navigator.pop(context);
+                    }
+                  }
+                },
+                leading: const Icon(Icons.camera),
+                title: const Text('Camera'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.image),
+                onTap: () async {
+                  pickImage = await ImagePicker()
+                      .pickImage(source: ImageSource.gallery);
+                  if (pickImage != null) {
+                    setState(() {});
+                    if (mounted) {
+                      Navigator.pop(context);
+                    }
+                  }
+                },
+                title: const Text('Gallery'),
+              )
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class CustomTextFormField extends StatelessWidget {
+  final String hintText;
+  final TextEditingController controller;
+  final FormFieldValidator<String>? validator;
+
+  const CustomTextFormField({
+    super.key,
+    required this.hintText,
+    required this.controller,
+    this.validator,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          hintText: hintText,
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderSide: BorderSide(
+                color: CustomColors().getDarkGreenBorder(), width: 2.0),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+                color: CustomColors().getDarkGreenBorder(), width: 2.0),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+                color: CustomColors().getDarkGreenBorder(), width: 2.0),
+          ),
+        ),
+        validator: validator,
+      ),
+    );
+  }
+}
+
+class CustomPasswordTextFormField extends StatelessWidget {
+  final String hintText;
+  final TextEditingController controller;
+  final bool obscureText;
+  final VoidCallback togglePasswordVisibility;
+  final FormFieldValidator<String>? validator;
+
+  const CustomPasswordTextFormField({
+    super.key,
+    required this.hintText,
+    required this.controller,
+    required this.obscureText,
+    required this.togglePasswordVisibility,
+    this.validator,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: TextFormField(
+        controller: controller,
+        obscureText: obscureText,
+        decoration: InputDecoration(
+          hintText: hintText,
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderSide: BorderSide(
+                color: CustomColors().getDarkGreenBorder(), width: 2.0),
+          ),
+          suffixIcon: IconButton(
+            icon: Icon(
+              obscureText ? Icons.visibility_off : Icons.visibility,
+              color: Colors.grey,
             ),
-          );
-        });
+            onPressed: togglePasswordVisibility,
+          ),
+        ),
+        validator: validator,
+      ),
+    );
   }
 }

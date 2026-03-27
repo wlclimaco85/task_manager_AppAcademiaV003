@@ -87,7 +87,7 @@ class _ExamesModalAddState extends State<ExamesModalAdd> {
       //String base64Images = base64Encode(imageBytes);
       base64Imagess = base64Encode(bytess);
     }
-    Data userInfo = AuthUtility.userInfo.data!;
+    Data userInfo = AuthUtility.userInfo?.data ?? Data();
 
     Map<String, dynamic> af = {};
     af["id"] = userInfo.id;
@@ -179,7 +179,7 @@ class _ExamesModalAddState extends State<ExamesModalAdd> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: userBanner(context, onTapped: () {
+      appBar: UserBannerAppBar(onTapped: () {
         Navigator.push(
             context,
             MaterialPageRoute(
@@ -191,7 +191,7 @@ class _ExamesModalAddState extends State<ExamesModalAdd> {
           padding: const EdgeInsets.all(18),
           child: Container(
             alignment: Alignment.topCenter,
-            color: CustomColors().getAppFundoPage(),
+            color: CustomColors().getLightGreenBackground(),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,

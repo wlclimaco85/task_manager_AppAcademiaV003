@@ -11,8 +11,8 @@ import 'package:task_manager_flutter/ui/widgets/academia_dynamic_form.dart';
 
 class AcademiaScreen extends StatefulWidget {
   const AcademiaScreen({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<AcademiaScreen> createState() => _AcademiaScreenState();
@@ -153,8 +153,7 @@ class _AcademiaScreenState extends State<AcademiaScreen> {
     return Scaffold(
       //  floatingActionButton: getHomeFab(context, listModels, refreshPage),
       backgroundColor: const Color(0xFF340A9C),
-      appBar: userBanner(
-        context,
+      appBar: UserBannerAppBar(
         onTapped: () {
           Navigator.push(
               context,

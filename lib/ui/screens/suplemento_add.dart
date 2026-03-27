@@ -84,7 +84,7 @@ class _SuplementoModalAddState extends State<SuplementoModalAdd> {
       //String base64Images = base64Encode(imageBytes);
       base64Imagess = base64Encode(bytess);
     }
-    Data userInfo = AuthUtility.userInfo.data!;
+    Data userInfo = AuthUtility.userInfo?.data ?? Data();
 
     Map<String, dynamic> af = {};
     af["id"] = userInfo.id;
@@ -179,7 +179,7 @@ class _SuplementoModalAddState extends State<SuplementoModalAdd> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: userBanner(context, onTapped: () {
+      appBar: UserBannerAppBar(onTapped: () {
         Navigator.push(
             context,
             MaterialPageRoute(
@@ -191,7 +191,7 @@ class _SuplementoModalAddState extends State<SuplementoModalAdd> {
           padding: const EdgeInsets.all(18),
           child: Container(
             alignment: Alignment.topCenter,
-            color: CustomColors().getAppFundoPage(),
+            color: CustomColors().getLightGreenBackground(),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -272,7 +272,7 @@ class _SuplementoModalAddState extends State<SuplementoModalAdd> {
                         child: Container(
                           padding: const EdgeInsets.all(18),
                           decoration: BoxDecoration(
-                            color: CustomColors().getAppFundoImput(),
+                            color: CustomColors().getLightGreenBackground(),
                             borderRadius: const BorderRadius.only(
                               topRight: Radius.circular(8),
                               bottomRight: Radius.circular(8),

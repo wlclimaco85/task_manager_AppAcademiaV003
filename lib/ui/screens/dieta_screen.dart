@@ -13,8 +13,8 @@ import '../../data/models/login_model.dart';
 
 class Dietacreen extends StatefulWidget {
   const Dietacreen({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<Dietacreen> createState() => _DietacreenState();
@@ -60,7 +60,7 @@ class _DietacreenState extends State<Dietacreen> {
     if (mounted) {
       setState(() {});
     }
-    Data userInfo = AuthUtility.userInfo.data!;
+    Data userInfo = AuthUtility.userInfo?.data ?? Data();
 
     Map<String, dynamic> af = {};
     af["id"] = userInfo.id;
@@ -141,8 +141,7 @@ class _DietacreenState extends State<Dietacreen> {
     return Scaffold(
       //  floatingActionButton: getHomeFab(context, listModels, refreshPage),
       backgroundColor: const Color(0xFF340A9C),
-      appBar: userBanner(
-        context,
+      appBar: UserBannerAppBar(
         onTapped: () {
           Navigator.push(
               context,
