@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.task_manager_appacademia"
+    namespace = "com.washingtonclimaco.task_manager_appacademia"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -19,7 +19,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.task_manager_appacademia"
+        applicationId = "com.washingtonclimaco.task_manager_appacademia"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = 1
@@ -28,7 +28,6 @@ android {
 
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = false
             isShrinkResources = false
         }

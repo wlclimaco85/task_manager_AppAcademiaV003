@@ -4,7 +4,7 @@ class AssetsUtils {
   AssetsUtils._();
   static const String _images = 'assets/images';
   static const String backgroundSVG = '$_images/logo_contabilidade.jpg';
-  static const String logoJPG = '$_images/logo_contabilidade.jpg';
+  static const String logoJPG = '$_images/logo.svg';
 }
 
 showBase64Image(base64String) {
