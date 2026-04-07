@@ -1,0 +1,7 @@
+Task Manager AppAcademia é um aplicativo completo para gerenciamento de tarefas, desenvolvido com Flutter.
+
+Funcionalidades:
+• Criação e organização de tarefas
+• Controle de prazos e prioridades
+• Sincronização em tempo real
+• Interface intuitiva e responsiva

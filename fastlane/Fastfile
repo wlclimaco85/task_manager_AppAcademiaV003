@@ -1,0 +1,174 @@
+fastlane_version "2.0.0"
+
+def flutter_version
+  pubspec = File.read("../pubspec.yaml")
+  version_line = pubspec.match(/^version:\s*(.+)/)
+  raise "Versão não encontrada no pubspec.yaml" unless version_line
+  parts = version_line[1].strip.split("+")
+  { name: parts[0], build: parts[1] || "1" }
+end
+
+def flutter(args)
+  sh("flutter #{args}")
+end
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PLATAFORMA: iOS
+# ─────────────────────────────────────────────────────────────────────────────
+platform :ios do
+
+  before_all do
+    ensure_env_vars(
+      env_vars: [
+        "APP_STORE_CONNECT_API_KEY_KEY_ID",
+        "APP_STORE_CONNECT_API_KEY_ISSUER_ID",
+        "APP_STORE_CONNECT_API_KEY_KEY_FILEPATH",
+        "MATCH_GIT_URL",
+        "MATCH_PASSWORD"
+      ]
+    )
+    app_store_connect_api_key(
+      key_id:       ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
+      issuer_id:    ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+      key_filepath: ENV["APP_STORE_CONNECT_API_KEY_KEY_FILEPATH"],
+      duration:     1200,
+      in_house:     false
+    )
+  end
+
+  desc "Roda os testes do iOS"
+  lane :tests do
+    run_tests(
+      workspace:  "ios/Runner.xcworkspace",
+      scheme:     "Runner",
+      devices:    ["iPhone 15", "iPhone 15 Pro"],
+      clean:      true,
+      output_dir: "fastlane/test_output/ios"
+    )
+  end
+
+  desc "Captura screenshots em todos os dispositivos e idiomas"
+  lane :screenshots do
+    capture_screenshots(
+      workspace:                  "ios/Runner.xcworkspace",
+      scheme:                     "RunnerUITests",
+      output_directory:           "fastlane/screenshots/ios",
+      clear_previous_screenshots: true
+    )
+    frame_screenshots(white: true)
+  end
+
+  desc "Sincroniza certificados e provisioning profiles"
+  lane :certificates do
+    match(
+      type:           "appstore",
+      readonly:       true,
+      app_identifier: "com.washingtonclimaco.taskManagerAppacademia"
+    )
+  end
+
+  desc "Build e upload para TestFlight (beta)"
+  lane :beta do
+    ver = flutter_version
+    match(type: "appstore", readonly: true)
+    increment_build_number(build_number: ver[:build], xcodeproj: "ios/Runner.xcodeproj")
+    flutter("build ipa --release --build-name=#{ver[:name]} --build-number=#{ver[:build]}")
+    upload_to_testflight(
+      ipa:                               "build/ios/ipa/Runner.ipa",
+      skip_waiting_for_build_processing: true
+    )
+    slack(message: "✅ iOS beta #{ver[:name]}+#{ver[:build]} enviado para TestFlight!", slack_url: ENV["SLACK_URL"]) if ENV["SLACK_URL"]
+  end
+
+  desc "Build e publicação na App Store"
+  lane :release do
+    ver = flutter_version
+    match(type: "appstore", readonly: true)
+    increment_build_number(build_number: ver[:build], xcodeproj: "ios/Runner.xcodeproj")
+    flutter("build ipa --release --build-name=#{ver[:name]} --build-number=#{ver[:build]}")
+    upload_to_app_store(
+      ipa:               "build/ios/ipa/Runner.ipa",
+      skip_metadata:     false,
+      skip_screenshots:  false,
+      submit_for_review: false,
+      automatic_release: false
+    )
+    slack(message: "🚀 iOS #{ver[:name]} enviado para App Store Review!", slack_url: ENV["SLACK_URL"]) if ENV["SLACK_URL"]
+  end
+
+  after_all  { |lane| puts "✅ Lane iOS '#{lane}' concluída." }
+  error do |lane, exception|
+    slack(message: "❌ Erro na lane iOS '#{lane}': #{exception.message}", slack_url: ENV["SLACK_URL"], success: false) if ENV["SLACK_URL"]
+  end
+end
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PLATAFORMA: Android
+# ─────────────────────────────────────────────────────────────────────────────
+platform :android do
+
+  before_all do
+    ensure_env_vars(
+      env_vars: ["ANDROID_KEYSTORE_PATH", "ANDROID_KEY_ALIAS",
+                 "ANDROID_STORE_PASSWORD", "ANDROID_KEY_PASSWORD"]
+    )
+  end
+
+  desc "Roda os testes unitários"
+  lane :tests do
+    flutter("test")
+    gradle(task: "test", project_dir: "android")
+  end
+
+  desc "Captura screenshots via Espresso"
+  lane :screenshots do
+    gradle(task: "clean",               project_dir: "android")
+    gradle(task: "assembleDebug",       project_dir: "android")
+    gradle(task: "assembleAndroidTest", project_dir: "android")
+    capture_android_screenshots(
+      output_directory:           "fastlane/screenshots/android",
+      clear_previous_screenshots: true,
+      locales:                    ["pt-BR", "en-US"],
+      app_apk_path:               "android/app/build/outputs/apk/debug/app-debug.apk",
+      tests_apk_path:             "android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk"
+    )
+  end
+
+  desc "Build e upload para Google Play (internal track)"
+  lane :beta do
+    ver = flutter_version
+    flutter("build appbundle --release --build-name=#{ver[:name]} --build-number=#{ver[:build]}")
+    upload_to_play_store(
+      track:                   "internal",
+      aab:                     "build/app/outputs/bundle/release/app-release.aab",
+      skip_upload_metadata:    true,
+      skip_upload_images:      true,
+      skip_upload_screenshots: true
+    )
+    slack(message: "✅ Android beta #{ver[:name]}+#{ver[:build]} enviado para Google Play (internal)!", slack_url: ENV["SLACK_URL"]) if ENV["SLACK_URL"]
+  end
+
+  desc "Build e publicação no Google Play (production)"
+  lane :release do
+    ver = flutter_version
+    flutter("build appbundle --release --build-name=#{ver[:name]} --build-number=#{ver[:build]}")
+    upload_to_play_store(
+      track:                   "production",
+      aab:                     "build/app/outputs/bundle/release/app-release.aab",
+      skip_upload_metadata:    false,
+      skip_upload_images:      false,
+      skip_upload_screenshots: false
+    )
+    slack(message: "🚀 Android #{ver[:name]} publicado no Google Play!", slack_url: ENV["SLACK_URL"]) if ENV["SLACK_URL"]
+  end
+
+  desc "Promove internal para production sem novo build"
+  lane :promote do
+    upload_to_play_store(track: "internal", track_promote_to: "production")
+  end
+
+  after_all  { |lane| puts "✅ Lane Android '#{lane}' concluída." }
+  error do |lane, exception|
+    slack(message: "❌ Erro na lane Android '#{lane}': #{exception.message}", slack_url: ENV["SLACK_URL"], success: false) if ENV["SLACK_URL"]
+  end
+end

@@ -1,0 +1,8 @@
+# ─── iOS ───────────────────────────────────────────────────────────────────────
+app_identifier("com.washingtonclimaco.taskManagerAppacademia")
+apple_id(ENV["APPLE_ID"])
+team_id(ENV["APPLE_TEAM_ID"])
+
+# ─── Android ───────────────────────────────────────────────────────────────────
+package_name("com.washingtonclimaco.task_manager_appacademia")
+json_key_file(ENV["GOOGLE_PLAY_JSON_KEY"] || "fastlane/google-play-key.json")

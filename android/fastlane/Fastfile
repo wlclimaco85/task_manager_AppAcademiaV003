@@ -1,0 +1,40 @@
+default_platform(:android)
+
+platform :android do
+
+  desc "Build release AAB"
+  lane :build do
+    Dir.chdir("../..") do
+      sh("flutter build appbundle --release")
+    end
+  end
+
+  desc "Deploy to Play Store Internal track"
+  lane :deploy_internal do
+    build
+    upload_to_play_store(
+      track: "internal",
+      aab: "../../build/app/outputs/bundle/release/app-release.aab",
+      json_key_data: ENV["PLAY_STORE_JSON_KEY_DATA"]
+    )
+  end
+
+  desc "Promote Internal to Beta"
+  lane :promote_beta do
+    upload_to_play_store(
+      track: "internal",
+      track_promote_to: "beta",
+      json_key_data: ENV["PLAY_STORE_JSON_KEY_DATA"]
+    )
+  end
+
+  desc "Promote Beta to Production"
+  lane :promote_production do
+    upload_to_play_store(
+      track: "beta",
+      track_promote_to: "production",
+      json_key_data: ENV["PLAY_STORE_JSON_KEY_DATA"]
+    )
+  end
+
+end

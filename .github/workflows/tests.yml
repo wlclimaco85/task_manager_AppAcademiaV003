@@ -1,0 +1,103 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  flutter-tests:
+    name: Flutter Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: stable
+          cache: true
+
+      - name: Flutter pub get
+        run: flutter pub get
+        working-directory: task_manager_AppAcademiaV003
+
+      - name: Flutter analyze
+        run: flutter analyze
+        working-directory: task_manager_AppAcademiaV003
+
+      - name: Flutter test
+        run: flutter test --coverage
+        working-directory: task_manager_AppAcademiaV003
+
+  android-tests:
+    name: Android Unit Tests
+    runs-on: ubuntu-latest
+    needs: flutter-tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: stable
+          cache: true
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: task_manager_AppAcademiaV003
+
+      - name: Flutter pub get
+        run: flutter pub get
+        working-directory: task_manager_AppAcademiaV003
+
+      - name: Run Android tests via Fastlane
+        run: bundle exec fastlane android tests
+        working-directory: task_manager_AppAcademiaV003
+
+  ios-tests:
+    name: iOS Unit Tests
+    runs-on: macos-latest
+    needs: flutter-tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: stable
+          cache: true
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: task_manager_AppAcademiaV003
+
+      - name: Flutter pub get
+        run: flutter pub get
+        working-directory: task_manager_AppAcademiaV003
+
+      - name: Run iOS tests via Fastlane
+        run: bundle exec fastlane ios tests
+        working-directory: task_manager_AppAcademiaV003
+        env:
+          APP_STORE_CONNECT_API_KEY_KEY_ID:       ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID:    ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY_FILEPATH: fastlane/AuthKey.p8
+          MATCH_GIT_URL:   ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD:  ${{ secrets.MATCH_PASSWORD }}

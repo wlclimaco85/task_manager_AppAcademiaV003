@@ -43,3 +43,10 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Fastlane — arquivos sensíveis (NUNCA commitar)
+fastlane/.env
+fastlane/google-play-key.json
+fastlane/AuthKey*.p8
+android/app/keystore.jks
+Gemfile.lock

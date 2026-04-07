@@ -26,14 +26,29 @@ android {
         versionName = "1.0.0"
     }
 
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-            isShrinkResources = false
+    signingConfigs {
+        create("release") {
+            storeFile     = file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "keystore.jks")
+            storePassword = System.getenv("ANDROID_STORE_PASSWORD") ?: ""
+            keyAlias      = System.getenv("ANDROID_KEY_ALIAS") ?: "upload"
+            keyPassword   = System.getenv("ANDROID_KEY_PASSWORD") ?: ""
         }
     }
-}
+
+    buildTypes {
+        getByName("release") {
+            signingConfig    = signingConfigs.getByName("release")
+            isMinifyEnabled  = false
+            isShrinkResources = false
+        }
+    }}
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    androidTestImplementation("tools.fastlane:screengrab:2.1.1")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test:rules:1.5.0")
 }

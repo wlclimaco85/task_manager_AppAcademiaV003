@@ -1,0 +1,7 @@
+Task Manager AppAcademia is a complete task management app built with Flutter.
+
+Features:
+• Create and organize tasks
+• Deadline and priority control
+• Real-time synchronization
+• Intuitive and responsive interface
