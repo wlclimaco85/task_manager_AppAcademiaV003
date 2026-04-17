@@ -187,14 +187,22 @@ class LoginModel {
   String? token;
   Data? data;
   Login? login;
+  /// Permissões do banco retornadas no login — substitui security_matrix hardcoded
+  List<RolePermissaoItem>? permissoes;
 
-  LoginModel({this.status, this.token, this.data, this.login});
+  LoginModel({this.status, this.token, this.data, this.login, this.permissoes});
 
   LoginModel.fromJson(Map<String, dynamic> json) {
     status = json['status'];
-    token = json['token'];
+    token = json['access_token'] ?? json['token'];
     data = json['data'] != null ? Data.fromJson(json['data']) : null;
     login = json['login'] != null ? Login.fromJson(json['login']) : null;
+    if (json['permissoes'] is List) {
+      permissoes = (json['permissoes'] as List)
+          .whereType<Map>()
+          .map((e) => RolePermissaoItem.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -211,8 +219,62 @@ class LoginModel {
       data['login'] = login!.toJson();
     }
 
+    if (permissoes != null) {
+      data['permissoes'] = permissoes!.map((p) => p.toJson()).toList();
+    }
+
     return data;
   }
+}
+
+/// Permissão de uma tela para uma role — vem do banco no login
+class RolePermissaoItem {
+  final int? id;
+  final int? roleId;
+  final String? roleKey;
+  final String? roleDescription;
+  final String telaNome;
+  final bool podeVer;
+  final bool podeInserir;
+  final bool podeEditar;
+  final bool podeDeletar;
+
+  const RolePermissaoItem({
+    this.id,
+    this.roleId,
+    this.roleKey,
+    this.roleDescription,
+    required this.telaNome,
+    required this.podeVer,
+    required this.podeInserir,
+    required this.podeEditar,
+    required this.podeDeletar,
+  });
+
+  factory RolePermissaoItem.fromJson(Map<String, dynamic> json) =>
+      RolePermissaoItem(
+        id: json['id'] as int?,
+        roleId: json['roleId'] as int?,
+        roleKey: json['roleKey'] as String?,
+        roleDescription: json['roleDescription'] as String?,
+        telaNome: json['telaNome']?.toString() ?? '',
+        podeVer: json['podeVer'] == true,
+        podeInserir: json['podeInserir'] == true,
+        podeEditar: json['podeEditar'] == true,
+        podeDeletar: json['podeDeletar'] == true,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'roleId': roleId,
+        'roleKey': roleKey,
+        'roleDescription': roleDescription,
+        'telaNome': telaNome,
+        'podeVer': podeVer,
+        'podeInserir': podeInserir,
+        'podeEditar': podeEditar,
+        'podeDeletar': podeDeletar,
+      };
 }
 
 class Data {
