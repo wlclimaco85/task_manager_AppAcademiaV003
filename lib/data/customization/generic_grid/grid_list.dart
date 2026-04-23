@@ -248,7 +248,7 @@ class _GridListScreenState extends State<GridListScreen> {
   }
 
   String _buildUrl(int page) {
-    String url = '${widget.fetchEndpoint}?page=$page&size=$_pageSize';
+    String url = '${widget.fetchEndpoint}?pagina=$page&tamanho=$_pageSize';
 
     if (_searchCtrl.text.isNotEmpty) {
       url += '&search=${Uri.encodeComponent(_searchCtrl.text)}';
@@ -294,32 +294,97 @@ class _GridListScreenState extends State<GridListScreen> {
       body: Column(
         children: [
           if (_filtersOpen) _buildFilters(context),
+          // Tags de filtros ativos
+          _buildActiveFilterTags(),
           if ((widget.serverActions?.isNotEmpty ?? false))
             _buildServerActionsBar(context),
           Expanded(
             child: Stack(
               children: [
-                RefreshIndicator.adaptive(
-                  onRefresh: () => _load(reset: true),
-                  child: ListView.builder(
-                    controller: _scroll,
-                    itemCount: _filtered.length + (_loading ? 1 : 0),
-                    itemBuilder: (ctx, i) {
-                      if (i == _filtered.length) return _loadingIndicator(ctx);
-                      return _card(ctx, _filtered[i], i);
-                    },
+                // Lista — só mostra quando não está carregando pela primeira vez
+                if (!(_loading && _filtered.isEmpty))
+                  RefreshIndicator.adaptive(
+                    onRefresh: () => _load(reset: true),
+                    child: ListView.builder(
+                      controller: _scroll,
+                      itemCount: _filtered.length + (_hasMore && !_loading ? 1 : 0),
+                      itemBuilder: (ctx, i) {
+                        if (i == _filtered.length) return _loadingIndicator(ctx);
+                        return _card(ctx, _filtered[i], i);
+                      },
+                    ),
                   ),
-                ),
+                // Loading único centralizado (primeira carga ou reset)
                 if (_loading && _filtered.isEmpty)
-                  Container(
-                    color: Colors.black12,
-                    child: const Center(child: CircularProgressIndicator()),
-                  ),
+                  const Center(child: CircularProgressIndicator()),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  /// Linha de chips mostrando filtros ativos com botão X para remover
+  Widget _buildActiveFilterTags() {
+    final activeTags = <Widget>[];
+
+    if (_searchCtrl.text.isNotEmpty) {
+      activeTags.add(_filterChip(
+        label: 'Busca: ${_searchCtrl.text}',
+        onRemove: () {
+          _searchCtrl.clear();
+          _applyFilters();
+        },
+      ));
+    }
+
+    for (final c in widget.fieldConfigs.where((x) => x.isFilterable)) {
+      final v = _filterCtrls[c.fieldName]?.text ?? '';
+      if (v.isNotEmpty) {
+        activeTags.add(_filterChip(
+          label: '${c.label}: $v',
+          onRemove: () {
+            _filterCtrls[c.fieldName]?.clear();
+            _applyFilters();
+          },
+        ));
+      }
+    }
+
+    if (activeTags.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      color: GridColors.primary.withValues(alpha: 0.05),
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 4,
+        children: [
+          ...activeTags,
+          ActionChip(
+            label: const Text('Limpar tudo', style: TextStyle(fontSize: 11)),
+            avatar: const Icon(Icons.clear_all, size: 14),
+            onPressed: _clearFilters,
+            backgroundColor: GridColors.error.withValues(alpha: 0.1),
+            labelStyle: const TextStyle(color: GridColors.error),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _filterChip({required String label, required VoidCallback onRemove}) {
+    return Chip(
+      label: Text(label, style: const TextStyle(fontSize: 11)),
+      deleteIcon: const Icon(Icons.close, size: 14),
+      onDeleted: onRemove,
+      backgroundColor: GridColors.primary.withValues(alpha: 0.1),
+      labelStyle: const TextStyle(color: GridColors.primary),
+      deleteIconColor: GridColors.primary,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
     );
   }
 
@@ -430,7 +495,7 @@ class _GridListScreenState extends State<GridListScreen> {
             const Spacer(),
             IconButton(
               onPressed: () => setState(() => _filtersOpen = false),
-              icon: Icon(Icons.close, color: cs.onSurface.withOpacity(0.6)),
+              icon: const Icon(Icons.close),
             ),
           ]),
           const SizedBox(height: 12),

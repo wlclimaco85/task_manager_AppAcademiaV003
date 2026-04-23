@@ -267,7 +267,7 @@ class _GenericMobileGridScreenState extends State<GenericMobileGridScreen> {
   }
 
   String _buildUrl(int page) {
-    String url = '${widget.fetchEndpoint}?page=$page&size=$_itemsPerPage';
+    String url = '${widget.fetchEndpoint}?pagina=$page&tamanho=$_itemsPerPage';
     if (_searchController.text.isNotEmpty) {
       url += '&search=${Uri.encodeComponent(_searchController.text)}';
     }
