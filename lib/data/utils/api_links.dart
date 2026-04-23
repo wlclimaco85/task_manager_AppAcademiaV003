@@ -425,4 +425,9 @@ class ApiLinks {
   static String pontoBancoHoras = "$baseUrl/api/pontos/banco-horas";
 
   static String contasPagarBoleto = "$baseUrl/api/boletos/importar-boleto";
+
+  // Licenças
+  static String get allLicencas => '$_baseUrlNew/api/licencas';
+  static String licencaStatus(int codApp) => '$_baseUrlNew/api/licencas/status/$codApp';
+  static String updateLicenca(int id) => '$_baseUrlNew/api/licencas/$id';
 }
