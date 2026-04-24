@@ -470,8 +470,7 @@ class _GenericMobileGridScreenState<T>
   }
 
   String _buildUrl(int page) {
-    String url = '${widget.fetchEndpoint}?page=$page&size=$_itemsPerPage';
-
+    String url = '${widget.fetchEndpoint}?pagina=$page&tamanho=$_itemsPerPage';
     if (_searchController.text.isNotEmpty) {
       url += '&search=${Uri.encodeComponent(_searchController.text)}';
     }
@@ -2206,22 +2205,34 @@ class _GenericMobileGridScreenState<T>
                   onRefresh: () => _loadItems(reset: true),
                   child: ListView.builder(
                     controller: _scrollController,
-                    itemCount: filtered.length + (isLoading ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == filtered.length) {
-                        return _buildLoadingIndicator();
-                      }
-                      return _buildItemCard(filtered[index], index);
-                    },
+                    itemCount: filtered.length,
+                    itemBuilder: (context, index) => _buildItemCard(filtered[index], index),
                   ),
                 ),
-
-                // Overlay de carregamento
-                if (isLoading && filtered.isEmpty)
+                // Loading único centralizado — vermelho com "Aguarde"
+                if (isLoading)
                   Container(
-                    color: Colors.black.withOpacity(0.1),
-                    child: const Center(
-                      child: CircularProgressIndicator(),
+                    color: Colors.black.withValues(alpha: 0.35),
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF93070A),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 12)],
+                        ),
+                        child: const Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              strokeWidth: 3,
+                            ),
+                            SizedBox(height: 14),
+                            Text('Aguarde', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
               ],

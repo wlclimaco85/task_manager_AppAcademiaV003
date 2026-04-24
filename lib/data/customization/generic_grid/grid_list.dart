@@ -314,9 +314,32 @@ class _GridListScreenState extends State<GridListScreen> {
                       },
                     ),
                   ),
-                // Loading único centralizado (primeira carga ou reset)
-                if (_loading && _filtered.isEmpty)
-                  const Center(child: CircularProgressIndicator()),
+                // Loading único centralizado — vermelho com "Aguarde"
+                if (_loading)
+                  Container(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF93070A),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 12)],
+                        ),
+                        child: const Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              strokeWidth: 3,
+                            ),
+                            SizedBox(height: 14),
+                            Text('Aguarde', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
