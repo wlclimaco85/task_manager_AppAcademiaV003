@@ -15,6 +15,7 @@ import 'package:task_manager_flutter/ui/screens/file_upload_screen.dart';
 import 'package:task_manager_flutter/ui/screens/parceiro_grid_screen.dart';
 import 'package:task_manager_flutter/ui/screens/ponto_screen.dart';
 import 'package:task_manager_flutter/ui/screens/licenca_screen.dart';
+import 'package:task_manager_flutter/ui/screens/system_test_screen.dart';
 
 class BottomNavBarScreen extends StatefulWidget {
   const BottomNavBarScreen({super.key});

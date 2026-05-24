@@ -27,7 +27,8 @@ class _LicencaScreenState extends State<LicencaScreen> {
     if (res.isSuccess) {
       final body = res.body;
       setState(() {
-        _licencas = (body is List ? body : (body?['data'] as List? ?? []));
+        final raw = body is List ? body : (body?['data']);
+        _licencas = raw is List ? List<dynamic>.from(raw) : [];
         _loading = false;
       });
     } else {
