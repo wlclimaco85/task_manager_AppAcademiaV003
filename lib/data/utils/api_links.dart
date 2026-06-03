@@ -1,10 +1,9 @@
 class ApiLinks {
   ApiLinks._();
-  static const String _baseIp = "http://192.168.56.1:8088";
+  static const String _baseIp = "http://localhost:9001";
    // "https://appacademia-production-be7e.up.railway.app";
-  //static const String _chatId = 'ws://192.168.114.1:8088/boletobancos';
 
-  static const String _chatId = 'ws://192.168.114.1:8088/boletobancos';
+  static const String _chatId = 'ws://localhost:9001/boletobancos';
  // "wss://appacademia-production-be7e.up.railway.app/boletobancos";
   //"http://192.168.100.41:8088";
   //  "http://192.168.114.1:8088";

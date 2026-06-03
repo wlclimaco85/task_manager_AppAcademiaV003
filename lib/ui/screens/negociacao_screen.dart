@@ -1171,7 +1171,7 @@ class ProductCard extends StatelessWidget {
       home: const NegociacaoCatalogPage(
         title: 'Produtos do Vendedor',
         apiUrl:
-            'http://192.168.146.1:8088/boletobancos/api/produtos/vendedor/4',
+            'http://localhost:9001/boletobancos/api/produtos/vendedor/4',
         actionIcon: Icons.edit,
         actionTooltip: 'Editar Produto',
       ),

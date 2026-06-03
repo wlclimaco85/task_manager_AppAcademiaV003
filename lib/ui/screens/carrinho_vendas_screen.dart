@@ -347,7 +347,7 @@ void main() {
     home: ProductCatalogPageVendas(
       title: 'Produtos do Vendedor',
       apiUrl:
-          'http://192.168.146.1:8088/boletobancos/api/produtos/vendedor/${AuthUtility.userInfo?.data?.id}',
+          'http://localhost:9001/boletobancos/api/produtos/vendedor/${AuthUtility.userInfo?.data?.id}',
       actionIcon: Icons.edit,
       actionTooltip: 'Editar Produto',
     ),
