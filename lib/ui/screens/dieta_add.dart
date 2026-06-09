@@ -89,7 +89,7 @@ class _DietaModalAddState extends State<DietaModalAdd> {
       //String base64Images = base64Encode(imageBytes);
       base64Imagess = base64Encode(bytess);
     }
-    Data userInfo = AuthUtility.userInfo?.data ?? Data();
+    Data userInfo = AuthUtility.userInfo.data ?? Data();
 
     NumberToDieta myObjectInstanced = NumberToDieta();
     List<Map<String, dynamic>> dayNamed = myObjectInstanced.test();
@@ -111,8 +111,8 @@ class _DietaModalAddState extends State<DietaModalAdd> {
       "fotos": [fotos],
     };
 
-    final NetworkResponse response = await NetworkCaller()
-        .postRequest(ApiLinks.insertMedicamento, requestBody);
+    final NetworkResponse response =
+        await NetworkCaller().postRequest(ApiLinks.createDieta, requestBody);
     _signUpInProgress = false;
     if (mounted) {
       setState(() {});

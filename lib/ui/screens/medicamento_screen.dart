@@ -14,7 +14,10 @@ import '../../data/models/login_model.dart';
 class Medicamentoscreen extends StatefulWidget {
   const Medicamentoscreen({
     super.key,
+    this.canInsert = true,
   });
+
+  final bool canInsert;
 
   @override
   State<Medicamentoscreen> createState() => _MedicamentoscreenState();
@@ -60,12 +63,13 @@ class _MedicamentoscreenState extends State<Medicamentoscreen> {
     if (mounted) {
       setState(() {});
     }
-    Data userInfo = AuthUtility.userInfo?.data ?? Data();
+    Data userInfo = AuthUtility.userInfo.data ?? Data();
+    final alunoId = userInfo.id ?? 1;
 
     Map<String, dynamic> af = {};
     af["id"] = userInfo.id;
     Map<String, dynamic> requestBody = {
-      "idaluno": {"id": 1},
+      "idaluno": {"id": alunoId},
     };
 
     void onPressedss() => Navigator.push(context,
@@ -88,7 +92,7 @@ class _MedicamentoscreenState extends State<Medicamentoscreen> {
             hint: "Buscar Medicamentos",
             obscure: false,
             icon: Icons.person_outline,
-            onPresseds: onPressedss));
+            onPresseds: widget.canInsert ? onPressedss : null));
         for (var element in datas) {
           mywidgets.add(
             Row(
@@ -122,7 +126,7 @@ class _MedicamentoscreenState extends State<Medicamentoscreen> {
             hint: "Buscar Medicamentos",
             obscure: false,
             icon: Icons.person_outline,
-            onPresseds: onPressedss));
+            onPresseds: widget.canInsert ? onPressedss : null));
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Nenhuma suplemento cadastrado!"),

@@ -84,7 +84,7 @@ class _SuplementoModalAddState extends State<SuplementoModalAdd> {
       //String base64Images = base64Encode(imageBytes);
       base64Imagess = base64Encode(bytess);
     }
-    Data userInfo = AuthUtility.userInfo?.data ?? Data();
+    Data userInfo = AuthUtility.userInfo.data ?? Data();
 
     Map<String, dynamic> af = {};
     af["id"] = userInfo.id;

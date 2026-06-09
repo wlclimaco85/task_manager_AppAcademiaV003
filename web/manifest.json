@@ -1,11 +1,11 @@
 {
-    "name": "task_manager_flutter",
-    "short_name": "task_manager_flutter",
+    "name": "Meu Treino",
+    "short_name": "Meu Treino",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#5A2D82",
+    "theme_color": "#EA6B3A",
+    "description": "App de treino, metas e evolução fitness.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

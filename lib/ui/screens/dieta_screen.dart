@@ -14,7 +14,10 @@ import '../../data/models/login_model.dart';
 class Dietacreen extends StatefulWidget {
   const Dietacreen({
     super.key,
+    this.canInsert = true,
   });
+
+  final bool canInsert;
 
   @override
   State<Dietacreen> createState() => _DietacreenState();
@@ -60,12 +63,13 @@ class _DietacreenState extends State<Dietacreen> {
     if (mounted) {
       setState(() {});
     }
-    Data userInfo = AuthUtility.userInfo?.data ?? Data();
+    Data userInfo = AuthUtility.userInfo.data ?? Data();
+    final alunoId = userInfo.id ?? 1;
 
     Map<String, dynamic> af = {};
     af["id"] = userInfo.id;
     Map<String, dynamic> requestBody = {
-      "codAluno": {"id": 1},
+      "codAluno": {"id": alunoId},
     };
 
     void onPressedss() => Navigator.push(context,
@@ -88,7 +92,7 @@ class _DietacreenState extends State<Dietacreen> {
             hint: "Buscar Dieta",
             obscure: false,
             icon: Icons.person_outline,
-            onPresseds: onPressedss));
+            onPresseds: widget.canInsert ? onPressedss : null));
         for (var element in datas) {
           mywidgets.add(
             Row(
@@ -121,7 +125,7 @@ class _DietacreenState extends State<Dietacreen> {
             hint: "Buscar Dieta",
             obscure: false,
             icon: Icons.person_outline,
-            onPresseds: onPressedss));
+            onPresseds: widget.canInsert ? onPressedss : null));
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Nenhuma suplemento cadastrado!"),

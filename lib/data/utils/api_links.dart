@@ -1,9 +1,23 @@
 class ApiLinks {
   ApiLinks._();
+<<<<<<< HEAD
   static const String _baseIp = "http://localhost:9001";
+=======
+  static const String _baseIp = String.fromEnvironment(
+    'BACKEND_URL',
+    defaultValue: 'http://192.168.56.1:8088',
+  );
+>>>>>>> 637d85e (chore: consolidar atualizacoes do projeto)
    // "https://appacademia-production-be7e.up.railway.app";
 
+<<<<<<< HEAD
   static const String _chatId = 'ws://localhost:9001/boletobancos';
+=======
+  static const String _chatId = String.fromEnvironment(
+    'WS_BACKEND_URL',
+    defaultValue: 'ws://192.168.114.1:8088/boletobancos',
+  );
+>>>>>>> 637d85e (chore: consolidar atualizacoes do projeto)
  // "wss://appacademia-production-be7e.up.railway.app/boletobancos";
   //"http://192.168.100.41:8088";
   //  "http://192.168.114.1:8088";

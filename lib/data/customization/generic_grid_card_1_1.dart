@@ -26,12 +26,12 @@ import 'package:task_manager_flutter/ui/widgets/user_banners.dart';
 
 // ---------------------- TEMA ----------------------
 class GridColors {
-  static const Color primary = Color(0xFF93070A);
-  static const Color primaryDark = Color(0xFF6A0507);
-  static const Color secondary = Color(0xFF005826);
+  static const Color primary = Color(0xFF5937B2);
+  static const Color primaryDark = Color(0xFF340A9C);
+  static const Color secondary = Color(0xFFFA903A);
   static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFF000000);
-  static const Color background = Color(0xFF005826);
+  static const Color textSecondary = Color(0xFF241B3F);
+  static const Color background = Color(0xFF5937B2);
   static const Color card = Color(0xFFFFFFFF);
   static const Color error = Color(0xFFD32F2F);
   static const Color warning = Color(0xFFFFA000);
@@ -833,7 +833,8 @@ class _GenericMobileGridScreenState extends State<GenericMobileGridScreen> {
                   child: ListView.builder(
                     controller: _scrollController,
                     itemCount: filtered.length,
-                    itemBuilder: (ctx, i) => _buildItemCard(ctx, filtered[i], i),
+                    itemBuilder: (ctx, i) =>
+                        _buildItemCard(ctx, filtered[i], i),
                   ),
                 ),
                 // Loading único centralizado — vermelho com "Aguarde"
@@ -842,21 +843,31 @@ class _GenericMobileGridScreenState extends State<GenericMobileGridScreen> {
                     color: Colors.black.withValues(alpha: 0.35),
                     child: Center(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 32, vertical: 20),
                         decoration: BoxDecoration(
                           color: const Color(0xFF93070A),
                           borderRadius: BorderRadius.circular(12),
-                          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 12)],
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                blurRadius: 12)
+                          ],
                         ),
                         child: const Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
                               strokeWidth: 3,
                             ),
                             SizedBox(height: 14),
-                            Text('Aguarde', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+                            Text('Aguarde',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600)),
                           ],
                         ),
                       ),

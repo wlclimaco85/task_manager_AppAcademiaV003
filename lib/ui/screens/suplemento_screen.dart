@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/data/models/auth_utility.dart';
 import 'package:task_manager_flutter/data/utils/api_links.dart';
 import 'package:task_manager_flutter/ui/widgets/user_banners.dart';
 import 'package:task_manager_flutter/ui/screens/update_profile.dart';
@@ -12,7 +13,10 @@ import 'package:task_manager_flutter/ui/screens/suplemento_add.dart';
 class SuplementoScreen extends StatefulWidget {
   const SuplementoScreen({
     super.key,
+    this.canInsert = true,
   });
+
+  final bool canInsert;
 
   @override
   State<SuplementoScreen> createState() => _SuplementoScreenState();
@@ -58,8 +62,9 @@ class _SuplementoScreenState extends State<SuplementoScreen> {
     if (mounted) {
       setState(() {});
     }
+    final alunoId = AuthUtility.userInfo.data?.id ?? 1;
     Map<String, dynamic> requestBody = {
-      "codAluno": {"id": 1},
+      "codAluno": {"id": alunoId},
     };
 
     void onPressedss() => Navigator.push(context,
@@ -82,7 +87,7 @@ class _SuplementoScreenState extends State<SuplementoScreen> {
             hint: "Buscar Suplemento",
             obscure: false,
             icon: Icons.person_outline,
-            onPresseds: onPressedss));
+            onPresseds: widget.canInsert ? onPressedss : null));
         for (var element in datas) {
           mywidgets.add(
             Row(
@@ -114,7 +119,7 @@ class _SuplementoScreenState extends State<SuplementoScreen> {
             hint: "Buscar Suplemento",
             obscure: false,
             icon: Icons.person_outline,
-            onPresseds: onPressedss));
+            onPresseds: widget.canInsert ? onPressedss : null));
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Nenhuma suplemento cadastrado!"),

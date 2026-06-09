@@ -50,3 +50,6 @@ fastlane/google-play-key.json
 fastlane/AuthKey*.p8
 android/app/keystore.jks
 Gemfile.lock
+
+# opencode config
+opencode.json

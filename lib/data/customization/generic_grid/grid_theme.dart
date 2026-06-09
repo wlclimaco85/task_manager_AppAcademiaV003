@@ -5,12 +5,12 @@
 import 'package:flutter/material.dart';
 
 class GridColors {
-  static const Color primary = Color(0xFF93070A);
-  static const Color primaryDark = Color(0xFF6A0507);
-  static const Color secondary = Color(0xFF005826);
+  static const Color primary = Color(0xFF5937B2);
+  static const Color primaryDark = Color(0xFF340A9C);
+  static const Color secondary = Color(0xFFFA903A);
   static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFF000000);
-  static const Color background = Color(0xFF005826);
+  static const Color textSecondary = Color(0xFF241B3F);
+  static const Color background = Color(0xFF5937B2);
   static const Color card = Color(0xFFFFFFFF);
   static const Color error = Color(0xFFD32F2F);
   static const Color warning = Color(0xFFFFA000);

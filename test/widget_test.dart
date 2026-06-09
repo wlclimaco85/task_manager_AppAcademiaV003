@@ -1,29 +1,39 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:task_manager_flutter/app.dart';
+import 'package:task_manager_flutter/data/models/aplicativo_model.dart';
+import 'package:task_manager_flutter/data/models/auth_utility.dart';
+import 'package:task_manager_flutter/data/models/login_model.dart';
+import 'package:task_manager_flutter/data/models/role_model.dart';
+import 'package:task_manager_flutter/ui/screens/bottom_navbar_screen.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const TaskManagerApp());
+  tearDown(() {
+    AuthUtility.userInfo = LoginModel();
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  testWidgets('Hub Fitness renderiza textos principais do MVP',
+      (WidgetTester tester) async {
+    AuthUtility.userInfo = LoginModel(
+      token: 'token-test',
+      login: Login(
+        tipoLogin: LoginEnum.APP_ACADEMIA,
+        aplicativo: Aplicativo(nome: 'App Academia'),
+        roles: [Role(key: 'ROLE_ACADEMIA')],
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: BottomNavBarScreen(),
+      ),
+    );
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Hub Fitness'), findsOneWidget);
+    expect(find.text('Resumo do aluno, treinos e evolucao'), findsOneWidget);
+    expect(find.text('Hoje no treino'), findsOneWidget);
+    expect(find.text('Atalhos do aluno'), findsOneWidget);
+    expect(find.text('Alunos'), findsOneWidget);
+    expect(find.text('Treinos'), findsAtLeastNWidgets(1));
+    expect(find.text('Metas'), findsAtLeastNWidgets(1));
   });
 }

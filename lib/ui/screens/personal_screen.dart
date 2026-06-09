@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/data/models/auth_utility.dart';
 import 'package:task_manager_flutter/data/utils/api_links.dart';
 import 'package:task_manager_flutter/ui/widgets/user_banners.dart';
 import 'package:task_manager_flutter/ui/screens/update_profile.dart';
@@ -12,7 +13,10 @@ import 'package:task_manager_flutter/ui/widgets/itens_list_personal.dart';
 class PersonalScreen extends StatefulWidget {
   const PersonalScreen({
     super.key,
+    this.canInsert = true,
   });
+
+  final bool canInsert;
 
   @override
   State<PersonalScreen> createState() => _PersonalScreenState();
@@ -50,9 +54,10 @@ class _PersonalScreenState extends State<PersonalScreen> {
     if (mounted) {
       setState(() {});
     }
+    final alunoId = AuthUtility.userInfo.data?.id ?? 1;
     Map<String, dynamic> requestBody = {
       "cref": '',
-      "id": 1,
+      "id": alunoId,
     };
 
     final NetworkResponse response =
@@ -72,7 +77,7 @@ class _PersonalScreenState extends State<PersonalScreen> {
             hint: "Buscar Personal ",
             obscure: false,
             icon: Icons.person_outline,
-            onPresseds: onPresseds));
+            onPresseds: widget.canInsert ? onPresseds : null));
         for (var element in datas) {
           mywidgets.add(
             Row(

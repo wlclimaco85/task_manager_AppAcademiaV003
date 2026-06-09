@@ -3,8 +3,8 @@ import 'dart:typed_data';
 class AssetsUtils {
   AssetsUtils._();
   static const String _images = 'assets/images';
-  static const String backgroundSVG = '$_images/logo_contabilidade.jpg';
-  static const String logoJPG = '$_images/logo.svg';
+  static const String backgroundSVG = '$_images/background.svg';
+  static const String logoJPG = '$_images/meu_treino_logo.png';
 }
 
 showBase64Image(base64String) {

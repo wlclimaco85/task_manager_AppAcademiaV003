@@ -28,8 +28,8 @@ class _LoginScreenState extends State<LoginScreen>
   // Usei as cores extraídas da sua logo:
   // Verde:  #005826  -> Color(0xFF005826)
   // Vermelho: #93070A -> Color(0xFF93070A)
-  static const Color _logoGreen = Color(0xFF005826);
-  static const Color _logoRed = Color(0xFF93070A);
+  static const Color _brandBackground = Color(0xFF340A9C);
+  static const Color _brandPrimary = Color(0xFFFA903A);
 
   bool _obscurePassword = true;
 
@@ -103,11 +103,11 @@ class _LoginScreenState extends State<LoginScreen>
       suffixIcon: suffixIcon,
       // bordas vermelhas da logo
       enabledBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: _logoRed, width: 2),
+        borderSide: const BorderSide(color: _brandPrimary, width: 2),
         borderRadius: BorderRadius.circular(12),
       ),
       focusedBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: _logoRed, width: 2.5),
+        borderSide: const BorderSide(color: _brandPrimary, width: 2.5),
         borderRadius: BorderRadius.circular(12),
       ),
       errorBorder: OutlineInputBorder(
@@ -120,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _logoGreen, // fundo com a cor exata da logo
+      backgroundColor: _brandBackground,
       body: Container(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -136,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen>
                         bottom: 32,
                       ),
                       child: Image.asset(
-                        "assets/images/Logo contabilidade_page-0001.jpg",
+                        "assets/images/logoforafitn1.png",
                         height: 260,
                         fit: BoxFit.contain,
                       ),
@@ -203,7 +203,7 @@ class _LoginScreenState extends State<LoginScreen>
                           const SizedBox(height: 16),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: _logoRed, // vermelho da logo
+                              backgroundColor: _brandPrimary,
                               minimumSize: const Size.fromHeight(50),
                             ),
                             onPressed: _loginInProgress ? null : () => login(),
@@ -237,7 +237,7 @@ class _LoginScreenState extends State<LoginScreen>
                               child: const Text(
                                 "Esqueceu a Senha?",
                                 style: TextStyle(
-                                    color: Colors.white,
+                                    color: _brandPrimary,
                                     letterSpacing: .7,
                                     fontSize: 20),
                               ),

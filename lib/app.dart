@@ -10,9 +10,9 @@ class TaskManagerApp extends StatelessWidget {
     return MaterialApp(
       navigatorKey: globalKey,
       debugShowCheckedModeBanner: false,
-      title: "Task Manager",
+      title: "Meu Treino",
       theme: ThemeData(
-        primarySwatch: Colors.green,
+        primarySwatch: Colors.deepPurple,
         inputDecorationTheme: const InputDecorationTheme(
           filled: true,
           fillColor: Colors.white,
@@ -37,5 +37,4 @@ class TaskManagerApp extends StatelessWidget {
       home: const SplashScreen(),
     );
   }
-  
 }

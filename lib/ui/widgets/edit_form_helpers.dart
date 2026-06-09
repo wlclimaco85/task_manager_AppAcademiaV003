@@ -593,17 +593,29 @@ class EditableImageCircle extends StatelessWidget {
               )
             else if (imageUrl != null && imageUrl!.isNotEmpty)
               ClipOval(
-                child: Image.network(
-                  imageUrl!,
-                  width: 116,
-                  height: 116,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Icon(
-                    placeholderIcon,
-                    size: 50,
-                    color: GridColors.primary,
-                  ),
-                ),
+                child: imageUrl!.startsWith('data:image')
+                    ? Image.memory(
+                        base64Decode(imageUrl!.split(',').last),
+                        width: 116,
+                        height: 116,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Icon(
+                          placeholderIcon,
+                          size: 50,
+                          color: GridColors.primary,
+                        ),
+                      )
+                    : Image.network(
+                        imageUrl!,
+                        width: 116,
+                        height: 116,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Icon(
+                          placeholderIcon,
+                          size: 50,
+                          color: GridColors.primary,
+                        ),
+                      ),
               )
             else
               Icon(

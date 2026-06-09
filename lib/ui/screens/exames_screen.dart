@@ -14,7 +14,10 @@ import '../../data/models/login_model.dart';
 class ExameScreen extends StatefulWidget {
   const ExameScreen({
     super.key,
+    this.canInsert = true,
   });
+
+  final bool canInsert;
 
   @override
   State<ExameScreen> createState() => _ExameScreenState();
@@ -60,12 +63,13 @@ class _ExameScreenState extends State<ExameScreen> {
     if (mounted) {
       setState(() {});
     }
-    Data userInfo = AuthUtility.userInfo?.data ?? Data();
+    Data userInfo = AuthUtility.userInfo.data ?? Data();
+    final alunoId = userInfo.id ?? 1;
 
     Map<String, dynamic> af = {};
     af["id"] = userInfo.id;
     Map<String, dynamic> requestBody = {
-      "idaluno": {"id": 1},
+      "idaluno": {"id": alunoId},
     };
 
     void onPressedss() => Navigator.push(context,
@@ -88,7 +92,7 @@ class _ExameScreenState extends State<ExameScreen> {
             hint: "Buscar Exames",
             obscure: false,
             icon: Icons.person_outline,
-            onPresseds: onPressedss));
+            onPresseds: widget.canInsert ? onPressedss : null));
         for (var element in datas) {
           mywidgets.add(
             Row(
@@ -115,7 +119,7 @@ class _ExameScreenState extends State<ExameScreen> {
             hint: "Buscar Exames",
             obscure: false,
             icon: Icons.person_outline,
-            onPresseds: onPressedss));
+            onPresseds: widget.canInsert ? onPressedss : null));
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Nenhuma suplemento cadastrado!"),

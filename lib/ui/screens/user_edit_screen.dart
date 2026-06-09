@@ -1,6 +1,7 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/services/network_caller.dart';
-import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:task_manager_flutter/data/utils/grid_colors.dart'; // ★ adicionado para aplicar o tema
 import 'package:task_manager_flutter/data/utils/api_links.dart';
@@ -265,16 +266,26 @@ class _UserEditScreenState extends State<UserEditScreen> {
             else if (widget.initialData['photo'] != null &&
                 widget.initialData['photo']!.isNotEmpty)
               ClipOval(
-                child: Image.network(
-                  widget.initialData['photo']!,
-                  width: 116,
-                  height: 116,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(Icons.person,
-                        size: 50, color: GridColors.primary);
-                  },
-                ),
+                child: widget.initialData['photo']!.startsWith('data:image')
+                    ? Image.memory(
+                        base64Decode(
+                            widget.initialData['photo']!.split(',').last),
+                        width: 116,
+                        height: 116,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.person,
+                                size: 50, color: GridColors.primary),
+                      )
+                    : Image.network(
+                        widget.initialData['photo']!,
+                        width: 116,
+                        height: 116,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.person,
+                                size: 50, color: GridColors.primary),
+                      ),
               )
             else
               const Icon(Icons.person, size: 50, color: GridColors.primary),
