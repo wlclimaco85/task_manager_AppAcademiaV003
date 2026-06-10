@@ -53,3 +53,5 @@ Gemfile.lock
 
 # opencode config
 opencode.json
+# Build artifacts
+android/build/
