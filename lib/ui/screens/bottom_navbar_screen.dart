@@ -10,6 +10,11 @@ import 'package:task_manager_flutter/ui/screens/personal_screen.dart';
 import 'package:task_manager_flutter/ui/screens/personal_workspace_screen.dart';
 import 'package:task_manager_flutter/ui/screens/sem_acesso_screen.dart';
 import 'package:task_manager_flutter/ui/screens/suplemento_screen.dart';
+import 'package:task_manager_flutter/ui/screens/alimento_grid_screen_dynamic.dart';
+import 'package:task_manager_flutter/ui/screens/objetivo_grid_screen_dynamic.dart';
+import 'package:task_manager_flutter/ui/screens/avaliacao_fisica_grid_screen_dynamic.dart';
+import 'package:task_manager_flutter/ui/screens/grupo_muscular_grid_screen_dynamic.dart';
+import 'package:task_manager_flutter/ui/screens/modalidade_grid_screen_dynamic.dart';
 
 class BottomNavBarScreen extends StatefulWidget {
   const BottomNavBarScreen({super.key});
@@ -228,6 +233,38 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
           MaterialPageRoute(builder: (_) => const MetasScreen()),
         );
         break;
+      case 'Alimentos':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AlimentoScreenDynamic()),
+        );
+        break;
+      case 'Objetivos':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ObjetivoScreenDynamic()),
+        );
+        break;
+      case 'Avaliacao fisica':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => const AvaliacaoFisicaScreenDynamic()),
+        );
+        break;
+      case 'Grupo muscular':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => const GrupoMuscularScreenDynamic()),
+        );
+        break;
+      case 'Modalidades':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ModalidadeScreenDynamic()),
+        );
+        break;
       case 'Sair':
         Navigator.pop(context);
         break;
@@ -254,6 +291,10 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         actions: [
           if (sec.canView(AppScreen.dieta))
             const _FitnessAction(Icons.restaurant_menu, 'Dieta'),
+          if (sec.canView(AppScreen.alimentos))
+            const _FitnessAction(Icons.set_meal_outlined, 'Alimentos'),
+          if (sec.canView(AppScreen.objetivos))
+            const _FitnessAction(Icons.track_changes_outlined, 'Objetivos'),
           if (sec.canView(AppScreen.suplementos))
             const _FitnessAction(Icons.medication_liquid, 'Suplementos'),
           if (sec.canView(AppScreen.medicamentos))
@@ -274,8 +315,21 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
             const _FitnessAction(Icons.favorite_border, 'Batimentos'),
           if (sec.canView(AppScreen.corpo))
             const _FitnessAction(Icons.scale_outlined, 'Corpo'),
+          if (sec.canView(AppScreen.avaliacaoFisica))
+            const _FitnessAction(
+                Icons.assignment_outlined, 'Avaliacao fisica'),
           if (sec.canView(AppScreen.metas))
             const _FitnessAction(Icons.flag_outlined, 'Metas'),
+        ],
+      ),
+      _FitnessMenuSection(
+        title: 'Cadastros',
+        actions: [
+          if (sec.canView(AppScreen.grupoMuscular))
+            const _FitnessAction(
+                Icons.accessibility_new_outlined, 'Grupo muscular'),
+          if (sec.canView(AppScreen.modalidades))
+            const _FitnessAction(Icons.sports_outlined, 'Modalidades'),
         ],
       ),
       const _FitnessMenuSection(
@@ -378,6 +432,17 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         const _FitnessAction(Icons.medical_services_outlined, 'Medicamentos'),
       if (sec.canView(AppScreen.exames))
         const _FitnessAction(Icons.biotech_outlined, 'Exames'),
+      if (sec.canView(AppScreen.alimentos))
+        const _FitnessAction(Icons.set_meal_outlined, 'Alimentos'),
+      if (sec.canView(AppScreen.objetivos))
+        const _FitnessAction(Icons.track_changes_outlined, 'Objetivos'),
+      if (sec.canView(AppScreen.avaliacaoFisica))
+        const _FitnessAction(Icons.assignment_outlined, 'Avaliacao fisica'),
+      if (sec.canView(AppScreen.grupoMuscular))
+        const _FitnessAction(
+            Icons.accessibility_new_outlined, 'Grupo muscular'),
+      if (sec.canView(AppScreen.modalidades))
+        const _FitnessAction(Icons.sports_outlined, 'Modalidades'),
     ];
   }
 }

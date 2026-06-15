@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:task_manager_flutter/ui/screens/splash_screens.dart';
 
 class TaskManagerApp extends StatelessWidget {
@@ -19,8 +20,8 @@ class TaskManagerApp extends StatelessWidget {
           contentPadding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           border: OutlineInputBorder(borderSide: BorderSide.none),
         ),
-        textTheme: const TextTheme(
-          titleLarge: TextStyle(
+        textTheme: GoogleFonts.poppinsTextTheme().copyWith(
+          titleLarge: GoogleFonts.poppins(
               fontSize: 24, fontWeight: FontWeight.w500, color: Colors.black),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(

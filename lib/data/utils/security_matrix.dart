@@ -35,6 +35,11 @@ enum AppScreen {
   batimentos,
   corpo,
   metas,
+  alimentos,
+  objetivos,
+  avaliacaoFisica,
+  grupoMuscular,
+  modalidades,
 
   // ── Bottom Nav ──────────────────────────────────────────────────────────────
   calendario,
@@ -132,6 +137,11 @@ const _fitnessScreens = {
   AppScreen.batimentos,
   AppScreen.corpo,
   AppScreen.metas,
+  AppScreen.alimentos,
+  AppScreen.objetivos,
+  AppScreen.avaliacaoFisica,
+  AppScreen.grupoMuscular,
+  AppScreen.modalidades,
 };
 
 final Map<UserProfile, Map<AppScreen, Set<AppAction>>> _matrix = {
@@ -156,6 +166,11 @@ final Map<UserProfile, Map<AppScreen, Set<AppAction>>> _matrix = {
     AppScreen.batimentos: _readOnly,
     AppScreen.corpo: _readOnly,
     AppScreen.metas: _allActions,
+    AppScreen.alimentos: _allActions,
+    AppScreen.objetivos: _allActions,
+    AppScreen.avaliacaoFisica: _allActions,
+    AppScreen.grupoMuscular: _allActions,
+    AppScreen.modalidades: _allActions,
     AppScreen.calendario: _allActions,
     AppScreen.chat: _readOnly,
     AppScreen.comunicados: _allActions,
@@ -200,6 +215,11 @@ final Map<UserProfile, Map<AppScreen, Set<AppAction>>> _matrix = {
     AppScreen.batimentos: _readOnly,
     AppScreen.corpo: _readOnly,
     AppScreen.metas: _allActions,
+    AppScreen.alimentos: _allActions,
+    AppScreen.objetivos: _allActions,
+    AppScreen.avaliacaoFisica: _allActions,
+    AppScreen.grupoMuscular: _allActions,
+    AppScreen.modalidades: _allActions,
   },
 
   UserProfile.financeiro: {
