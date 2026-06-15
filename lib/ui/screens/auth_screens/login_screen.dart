@@ -5,6 +5,8 @@ import 'package:task_manager_flutter/data/models/login_model.dart';
 import 'package:task_manager_flutter/data/models/network_response.dart';
 import 'package:task_manager_flutter/data/services/network_caller.dart';
 import 'package:task_manager_flutter/data/utils/api_links.dart';
+import 'package:task_manager_flutter/data/utils/grid_colors.dart';
+import 'package:task_manager_flutter/ui/screens/auth_screens/criar_conta_screen.dart';
 import 'package:task_manager_flutter/ui/screens/auth_screens/email_verification_screeen.dart';
 import 'package:task_manager_flutter/ui/screens/bottom_navbar_screen.dart';
 
@@ -223,6 +225,28 @@ class _LoginScreenState extends State<LoginScreen>
                                       color: Colors.white,
                                     ),
                                   ),
+                          ),
+                          const SizedBox(height: 16),
+                          OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(
+                                  color: GridColors.secondary, width: 2),
+                              minimumSize: const Size.fromHeight(50),
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const CriarContaScreen()));
+                            },
+                            child: const Text(
+                              'Criar conta',
+                              style: TextStyle(
+                                fontSize: 24,
+                                color: GridColors.textPrimary,
+                              ),
+                            ),
                           ),
                           const SizedBox(height: 40),
                           Center(

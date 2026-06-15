@@ -1,23 +1,15 @@
 class ApiLinks {
   ApiLinks._();
-<<<<<<< HEAD
-  static const String _baseIp = "http://localhost:9001";
-=======
   static const String _baseIp = String.fromEnvironment(
     'BACKEND_URL',
-    defaultValue: 'http://192.168.56.1:8088',
+    defaultValue: 'http://localhost:9001',
   );
->>>>>>> 637d85e (chore: consolidar atualizacoes do projeto)
    // "https://appacademia-production-be7e.up.railway.app";
 
-<<<<<<< HEAD
-  static const String _chatId = 'ws://localhost:9001/boletobancos';
-=======
   static const String _chatId = String.fromEnvironment(
     'WS_BACKEND_URL',
-    defaultValue: 'ws://192.168.114.1:8088/boletobancos',
+    defaultValue: 'ws://localhost:9001/boletobancos',
   );
->>>>>>> 637d85e (chore: consolidar atualizacoes do projeto)
  // "wss://appacademia-production-be7e.up.railway.app/boletobancos";
   //"http://192.168.100.41:8088";
   //  "http://192.168.114.1:8088";
@@ -43,6 +35,9 @@ class ApiLinks {
   static const String allSuplementoAluno =
       '$_baseUrlNew/suplemento/findByIdAluno';
   static const String insertAluno = '$_baseUrlNew/rest/auth/inserirAluno';
+  static const String registrarAluno = '$_baseUrlNew/rest/auth/registrar-aluno';
+  static const String personaisDisponiveis =
+      '$_baseUrlNew/rest/auth/personais-disponiveis';
   static String regestration = '$_baseUrl/registration';
   static String profileUpdate = '$_baseUrl/profileUpdate';
   static const String insertExame = '$_baseUrlNew/exame/inserir';
