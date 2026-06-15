@@ -48,4 +48,43 @@ class CadastroRepository {
     final List<dynamic> json = jsonDecode(response.body) as List<dynamic>;
     return json.cast<Map<String, dynamic>>();
   }
+
+  /// Registra um novo personal trainer. Retorna o JSON decodificado da
+  /// resposta, tanto em caso de sucesso (201) quanto de erro (400/409/500).
+  Future<Map<String, dynamic>> registrarPersonal(
+      Map<String, dynamic> body) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiLinks.registrarPersonal),
+        headers: {'Content-Type': 'application/json;charset=UTF-8'},
+        body: jsonEncode(body),
+      );
+
+      final Map<String, dynamic> json =
+          jsonDecode(response.body) as Map<String, dynamic>;
+      return json;
+    } catch (e) {
+      return {
+        'error': true,
+        'message': 'Não foi possível conectar ao servidor: $e',
+      };
+    }
+  }
+
+  /// Lista as academias disponíveis para o personal escolher durante o
+  /// cadastro.
+  Future<List<Map<String, dynamic>>> listarAcademiasDisponiveis() async {
+    final response = await http.get(
+      Uri.parse(ApiLinks.academiasDisponiveis),
+      headers: {'Content-Type': 'application/json;charset=UTF-8'},
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(
+          'Falha ao buscar academias disponíveis (${response.statusCode})');
+    }
+
+    final List<dynamic> json = jsonDecode(response.body) as List<dynamic>;
+    return json.cast<Map<String, dynamic>>();
+  }
 }

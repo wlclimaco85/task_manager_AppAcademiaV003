@@ -38,6 +38,10 @@ class ApiLinks {
   static const String registrarAluno = '$_baseUrlNew/rest/auth/registrar-aluno';
   static const String personaisDisponiveis =
       '$_baseUrlNew/rest/auth/personais-disponiveis';
+  static const String registrarPersonal =
+      '$_baseUrlNew/rest/auth/registrar-personal';
+  static const String academiasDisponiveis =
+      '$_baseUrlNew/rest/auth/academias-disponiveis';
   static String regestration = '$_baseUrl/registration';
   static String profileUpdate = '$_baseUrl/profileUpdate';
   static const String insertExame = '$_baseUrlNew/exame/inserir';

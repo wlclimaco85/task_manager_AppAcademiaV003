@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/utils/grid_colors.dart';
 import 'package:task_manager_flutter/ui/screens/auth_screens/wizard_aluno_screen.dart';
+import 'package:task_manager_flutter/ui/screens/auth_screens/wizard_personal_screen.dart';
 
 class CriarContaScreen extends StatelessWidget {
   const CriarContaScreen({super.key});
@@ -37,8 +38,14 @@ class CriarContaScreen extends StatelessWidget {
             icone: Icons.sports_gymnastics,
             titulo: 'Personal',
             descricao: 'Sou personal trainer',
-            habilitado: false,
-            onTap: () => _mostrarEmBreve(context),
+            habilitado: true,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const WizardPersonalScreen()),
+              );
+            },
           ),
           const SizedBox(height: 16),
           _OpcaoCadastroCard(
