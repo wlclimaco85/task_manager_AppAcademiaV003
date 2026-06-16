@@ -8,10 +8,18 @@ class LogoutDialog extends StatelessWidget {
     required this.onConfirm,
   }) : super(key: key);
 
-  static void show(BuildContext context, {required VoidCallback onConfirm}) {
+  static void show(BuildContext context, {VoidCallback? onConfirm}) {
     showDialog(
       context: context,
-      builder: (context) => LogoutDialog(onConfirm: onConfirm),
+      builder: (context) => LogoutDialog(
+        onConfirm: onConfirm ??
+            () {
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                '/login',
+                (route) => false,
+              );
+            },
+      ),
     );
   }
 

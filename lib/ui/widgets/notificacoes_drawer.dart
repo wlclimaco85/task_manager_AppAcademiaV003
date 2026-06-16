@@ -10,7 +10,11 @@ class NotificacoesDrawer extends StatelessWidget {
     required this.onSettings,
   }) : super(key: key);
 
-  static void show(BuildContext context, {required VoidCallback onMarkAllAsRead, required VoidCallback onSettings}) {
+  static void show(
+    BuildContext context, {
+    VoidCallback? onMarkAllAsRead,
+    VoidCallback? onSettings,
+  }) {
     Scaffold.of(context).openDrawer();
     // Aqui seria implementado um drawer real ou um modal
     // Por enquanto, usando um SnackBar como placeholder
@@ -19,7 +23,7 @@ class NotificacoesDrawer extends StatelessWidget {
         content: const Text('Notificações - Em desenvolvimento'),
         action: SnackBarAction(
           label: 'Configurações',
-          onPressed: onSettings,
+          onPressed: onSettings ?? () {},
         ),
       ),
     );

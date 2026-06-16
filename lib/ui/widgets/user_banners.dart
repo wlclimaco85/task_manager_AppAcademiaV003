@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:task_manager_flutter/ui/widgets/configurar_colunas_dialog.dart';
 import 'package:task_manager_flutter/ui/widgets/logout_dialog.dart';
 import 'package:task_manager_flutter/ui/widgets/notificacoes_drawer.dart';
 
@@ -8,6 +7,11 @@ class UserBannerAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? screenTitle;
   final String? cargo;
   final VoidCallback? onTapped;
+  final VoidCallback? onRefresh;
+  final VoidCallback? onFilterToggle;
+  final VoidCallback? onExportToExcel;
+  final bool isLoading;
+  final bool showFilterButton;
   final VoidCallback? onConfigurarColunas;
   final bool mostrarConfigurarColunas;
 
@@ -17,6 +21,11 @@ class UserBannerAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.screenTitle,
     this.cargo,
     this.onTapped,
+    this.onRefresh,
+    this.onFilterToggle,
+    this.onExportToExcel,
+    this.isLoading = false,
+    this.showFilterButton = false,
     this.onConfigurarColunas,
     this.mostrarConfigurarColunas = false,
   });
@@ -68,6 +77,33 @@ class UserBannerAppBar extends StatelessWidget implements PreferredSizeWidget {
               ],
             ),
           ),
+          if (onRefresh != null)
+            isLoading
+                ? const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : IconButton(
+                    icon: const Icon(Icons.refresh),
+                    tooltip: 'Atualizar',
+                    onPressed: onRefresh,
+                  ),
+          if (showFilterButton)
+            IconButton(
+              icon: const Icon(Icons.filter_list),
+              tooltip: 'Filtros',
+              onPressed: onFilterToggle,
+            ),
+          if (onExportToExcel != null)
+            IconButton(
+              icon: const Icon(Icons.file_download_outlined),
+              tooltip: 'Exportar Excel',
+              onPressed: onExportToExcel,
+            ),
           _NotifBellButton(),
           if (mostrarConfigurarColunas) ...[
             const SizedBox(width: 4),
