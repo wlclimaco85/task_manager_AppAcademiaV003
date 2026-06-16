@@ -3,26 +3,37 @@ import 'package:task_manager_flutter/ui/widgets/configurar_colunas_dialog.dart';
 import 'package:task_manager_flutter/ui/widgets/logout_dialog.dart';
 import 'package:task_manager_flutter/ui/widgets/notificacoes_drawer.dart';
 
-class UserBannerAppBar extends StatelessWidget {
-  final String nomeUsuario;
+class UserBannerAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final String? nomeUsuario;
+  final String? screenTitle;
   final String? cargo;
+  final VoidCallback? onTapped;
   final VoidCallback? onConfigurarColunas;
   final bool mostrarConfigurarColunas;
 
   const UserBannerAppBar({
     super.key,
-    required this.nomeUsuario,
+    this.nomeUsuario,
+    this.screenTitle,
     this.cargo,
+    this.onTapped,
     this.onConfigurarColunas,
     this.mostrarConfigurarColunas = false,
   });
 
   @override
+  Size get preferredSize => const Size.fromHeight(72);
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isWide = MediaQuery.of(context).size.width >= 720;
+    final title = _firstNotEmpty(screenTitle, nomeUsuario) ?? 'Meu Treino';
+    final subtitle = screenTitle != null && screenTitle!.trim().isNotEmpty
+        ? nomeUsuario
+        : cargo;
 
-    return Container(
+    final banner = Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: theme.colorScheme.primaryContainer,
@@ -30,7 +41,7 @@ class UserBannerAppBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _AvatarUsuario(nomeUsuario: nomeUsuario),
+          _AvatarUsuario(nomeUsuario: title),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -38,16 +49,16 @@ class UserBannerAppBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  nomeUsuario,
+                  title,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.onPrimaryContainer,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (cargo != null && cargo!.isNotEmpty)
+                if (subtitle != null && subtitle.trim().isNotEmpty)
                   Text(
-                    cargo!,
+                    subtitle.trim(),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onPrimaryContainer
                           .withValues(alpha: 0.75),
@@ -67,6 +78,25 @@ class UserBannerAppBar extends StatelessWidget {
         ],
       ),
     );
+
+    if (onTapped == null) {
+      return banner;
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTapped,
+        child: banner,
+      ),
+    );
+  }
+
+  String? _firstNotEmpty(String? first, String? second) {
+    if (first != null && first.trim().isNotEmpty) return first.trim();
+    if (second != null && second.trim().isNotEmpty) return second.trim();
+    return null;
   }
 }
 
