@@ -40,7 +40,17 @@ class AuthUtility {
     bool isLogin = _sharedPreferences.containsKey("user_data");
     if (isLogin) {
       final info = await getUserInfo();
-      if (info != null) userInfo = info;
+      if (info != null) {
+        userInfo = info;
+      } else {
+        // Storage existe mas o JSON está corrompido / falhou o parse.
+        // Não dá pra afirmar login válido — o token em cache pode ser de uma
+        // sessão anterior. Força reautenticação.
+        userInfo = LoginModel();
+        isLogin = false;
+      }
+    } else {
+      userInfo = LoginModel();
     }
     return isLogin && userInfo.token != null;
   }
