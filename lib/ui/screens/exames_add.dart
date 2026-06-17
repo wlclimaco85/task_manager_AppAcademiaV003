@@ -179,12 +179,14 @@ class _ExamesModalAddState extends State<ExamesModalAdd> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: UserBannerAppBar(onTapped: () {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => const UpdateProfileScreen()));
-      }),
+      appBar: UserBannerAppBar(
+          screenTitle: 'Novo exame',
+          onTapped: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const UpdateProfileScreen()));
+          }),
       body: Form(
         key: _formKey,
         child: Padding(

@@ -8,6 +8,7 @@
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/customization/generic_grid/grid_models.dart';
 import 'package:task_manager_flutter/data/customization/generic_grid/grid_page.dart';
@@ -36,6 +37,7 @@ class DynamicGridDynamicScreen extends StatefulWidget {
   final Map<String, dynamic>? additionalFormData;
   final Map<String, dynamic> Function(Map<String, dynamic>? item)?
       dynamicAdditionalFormData;
+  final bool showAppBar;
 
   const DynamicGridDynamicScreen({
     super.key,
@@ -49,6 +51,7 @@ class DynamicGridDynamicScreen extends StatefulWidget {
     this.onBannerRefresh,
     this.additionalFormData,
     this.dynamicAdditionalFormData,
+    this.showAppBar = true,
   });
 
   @override
@@ -72,7 +75,8 @@ class _DynamicGridDynamicScreenState extends State<DynamicGridDynamicScreen> {
     try {
       final userInfo = AuthUtility.userInfo;
       final empId = userInfo?.login?.empresa?.id;
-      final clienteId = userInfo?.data?.login?.empresa?.id ?? userInfo?.data?.login?.parceiro?.id;
+      final clienteId = userInfo?.data?.login?.empresa?.id ??
+          userInfo?.data?.login?.parceiro?.id;
 
       final tela = await _telaService.getTelaFromCache(
         widget.telaNome,
@@ -264,7 +268,9 @@ class _DynamicGridDynamicScreenState extends State<DynamicGridDynamicScreen> {
               extraParams: widget.extraParams,
               enableSearch: tela.enableSearch,
               enableDebugMode: tela.enableDebugMode,
-              useUserBannerAppBar: tela.useUserBannerAppBar,
+              useUserBannerAppBar:
+                  widget.showAppBar && (tela.useUserBannerAppBar || !kIsWeb),
+              showAppBar: widget.showAppBar,
               onUserBannerTapped: widget.onUserBannerTapped,
               onBannerRefresh: widget.onBannerRefresh,
               additionalFormData: widget.additionalFormData,

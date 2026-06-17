@@ -37,21 +37,32 @@ class UserBannerAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isWide = MediaQuery.of(context).size.width >= 720;
+    final canPop = Navigator.of(context).canPop();
     final title = _firstNotEmpty(screenTitle, nomeUsuario) ?? 'Meu Treino';
     final subtitle = screenTitle != null && screenTitle!.trim().isNotEmpty
         ? nomeUsuario
         : cargo;
 
     final banner = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: isWide ? 16 : 8,
+        vertical: 12,
+      ),
       decoration: BoxDecoration(
         color: theme.colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          _AvatarUsuario(nomeUsuario: title),
-          const SizedBox(width: 12),
+          if (canPop)
+            IconButton(
+              icon: const Icon(Icons.arrow_back),
+              tooltip: 'Voltar',
+              onPressed: () => Navigator.of(context).maybePop(),
+            )
+          else
+            _AvatarUsuario(nomeUsuario: title),
+          SizedBox(width: canPop ? 4 : 12),
           Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,

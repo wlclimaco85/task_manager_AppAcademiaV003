@@ -993,8 +993,8 @@ class _GenericMobileGridScreenState extends State<GenericMobileGridScreen> {
           _openForm();
         }
       },
-      backgroundColor: GridColors.primary,
-      foregroundColor: GridColors.textPrimary,
+      backgroundColor: GridColors.secondary,
+      foregroundColor: Colors.black,
       tooltip: 'Adicionar',
       child: const Icon(Icons.add),
     );

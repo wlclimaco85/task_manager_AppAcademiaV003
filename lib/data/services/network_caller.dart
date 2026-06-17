@@ -10,14 +10,14 @@ import 'package:task_manager_flutter/ui/screens/LoginPopup_screens.dart';
 import 'package:task_manager_flutter/data/utils/api_links.dart';
 import 'package:task_manager_flutter/data/models/login_model.dart';
 import 'package:task_manager_flutter/data/utils/app_logger.dart';
+import 'package:task_manager_flutter/data/utils/tenant_context.dart';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 class NetworkCaller {
   Future<NetworkResponse> getRequest(String url) async {
     try {
-      final login = AuthUtility.userInfo?.login;
-      final user = AuthUtility.userInfo?.data;
+      final login = TenantContext.login;
       // Adiciona empresa, parceiro e aplicativo como query params
       Uri uri = Uri.parse(url).replace(
         queryParameters: {
@@ -34,10 +34,7 @@ class NetworkCaller {
 
       Response response = await get(
         uri,
-        headers: {
-          'Authorization': 'Bearer ${AuthUtility.userInfo?.token}',
-          'Accept-Encoding': 'gzip',
-        },
+        headers: TenantContext.headers,
       );
 
       debugPrint("Url get = $uri");
@@ -68,8 +65,8 @@ class NetworkCaller {
           AuthUtility.userInfo?.data?.id == 1 && response.statusCode == 403) {
         loginPadrao();
         Response response = await get(
-          Uri.parse(url),
-          headers: {'Authorization': 'Bearer ${AuthUtility.userInfo?.token}'},
+          Uri.parse(TenantContext.applyToUrl(url)),
+          headers: TenantContext.headers,
         );
         if (response.statusCode == 200) {
           return NetworkResponse(
@@ -202,13 +199,9 @@ class NetworkCaller {
   Future<NetworkResponse> putRequest(String url, dynamic body) async {
     try {
       final response = await put(
-        Uri.parse(url),
-        headers: {
-          'Authorization': 'Bearer ${AuthUtility.userInfo?.token}',
-          'Accept-Encoding': 'gzip',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(body),
+        Uri.parse(TenantContext.applyToUrl(url)),
+        headers: TenantContext.jsonHeaders,
+        body: jsonEncode(TenantContext.applyToBody(body)),
       );
 
       // Assuming your NetworkResponse constructor takes statusCode and a parsed body
@@ -233,7 +226,7 @@ class NetworkCaller {
     Map<String, dynamic>? body,
   ) async {
     try {
-      final user = AuthUtility.userInfo?.login;
+      final user = TenantContext.login;
       final isLoginRequest =
           url.contains('login') || url.contains('inserirAluno');
 
@@ -256,17 +249,13 @@ class NetworkCaller {
       }
 
       Response response = await post(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json;charset=UTF-8',
-          'Authorization': isLoginRequest
-              ? 'c2Fua2h5YTpzdXA='
-              : 'Bearer ${AuthUtility.userInfo?.token}',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Credentials': 'true',
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept',
-        },
+        Uri.parse(isLoginRequest ? url : TenantContext.applyToUrl(url)),
+        headers: isLoginRequest
+            ? {
+                'Content-Type': 'application/json;charset=UTF-8',
+                'Authorization': 'c2Fua2h5YTpzdXA=',
+              }
+            : TenantContext.jsonHeaders,
         body: jsonEncode(body),
       );
 
@@ -293,7 +282,7 @@ class NetworkCaller {
     Map<String, dynamic>? queryParams,
   }) async {
     try {
-      final user = AuthUtility.userInfo?.login;
+      final user = TenantContext.login;
 
       // Se queryParams é nulo, cria um novo Map, senão usa o passado
       queryParams ??= {};
@@ -310,14 +299,7 @@ class NetworkCaller {
 
       final response = await delete(
         uri,
-        headers: {
-          'Content-Type': 'application/json;charset=UTF-8',
-          'Authorization': 'Bearer ${AuthUtility.userInfo?.token}',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Credentials': 'true',
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, DELETE',
-          'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept',
-        },
+        headers: TenantContext.jsonHeaders,
       );
 
       print('DELETE $uri');
@@ -340,7 +322,10 @@ class NetworkCaller {
   Future<Uint8List?> getRawBytes(String url,
       {Map<String, String>? headers}) async {
     try {
-      final response = await http.get(Uri.parse(url), headers: headers);
+      final response = await http.get(
+        Uri.parse(TenantContext.applyToUrl(url)),
+        headers: {...TenantContext.headers, ...?headers},
+      );
 
       if (response.statusCode == 200) {
         debugPrint('📄 Download binário bem-sucedido: $url');
@@ -358,7 +343,7 @@ class NetworkCaller {
   Future<NetworkResponse> patchRequest(
       String url, Map<String, dynamic>? body) async {
     try {
-      final user = AuthUtility.userInfo?.login;
+      final user = TenantContext.login;
 
       // 🔧 Adiciona empresa, parceiro e aplicativo ao body (igual aos outros)
       body ??= {};
@@ -377,16 +362,8 @@ class NetworkCaller {
 
       // 🔹 Faz o PATCH request
       final response = await http.patch(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json;charset=UTF-8',
-          'Authorization': 'Bearer ${AuthUtility.userInfo?.token}',
-          'Accept-Encoding': 'gzip',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Credentials': 'true',
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PATCH',
-          'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept',
-        },
+        Uri.parse(TenantContext.applyToUrl(url)),
+        headers: TenantContext.jsonHeaders,
         body: jsonEncode(body),
       );
 

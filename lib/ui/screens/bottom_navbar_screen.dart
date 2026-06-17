@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
+import 'package:task_manager_flutter/data/customization/dynamic_grid_dynamic_screen.dart';
 import 'package:task_manager_flutter/data/utils/security_matrix.dart';
-import 'package:task_manager_flutter/ui/screens/academia_screen.dart';
-import 'package:task_manager_flutter/ui/screens/dieta_screen.dart';
-import 'package:task_manager_flutter/ui/screens/exames_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness_personal_screens.dart';
-import 'package:task_manager_flutter/ui/screens/medicamento_screen.dart';
-import 'package:task_manager_flutter/ui/screens/personal_screen.dart';
 import 'package:task_manager_flutter/ui/screens/personal_workspace_screen.dart';
 import 'package:task_manager_flutter/ui/screens/sem_acesso_screen.dart';
-import 'package:task_manager_flutter/ui/screens/suplemento_screen.dart';
 import 'package:task_manager_flutter/ui/screens/alimento_grid_screen_dynamic.dart';
 import 'package:task_manager_flutter/ui/screens/objetivo_grid_screen_dynamic.dart';
 import 'package:task_manager_flutter/ui/screens/avaliacao_fisica_grid_screen_dynamic.dart';
@@ -132,24 +127,10 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
   void _openFitnessAction(_FitnessAction action, SecurityMatrix sec) {
     switch (action.title) {
       case 'Academias':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => AcademiaScreen(
-              canInsert: sec.canInsert(AppScreen.academias),
-            ),
-          ),
-        );
+        _openDynamicGrid('academia', sec, AppScreen.academias);
         break;
       case 'Personal':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => PersonalScreen(
-              canInsert: sec.canInsert(AppScreen.personais),
-            ),
-          ),
-        );
+        _openDynamicGrid('personal', sec, AppScreen.personais);
         break;
       case 'Alunos do personal':
         Navigator.push(
@@ -158,44 +139,16 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         );
         break;
       case 'Dieta':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => Dietacreen(
-              canInsert: sec.canInsert(AppScreen.dieta),
-            ),
-          ),
-        );
+        _openDynamicGrid('Dietas', sec, AppScreen.dieta);
         break;
       case 'Suplementos':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => SuplementoScreen(
-              canInsert: sec.canInsert(AppScreen.suplementos),
-            ),
-          ),
-        );
+        _openDynamicGrid('suplemento', sec, AppScreen.suplementos);
         break;
       case 'Medicamentos':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => Medicamentoscreen(
-              canInsert: sec.canInsert(AppScreen.medicamentos),
-            ),
-          ),
-        );
+        _openDynamicGrid('Medicamentos', sec, AppScreen.medicamentos);
         break;
       case 'Exames':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ExameScreen(
-              canInsert: sec.canInsert(AppScreen.exames),
-            ),
-          ),
-        );
+        _openDynamicGrid('exame', sec, AppScreen.exames);
         break;
       case 'Treinos':
         Navigator.push(
@@ -255,8 +208,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
       case 'Grupo muscular':
         Navigator.push(
           context,
-          MaterialPageRoute(
-              builder: (_) => const GrupoMuscularScreenDynamic()),
+          MaterialPageRoute(builder: (_) => const GrupoMuscularScreenDynamic()),
         );
         break;
       case 'Modalidades':
@@ -268,6 +220,43 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
       case 'Sair':
         Navigator.pop(context);
         break;
+    }
+  }
+
+  void _openDynamicGrid(String telaNome, SecurityMatrix sec, AppScreen screen) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DynamicGridDynamicScreen(
+          key: ValueKey('fitness_dynamic_$telaNome'),
+          telaNome: telaNome,
+          hasPermission: (permission) =>
+              _hasPermissionFor(sec, screen, permission),
+          storageKey: 'fitness_dynamic_$telaNome',
+        ),
+      ),
+    );
+  }
+
+  bool _hasPermissionFor(
+    SecurityMatrix sec,
+    AppScreen screen,
+    String permission,
+  ) {
+    switch (permission.toLowerCase()) {
+      case 'insert':
+      case 'create':
+        return sec.canInsert(screen);
+      case 'edit':
+      case 'update':
+        return sec.canUpdate(screen);
+      case 'delete':
+      case 'remove':
+        return sec.canDelete(screen);
+      case 'view':
+      case 'read':
+      default:
+        return sec.canView(screen);
     }
   }
 
@@ -316,8 +305,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
           if (sec.canView(AppScreen.corpo))
             const _FitnessAction(Icons.scale_outlined, 'Corpo'),
           if (sec.canView(AppScreen.avaliacaoFisica))
-            const _FitnessAction(
-                Icons.assignment_outlined, 'Avaliacao fisica'),
+            const _FitnessAction(Icons.assignment_outlined, 'Avaliacao fisica'),
           if (sec.canView(AppScreen.metas))
             const _FitnessAction(Icons.flag_outlined, 'Metas'),
         ],

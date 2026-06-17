@@ -179,12 +179,14 @@ class _SuplementoModalAddState extends State<SuplementoModalAdd> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: UserBannerAppBar(onTapped: () {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => const UpdateProfileScreen()));
-      }),
+      appBar: UserBannerAppBar(
+          screenTitle: 'Novo suplemento',
+          onTapped: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const UpdateProfileScreen()));
+          }),
       body: Form(
         key: _formKey,
         child: Padding(

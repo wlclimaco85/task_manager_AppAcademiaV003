@@ -186,12 +186,14 @@ class _MedicamentosModalAddState extends State<MedicamentosModalAdd> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: UserBannerAppBar(onTapped: () {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => const UpdateProfileScreen()));
-      }),
+      appBar: UserBannerAppBar(
+          screenTitle: 'Novo medicamento',
+          onTapped: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const UpdateProfileScreen()));
+          }),
       body: Form(
         key: _formKey,
         child: Padding(

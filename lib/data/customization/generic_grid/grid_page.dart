@@ -47,6 +47,8 @@ class GenericMobileGridScreen extends StatefulWidget {
   final Future<Map<String, String>> Function()? authHeadersProvider;
 
   final List<ServerAction>? serverActions;
+  final bool showAppBar;
+  final bool showFab;
 
   const GenericMobileGridScreen({
     super.key,
@@ -77,6 +79,8 @@ class GenericMobileGridScreen extends StatefulWidget {
     this.baseUrlForMultipart,
     this.authHeadersProvider,
     this.serverActions = const [],
+    this.showAppBar = true,
+    this.showFab = true,
   });
 
   @override
@@ -342,8 +346,8 @@ class _GenericMobileGridScreenState extends State<GenericMobileGridScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: GridColors.background,
-      appBar: _buildAppBar(context),
-      floatingActionButton: _buildFab(),
+      appBar: widget.showAppBar ? _buildAppBar(context) : null,
+      floatingActionButton: widget.showFab ? _buildFab() : null,
       body: Column(
         children: [
           if (_filtersOpen)
@@ -385,6 +389,8 @@ class _GenericMobileGridScreenState extends State<GenericMobileGridScreen> {
               baseUrlForMultipart: widget.baseUrlForMultipart,
               authHeadersProvider: widget.authHeadersProvider,
               serverActions: widget.serverActions,
+              showAppBar: false,
+              showFab: false,
             ),
           ),
         ],
@@ -431,8 +437,8 @@ class _GenericMobileGridScreenState extends State<GenericMobileGridScreen> {
           _openForm();
         }
       },
-      backgroundColor: GridColors.primary,
-      foregroundColor: GridColors.textPrimary,
+      backgroundColor: GridColors.secondary,
+      foregroundColor: Colors.black,
       tooltip: 'Adicionar',
       child: const Icon(Icons.add),
     );

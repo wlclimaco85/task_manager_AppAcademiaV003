@@ -6,8 +6,7 @@ class InputBuscarField extends StatelessWidget {
       required this.hint,
       required this.obscure,
       required this.icon,
-      required this.onPresseds
-      });
+      required this.onPresseds});
 
   final String hint;
   final bool obscure;
@@ -18,7 +17,6 @@ class InputBuscarField extends StatelessWidget {
     return Container(
       height: 50,
       margin: const EdgeInsets.all(8),
-      alignment: Alignment.center,
       decoration: const BoxDecoration(
           color: Color(0xFFFA903A),
           borderRadius: BorderRadius.only(
@@ -29,79 +27,38 @@ class InputBuscarField extends StatelessWidget {
           )),
       child: Row(
         children: <Widget>[
-          Column(
-            children: <Widget>[
-              Container(
-                height: 30,
-                width: 280,
-                margin: const EdgeInsets.all(8),
-                alignment: Alignment.topRight,
-                decoration: const BoxDecoration(
-                    color: Color(0xFFFA903A),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(6.0),
-                      topRight: Radius.circular(6.0),
-                      bottomLeft: Radius.circular(6.0),
-                      bottomRight: Radius.circular(6.0),
-                    )),
-                child: Flexible(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      suffixIcon: SizedBox(
-                        height: 50.0,
-                        width: 50.0,
-                        child: IconButton(
-                          padding: const EdgeInsets.all(0.0),
-                          color: const Color(0xFFFA903A),
-                          icon: Image.asset('assets/images/Buscar.ico'),
-                          onPressed: null,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.all(10.0),
-                      hintText: hint,
-                      hintStyle: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 15.0,
-                      ),
-                      border: InputBorder.none,
-                    ),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20.0,
-                    ),
+          Expanded(
+            child: Container(
+              height: 34,
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: TextField(
+                obscureText: obscure,
+                decoration: InputDecoration(
+                  suffixIcon: IconButton(
+                    padding: EdgeInsets.zero,
+                    icon: Image.asset('assets/images/Buscar.ico'),
+                    onPressed: null,
                   ),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  hintText: hint,
+                  hintStyle: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 13.0,
+                  ),
+                  border: InputBorder.none,
+                ),
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 14.0,
                 ),
               ),
-            ],
+            ),
           ),
-          Column(children: <Widget>[
-            Container(
-              height: 30,
-              width: 20,
-              alignment: Alignment.topRight,
-              color: const Color(0xFFFA903A),
-            ),
-          ]),
-          Column(children: <Widget>[
-            Container(
-              height: 30,
-              width: 40,
-              margin: const EdgeInsets.all(8),
-              alignment: Alignment.topRight,
-              color: const Color(0xFFFA903A),
-              child: SizedBox(
-                height: 40.0,
-                width: 40.0,
-                child: IconButton(
-                  padding: const EdgeInsets.all(0.0),
-                  color: const Color(0xFFFA903A),
-                  tooltip: 'Adicionar Personal',
-                  icon: Image.asset('assets/images/adcionarNew.ico'),
-                  onPressed: onPresseds,
-                ),
-              ),
-            ),
-          ])
         ],
       ),
     );

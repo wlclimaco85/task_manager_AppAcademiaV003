@@ -58,7 +58,7 @@ class _NegociacaoCatalogPageState extends State<NegociacaoCatalogPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: UserBannerAppBar(
-        screenTitle: "Vendas",
+        screenTitle: "Negociacao",
         onRefresh: fetchProducts,
         isLoading: isLoading,
         onTapped: () {
@@ -203,7 +203,7 @@ class ProductCard extends StatelessWidget {
 
       // Fechar o diálogo
       Navigator.pop(context);
-        } catch (e) {
+    } catch (e) {
       // Tratar outras exceções que possam ocorrer
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro inesperado: $e')),
@@ -272,7 +272,7 @@ class ProductCard extends StatelessWidget {
 
       // Fechar o diálogo
       Navigator.pop(context);
-        } catch (e) {
+    } catch (e) {
       // Tratar outras exceções que possam ocorrer
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro inesperado: $e')),
@@ -1170,8 +1170,7 @@ class ProductCard extends StatelessWidget {
       theme: ThemeData(primarySwatch: Colors.green),
       home: const NegociacaoCatalogPage(
         title: 'Produtos do Vendedor',
-        apiUrl:
-            'http://localhost:9001/boletobancos/api/produtos/vendedor/4',
+        apiUrl: 'http://localhost:9001/boletobancos/api/produtos/vendedor/4',
         actionIcon: Icons.edit,
         actionTooltip: 'Editar Produto',
       ),

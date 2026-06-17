@@ -7,7 +7,6 @@ import 'package:task_manager_flutter/ui/widgets/home_modal_add.dart';
 import 'package:task_manager_flutter/ui/widgets/home_list_model.dart';
 import 'package:task_manager_flutter/data/models/network_response.dart';
 import 'package:task_manager_flutter/data/services/network_caller.dart';
-import 'package:task_manager_flutter/ui/widgets/input_field_busca.dart';
 import 'package:task_manager_flutter/ui/widgets/itens_list_personal.dart';
 
 class PersonalScreen extends StatefulWidget {
@@ -73,11 +72,6 @@ class _PersonalScreenState extends State<PersonalScreen> {
         dynamic data = response.body?['data'];
         List<dynamic> datas = data['personalDto'];
         mywidgets = [];
-        mywidgets.add(InputBuscarField(
-            hint: "Buscar Personal ",
-            obscure: false,
-            icon: Icons.person_outline,
-            onPresseds: widget.canInsert ? onPresseds : null));
         for (var element in datas) {
           mywidgets.add(
             Row(
@@ -133,7 +127,16 @@ class _PersonalScreenState extends State<PersonalScreen> {
     return Scaffold(
       //  floatingActionButton: getHomeFab(context, listModels, refreshPage),
       backgroundColor: const Color(0xFF340A9C),
+      floatingActionButton: widget.canInsert
+          ? FloatingActionButton(
+              onPressed: onPresseds,
+              backgroundColor: const Color(0xFFFA903A),
+              foregroundColor: Colors.black,
+              child: const Icon(Icons.add),
+            )
+          : null,
       appBar: UserBannerAppBar(
+        screenTitle: 'Personal',
         onTapped: () {
           Navigator.push(
               context,

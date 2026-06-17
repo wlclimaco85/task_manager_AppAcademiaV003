@@ -60,7 +60,7 @@ class _ProductCatalogPageComprasState extends State<ProductCatalogPageCompras> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: UserBannerAppBar(
-        screenTitle: "Vendas",
+        screenTitle: "Compras",
         onRefresh: fetchProducts,
         isLoading: isLoading,
         onTapped: () {

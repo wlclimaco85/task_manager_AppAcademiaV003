@@ -5,7 +5,6 @@ import 'package:task_manager_flutter/ui/widgets/user_banners.dart';
 import 'package:task_manager_flutter/ui/screens/update_profile.dart';
 import 'package:task_manager_flutter/data/models/network_response.dart';
 import 'package:task_manager_flutter/data/services/network_caller.dart';
-import 'package:task_manager_flutter/ui/widgets/input_field_busca.dart';
 import 'package:task_manager_flutter/ui/screens/Medicamento_add.dart';
 import 'package:task_manager_flutter/ui/screens/Medicamento_list.dart';
 import 'package:task_manager_flutter/data/models/auth_utility.dart';
@@ -47,6 +46,13 @@ class _MedicamentoscreenState extends State<Medicamentoscreen> {
 
   bool _addNewTaskLoading = false;
 
+  void _openAdd() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MedicamentosModalAdd()),
+    );
+  }
+
   List<String> getList(List<dynamic> newMap) {
     late List<String> modList = [];
     for (var v in newMap) {
@@ -72,9 +78,6 @@ class _MedicamentoscreenState extends State<Medicamentoscreen> {
       "idaluno": {"id": alunoId},
     };
 
-    void onPressedss() => Navigator.push(context,
-        MaterialPageRoute(builder: (context) => const MedicamentosModalAdd()));
-
     final NetworkResponse response = await NetworkCaller()
         .postRequest(ApiLinks.findByAlunoByMedicamento, requestBody);
     _addNewTaskLoading = false;
@@ -88,11 +91,6 @@ class _MedicamentoscreenState extends State<Medicamentoscreen> {
         dynamic data = response.body?['data'];
         List<dynamic> datas = data;
         mywidgets = [];
-        mywidgets.add(InputBuscarField(
-            hint: "Buscar Medicamentos",
-            obscure: false,
-            icon: Icons.person_outline,
-            onPresseds: widget.canInsert ? onPressedss : null));
         for (var element in datas) {
           mywidgets.add(
             Row(
@@ -122,11 +120,6 @@ class _MedicamentoscreenState extends State<Medicamentoscreen> {
     } else {
       if (mounted) {
         mywidgets = [];
-        mywidgets.add(InputBuscarField(
-            hint: "Buscar Medicamentos",
-            obscure: false,
-            icon: Icons.person_outline,
-            onPresseds: widget.canInsert ? onPressedss : null));
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Nenhuma suplemento cadastrado!"),
@@ -146,7 +139,16 @@ class _MedicamentoscreenState extends State<Medicamentoscreen> {
     return Scaffold(
       //  floatingActionButton: getHomeFab(context, listModels, refreshPage),
       backgroundColor: const Color(0xFF340A9C),
+      floatingActionButton: widget.canInsert
+          ? FloatingActionButton(
+              onPressed: _openAdd,
+              backgroundColor: const Color(0xFFFA903A),
+              foregroundColor: Colors.black,
+              child: const Icon(Icons.add),
+            )
+          : null,
       appBar: UserBannerAppBar(
+        screenTitle: 'Medicamentos',
         onTapped: () {
           Navigator.push(
               context,

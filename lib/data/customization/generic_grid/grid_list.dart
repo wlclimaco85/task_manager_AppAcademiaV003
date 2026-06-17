@@ -51,6 +51,8 @@ class GridListScreen extends StatefulWidget {
   final Future<Map<String, String>> Function()? authHeadersProvider;
 
   final List<ServerAction>? serverActions;
+  final bool showAppBar;
+  final bool showFab;
 
   const GridListScreen({
     super.key,
@@ -80,6 +82,8 @@ class GridListScreen extends StatefulWidget {
     this.baseUrlForMultipart,
     this.authHeadersProvider,
     this.serverActions = const [],
+    this.showAppBar = true,
+    this.showFab = true,
   });
 
   @override
@@ -275,22 +279,25 @@ class _GridListScreenState extends State<GridListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: GridColors.background,
-      appBar: widget.useUserBannerAppBar
-          ? PreferredSize(
-              preferredSize: Size.fromHeight(
-                  widget.useUserBannerAppBar ? 94 : kToolbarHeight),
-              child: UserBannerAppBar(
-                screenTitle: widget.title,
-                onTapped: widget.onUserBannerTapped,
-                onRefresh: widget.onBannerRefresh ?? () => _load(reset: true),
-                isLoading: _loading,
-                onFilterToggle: () =>
-                    setState(() => _filtersOpen = !_filtersOpen),
-                showFilterButton: widget.useUserBannerAppBar,
-              ),
-            )
-          : (_selectionMode ? _selectionAppBar() : _normalAppBar()),
-      floatingActionButton: _buildFab(),
+      appBar: widget.showAppBar
+          ? (widget.useUserBannerAppBar
+              ? PreferredSize(
+                  preferredSize: Size.fromHeight(
+                      widget.useUserBannerAppBar ? 94 : kToolbarHeight),
+                  child: UserBannerAppBar(
+                    screenTitle: widget.title,
+                    onTapped: widget.onUserBannerTapped,
+                    onRefresh:
+                        widget.onBannerRefresh ?? () => _load(reset: true),
+                    isLoading: _loading,
+                    onFilterToggle: () =>
+                        setState(() => _filtersOpen = !_filtersOpen),
+                    showFilterButton: widget.useUserBannerAppBar,
+                  ),
+                )
+              : (_selectionMode ? _selectionAppBar() : _normalAppBar()))
+          : null,
+      floatingActionButton: widget.showFab ? _buildFab() : null,
       body: Column(
         children: [
           if (_filtersOpen) _buildFilters(context),
@@ -307,9 +314,11 @@ class _GridListScreenState extends State<GridListScreen> {
                     onRefresh: () => _load(reset: true),
                     child: ListView.builder(
                       controller: _scroll,
-                      itemCount: _filtered.length + (_hasMore && !_loading ? 1 : 0),
+                      itemCount:
+                          _filtered.length + (_hasMore && !_loading ? 1 : 0),
                       itemBuilder: (ctx, i) {
-                        if (i == _filtered.length) return _loadingIndicator(ctx);
+                        if (i == _filtered.length)
+                          return _loadingIndicator(ctx);
                         return _card(ctx, _filtered[i], i);
                       },
                     ),
@@ -320,21 +329,31 @@ class _GridListScreenState extends State<GridListScreen> {
                     color: Colors.black.withValues(alpha: 0.35),
                     child: Center(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 32, vertical: 20),
                         decoration: BoxDecoration(
                           color: const Color(0xFF93070A),
                           borderRadius: BorderRadius.circular(12),
-                          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 12)],
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                blurRadius: 12)
+                          ],
                         ),
                         child: const Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
                               strokeWidth: 3,
                             ),
                             SizedBox(height: 14),
-                            Text('Aguarde', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+                            Text('Aguarde',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600)),
                           ],
                         ),
                       ),
@@ -493,8 +512,8 @@ class _GridListScreenState extends State<GridListScreen> {
           _openForm();
         }
       },
-      backgroundColor: GridColors.primary,
-      foregroundColor: GridColors.textPrimary,
+      backgroundColor: GridColors.secondary,
+      foregroundColor: Colors.black,
       tooltip: 'Adicionar',
       child: const Icon(Icons.add),
     );

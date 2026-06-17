@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart'; // 👈 IMPORT NECESSÁRIO
 import 'package:task_manager_flutter/data/utils/app_logger.dart';
+import 'package:task_manager_flutter/data/utils/tenant_context.dart';
 
 /// Estrutura de resposta simplificada
 class NetworkResponse {
@@ -17,39 +18,58 @@ class NetworkResponse {
 /// REQUISIÇÕES BÁSICAS
 /// ---------------------------------------------------------------------------
 
+Map<String, String> _headers({Map<String, String>? extra, bool json = false}) {
+  return {
+    ...(json ? TenantContext.jsonHeaders : TenantContext.headers),
+    ...?extra,
+  };
+}
+
 Future<NetworkResponse> getJson(String url,
     {Map<String, String>? headers}) async {
-  L.d('[GET] $url');
-  final resp = await http.get(Uri.parse(url), headers: headers);
+  final resolvedUrl = TenantContext.applyToUrl(url);
+  L.d('[GET] $resolvedUrl');
+  final resp = await http.get(
+    Uri.parse(resolvedUrl),
+    headers: _headers(extra: headers),
+  );
   return _parseResponse(resp);
 }
 
 Future<NetworkResponse> postJson(String url, Map<String, dynamic> body,
     {Map<String, String>? headers}) async {
-  L.d('[POST] $url');
+  final resolvedUrl = TenantContext.applyToUrl(url);
+  final resolvedBody = TenantContext.applyToBody(body);
+  L.d('[POST] $resolvedUrl');
   final resp = await http.post(
-    Uri.parse(url),
-    headers: {'Content-Type': 'application/json', ...?headers},
-    body: jsonEncode(body),
+    Uri.parse(resolvedUrl),
+    headers: _headers(extra: headers, json: true),
+    body: jsonEncode(resolvedBody),
   );
   return _parseResponse(resp);
 }
 
 Future<NetworkResponse> putJson(String url, Map<String, dynamic> body,
     {Map<String, String>? headers}) async {
-  L.d('[PUT] $url');
+  final resolvedUrl = TenantContext.applyToUrl(url);
+  final resolvedBody = TenantContext.applyToBody(body);
+  L.d('[PUT] $resolvedUrl');
   final resp = await http.put(
-    Uri.parse(url),
-    headers: {'Content-Type': 'application/json', ...?headers},
-    body: jsonEncode(body),
+    Uri.parse(resolvedUrl),
+    headers: _headers(extra: headers, json: true),
+    body: jsonEncode(resolvedBody),
   );
   return _parseResponse(resp);
 }
 
 Future<NetworkResponse> deleteJson(String url,
     {Map<String, String>? headers}) async {
-  L.d('[DELETE] $url');
-  final resp = await http.delete(Uri.parse(url), headers: headers);
+  final resolvedUrl = TenantContext.applyToUrl(url);
+  L.d('[DELETE] $resolvedUrl');
+  final resp = await http.delete(
+    Uri.parse(resolvedUrl),
+    headers: _headers(extra: headers),
+  );
   return _parseResponse(resp);
 }
 
@@ -91,10 +111,11 @@ Future<NetworkResponse> sendMultipart({
 }) async {
   try {
     final url = baseUrlForMultipart != null
-        ? Uri.parse('$baseUrlForMultipart$endpoint')
-        : Uri.parse(endpoint);
+        ? Uri.parse(TenantContext.applyToUrl('$baseUrlForMultipart$endpoint'))
+        : Uri.parse(TenantContext.applyToUrl(endpoint));
     final req = http.MultipartRequest(isUpdate ? 'PUT' : 'POST', url);
     req.fields.addAll(fields);
+    req.headers.addAll(TenantContext.headers);
     if (authHeadersProvider != null) {
       req.headers.addAll(await authHeadersProvider());
     }

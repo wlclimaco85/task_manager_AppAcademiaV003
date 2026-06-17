@@ -261,7 +261,7 @@ class _ProductRegisterScreenState extends State<ProductRegisterScreen> {
     return Scaffold(
       backgroundColor: CustomColors().getLightGreenBackground(),
       appBar: UserBannerAppBar(
-        screenTitle: "Cadastro de Produto",
+        screenTitle: "Produtos",
         isLoading: isLoading,
         onRefresh: () {
           fetchInitialData();
