@@ -13,6 +13,17 @@ class Fitness360Summary {
     required this.habitsTotal,
     required this.weeklyProgress,
     required this.points,
+    required this.sleepScore,
+    required this.cardioScore,
+    required this.bodyScore,
+    required this.activeCalories,
+    required this.distanceKm,
+    required this.spo2,
+    required this.stress,
+    required this.readiness,
+    required this.weightGoalKg,
+    required this.lastSyncAt,
+    required this.syncSource,
   });
 
   final int steps;
@@ -24,6 +35,17 @@ class Fitness360Summary {
   final int habitsTotal;
   final double weeklyProgress;
   final int points;
+  final int sleepScore;
+  final int cardioScore;
+  final int bodyScore;
+  final int activeCalories;
+  final double distanceKm;
+  final int spo2;
+  final int stress;
+  final int readiness;
+  final double weightGoalKg;
+  final DateTime lastSyncAt;
+  final String syncSource;
 
   String get sleepLabel {
     final hours = sleepMinutes ~/ 60;
@@ -75,17 +97,44 @@ class Fitness360LocalStore {
   Fitness360LocalStore._();
 
   static const _recordsKey = 'fitness360.records.v1';
+  static const _cardOrderKey = 'fitness360.home.card_order.v1';
+  static const _hiddenCardsKey = 'fitness360.home.hidden_cards.v1';
+  static const _syncAtKey = 'fitness360.last_sync_at.v1';
+  static const _syncSourceKey = 'fitness360.sync_source.v1';
+  static const _integrationConsentKey = 'fitness360.integration_consent.v1';
+  static const _communityOptInKey = 'fitness360.community_opt_in.v1';
+
+  static const defaultHomeCards = [
+    'steps',
+    'sleep',
+    'workout',
+    'heart',
+    'body',
+    'goals',
+    'community',
+  ];
 
   static Future<List<Fitness360Record>> records({String? type}) async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_recordsKey);
-    final parsed = raw == null ? _seed : jsonDecode(raw) as List<dynamic>;
+    final parsed = _decodeRecords(raw);
     final list = parsed
         .map((item) => Fitness360Record.fromJson(item as Map<String, dynamic>))
         .toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     if (type == null) return list;
     return list.where((item) => item.type == type).toList();
+  }
+
+  static List<dynamic> _decodeRecords(String? raw) {
+    if (raw == null || raw.isEmpty) return _seed;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is List<dynamic>) return decoded;
+    } catch (_) {
+      return _seed;
+    }
+    return _seed;
   }
 
   static Future<void> addRecord({
@@ -116,7 +165,68 @@ class Fitness360LocalStore {
     );
   }
 
+  static Future<List<String>> homeCardOrder() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getStringList(_cardOrderKey) ?? defaultHomeCards;
+    final sanitized = [
+      ...saved.where(defaultHomeCards.contains),
+      ...defaultHomeCards.where((item) => !saved.contains(item)),
+    ];
+    return sanitized;
+  }
+
+  static Future<void> saveHomeCardOrder(List<String> order) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _cardOrderKey,
+      order.where(defaultHomeCards.contains).toList(),
+    );
+  }
+
+  static Future<Set<String>> hiddenHomeCards() async {
+    final prefs = await SharedPreferences.getInstance();
+    return (prefs.getStringList(_hiddenCardsKey) ?? const <String>[]).toSet();
+  }
+
+  static Future<void> setHomeCardHidden(String cardId, bool hidden) async {
+    final prefs = await SharedPreferences.getInstance();
+    final hiddenCards = await hiddenHomeCards();
+    if (hidden) {
+      hiddenCards.add(cardId);
+    } else {
+      hiddenCards.remove(cardId);
+    }
+    await prefs.setStringList(_hiddenCardsKey, hiddenCards.toList());
+  }
+
+  static Future<void> markSynced({String source = 'Importacao manual'}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_syncAtKey, DateTime.now().toIso8601String());
+    await prefs.setString(_syncSourceKey, source);
+  }
+
+  static Future<bool> integrationConsent() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_integrationConsentKey) ?? false;
+  }
+
+  static Future<void> setIntegrationConsent(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_integrationConsentKey, enabled);
+  }
+
+  static Future<bool> communityOptIn() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_communityOptInKey) ?? false;
+  }
+
+  static Future<void> setCommunityOptIn(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_communityOptInKey, enabled);
+  }
+
   static Future<Fitness360Summary> summary() async {
+    final prefs = await SharedPreferences.getInstance();
     final all = await records();
     final activity = all.where((item) => item.type == 'atividade').toList();
     final body = all.where((item) => item.type == 'corpo').toList();
@@ -135,7 +245,53 @@ class Fitness360LocalStore {
       weeklyProgress: ((activity.length + habits.length + body.length) / 18)
           .clamp(0.0, 1.0),
       points: 120 + (activity.length * 20) + (habits.length * 10),
+      sleepScore: (74 + sleep.length * 3).clamp(0, 100),
+      cardioScore: (68 + heart.length * 2).clamp(0, 100),
+      bodyScore: (72 + body.length * 2).clamp(0, 100),
+      activeCalories: 286 + activity.length * 42,
+      distanceKm: 5.6 + activity.length * 0.4,
+      spo2: 97,
+      stress: 31,
+      readiness: (70 + habits.length * 4).clamp(0, 100),
+      weightGoalKg: 74,
+      lastSyncAt: DateTime.tryParse(prefs.getString(_syncAtKey) ?? '') ??
+          DateTime.now().subtract(const Duration(minutes: 28)),
+      syncSource: prefs.getString(_syncSourceKey) ?? 'Importacao manual',
     );
+  }
+
+  static Future<List<int>> weeklySeries(String type) async {
+    final all = await records(type: type);
+    final seed = switch (type) {
+      'sono' => [72, 78, 81, 69, 84, 88, 80],
+      'batimento' => [68, 74, 71, 79, 76, 72, 70],
+      'corpo' => [78, 77, 77, 76, 76, 75, 76],
+      'meta' => [20, 35, 48, 60, 74, 82, 90],
+      _ => [4200, 6200, 8000, 5400, 9200, 7600, 8400],
+    };
+    if (all.isEmpty) return seed;
+    return [
+      for (var i = 0; i < 7; i++)
+        seed[i] +
+            all.where((item) => item.createdAt.weekday == i + 1).length * 5
+    ];
+  }
+
+  static Future<List<int>> insightSeries(String type, String range) async {
+    final weekly = await weeklySeries(type);
+    return switch (range) {
+      'Dia' => [
+          for (var i = 0; i < 6; i++)
+            (weekly[i % weekly.length] * (0.72 + i * 0.06)).round()
+        ],
+      'Mes' => [
+          for (var i = 0; i < 4; i++)
+            (weekly.skip(i).take(4).fold<int>(0, (sum, value) => sum + value) /
+                    4)
+                .round()
+        ],
+      _ => weekly,
+    };
   }
 
   static int _firstInt(List<Fitness360Record> items, {required int fallback}) {
