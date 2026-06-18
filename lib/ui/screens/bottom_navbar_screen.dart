@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/customization/dynamic_grid_dynamic_screen.dart';
+import 'package:task_manager_flutter/data/services/fitness_360_local_store.dart';
 import 'package:task_manager_flutter/data/utils/security_matrix.dart';
 import 'package:task_manager_flutter/ui/screens/fitness_personal_screens.dart';
 import 'package:task_manager_flutter/ui/screens/personal_workspace_screen.dart';
@@ -520,41 +521,83 @@ class _TodaySummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: GridColors.primary,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
-          BoxShadow(
-            color: GridColors.shadow,
-            blurRadius: 18,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Hoje no treino',
-            style: TextStyle(
-              color: Color(0xFFEAE3FF),
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(child: _SummaryMetric(value: '7.842', label: 'passos')),
-              Expanded(child: _SummaryMetric(value: '32m', label: 'treino')),
-              Expanded(child: _SummaryMetric(value: '72', label: 'bpm')),
+    return FutureBuilder<Fitness360Summary>(
+      future: Fitness360LocalStore.summary(),
+      builder: (context, snapshot) {
+        final summary = snapshot.data;
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: GridColors.primary,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: const [
+              BoxShadow(
+                color: GridColors.shadow,
+                blurRadius: 18,
+                offset: Offset(0, 10),
+              ),
             ],
           ),
-        ],
-      ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Saude do aluno hoje',
+                style: TextStyle(
+                  color: Color(0xFFEAE3FF),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _SummaryMetric(
+                      value: summary == null ? '--' : '${summary.steps}',
+                      label: 'passos',
+                    ),
+                  ),
+                  Expanded(
+                    child: _SummaryMetric(
+                      value: summary == null
+                          ? '--'
+                          : '${summary.trainingMinutes}m',
+                      label: 'treino',
+                    ),
+                  ),
+                  Expanded(
+                    child: _SummaryMetric(
+                      value:
+                          summary == null ? '--' : '${summary.heartRate} bpm',
+                      label: 'batimentos',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(99),
+                child: LinearProgressIndicator(
+                  value: summary?.weeklyProgress ?? 0,
+                  minHeight: 9,
+                  backgroundColor: Colors.white.withValues(alpha: 0.22),
+                  valueColor:
+                      const AlwaysStoppedAnimation(GridColors.secondary),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                summary == null
+                    ? 'Carregando metas e habitos...'
+                    : 'Sono ${summary.sleepLabel} • Habitos ${summary.habitsDone}/${summary.habitsTotal} • ${summary.points} pontos',
+                style: const TextStyle(color: Color(0xFFEAE3FF), fontSize: 12),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
