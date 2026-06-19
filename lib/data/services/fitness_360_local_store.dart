@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:task_manager_flutter/data/models/saude_diaria_model.dart';
+import 'package:task_manager_flutter/data/services/saude_diaria_caller.dart';
 
 class Fitness360Summary {
   const Fitness360Summary({
@@ -51,6 +53,41 @@ class Fitness360Summary {
     final hours = sleepMinutes ~/ 60;
     final minutes = sleepMinutes % 60;
     return '${hours}h ${minutes.toString().padLeft(2, '0')}m';
+  }
+
+  /// Converte um [ResumoSaudeDiaria] da API REAL em [Fitness360Summary],
+  /// reaproveitando as MESMAS fórmulas derivadas do store local.
+  ///
+  /// - steps/trainingMinutes/heartRate/sleepMinutes/weightKg vêm da API
+  ///   (com fallback para os campos opcionais que podem vir null).
+  /// - spo2, stress, habits, points, weeklyProgress, scores e syncSource seguem
+  ///   a mesma lógica/fallback de [Fitness360LocalStore.summary]. O tamanho do
+  ///   histórico semanal substitui a "quantidade de registros" como base das
+  ///   derivações que dependiam dela.
+  factory Fitness360Summary.fromApi(ResumoSaudeDiaria r) {
+    final dias = r.historicoSemanal.length;
+    return Fitness360Summary(
+      steps: r.passos,
+      trainingMinutes: r.treinoMinutos,
+      heartRate: r.batimentos ?? 72,
+      sleepMinutes: r.sonoMinutos,
+      weightKg: r.pesoKg ?? 76.4,
+      habitsDone: 0,
+      habitsTotal: 6,
+      weeklyProgress: (dias / 7).clamp(0.0, 1.0),
+      points: 120 + (dias * 20),
+      sleepScore: (74 + dias * 3).clamp(0, 100),
+      cardioScore: (68 + dias * 2).clamp(0, 100),
+      bodyScore: (72 + dias * 2).clamp(0, 100),
+      activeCalories: 286 + dias * 42,
+      distanceKm: 5.6 + dias * 0.4,
+      spo2: 97,
+      stress: 31,
+      readiness: 70,
+      weightGoalKg: r.pesoMetaKg ?? 74,
+      lastSyncAt: DateTime.now(),
+      syncSource: 'API',
+    );
   }
 }
 
@@ -163,6 +200,43 @@ class Fitness360LocalStore {
       _recordsKey,
       jsonEncode(updated.map((item) => item.toJson()).toList()),
     );
+
+    if (type == 'atividade') {
+      await _sincronizarAtividadeComBackend(value);
+    }
+  }
+
+  /// Extrai "<numero> passos" ou "<numero> min" do texto livre do registro de
+  /// atividade e soma ao resumo diario real no backend (passos/treinoMinutos).
+  /// Falha silenciosa: o registro local ja foi salvo, o backend e um reforco.
+  static final _valorAtividadePattern =
+      RegExp(r'(\d+)\s*(passos?|min(?:utos?)?)', caseSensitive: false);
+
+  static Future<void> _sincronizarAtividadeComBackend(String value) async {
+    final match = _valorAtividadePattern.firstMatch(value);
+    if (match == null) return;
+    final quantidade = int.tryParse(match.group(1) ?? '');
+    if (quantidade == null) return;
+    final unidade = match.group(2)!.toLowerCase();
+
+    final caller = SaudeDiariaCaller();
+    final atual = await caller.fetchResumo() ??
+        ResumoSaudeDiaria(
+          data: DateTime.now(),
+          passos: 0,
+          treinoMinutos: 0,
+          batimentos: null,
+          sonoMinutos: 0,
+          pesoKg: null,
+          pesoMetaKg: null,
+          historicoSemanal: const [],
+        );
+
+    final atualizado = unidade.startsWith('passo')
+        ? atual.copyWith(passos: atual.passos + quantidade)
+        : atual.copyWith(treinoMinutos: atual.treinoMinutos + quantidade);
+
+    await caller.salvarResumo(atualizado);
   }
 
   static Future<List<String>> homeCardOrder() async {
@@ -261,6 +335,12 @@ class Fitness360LocalStore {
   }
 
   static Future<List<int>> weeklySeries(String type) async {
+    if (type == 'atividade') {
+      final apiSeries = await _atividadeSeriesFromBackend();
+      if (apiSeries != null && apiSeries.any((value) => value > 0)) {
+        return apiSeries;
+      }
+    }
     final all = await records(type: type);
     final seed = switch (type) {
       'sono' => [72, 78, 81, 69, 84, 88, 80],
@@ -276,6 +356,23 @@ class Fitness360LocalStore {
             all.where((item) => item.createdAt.weekday == i + 1).length * 5
     ];
   }
+
+  /// Serie real de passos dos ultimos 7 dias via GET /api/fitness/resumo
+  /// (historicoSemanal). Retorna null em falha de rede para cair no mock.
+  static Future<List<int>?> _atividadeSeriesFromBackend() async {
+    final resumo = await SaudeDiariaCaller().fetchResumo();
+    if (resumo == null) return null;
+    final passosPorDia = <String, int>{
+      for (final dia in resumo.historicoSemanal) _chaveData(dia.data): dia.passos,
+    };
+    final hoje = DateTime.now();
+    return [
+      for (var i = 6; i >= 0; i--)
+        passosPorDia[_chaveData(hoje.subtract(Duration(days: i)))] ?? 0,
+    ];
+  }
+
+  static String _chaveData(DateTime d) => '${d.year}-${d.month}-${d.day}';
 
   static Future<List<int>> insightSeries(String type, String range) async {
     final weekly = await weeklySeries(type);

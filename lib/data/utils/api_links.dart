@@ -442,4 +442,8 @@ class ApiLinks {
   static String get allLicencas => '$_baseUrlNew/api/licencas';
   static String licencaStatus(int codApp) => '$_baseUrlNew/api/licencas/status/$codApp';
   static String updateLicenca(int id) => '$_baseUrlNew/api/licencas/$id';
+
+  // Saúde / Fitness (Home Saúde)
+  static String get fitnessResumo => '$_baseUrlNew/api/fitness/resumo';
+  static String get fitnessHistorico => '$_baseUrlNew/api/fitness/historico';
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/customization/dynamic_grid_dynamic_screen.dart';
 import 'package:task_manager_flutter/data/services/fitness_360_local_store.dart';
+import 'package:task_manager_flutter/data/services/saude_diaria_caller.dart';
 import 'package:task_manager_flutter/data/utils/security_matrix.dart';
 import 'package:task_manager_flutter/ui/screens/fitness_personal_screens.dart';
 import 'package:task_manager_flutter/ui/screens/personal_workspace_screen.dart';
@@ -1111,8 +1112,14 @@ class _EnhancedHubState {
   final Set<String> hiddenCards;
 
   static Future<_EnhancedHubState> load() async {
+    // Tenta a API REAL primeiro; em caso de null (offline/erro) cai no store local.
+    final resumoApi = await SaudeDiariaCaller().fetchResumo();
+    final summary = resumoApi != null
+        ? Fitness360Summary.fromApi(resumoApi)
+        : await Fitness360LocalStore.summary();
+
     return _EnhancedHubState(
-      summary: await Fitness360LocalStore.summary(),
+      summary: summary,
       communityOptIn: await Fitness360LocalStore.communityOptIn(),
       cardOrder: await Fitness360LocalStore.homeCardOrder(),
       hiddenCards: await Fitness360LocalStore.hiddenHomeCards(),
