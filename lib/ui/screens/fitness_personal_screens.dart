@@ -4,15 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/exame_registro_model.dart';
+import 'package:task_manager_flutter/data/models/gamificacao_model.dart';
 import 'package:task_manager_flutter/data/models/hidratacao_model.dart';
 import 'package:task_manager_flutter/data/models/lembrete_model.dart';
 import 'package:task_manager_flutter/data/models/medida_corporal_model.dart';
+import 'package:task_manager_flutter/data/models/mural_model.dart';
 import 'package:task_manager_flutter/data/models/saude_diaria_model.dart';
 import 'package:task_manager_flutter/data/services/exame_registro_caller.dart';
 import 'package:task_manager_flutter/data/services/fitness_360_local_store.dart';
+import 'package:task_manager_flutter/data/services/gamificacao_caller.dart';
 import 'package:task_manager_flutter/data/services/hidratacao_caller.dart';
 import 'package:task_manager_flutter/data/services/lembrete_caller.dart';
 import 'package:task_manager_flutter/data/services/medida_corporal_caller.dart';
+import 'package:task_manager_flutter/data/services/mural_caller.dart';
 import 'package:task_manager_flutter/data/services/saude_diaria_caller.dart';
 
 class ExerciciosScreen extends StatelessWidget {
@@ -441,6 +445,8 @@ class ComunidadeScreen extends StatelessWidget {
       extraCards: [
         _CommunityPrivacyCard(),
         _GamificationCard(),
+        _RankingCard(),
+        _MuralCard(),
       ],
       tips: [
         'Dados de saude nao aparecem no mural sem permissao.',
@@ -1818,26 +1824,130 @@ class _IntegrationConsentCardState extends State<_IntegrationConsentCard> {
   }
 }
 
-class _GamificationCard extends StatelessWidget {
+/// Especificacao simples de badge (label + icone), usada para gerar tanto o
+/// fallback mockado quanto os badges reais vindos da API de conquistas.
+class _BadgeSpec {
+  const _BadgeSpec(this.label, this.icon);
+
+  final String label;
+  final IconData icon;
+}
+
+/// Badges mockados usados como fallback quando a API de conquistas falha ou
+/// retorna lista vazia (nao quebrar a UX que ja existia).
+const _badgesFallback = [
+  _BadgeSpec('5 dias', Icons.local_fire_department),
+  _BadgeSpec('10k passos', Icons.directions_walk),
+  _BadgeSpec('Sono bom', Icons.bedtime_outlined),
+];
+
+/// Mapa simples de icone por codigo/nome de conquista. Usa um icone generico
+/// quando o codigo nao e reconhecido (o backend pode evoluir a lista).
+IconData _iconeConquista(String codigo) {
+  final chave = codigo.toLowerCase();
+  if (chave.contains('passo') || chave.contains('caminhada')) {
+    return Icons.directions_walk;
+  }
+  if (chave.contains('sono') || chave.contains('dormir')) {
+    return Icons.bedtime_outlined;
+  }
+  if (chave.contains('streak') || chave.contains('dias') ||
+      chave.contains('sequencia')) {
+    return Icons.local_fire_department;
+  }
+  if (chave.contains('treino') || chave.contains('exercicio')) {
+    return Icons.fitness_center;
+  }
+  return Icons.workspace_premium_outlined;
+}
+
+class _GamificationCard extends StatefulWidget {
   const _GamificationCard();
 
   @override
+  State<_GamificationCard> createState() => _GamificationCardState();
+}
+
+class _GamificationCardState extends State<_GamificationCard> {
+  late Future<List<ConquistaItem>?> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = GamificacaoCaller().fetchConquistas();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const _Panel(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SectionTitle(title: 'Conquistas', trailing: '3 badges'),
-          SizedBox(height: 12),
-          Row(
+    return FutureBuilder<List<ConquistaItem>?>(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const _Panel(
+            child: Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final conquistas = snapshot.data;
+        final obtidas =
+            (conquistas ?? const <ConquistaItem>[])
+                .where((item) => item.obtida)
+                .toList();
+
+        // Fallback gracioso: chamada falhou (null) ou lista vazia -> badges
+        // mockados, mesma UX anterior a integracao.
+        final usaFallback = conquistas == null || obtidas.isEmpty;
+        final badgeSpecs = usaFallback
+            ? _badgesFallback
+            : [
+                for (final item in obtidas)
+                  _BadgeSpec(
+                    item.nome.isNotEmpty ? item.nome : item.codigo,
+                    _iconeConquista(
+                      item.codigo.isNotEmpty ? item.codigo : item.nome,
+                    ),
+                  ),
+              ];
+
+        final contagem = badgeSpecs.length;
+
+        return _Panel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _Badge(label: '5 dias', icon: Icons.local_fire_department),
-              _Badge(label: '10k passos', icon: Icons.directions_walk),
-              _Badge(label: 'Sono bom', icon: Icons.bedtime_outlined),
+              _SectionTitle(
+                title: 'Conquistas',
+                trailing: '$contagem badge${contagem == 1 ? '' : 's'}',
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 4,
+                runSpacing: 8,
+                children: [
+                  for (final spec in badgeSpecs)
+                    SizedBox(
+                      width: 84,
+                      child: Row(
+                        children: [
+                          _Badge(label: spec.label, icon: spec.icon),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -1851,11 +1961,15 @@ class _CommunityPrivacyCard extends StatefulWidget {
 
 class _CommunityPrivacyCardState extends State<_CommunityPrivacyCard> {
   late Future<bool> _future;
+  var _salvando = false;
 
   @override
   void initState() {
     super.initState();
-    _future = Fitness360LocalStore.communityOptIn();
+    // Le preferencialmente do backend (GET perfil); cai no valor local salvo
+    // se a chamada de rede falhar (mesmo padrao de _atividadeSeriesFromBackend
+    // em fitness_360_local_store.dart).
+    _future = Fitness360LocalStore.communityOptInFromBackend();
   }
 
   @override
@@ -1870,10 +1984,16 @@ class _CommunityPrivacyCardState extends State<_CommunityPrivacyCard> {
             children: [
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                secondary: const Icon(
-                  Icons.privacy_tip_outlined,
-                  color: GridColors.primary,
-                ),
+                secondary: _salvando
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(
+                        Icons.privacy_tip_outlined,
+                        color: GridColors.primary,
+                      ),
                 value: enabled,
                 title: Text(
                   enabled
@@ -1889,12 +2009,23 @@ class _CommunityPrivacyCardState extends State<_CommunityPrivacyCard> {
                       ? 'Ranking e desafios ficam visiveis para o aluno.'
                       : 'Desligado por padrao. Ative para liberar desafios e ranking local.',
                 ),
-                onChanged: (value) async {
-                  await Fitness360LocalStore.setCommunityOptIn(value);
-                  setState(() {
-                    _future = Fitness360LocalStore.communityOptIn();
-                  });
-                },
+                onChanged: _salvando
+                    ? null
+                    : (value) async {
+                        setState(() => _salvando = true);
+                        // Tenta salvar no backend primeiro; o helper ja cai
+                        // no SharedPreferences local como fallback/cache em
+                        // qualquer cenario (sucesso ou falha de rede).
+                        await Fitness360LocalStore.setCommunityOptInBackend(
+                          value,
+                        );
+                        if (!mounted) return;
+                        setState(() {
+                          _salvando = false;
+                          _future =
+                              Fitness360LocalStore.communityOptInFromBackend();
+                        });
+                      },
               ),
               const SizedBox(height: 8),
               TextButton.icon(
@@ -1913,6 +2044,358 @@ class _CommunityPrivacyCardState extends State<_CommunityPrivacyCard> {
       },
     );
   }
+}
+
+/// Card de ranking opcional: mostra "Posicao X de Y" e a lista (top 20 +
+/// posicao do usuario, se fora do top). Sem nomes de aluno -- so "Voce" ou
+/// "Usuario #<id>", pois o backend nao expoe nome. Trata loading/erro/vazio.
+class _RankingCard extends StatefulWidget {
+  const _RankingCard();
+
+  @override
+  State<_RankingCard> createState() => _RankingCardState();
+}
+
+class _RankingCardState extends State<_RankingCard> {
+  late Future<List<RankingItem>?> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = GamificacaoCaller().fetchRanking();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<RankingItem>?>(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const _Panel(
+            child: Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final ranking = snapshot.data;
+
+        // Erro de rede (null) ou lista vazia: estado vazio, sem quebrar a
+        // tela.
+        if (ranking == null) {
+          return const _Panel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _SectionTitle(title: 'Ranking', trailing: 'Opt-in'),
+                SizedBox(height: 10),
+                _EmptyState(label: 'Ranking indisponivel no momento.'),
+              ],
+            ),
+          );
+        }
+
+        if (ranking.isEmpty) {
+          return const _Panel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _SectionTitle(title: 'Ranking', trailing: 'Opt-in'),
+                SizedBox(height: 10),
+                _EmptyState(label: 'Nenhum participante ainda.'),
+              ],
+            ),
+          );
+        }
+
+        final ordenado = [...ranking]
+          ..sort((a, b) => a.posicao.compareTo(b.posicao));
+        RankingItem? voce;
+        for (final item in ordenado) {
+          if (item.voce) {
+            voce = item;
+            break;
+          }
+        }
+        final top20 = ordenado.take(20).toList();
+
+        return _Panel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SectionTitle(
+                title: 'Ranking',
+                trailing: voce != null
+                    ? 'Posicao ${voce.posicao} de ${ordenado.length}'
+                    : 'Opt-in',
+              ),
+              const SizedBox(height: 10),
+              for (final item in top20)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 28,
+                        child: Text(
+                          '${item.posicao}.',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: GridColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          item.voce ? 'Voce' : 'Usuario #${item.usuarioId}',
+                          style: TextStyle(
+                            fontWeight:
+                                item.voce ? FontWeight.w900 : FontWeight.w500,
+                            color: item.voce
+                                ? GridColors.primary
+                                : GridColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '${item.pontuacao} pontos',
+                        style: const TextStyle(color: Color(0xFF6D647A)),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Mural simples da comunidade: lista de posts (texto + autor "Voce"/
+/// "Usuario #<id>" + data) e um campo de texto com botao "Postar" (max 280
+/// caracteres, contador). Se o usuario nao tiver opt-in de comunidade, o
+/// campo de postar fica desabilitado com mensagem explicativa.
+class _MuralCard extends StatefulWidget {
+  const _MuralCard();
+
+  @override
+  State<_MuralCard> createState() => _MuralCardState();
+}
+
+class _MuralCardState extends State<_MuralCard> {
+  static const _maxChars = 280;
+
+  late Future<_MuralCardData> _future;
+  final _controller = TextEditingController();
+  var _postando = false;
+  String? _erro;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _carregar();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<_MuralCardData> _carregar() async {
+    final optIn = await Fitness360LocalStore.communityOptInFromBackend();
+    final posts = await MuralCaller().fetchPosts();
+    return _MuralCardData(
+      comunidadeOptIn: optIn,
+      posts: posts,
+    );
+  }
+
+  void _reload() {
+    setState(() {
+      _future = _carregar();
+    });
+  }
+
+  Future<void> _postar() async {
+    final conteudo = _controller.text.trim();
+    if (conteudo.isEmpty || conteudo.length > _maxChars) return;
+
+    setState(() {
+      _postando = true;
+      _erro = null;
+    });
+
+    final criado = await MuralCaller().criarPost(conteudo);
+
+    if (!mounted) return;
+    setState(() => _postando = false);
+
+    if (criado != null) {
+      _controller.clear();
+      _reload();
+    } else {
+      setState(() => _erro = 'Nao foi possivel publicar agora. Tente novamente.');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<_MuralCardData>(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const _Panel(
+            child: Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final data = snapshot.data ??
+            const _MuralCardData(comunidadeOptIn: false, posts: null);
+        final posts = data.posts;
+        final podePostar = data.comunidadeOptIn;
+        final caracteresRestantes = _maxChars - _controller.text.length;
+
+        return _Panel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _SectionTitle(title: 'Mural da comunidade', trailing: 'Opt-in'),
+              const SizedBox(height: 10),
+              if (posts == null)
+                const _EmptyState(label: 'Mural indisponivel no momento.')
+              else if (posts.isEmpty)
+                const _EmptyState(label: 'Nenhum post ainda. Seja o primeiro!')
+              else
+                for (final post in posts)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              post.voce ? 'Voce' : 'Usuario #${post.usuarioId}',
+                              style: TextStyle(
+                                fontWeight: post.voce
+                                    ? FontWeight.w900
+                                    : FontWeight.w700,
+                                color: post.voce
+                                    ? GridColors.primary
+                                    : GridColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _formatarDataHora(post.criadoEm),
+                              style: const TextStyle(
+                                color: Color(0xFF6D647A),
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(post.conteudo),
+                      ],
+                    ),
+                  ),
+              const Divider(height: 20),
+              if (!podePostar)
+                const Text(
+                  'Ative a participacao na comunidade para poder postar no mural.',
+                  style: TextStyle(color: Color(0xFF6D647A), fontSize: 12),
+                )
+              else ...[
+                TextField(
+                  controller: _controller,
+                  enabled: !_postando,
+                  maxLength: _maxChars,
+                  maxLines: 3,
+                  onChanged: (_) => setState(() {}),
+                  decoration: const InputDecoration(
+                    hintText: 'Compartilhe algo com a comunidade...',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                if (_erro != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      _erro!,
+                      style: const TextStyle(color: Colors.red, fontSize: 12),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Text(
+                      '$caracteresRestantes caracteres restantes',
+                      style: const TextStyle(
+                        color: Color(0xFF6D647A),
+                        fontSize: 12,
+                      ),
+                    ),
+                    const Spacer(),
+                    ElevatedButton.icon(
+                      onPressed: (_postando || _controller.text.trim().isEmpty)
+                          ? null
+                          : _postar,
+                      icon: _postando
+                          ? const SizedBox(
+                              height: 14,
+                              width: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.send_outlined, size: 18),
+                      label: const Text('Postar'),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _MuralCardData {
+  const _MuralCardData({
+    required this.comunidadeOptIn,
+    required this.posts,
+  });
+
+  final bool comunidadeOptIn;
+  final List<MuralPost>? posts;
+}
+
+/// Formata data+hora como DD/MM HH:MM.
+String _formatarDataHora(DateTime d) {
+  final dia = d.day.toString().padLeft(2, '0');
+  final mes = d.month.toString().padLeft(2, '0');
+  final hora = d.hour.toString().padLeft(2, '0');
+  final minuto = d.minute.toString().padLeft(2, '0');
+  return '$dia/$mes $hora:$minuto';
 }
 
 class _TipsCard extends StatelessWidget {

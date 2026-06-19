@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/models/saude_diaria_model.dart';
+import 'package:task_manager_flutter/data/services/gamificacao_caller.dart';
 import 'package:task_manager_flutter/data/services/saude_diaria_caller.dart';
 
 class Fitness360Summary {
@@ -297,6 +298,37 @@ class Fitness360LocalStore {
   static Future<void> setCommunityOptIn(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_communityOptInKey, enabled);
+  }
+
+  /// Le o opt-in de comunidade preferencialmente do backend (GET perfil de
+  /// gamificacao). Em caso de falha de rede, cai no valor salvo localmente
+  /// (mesmo padrao de [_atividadeSeriesFromBackend]).
+  static Future<bool> communityOptInFromBackend() async {
+    final perfil = await GamificacaoCaller().fetchPerfil();
+    if (perfil != null) {
+      // Mantem o cache local consistente com o backend.
+      await setCommunityOptIn(perfil.comunidadeOptIn);
+      return perfil.comunidadeOptIn;
+    }
+    return communityOptIn();
+  }
+
+  /// Atualiza o opt-in de comunidade no backend via PUT. So atualiza o cache
+  /// local se a chamada de rede tiver sucesso; em falha, mantem o valor local
+  /// anterior como fallback (nao perde a intencao do usuario, mas evita
+  /// divergencia silenciosa do servidor).
+  static Future<bool> setCommunityOptInBackend(bool enabled) async {
+    final perfil = await GamificacaoCaller().atualizarOptIns(
+      comunidadeOptIn: enabled,
+    );
+    if (perfil != null) {
+      await setCommunityOptIn(perfil.comunidadeOptIn);
+      return true;
+    }
+    // Falha de rede: mantem o local como fallback (padrao do projeto), mas
+    // ainda assim aplica a intencao do usuario localmente.
+    await setCommunityOptIn(enabled);
+    return false;
   }
 
   static Future<Fitness360Summary> summary() async {

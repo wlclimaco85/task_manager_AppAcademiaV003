@@ -454,4 +454,14 @@ class ApiLinks {
       '$_baseUrlNew/api/hidratacao/resumo';
   static String get fitnessHidratacaoRegistros =>
       '$_baseUrlNew/api/hidratacao/registros';
+
+  // Gamificação / Mural (Comunidade)
+  static String get fitnessGamificacaoPerfil =>
+      '$_baseUrlNew/api/fitness/gamificacao/perfil';
+  static String get fitnessGamificacaoConquistas =>
+      '$_baseUrlNew/api/fitness/gamificacao/conquistas';
+  static String get fitnessGamificacaoRanking =>
+      '$_baseUrlNew/api/fitness/gamificacao/ranking';
+  static String get fitnessMuralPosts =>
+      '$_baseUrlNew/api/fitness/mural/posts';
 }
