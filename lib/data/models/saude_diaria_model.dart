@@ -14,6 +14,7 @@ class ResumoSaudeDiaria {
   final int sonoMinutos;
   final double? pesoKg;
   final double? pesoMetaKg;
+  final int? alturaCm;
   final List<DiaResumoSaude> historicoSemanal;
 
   const ResumoSaudeDiaria({
@@ -24,10 +25,15 @@ class ResumoSaudeDiaria {
     required this.sonoMinutos,
     required this.pesoKg,
     required this.pesoMetaKg,
+    this.alturaCm,
     required this.historicoSemanal,
   });
 
-  ResumoSaudeDiaria copyWith({int? passos, int? treinoMinutos}) {
+  ResumoSaudeDiaria copyWith({
+    int? passos,
+    int? treinoMinutos,
+    int? alturaCm,
+  }) {
     return ResumoSaudeDiaria(
       data: data,
       passos: passos ?? this.passos,
@@ -36,6 +42,7 @@ class ResumoSaudeDiaria {
       sonoMinutos: sonoMinutos,
       pesoKg: pesoKg,
       pesoMetaKg: pesoMetaKg,
+      alturaCm: alturaCm ?? this.alturaCm,
       historicoSemanal: historicoSemanal,
     );
   }
@@ -64,6 +71,7 @@ class ResumoSaudeDiaria {
       sonoMinutos: _toInt(map['sonoMinutos']) ?? 0,
       pesoKg: _toDouble(map['pesoKg']),
       pesoMetaKg: _toDouble(map['pesoMetaKg']),
+      alturaCm: _toInt(map['alturaCm']),
       historicoSemanal: historico,
     );
   }
@@ -85,12 +93,16 @@ class DiaResumoSaude {
   final int passos;
   final int treinoMinutos;
   final int sonoMinutos;
+  final double? pesoKg;
+  final int? alturaCm;
 
   const DiaResumoSaude({
     required this.data,
     required this.passos,
     required this.treinoMinutos,
     required this.sonoMinutos,
+    this.pesoKg,
+    this.alturaCm,
   });
 
   factory DiaResumoSaude.fromJson(Map<String, dynamic> json) {
@@ -99,6 +111,8 @@ class DiaResumoSaude {
       passos: _toInt(json['passos']) ?? 0,
       treinoMinutos: _toInt(json['treinoMinutos']) ?? 0,
       sonoMinutos: _toInt(json['sonoMinutos']) ?? 0,
+      pesoKg: _toDouble(json['pesoKg']),
+      alturaCm: _toInt(json['alturaCm']),
     );
   }
 }

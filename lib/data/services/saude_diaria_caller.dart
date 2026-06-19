@@ -43,6 +43,7 @@ class SaudeDiariaCaller {
         'sonoMinutos': resumo.sonoMinutos,
         'pesoKg': resumo.pesoKg,
         'pesoMetaKg': resumo.pesoMetaKg,
+        'alturaCm': resumo.alturaCm,
       };
 
       final NetworkResponse response =

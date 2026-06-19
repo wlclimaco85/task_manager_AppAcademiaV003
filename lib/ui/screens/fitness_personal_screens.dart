@@ -3,7 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
+import 'package:task_manager_flutter/data/models/exame_registro_model.dart';
+import 'package:task_manager_flutter/data/models/medida_corporal_model.dart';
+import 'package:task_manager_flutter/data/models/saude_diaria_model.dart';
+import 'package:task_manager_flutter/data/services/exame_registro_caller.dart';
 import 'package:task_manager_flutter/data/services/fitness_360_local_store.dart';
+import 'package:task_manager_flutter/data/services/medida_corporal_caller.dart';
+import 'package:task_manager_flutter/data/services/saude_diaria_caller.dart';
 
 class ExerciciosScreen extends StatelessWidget {
   const ExerciciosScreen({super.key});
@@ -130,36 +136,160 @@ class BatimentosScreen extends StatelessWidget {
   }
 }
 
-class CorpoScreen extends StatelessWidget {
+/// Tela "Corpo e Exames". Busca dados reais (resumo de saude, medidas
+/// corporais e exames) ANTES de montar o [FitnessRecordScreen] generico, para
+/// nao alterar a API publica do widget reutilizado por [MetasScreen] e
+/// outras telas.
+class CorpoScreen extends StatefulWidget {
   const CorpoScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const FitnessRecordScreen(
-      type: 'corpo',
-      title: 'Corpo e Exames',
-      subtitle: 'Peso, IMC, composicao corporal, medidas e exames',
-      icon: Icons.scale_outlined,
-      primaryActionLabel: 'Registrar medida',
-      emptyLabel: 'Nenhuma medida corporal registrada.',
-      defaultTitle: 'Peso',
-      defaultValue: '76,4 kg',
-      defaultNote: 'IMC, gordura, musculo ou observacao de exame',
-      metricCards: [
-        FitnessMetricSpec('IMC', '23,8', Icons.analytics_outlined),
-        FitnessMetricSpec('Gordura', '18%', Icons.pie_chart_outline),
-        FitnessMetricSpec('Musculo', '34,2 kg', Icons.accessibility_new),
-        FitnessMetricSpec('Agua', '57%', Icons.water_drop_outlined),
-      ],
-      extraCards: [
-        _BodyCompositionCard(),
-      ],
-      tips: [
-        'Acompanhe tendencia, nao apenas uma medida isolada.',
-        'Exames podem ser ligados ao historico de evolucao do aluno.',
-      ],
+  State<CorpoScreen> createState() => _CorpoScreenState();
+}
+
+class _CorpoScreenData {
+  const _CorpoScreenData({
+    required this.resumo,
+    required this.medidas,
+    required this.exames,
+  });
+
+  final ResumoSaudeDiaria? resumo;
+  final List<MedidaCorporal> medidas;
+  final List<ExameRegistro> exames;
+}
+
+class _CorpoScreenState extends State<CorpoScreen> {
+  late Future<_CorpoScreenData> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _carregar();
+  }
+
+  Future<_CorpoScreenData> _carregar() async {
+    final resumo = await SaudeDiariaCaller().fetchResumo();
+    final medidas = await MedidaCorporalCaller().fetchMedidas();
+    final exames = await ExameRegistroCaller().fetchExames();
+    return _CorpoScreenData(
+      resumo: resumo,
+      // Fallback gracioso: sem mock previo para medida/exame -> lista vazia
+      // (nao inventar dado clinico ficticio).
+      medidas: medidas ?? const <MedidaCorporal>[],
+      exames: exames ?? const <ExameRegistro>[],
     );
   }
+
+  void _reload() {
+    setState(() {
+      _future = _carregar();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<_CorpoScreenData>(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            backgroundColor: GridColors.filterBackground,
+            appBar: AppBar(
+              title: const Text('Corpo e Exames'),
+              backgroundColor: GridColors.filterBackground,
+              foregroundColor: GridColors.textSecondary,
+              elevation: 0,
+            ),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final data = snapshot.data ??
+            const _CorpoScreenData(
+              resumo: null,
+              medidas: <MedidaCorporal>[],
+              exames: <ExameRegistro>[],
+            );
+
+        final pesoKg = data.resumo?.pesoKg;
+        final alturaCm = data.resumo?.alturaCm;
+        final imc = _calcularImc(pesoKg, alturaCm);
+        final ultimaMedida = data.medidas.isEmpty ? null : data.medidas.first;
+
+        return FitnessRecordScreen(
+          type: 'corpo',
+          title: 'Corpo e Exames',
+          subtitle: 'Peso, IMC, composicao corporal, medidas e exames',
+          icon: Icons.scale_outlined,
+          primaryActionLabel: 'Registrar medida',
+          emptyLabel: 'Nenhuma medida corporal registrada.',
+          defaultTitle: 'Peso',
+          defaultValue:
+              pesoKg != null ? '${_formatarNumero(pesoKg)} kg' : '--',
+          defaultNote: 'IMC, gordura, musculo ou observacao de exame',
+          metricCards: [
+            FitnessMetricSpec(
+              'IMC',
+              imc != null ? _formatarNumero(imc) : '--',
+              Icons.analytics_outlined,
+            ),
+            FitnessMetricSpec(
+              'Gordura',
+              ultimaMedida?.percentualGordura != null
+                  ? '${_formatarNumero(ultimaMedida!.percentualGordura!)}%'
+                  : '--',
+              Icons.pie_chart_outline,
+            ),
+            FitnessMetricSpec(
+              'Musculo',
+              ultimaMedida?.percentualMassaMuscular != null
+                  ? '${_formatarNumero(ultimaMedida!.percentualMassaMuscular!)}%'
+                  : '--',
+              Icons.accessibility_new,
+            ),
+            FitnessMetricSpec(
+              'Agua',
+              ultimaMedida?.percentualAgua != null
+                  ? '${_formatarNumero(ultimaMedida!.percentualAgua!)}%'
+                  : '--',
+              Icons.water_drop_outlined,
+            ),
+          ],
+          extraCards: [
+            _BodyCompositionCard(medida: ultimaMedida, pesoKg: pesoKg),
+            _CorpoActionsCard(
+              resumo: data.resumo,
+              onAlturaSalva: _reload,
+              onMedidaRegistrada: _reload,
+              onExameRegistrado: _reload,
+            ),
+            _CorpoTimelineCard(
+              historico: data.resumo?.historicoSemanal ?? const [],
+              medidas: data.medidas,
+              exames: data.exames,
+            ),
+          ],
+          tips: const [
+            'Acompanhe tendencia, nao apenas uma medida isolada.',
+            'Exames podem ser ligados ao historico de evolucao do aluno.',
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// Calcula o IMC no client: peso / (altura_m)^2. Retorna null se peso ou
+/// altura nao estiverem disponiveis (nunca um valor ficticio).
+double? _calcularImc(double? pesoKg, int? alturaCm) {
+  if (pesoKg == null || alturaCm == null || alturaCm <= 0) return null;
+  final alturaM = alturaCm / 100;
+  return pesoKg / (alturaM * alturaM);
+}
+
+String _formatarNumero(double value) {
+  return value.toStringAsFixed(1).replaceAll('.', ',');
 }
 
 class MetasScreen extends StatelessWidget {
@@ -918,19 +1048,463 @@ class _HeartZonesCard extends StatelessWidget {
 }
 
 class _BodyCompositionCard extends StatelessWidget {
-  const _BodyCompositionCard();
+  const _BodyCompositionCard({this.medida, this.pesoKg});
+
+  final MedidaCorporal? medida;
+  final double? pesoKg;
 
   @override
   Widget build(BuildContext context) {
-    return const _Panel(
+    final gordura = medida?.percentualGordura;
+    final massaMuscular = medida?.percentualMassaMuscular;
+
+    return _Panel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SectionTitle(title: 'Composicao corporal', trailing: 'Meta 74 kg'),
-          SizedBox(height: 12),
-          _ProgressRow(label: 'Peso', value: '76,4 kg', progress: 0.72),
-          _ProgressRow(label: 'Gordura', value: '18%', progress: 0.42),
-          _ProgressRow(label: 'Musculo', value: '34,2 kg', progress: 0.68),
+          const _SectionTitle(title: 'Composicao corporal', trailing: ''),
+          const SizedBox(height: 12),
+          _ProgressRow(
+            label: 'Peso',
+            value: pesoKg != null ? '${_formatarNumero(pesoKg!)} kg' : '--',
+            progress: pesoKg != null ? (pesoKg! / 120).clamp(0.0, 1.0) : 0,
+          ),
+          _ProgressRow(
+            label: 'Gordura',
+            value: gordura != null ? '${_formatarNumero(gordura)}%' : '--',
+            progress: gordura != null ? (gordura / 100).clamp(0.0, 1.0) : 0,
+          ),
+          _ProgressRow(
+            label: 'Musculo',
+            value: massaMuscular != null
+                ? '${_formatarNumero(massaMuscular)}%'
+                : '--',
+            progress: massaMuscular != null
+                ? (massaMuscular / 100).clamp(0.0, 1.0)
+                : 0,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Card de acoes do CorpoScreen: input de altura (uma vez/pre-populado),
+/// registrar medida corporal e registrar exame.
+class _CorpoActionsCard extends StatefulWidget {
+  const _CorpoActionsCard({
+    required this.resumo,
+    required this.onAlturaSalva,
+    required this.onMedidaRegistrada,
+    required this.onExameRegistrado,
+  });
+
+  final ResumoSaudeDiaria? resumo;
+  final VoidCallback onAlturaSalva;
+  final VoidCallback onMedidaRegistrada;
+  final VoidCallback onExameRegistrado;
+
+  @override
+  State<_CorpoActionsCard> createState() => _CorpoActionsCardState();
+}
+
+class _CorpoActionsCardState extends State<_CorpoActionsCard> {
+  @override
+  Widget build(BuildContext context) {
+    return _Panel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SectionTitle(title: 'Registros', trailing: ''),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              OutlinedButton.icon(
+                onPressed: _showAlturaSheet,
+                icon: const Icon(Icons.height),
+                label: Text(
+                  widget.resumo?.alturaCm != null
+                      ? 'Altura: ${widget.resumo!.alturaCm} cm'
+                      : 'Informar altura',
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: _showMedidaSheet,
+                icon: const Icon(Icons.straighten),
+                label: const Text('Registrar medida'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _showExameSheet,
+                icon: const Icon(Icons.assignment_outlined),
+                label: const Text('Registrar exame'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showAlturaSheet() async {
+    final controller = TextEditingController(
+      text: widget.resumo?.alturaCm?.toString() ?? '',
+    );
+
+    final saved = await _showBottomSheet(
+      context: context,
+      title: 'Informar altura',
+      child: _TextField(controller: controller, label: 'Altura (cm)'),
+      onSave: () async {
+        final alturaCm = int.tryParse(controller.text.trim());
+        if (alturaCm == null) return false;
+        final base = widget.resumo ??
+            ResumoSaudeDiaria(
+              data: DateTime.now(),
+              passos: 0,
+              treinoMinutos: 0,
+              batimentos: null,
+              sonoMinutos: 0,
+              pesoKg: null,
+              pesoMetaKg: null,
+              historicoSemanal: const [],
+            );
+        final atualizado = base.copyWith(alturaCm: alturaCm);
+        final resultado =
+            await SaudeDiariaCaller().salvarResumo(atualizado);
+        return resultado != null;
+      },
+    );
+
+    controller.dispose();
+    if (saved == true) widget.onAlturaSalva();
+  }
+
+  Future<void> _showMedidaSheet() async {
+    final gordura = TextEditingController();
+    final massaMuscular = TextEditingController();
+    final agua = TextEditingController();
+    final braco = TextEditingController();
+    final cintura = TextEditingController();
+    final quadril = TextEditingController();
+
+    final saved = await _showBottomSheet(
+      context: context,
+      title: 'Registrar medida corporal',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _TextField(controller: gordura, label: '% Gordura'),
+          const SizedBox(height: 12),
+          _TextField(controller: massaMuscular, label: '% Massa muscular'),
+          const SizedBox(height: 12),
+          _TextField(controller: agua, label: '% Agua'),
+          const SizedBox(height: 12),
+          _TextField(controller: braco, label: 'Braco (cm)'),
+          const SizedBox(height: 12),
+          _TextField(controller: cintura, label: 'Cintura (cm)'),
+          const SizedBox(height: 12),
+          _TextField(controller: quadril, label: 'Quadril (cm)'),
+        ],
+      ),
+      onSave: () async {
+        final circunferencias = <String, double>{};
+        final bracoVal = _parseDouble(braco.text);
+        final cinturaVal = _parseDouble(cintura.text);
+        final quadrilVal = _parseDouble(quadril.text);
+        if (bracoVal != null) circunferencias['braco'] = bracoVal;
+        if (cinturaVal != null) circunferencias['cintura'] = cinturaVal;
+        if (quadrilVal != null) circunferencias['quadril'] = quadrilVal;
+
+        final medida = MedidaCorporal(
+          data: DateTime.now(),
+          percentualGordura: _parseDouble(gordura.text),
+          percentualMassaMuscular: _parseDouble(massaMuscular.text),
+          percentualAgua: _parseDouble(agua.text),
+          circunferencias: circunferencias,
+        );
+        final resultado =
+            await MedidaCorporalCaller().registrarMedida(medida);
+        return resultado != null;
+      },
+    );
+
+    gordura.dispose();
+    massaMuscular.dispose();
+    agua.dispose();
+    braco.dispose();
+    cintura.dispose();
+    quadril.dispose();
+
+    if (saved == true) widget.onMedidaRegistrada();
+  }
+
+  Future<void> _showExameSheet() async {
+    final nomeExame = TextEditingController();
+    final observacao = TextEditingController();
+
+    final saved = await _showBottomSheet(
+      context: context,
+      title: 'Registrar exame',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _TextField(controller: nomeExame, label: 'Nome do exame'),
+          const SizedBox(height: 12),
+          _TextField(controller: observacao, label: 'Observacao (opcional)'),
+        ],
+      ),
+      onSave: () async {
+        final nome = nomeExame.text.trim();
+        if (nome.isEmpty) return false;
+        final exame = ExameRegistro(
+          data: DateTime.now(),
+          nomeExame: nome,
+          observacao:
+              observacao.text.trim().isEmpty ? null : observacao.text.trim(),
+        );
+        final resultado = await ExameRegistroCaller().registrarExame(exame);
+        return resultado != null;
+      },
+    );
+
+    nomeExame.dispose();
+    observacao.dispose();
+
+    if (saved == true) widget.onExameRegistrado();
+  }
+
+  double? _parseDouble(String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return null;
+    return double.tryParse(trimmed.replaceAll(',', '.'));
+  }
+}
+
+/// Bottom sheet generico de registro, usado pelos 3 fluxos do
+/// [_CorpoActionsCard] (altura, medida, exame), reaproveitando o mesmo
+/// padrao visual do `_showRecordSheet` do [FitnessRecordScreen].
+Future<bool?> _showBottomSheet({
+  required BuildContext context,
+  required String title,
+  required Widget child,
+  required Future<bool> Function() onSave,
+}) {
+  return showModalBottomSheet<bool>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) {
+      var salvando = false;
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.viewInsetsOf(context).bottom,
+            ),
+            child: DecoratedBox(
+              decoration: const BoxDecoration(
+                color: GridColors.card,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          color: GridColors.textSecondary,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      child,
+                      const SizedBox(height: 18),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: GridColors.secondary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          onPressed: salvando
+                              ? null
+                              : () async {
+                                  setState(() => salvando = true);
+                                  final ok = await onSave();
+                                  if (context.mounted) {
+                                    Navigator.pop(context, ok);
+                                  }
+                                },
+                          child: salvando
+                              ? const SizedBox(
+                                  height: 18,
+                                  width: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text('Salvar'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
+/// Evento generico da linha do tempo do CorpoScreen (peso/medida/exame).
+class _TimelineEvent {
+  const _TimelineEvent({
+    required this.data,
+    required this.tipo,
+    required this.titulo,
+    required this.detalhe,
+    required this.icon,
+  });
+
+  final DateTime data;
+  final String tipo;
+  final String titulo;
+  final String detalhe;
+  final IconData icon;
+}
+
+/// Linha do tempo unificada: combina historico de peso/altura, medidas
+/// corporais e exames numa lista ordenada por data desc. Sem grafico
+/// (fl_chart fora desta entrega minima, por decisao explicita do plano).
+class _CorpoTimelineCard extends StatelessWidget {
+  const _CorpoTimelineCard({
+    required this.historico,
+    required this.medidas,
+    required this.exames,
+  });
+
+  final List<DiaResumoSaude> historico;
+  final List<MedidaCorporal> medidas;
+  final List<ExameRegistro> exames;
+
+  @override
+  Widget build(BuildContext context) {
+    final eventos = <_TimelineEvent>[
+      for (final dia in historico)
+        if (dia.pesoKg != null)
+          _TimelineEvent(
+            data: dia.data,
+            tipo: 'peso',
+            titulo: 'Peso',
+            detalhe: '${_formatarNumero(dia.pesoKg!)} kg',
+            icon: Icons.scale_outlined,
+          ),
+      for (final medida in medidas)
+        _TimelineEvent(
+          data: medida.data,
+          tipo: 'medida',
+          titulo: 'Medida corporal',
+          detalhe: _detalheMedida(medida),
+          icon: Icons.straighten,
+        ),
+      for (final exame in exames)
+        _TimelineEvent(
+          data: exame.data,
+          tipo: 'exame',
+          titulo: exame.nomeExame,
+          detalhe: exame.observacao ?? 'Exame registrado',
+          icon: Icons.assignment_outlined,
+        ),
+    ]..sort((a, b) => b.data.compareTo(a.data));
+
+    return _Panel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionTitle(
+            title: 'Linha do tempo',
+            trailing: '${eventos.length} evento(s)',
+          ),
+          const SizedBox(height: 10),
+          if (eventos.isEmpty)
+            const _EmptyState(label: 'Nenhum evento registrado ainda.')
+          else
+            for (final evento in eventos) _TimelineTile(evento: evento),
+        ],
+      ),
+    );
+  }
+
+  String _detalheMedida(MedidaCorporal medida) {
+    final partes = <String>[];
+    if (medida.percentualGordura != null) {
+      partes.add('Gordura ${_formatarNumero(medida.percentualGordura!)}%');
+    }
+    if (medida.percentualMassaMuscular != null) {
+      partes.add(
+        'Musculo ${_formatarNumero(medida.percentualMassaMuscular!)}%',
+      );
+    }
+    if (medida.percentualAgua != null) {
+      partes.add('Agua ${_formatarNumero(medida.percentualAgua!)}%');
+    }
+    if (partes.isEmpty) return 'Medida registrada';
+    return partes.join(' - ');
+  }
+}
+
+class _TimelineTile extends StatelessWidget {
+  const _TimelineTile({required this.evento});
+
+  final _TimelineEvent evento;
+
+  @override
+  Widget build(BuildContext context) {
+    final date = DateFormat('dd/MM/yyyy').format(evento.data);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            backgroundColor: GridColors.filterBackground,
+            child: Icon(evento.icon, color: GridColors.primary, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  evento.titulo,
+                  style: const TextStyle(
+                    color: GridColors.textSecondary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  evento.detalhe,
+                  style: const TextStyle(color: Color(0xFF6D647A)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            date,
+            style: const TextStyle(color: Color(0xFF6D647A), fontSize: 11),
+          ),
         ],
       ),
     );
