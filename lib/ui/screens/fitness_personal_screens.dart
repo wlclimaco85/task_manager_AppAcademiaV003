@@ -4,10 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/exame_registro_model.dart';
+import 'package:task_manager_flutter/data/models/hidratacao_model.dart';
+import 'package:task_manager_flutter/data/models/lembrete_model.dart';
 import 'package:task_manager_flutter/data/models/medida_corporal_model.dart';
 import 'package:task_manager_flutter/data/models/saude_diaria_model.dart';
 import 'package:task_manager_flutter/data/services/exame_registro_caller.dart';
 import 'package:task_manager_flutter/data/services/fitness_360_local_store.dart';
+import 'package:task_manager_flutter/data/services/hidratacao_caller.dart';
+import 'package:task_manager_flutter/data/services/lembrete_caller.dart';
 import 'package:task_manager_flutter/data/services/medida_corporal_caller.dart';
 import 'package:task_manager_flutter/data/services/saude_diaria_caller.dart';
 
@@ -70,37 +74,125 @@ class AtividadeScreen extends StatelessWidget {
   }
 }
 
-class SonoScreen extends StatelessWidget {
+/// Tela "Sono e Habitos". Busca dados reais (resumo de saude para o sono e
+/// lembretes ativos) ANTES de montar o [FitnessRecordScreen] generico, para
+/// nao alterar a API publica do widget reutilizado por [MetasScreen] e
+/// outras telas. Segue o mesmo padrao de [CorpoScreen].
+class SonoScreen extends StatefulWidget {
   const SonoScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const FitnessRecordScreen(
-      type: 'sono',
-      title: 'Sono e Habitos',
-      subtitle: 'Score, fases do sono, check-in e agenda de recuperacao',
-      icon: Icons.bedtime_outlined,
-      primaryActionLabel: 'Registrar sono',
-      emptyLabel: 'Nenhum registro de sono ainda.',
-      defaultTitle: 'Sono principal',
-      defaultValue: '7h 30m',
-      defaultNote: 'Qualidade, despertares e recuperacao',
-      metricCards: [
-        FitnessMetricSpec('Score', '84/100', Icons.stars_outlined),
-        FitnessMetricSpec('Profundo', '2h 04m', Icons.nightlight_round),
-        FitnessMetricSpec('Leve', '4h 32m', Icons.bed_outlined),
-        FitnessMetricSpec('Acordado', '42 min', Icons.wb_twilight_outlined),
-      ],
-      extraCards: [
-        _SleepPhasesCard(),
-        _HabitReminderCard(),
-      ],
-      tips: [
-        'Manter horario regular tende a melhorar o score.',
-        'Evite treino pesado perto do horario de dormir.',
-      ],
+  State<SonoScreen> createState() => _SonoScreenState();
+}
+
+class _SonoScreenData {
+  const _SonoScreenData({
+    required this.resumo,
+    required this.lembretes,
+  });
+
+  final ResumoSaudeDiaria? resumo;
+  final List<Lembrete> lembretes;
+}
+
+class _SonoScreenState extends State<SonoScreen> {
+  late Future<_SonoScreenData> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _carregar();
+  }
+
+  Future<_SonoScreenData> _carregar() async {
+    final resumo = await SaudeDiariaCaller().fetchResumo();
+    final lembretes = await LembreteCaller().fetchLembretes(ativo: true);
+    return _SonoScreenData(
+      resumo: resumo,
+      // Fallback gracioso: sem lembrete real -> lista vazia (nao inventar
+      // lembrete ficticio).
+      lembretes: lembretes ?? const <Lembrete>[],
     );
   }
+
+  void _reload() {
+    setState(() {
+      _future = _carregar();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<_SonoScreenData>(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            backgroundColor: GridColors.filterBackground,
+            appBar: AppBar(
+              title: const Text('Sono e Habitos'),
+              backgroundColor: GridColors.filterBackground,
+              foregroundColor: GridColors.textSecondary,
+              elevation: 0,
+            ),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final data = snapshot.data ??
+            const _SonoScreenData(resumo: null, lembretes: <Lembrete>[]);
+
+        final sonoMinutos = data.resumo?.sonoMinutos;
+        // Fallback gracioso para o mock se a API falhar ou sonoMinutos
+        // vier 0/null.
+        final sonoLabel = (sonoMinutos != null && sonoMinutos > 0)
+            ? _formatarMinutos(sonoMinutos)
+            : '7h 30m';
+
+        final lembretesOrdenados = [...data.lembretes]
+          ..sort((a, b) => (a.horario ?? '99:99').compareTo(
+                b.horario ?? '99:99',
+              ));
+
+        return FitnessRecordScreen(
+          type: 'sono',
+          title: 'Sono e Habitos',
+          subtitle: 'Score, fases do sono, check-in e agenda de recuperacao',
+          icon: Icons.bedtime_outlined,
+          primaryActionLabel: 'Registrar sono',
+          emptyLabel: 'Nenhum registro de sono ainda.',
+          defaultTitle: 'Sono principal',
+          defaultValue: sonoLabel,
+          defaultNote: 'Qualidade, despertares e recuperacao',
+          metricCards: const [
+            FitnessMetricSpec('Score', '84/100', Icons.stars_outlined),
+            FitnessMetricSpec('Profundo', '2h 04m', Icons.nightlight_round),
+            FitnessMetricSpec('Leve', '4h 32m', Icons.bed_outlined),
+            FitnessMetricSpec('Acordado', '42 min', Icons.wb_twilight_outlined),
+          ],
+          extraCards: [
+            _SleepPhasesCard(sonoMinutosTotal: sonoMinutos),
+            _HabitReminderCard(
+              lembretes: lembretesOrdenados,
+              onLembreteConcluido: _reload,
+            ),
+            const _HidratacaoCard(),
+          ],
+          tips: const [
+            'Manter horario regular tende a melhorar o score.',
+            'Evite treino pesado perto do horario de dormir.',
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// Formata minutos totais como "Xh Ym" (ex: 450 -> "7h 30m").
+String _formatarMinutos(int minutos) {
+  final horas = minutos ~/ 60;
+  final restoMinutos = minutos % 60;
+  return '${horas}h ${restoMinutos.toString().padLeft(2, '0')}m';
 }
 
 class BatimentosScreen extends StatelessWidget {
@@ -1000,21 +1092,41 @@ class _RecordTile extends StatelessWidget {
 }
 
 class _SleepPhasesCard extends StatelessWidget {
-  const _SleepPhasesCard();
+  const _SleepPhasesCard({this.sonoMinutosTotal});
+
+  /// Total real de minutos de sono (GET /api/fitness/resumo). Pode ser null
+  /// se a API falhar ou nao houver registro do dia.
+  final int? sonoMinutosTotal;
 
   @override
   Widget build(BuildContext context) {
-    return const _Panel(
+    // Fases do sono sao estimativa proporcional - backend so expoe total.
+    // Os percentuais abaixo sao os mesmos do mock anterior, aplicados sobre
+    // o total real quando disponivel.
+    const percentualProfundo = 0.28;
+    const percentualLeve = 0.62;
+    const percentualAcordado = 0.10;
+
+    final temDadoReal = sonoMinutosTotal != null && sonoMinutosTotal! > 0;
+    final trailing = temDadoReal
+        ? _formatarMinutos(sonoMinutosTotal!)
+        : 'Score 84';
+
+    return _Panel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SectionTitle(title: 'Fases do sono', trailing: 'Score 84'),
-          SizedBox(height: 12),
-          _SegmentBar(
+          _SectionTitle(title: 'Fases do sono', trailing: trailing),
+          const SizedBox(height: 12),
+          const _SegmentBar(
             segments: [
-              _SegmentSpec(0.28, Color(0xFF32117A), 'Profundo'),
-              _SegmentSpec(0.62, GridColors.primary, 'Leve'),
-              _SegmentSpec(0.10, GridColors.secondary, 'Acordado'),
+              _SegmentSpec(percentualProfundo, Color(0xFF32117A), 'Profundo'),
+              _SegmentSpec(percentualLeve, GridColors.primary, 'Leve'),
+              _SegmentSpec(
+                percentualAcordado,
+                GridColors.secondary,
+                'Acordado',
+              ),
             ],
           ),
         ],
@@ -1512,30 +1624,146 @@ class _TimelineTile extends StatelessWidget {
 }
 
 class _HabitReminderCard extends StatelessWidget {
-  const _HabitReminderCard();
+  const _HabitReminderCard({
+    this.lembretes = const <Lembrete>[],
+    this.onLembreteConcluido,
+  });
+
+  /// Lembretes reais (GET /api/fitness/lembretes?ativo=true), ja ordenados
+  /// por horario pelo chamador.
+  final List<Lembrete> lembretes;
+  final VoidCallback? onLembreteConcluido;
 
   @override
   Widget build(BuildContext context) {
-    return const _Panel(
+    return _Panel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SectionTitle(title: 'Agenda de habitos', trailing: 'Opt-in'),
-          SizedBox(height: 10),
-          _ReminderLine(
-              icon: Icons.water_drop_outlined,
-              label: 'Agua',
-              time: '10:00, 14:00, 18:00'),
-          _ReminderLine(
-              icon: Icons.medication_outlined,
-              label: 'Medicamento',
-              time: '08:00'),
-          _ReminderLine(
-              icon: Icons.fitness_center,
-              label: 'Treino',
-              time: 'Seg, Qua, Sex'),
+          const _SectionTitle(title: 'Agenda de habitos', trailing: 'Opt-in'),
+          const SizedBox(height: 10),
+          if (lembretes.isEmpty)
+            const _EmptyState(label: 'Nenhum lembrete cadastrado')
+          else
+            for (final lembrete in lembretes)
+              _ReminderLine(
+                icon: _iconeLembrete(lembrete.tipo),
+                label: lembrete.nome,
+                time: lembrete.horario ?? lembrete.frequencia ?? '--',
+                concluido: lembrete.concluidoHoje,
+                onTap: lembrete.id == null
+                    ? null
+                    : () async {
+                        await LembreteCaller().concluirLembrete(lembrete.id!);
+                        onLembreteConcluido?.call();
+                      },
+              ),
         ],
       ),
+    );
+  }
+
+  IconData _iconeLembrete(String tipo) {
+    return switch (tipo) {
+      'MEDICAMENTO' => Icons.medication_outlined,
+      'SUPLEMENTO' => Icons.local_pharmacy_outlined,
+      'HABITO' => Icons.fitness_center,
+      _ => Icons.notifications_outlined,
+    };
+  }
+}
+
+/// Card simples de hidratacao na SonoScreen: mostra total consumido/meta do
+/// dia e um botao "+1 copo". Modulo de hidratacao ja existe 100% no backend
+/// (nao desta fase), contrato confirmado em HidratacaoController.java.
+class _HidratacaoCard extends StatefulWidget {
+  const _HidratacaoCard();
+
+  @override
+  State<_HidratacaoCard> createState() => _HidratacaoCardState();
+}
+
+class _HidratacaoCardState extends State<_HidratacaoCard> {
+  late Future<ResumoHidratacao?> _future;
+  var _registrando = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = HidratacaoCaller().fetchResumo();
+  }
+
+  void _reload() {
+    setState(() {
+      _future = HidratacaoCaller().fetchResumo();
+    });
+  }
+
+  Future<void> _adicionarCopo(int volumeCopoMl) async {
+    setState(() => _registrando = true);
+    await HidratacaoCaller().registrarConsumo(volumeCopoMl);
+    if (mounted) {
+      setState(() => _registrando = false);
+      _reload();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<ResumoHidratacao?>(
+      future: _future,
+      builder: (context, snapshot) {
+        final resumo = snapshot.data;
+        final totalMl = resumo?.totalMl;
+        final metaMl = resumo?.metaDiariaMl;
+        final volumeCopoMl = resumo?.volumeCopoMl ?? 250;
+
+        final resumoLabel = (totalMl != null && metaMl != null)
+            ? '$totalMl ml / $metaMl ml'
+            : '-- ml / -- ml';
+
+        return _Panel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _SectionTitle(title: 'Hidratacao', trailing: 'Hoje'),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.water_drop_outlined,
+                    color: GridColors.primary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      resumoLabel,
+                      style: const TextStyle(
+                        color: GridColors.textSecondary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _registrando
+                        ? null
+                        : () => _adicionarCopo(volumeCopoMl),
+                    icon: _registrando
+                        ? const SizedBox(
+                            height: 14,
+                            width: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.add, size: 18),
+                    label: const Text('+1 copo'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -1866,23 +2094,44 @@ class _ReminderLine extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.time,
+    this.concluido = false,
+    this.onTap,
   });
 
   final IconData icon;
   final String label;
   final String time;
+  final bool concluido;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Row(
-        children: [
-          Icon(icon, color: GridColors.primary, size: 20),
-          const SizedBox(width: 10),
-          Expanded(child: Text(label)),
-          Text(time, style: const TextStyle(color: Color(0xFF6D647A))),
-        ],
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Row(
+          children: [
+            Icon(
+              concluido ? Icons.check_circle : icon,
+              color: concluido ? GridColors.success : GridColors.primary,
+              size: 20,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                label,
+                style: concluido
+                    ? const TextStyle(
+                        color: Color(0xFF6D647A),
+                        decoration: TextDecoration.lineThrough,
+                      )
+                    : null,
+              ),
+            ),
+            Text(time, style: const TextStyle(color: Color(0xFF6D647A))),
+          ],
+        ),
       ),
     );
   }

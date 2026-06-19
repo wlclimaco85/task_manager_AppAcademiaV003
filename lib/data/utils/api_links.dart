@@ -448,4 +448,10 @@ class ApiLinks {
   static String get fitnessHistorico => '$_baseUrlNew/api/fitness/historico';
   static String get fitnessMedidas => '$_baseUrlNew/api/fitness/medidas';
   static String get fitnessExames => '$_baseUrlNew/api/fitness/exames';
+  static String get fitnessCheckinDiario => '$_baseUrlNew/api/fitness/checkin';
+  static String get fitnessLembretes => '$_baseUrlNew/api/fitness/lembretes';
+  static String get fitnessHidratacaoResumo =>
+      '$_baseUrlNew/api/hidratacao/resumo';
+  static String get fitnessHidratacaoRegistros =>
+      '$_baseUrlNew/api/hidratacao/registros';
 }
