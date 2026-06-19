@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
@@ -354,6 +355,10 @@ class _CorpoScreenState extends State<CorpoScreen> {
           ],
           extraCards: [
             _BodyCompositionCard(medida: ultimaMedida, pesoKg: pesoKg),
+            _CorpoEvolutionChartCard(
+              historico: data.resumo?.historicoSemanal ?? const [],
+              medidas: data.medidas,
+            ),
             _CorpoActionsCard(
               resumo: data.resumo,
               onAlturaSalva: _reload,
@@ -1502,9 +1507,219 @@ class _TimelineEvent {
   final IconData icon;
 }
 
+/// Periodo de filtro para o grafico de evolucao (client-side, sobre dados
+/// ja carregados pela CorpoScreen - sem novo parametro de API).
+enum _PeriodoEvolucao { umMes, tresMeses, seisMeses, umAno }
+
+extension on _PeriodoEvolucao {
+  String get label => switch (this) {
+        _PeriodoEvolucao.umMes => '1 mes',
+        _PeriodoEvolucao.tresMeses => '3 meses',
+        _PeriodoEvolucao.seisMeses => '6 meses',
+        _PeriodoEvolucao.umAno => '1 ano',
+      };
+
+  int get dias => switch (this) {
+        _PeriodoEvolucao.umMes => 30,
+        _PeriodoEvolucao.tresMeses => 90,
+        _PeriodoEvolucao.seisMeses => 180,
+        _PeriodoEvolucao.umAno => 365,
+      };
+}
+
+/// Metrica selecionavel no grafico de evolucao corporal.
+enum _MetricaEvolucao { peso, gordura, musculo, agua }
+
+extension on _MetricaEvolucao {
+  String get label => switch (this) {
+        _MetricaEvolucao.peso => 'Peso (kg)',
+        _MetricaEvolucao.gordura => 'Gordura (%)',
+        _MetricaEvolucao.musculo => 'Musculo (%)',
+        _MetricaEvolucao.agua => 'Agua (%)',
+      };
+}
+
+/// Grafico de linha de evolucao de peso e medidas corporais, com seletor de
+/// metrica e filtro de periodo. Reaproveita os mesmos dados (historico e
+/// medidas) ja carregados pela CorpoScreen - nao duplica chamada de API.
+///
+/// Nota de escopo: evolucao de carga maxima por exercicio NAO esta incluida
+/// aqui porque "carga" (peso levantado em exercicio) ainda nao existe no
+/// backend - depende do card "[FITNESS] Registro de carga por exercicio"
+/// (nao iniciado). Quando esse card for implementado, adicionar uma aba ou
+/// selector adicional aqui reaproveitando este mesmo widget de grafico.
+class _CorpoEvolutionChartCard extends StatefulWidget {
+  const _CorpoEvolutionChartCard({
+    required this.historico,
+    required this.medidas,
+  });
+
+  final List<DiaResumoSaude> historico;
+  final List<MedidaCorporal> medidas;
+
+  @override
+  State<_CorpoEvolutionChartCard> createState() =>
+      _CorpoEvolutionChartCardState();
+}
+
+class _CorpoEvolutionChartCardState extends State<_CorpoEvolutionChartCard> {
+  _MetricaEvolucao _metrica = _MetricaEvolucao.peso;
+  _PeriodoEvolucao _periodo = _PeriodoEvolucao.tresMeses;
+
+  List<_PontoSerie> _serieFiltrada() {
+    final limite = DateTime.now().subtract(Duration(days: _periodo.dias));
+    final pontos = <_PontoSerie>[];
+
+    if (_metrica == _MetricaEvolucao.peso) {
+      for (final dia in widget.historico) {
+        if (dia.pesoKg != null && !dia.data.isBefore(limite)) {
+          pontos.add(_PontoSerie(dia.data, dia.pesoKg!));
+        }
+      }
+    } else {
+      for (final medida in widget.medidas) {
+        if (medida.data.isBefore(limite)) continue;
+        final valor = switch (_metrica) {
+          _MetricaEvolucao.gordura => medida.percentualGordura,
+          _MetricaEvolucao.musculo => medida.percentualMassaMuscular,
+          _MetricaEvolucao.agua => medida.percentualAgua,
+          _MetricaEvolucao.peso => null,
+        };
+        if (valor != null) {
+          pontos.add(_PontoSerie(medida.data, valor));
+        }
+      }
+    }
+
+    pontos.sort((a, b) => a.data.compareTo(b.data));
+    return pontos;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final serie = _serieFiltrada();
+
+    return _Panel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SectionTitle(
+            title: 'Evolucao',
+            trailing: 'Peso e medidas',
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final metrica in _MetricaEvolucao.values)
+                ChoiceChip(
+                  label: Text(metrica.label),
+                  selected: _metrica == metrica,
+                  onSelected: (_) => setState(() => _metrica = metrica),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final periodo in _PeriodoEvolucao.values)
+                ChoiceChip(
+                  label: Text(periodo.label),
+                  selected: _periodo == periodo,
+                  onSelected: (_) => setState(() => _periodo = periodo),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (serie.length < 2)
+            const _EmptyState(
+              label: 'Dados insuficientes para grafico neste periodo.',
+            )
+          else
+            SizedBox(
+              height: 220,
+              child: LineChart(
+                LineChartData(
+                  gridData: const FlGridData(show: false),
+                  borderData: FlBorderData(show: false),
+                  titlesData: FlTitlesData(
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    leftTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: true, reservedSize: 36),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 26,
+                        getTitlesWidget: (v, _) {
+                          final i = v.toInt();
+                          if (i < 0 || i >= serie.length) {
+                            return const SizedBox.shrink();
+                          }
+                          final d = serie[i].data;
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              '${d.day}/${d.month}',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: GridColors.textSecondary,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  lineBarsData: [
+                    LineChartBarData(
+                      isCurved: true,
+                      color: GridColors.primary,
+                      barWidth: 3,
+                      dotData: const FlDotData(show: true),
+                      spots: [
+                        for (var i = 0; i < serie.length; i++)
+                          FlSpot(i.toDouble(), serie[i].valor),
+                      ],
+                      belowBarData: BarAreaData(
+                        show: true,
+                        gradient: LinearGradient(
+                          colors: [
+                            GridColors.primary.withValues(alpha: 0.25),
+                            Colors.transparent,
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PontoSerie {
+  const _PontoSerie(this.data, this.valor);
+
+  final DateTime data;
+  final double valor;
+}
+
 /// Linha do tempo unificada: combina historico de peso/altura, medidas
-/// corporais e exames numa lista ordenada por data desc. Sem grafico
-/// (fl_chart fora desta entrega minima, por decisao explicita do plano).
+/// corporais e exames numa lista ordenada por data desc.
 class _CorpoTimelineCard extends StatelessWidget {
   const _CorpoTimelineCard({
     required this.historico,
