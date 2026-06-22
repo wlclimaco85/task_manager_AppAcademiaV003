@@ -1,4 +1,4 @@
-// lib/data/customization/grid_page.dart
+﻿// lib/data/customization/grid_page.dart
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -101,6 +101,7 @@ class _GenericMobileGridScreenState extends State<GenericMobileGridScreen> {
   bool _hasMoreItems = true;
   bool _loading = false;
   bool _filtersOpen = false;
+  int _listReloadVersion = 0;
 
   final Map<String, bool> _fieldVisibility = {};
   final Map<String, bool> _permCache = {};
@@ -364,6 +365,7 @@ class _GenericMobileGridScreenState extends State<GenericMobileGridScreen> {
             _buildServerActionsBar(context),
           Expanded(
             child: GridListScreen(
+              key: ValueKey('${widget.storageKey}_${widget.title}_$_listReloadVersion'),
               title: widget.title,
               fetchEndpoint: widget.fetchEndpoint,
               createEndpoint: widget.createEndpoint,
@@ -426,16 +428,9 @@ class _GenericMobileGridScreenState extends State<GenericMobileGridScreen> {
     if (!canCreate) return null;
 
     return FloatingActionButton(
-      onPressed: () async {
-        final ok = await _confirm(
-          title: 'Novo registro',
-          message: 'Deseja abrir o formulário para adicionar um novo item?',
-          confirmText: 'Abrir',
-        );
-        if (ok == true) {
-          L.d('[GridPage] abrir form de criação');
-          _openForm();
-        }
+      onPressed: () {
+        L.d('[GridPage] abrir form de criação');
+        _openForm();
       },
       backgroundColor: GridColors.secondary,
       foregroundColor: Colors.black,
@@ -486,6 +481,7 @@ class _GenericMobileGridScreenState extends State<GenericMobileGridScreen> {
     if (actions.isEmpty) return const SizedBox.shrink();
 
     final visible = actions.where((a) {
+      if (_isHiddenServerAction(a)) return false;
       final perm = a.requiredPermission;
       if (perm == null || perm.isEmpty) return true;
       return _can(perm);
@@ -508,6 +504,11 @@ class _GenericMobileGridScreenState extends State<GenericMobileGridScreen> {
         }).toList(),
       ),
     );
+  }
+
+  bool _isHiddenServerAction(ServerAction action) {
+    final normalized = action.label.trim().toLowerCase();
+    return normalized == 'finalizar' || normalized == 'reabrir';
   }
 
   void _showFieldSettings() {
@@ -577,6 +578,9 @@ class _GenericMobileGridScreenState extends State<GenericMobileGridScreen> {
     if (saved == true) {
       L.d('[GridPage] form saved, reloading list');
       await _loadItems(reset: true);
+      if (mounted) {
+        setState(() => _listReloadVersion++);
+      }
     }
   }
 

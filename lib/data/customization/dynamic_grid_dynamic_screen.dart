@@ -1,9 +1,9 @@
-// lib/data/customization/dynamic_grid_dynamic_screen.dart
+﻿// lib/data/customization/dynamic_grid_dynamic_screen.dart
 // ------------------------------------------------------------
 // DynamicGridDynamicScreen
 // - Usa GenericMobileGridScreen do novo grid_page.dart
-// - Remove dependência do antigo generic_grid_card_1_1.dart
-// - Mantém logs AppLogger e compatibilidade total
+// - Remove dependÃªncia do antigo generic_grid_card_1_1.dart
+// - MantÃ©m logs AppLogger e compatibilidade total
 // ------------------------------------------------------------
 
 import 'dart:convert';
@@ -71,7 +71,7 @@ class _DynamicGridDynamicScreenState extends State<DynamicGridDynamicScreen> {
   }
 
   Future<TelaConfig> _loadTelaConfig() async {
-    L.i('🚀 Carregando tela dinâmica: ${widget.telaNome}');
+    L.i('ðŸš€ Carregando tela dinÃ¢mica: ${widget.telaNome}');
     try {
       final userInfo = AuthUtility.userInfo;
       final empId = userInfo?.login?.empresa?.id;
@@ -84,21 +84,21 @@ class _DynamicGridDynamicScreenState extends State<DynamicGridDynamicScreen> {
         clienteId: clienteId,
       );
       if (tela != null) {
-        L.i('✅ Tela carregada: ${tela.nome} '
+        L.i('âœ… Tela carregada: ${tela.nome} '
             '(Campos=${tela.fields.length}, Actions=${tela.actions.length})');
         return tela;
       } else {
-        throw Exception('Tela ${widget.telaNome} não encontrada.');
+        throw Exception('Tela ${widget.telaNome} nÃ£o encontrada.');
       }
     } catch (e, st) {
-      L.e('💥 Erro em _loadTelaConfig(): $e\n$st');
+      L.e('ðŸ’¥ Erro em _loadTelaConfig(): $e\n$st');
       rethrow;
     }
   }
 
-  // conversão de campos (TelaField → FieldConfig)
+  // conversÃ£o de campos (TelaField â†’ FieldConfig)
   List<FieldConfig> _convertToFieldConfigs(List<TelaField> fields) {
-    L.i('🧱 Convertendo ${fields.length} campos para FieldConfig...');
+    L.i('ðŸ§± Convertendo ${fields.length} campos para FieldConfig...');
     return fields.map((f) {
       List<Map<String, dynamic>>? dropdownOptions;
       if (f.dropdownOptions.isNotEmpty) {
@@ -109,6 +109,9 @@ class _DynamicGridDynamicScreenState extends State<DynamicGridDynamicScreen> {
                 })
             .toList();
       }
+      dropdownOptions ??= _fallbackDropdownOptions(f);
+
+      final uiFieldType = _resolveFieldType(f);
 
       return FieldConfig(
         label: f.label,
@@ -120,7 +123,7 @@ class _DynamicGridDynamicScreenState extends State<DynamicGridDynamicScreen> {
         maxLines: f.maxLines,
         icon: f.iconData,
         isSortable: f.isSortable,
-        fieldType: FieldType.values[f.fieldType.index],
+        fieldType: uiFieldType,
         dropdownOptions: dropdownOptions,
         dropdownFutureBuilder: f.dropdownEndpoint != null
             ? _createDropdownFutureBuilder(f.dropdownEndpoint!)
@@ -149,23 +152,66 @@ class _DynamicGridDynamicScreenState extends State<DynamicGridDynamicScreen> {
     }).toList();
   }
 
+  FieldType _resolveFieldType(TelaField f) {
+    if (f.dropdownEndpoint?.trim().isNotEmpty == true ||
+        f.dropdownOptions.isNotEmpty ||
+        _fallbackDropdownOptions(f) != null) {
+      return FieldType.dropdown;
+    }
+    if (f.fieldType.index >= 0 && f.fieldType.index < FieldType.values.length) {
+      return FieldType.values[f.fieldType.index];
+    }
+    return FieldType.text;
+  }
+
+  List<Map<String, dynamic>>? _fallbackDropdownOptions(TelaField f) {
+    final tela = widget.telaNome.trim().toLowerCase();
+    final field = f.fieldName.trim().toLowerCase();
+    if (tela == 'alimento' && field == 'grupo') {
+      const grupos = [
+        'Proteina',
+        'Carboidrato',
+        'Gordura',
+        'Fruta',
+        'Verdura',
+        'Legume',
+        'Laticinio',
+        'Bebida',
+        'Suplemento',
+        'Outro',
+      ];
+      return grupos.map((g) => {'value': g, 'label': g}).toList();
+    }
+    return null;
+  }
+
   Future<List<Map<String, dynamic>>> Function()? _createDropdownFutureBuilder(
       String endpoint) {
     return () async {
-      L.d('🌐 Carregando dropdown: $endpoint');
+      final url = endpoint.startsWith('http')
+          ? endpoint
+          : '${ApiLinks.baseUrl}${endpoint.startsWith('/') ? endpoint : '/$endpoint'}';
+      L.d('Carregando dropdown: $url');
       try {
-        final resp = await NetworkCaller().getRequest(endpoint);
+        final resp = await NetworkCaller().getRequest(url);
         if (resp.isSuccess && resp.body != null) {
           final list = _extractAnyList(resp.body);
-          return list
-              .map<Map<String, dynamic>>((it) => {
-                    'value': it['value'] ?? it['id'],
-                    'label': it['label'] ?? it['name'] ?? it['value'] ?? '',
-                  })
-              .toList();
+          return list.map<Map<String, dynamic>>((it) {
+            final value = it['value'] ?? it['id'] ?? it['codigo'];
+            final label =
+                it['label'] ?? it['nome'] ?? it['name'] ?? value ?? '';
+            return {
+              ...it,
+              'value': value,
+              'label': label,
+              'id': it['id'] ?? value,
+              'nome': it['nome'] ?? label,
+              'name': it['name'] ?? label,
+            };
+          }).toList();
         }
       } catch (e, st) {
-        L.e('❌ Erro dropdown: $e\n$st');
+        L.e('âŒ Erro dropdown: $e\n$st');
       }
       return [];
     };
@@ -191,14 +237,14 @@ class _DynamicGridDynamicScreenState extends State<DynamicGridDynamicScreen> {
         return _extractAnyList(jsonDecode(body));
       }
     } catch (e) {
-      L.e('💥 Erro em _extractAnyList: $e');
+      L.e('ðŸ’¥ Erro em _extractAnyList: $e');
     }
     return [];
   }
 
   String? Function(String?)? _createValidator(TelaField f) {
     if (!f.isRequired) return null;
-    return (v) => (v == null || v.isEmpty) ? '${f.label} é obrigatório' : null;
+    return (v) => (v == null || v.isEmpty) ? '${f.label} Ã© obrigatÃ³rio' : null;
   }
 
   @override
@@ -240,7 +286,9 @@ class _DynamicGridDynamicScreenState extends State<DynamicGridDynamicScreen> {
             }
 
             final tela = snapshot.data!;
-            final serverActions = tela.actions.map((a) {
+            final serverActions = tela.actions
+                .where((a) => !_isHiddenGlobalAction(a.label))
+                .map((a) {
               return ServerAction(
                 label: a.label,
                 icon: _iconFromName(a.icon),
@@ -312,5 +360,10 @@ class _DynamicGridDynamicScreenState extends State<DynamicGridDynamicScreen> {
       default:
         return Icons.play_circle_outline;
     }
+  }
+
+  bool _isHiddenGlobalAction(String label) {
+    final normalized = label.trim().toLowerCase();
+    return normalized == 'finalizar' || normalized == 'reabrir';
   }
 }

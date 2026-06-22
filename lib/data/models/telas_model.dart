@@ -26,6 +26,7 @@ enum TelaFieldType {
   currency,
   percentage,
   url,
+  multiselect,
 }
 
 class DropdownOption {

@@ -1,353 +1,342 @@
+import 'dart:convert' as convert;
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
-import 'package:task_manager_flutter/ui/widgets/logout_dialog.dart';
-import 'package:task_manager_flutter/ui/widgets/notificacoes_drawer.dart';
+
+enum PerfilBanner { aluno, personal }
 
 class UserBannerAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String? nomeUsuario;
+  final String nomeUsuario;
   final String? screenTitle;
   final String? cargo;
+  final String? nomeAluno;
+  final String? fotoAlunoBase64;
+  final String? nomePersonal;
+  final String? fotoPersonalBase64;
+  final PerfilBanner perfil;
+  final List<Widget>? actions;
   final VoidCallback? onTapped;
   final VoidCallback? onRefresh;
+  final bool? isLoading;
+  final VoidCallback? onEmpresaTap;
+  final VoidCallback? onUserTap;
   final VoidCallback? onFilterToggle;
-  final VoidCallback? onExportToExcel;
-  final bool isLoading;
   final bool showFilterButton;
+  final VoidCallback? onExportToExcel;
   final VoidCallback? onConfigurarColunas;
   final bool mostrarConfigurarColunas;
 
   const UserBannerAppBar({
     super.key,
-    this.nomeUsuario,
+    this.nomeUsuario = 'Usuario',
     this.screenTitle,
     this.cargo,
+    this.nomeAluno,
+    this.fotoAlunoBase64,
+    this.nomePersonal,
+    this.fotoPersonalBase64,
+    this.perfil = PerfilBanner.aluno,
+    this.actions,
     this.onTapped,
     this.onRefresh,
+    this.isLoading,
+    this.onEmpresaTap,
+    this.onUserTap,
     this.onFilterToggle,
+    this.showFilterButton = true,
     this.onExportToExcel,
-    this.isLoading = false,
-    this.showFilterButton = false,
     this.onConfigurarColunas,
     this.mostrarConfigurarColunas = false,
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(72);
+  Size get preferredSize => const Size.fromHeight(94);
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isWide = MediaQuery.of(context).size.width >= 720;
-    final canPop = Navigator.of(context).canPop();
-    final title = _firstNotEmpty(screenTitle, nomeUsuario) ?? 'Meu Treino';
-    final subtitle = screenTitle != null && screenTitle!.trim().isNotEmpty
-        ? nomeUsuario
-        : cargo;
-
-    final banner = Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isWide ? 16 : 8,
-        vertical: 12,
-      ),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          if (canPop)
-            IconButton(
-              icon: const Icon(Icons.arrow_back),
-              tooltip: 'Voltar',
-              onPressed: () => Navigator.of(context).maybePop(),
-            )
-          else
-            _AvatarUsuario(nomeUsuario: title),
-          SizedBox(width: canPop ? 4 : 12),
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onPrimaryContainer,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (subtitle != null && subtitle.trim().isNotEmpty)
-                  Text(
-                    subtitle.trim(),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onPrimaryContainer
-                          .withValues(alpha: 0.75),
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-              ],
-            ),
-          ),
-          if (onRefresh != null)
-            isLoading
-                ? const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  )
-                : IconButton(
-                    icon: const Icon(Icons.refresh),
-                    tooltip: 'Atualizar',
-                    onPressed: onRefresh,
-                  ),
-          if (showFilterButton)
-            IconButton(
-              icon: const Icon(Icons.filter_list),
-              tooltip: 'Filtros',
-              onPressed: onFilterToggle,
-            ),
-          if (onExportToExcel != null)
-            IconButton(
-              icon: const Icon(Icons.file_download_outlined),
-              tooltip: 'Exportar Excel',
-              onPressed: onExportToExcel,
-            ),
-          _NotifBellButton(),
-          if (mostrarConfigurarColunas) ...[
-            const SizedBox(width: 4),
-            _ConfigColunasButton(onPressed: onConfigurarColunas),
-          ],
-          const SizedBox(width: 4),
-          _LogoutButton(isWide: isWide),
-        ],
-      ),
-    );
-
-    if (onTapped == null) {
-      return banner;
-    }
+    final title = (screenTitle?.trim().isNotEmpty ?? false)
+        ? screenTitle!.trim()
+        : _nomePrincipal;
+    final subtitle = _subtitle;
 
     return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTapped,
-        child: banner,
-      ),
-    );
-  }
-
-  String? _firstNotEmpty(String? first, String? second) {
-    if (first != null && first.trim().isNotEmpty) return first.trim();
-    if (second != null && second.trim().isNotEmpty) return second.trim();
-    return null;
-  }
-}
-
-class FilterActionBar extends StatelessWidget {
-  final List<Widget> actions;
-
-  const FilterActionBar({super.key, required this.actions});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        alignment: WrapAlignment.end,
-        children: actions,
-      ),
-    );
-  }
-}
-
-class UserListTile extends StatelessWidget {
-  final String nome;
-  final String? subtitulo;
-  final String? cargo;
-  final bool ativo;
-  final VoidCallback? onTap;
-  final VoidCallback? onConfigurarColunas;
-  final VoidCallback? onExcluir;
-
-  const UserListTile({
-    super.key,
-    required this.nome,
-    this.subtitulo,
-    this.cargo,
-    this.ativo = true,
-    this.onTap,
-    this.onConfigurarColunas,
-    this.onExcluir,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return ListTile(
-      leading: _AvatarUsuario(nomeUsuario: nome),
-      title: Text(
-        nome,
-        style: theme.textTheme.bodyLarge,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: _buildSubtitle(theme),
-      trailing: _buildTrailing(context),
-      onTap: onTap,
-      tileColor: ativo
-          ? null
-          : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-    );
-  }
-
-  Widget? _buildSubtitle(ThemeData theme) {
-    final parts = <String>[
-      if (cargo != null && cargo!.isNotEmpty) cargo!,
-      if (!ativo) 'Inativo',
-    ];
-    if (parts.isEmpty && (subtitulo == null || subtitulo!.isEmpty)) {
-      return null;
-    }
-    return Text(
-      [
-        if (subtitulo != null && subtitulo!.isNotEmpty) subtitulo!,
-        ...parts,
-      ].join(' • '),
-      style: theme.textTheme.bodySmall,
-    );
-  }
-
-  Widget _buildTrailing(BuildContext context) {
-    final hasConfig = onConfigurarColunas != null;
-    final hasExcluir = onExcluir != null;
-    if (!hasConfig && !hasExcluir) {
-      return const Icon(Icons.chevron_right);
-    }
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (hasConfig)
-          _IconAction(
-            icon: Icons.view_column_outlined,
-            tooltip: 'Configurar colunas',
-            onPressed: onConfigurarColunas!,
+      color: const Color(0xFF6C4FB1),
+      elevation: 2,
+      child: SafeArea(
+        bottom: false,
+        child: Container(
+          height: preferredSize.height,
+          padding: const EdgeInsets.fromLTRB(12, 8, 8, 10),
+          child: Row(
+            children: [
+              _RoundIconButton(
+                icon: Icons.arrow_back,
+                tooltip: 'Voltar',
+                onPressed: Navigator.of(context).canPop()
+                    ? () => Navigator.of(context).maybePop()
+                    : null,
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: onUserTap ?? onTapped,
+                child: _AvatarUsuario(
+                  nome: _nomePrincipal,
+                  fotoBase64: _fotoPrincipal,
+                  size: 42,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onTapped ?? onUserTap,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          height: 1.12,
+                        ),
+                      ),
+                      if (subtitle.isNotEmpty) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.82),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            height: 1.15,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (onRefresh != null)
+                _RoundIconButton(
+                  icon: Icons.refresh,
+                  tooltip: 'Atualizar',
+                  onPressed: isLoading == true ? null : onRefresh,
+                  loading: isLoading == true,
+                ),
+              if (onExportToExcel != null)
+                _RoundIconButton(
+                  icon: Icons.table_view,
+                  tooltip: 'Exportar',
+                  onPressed: onExportToExcel,
+                ),
+              if (mostrarConfigurarColunas && onConfigurarColunas != null)
+                _RoundIconButton(
+                  icon: Icons.view_column,
+                  tooltip: 'Colunas',
+                  onPressed: onConfigurarColunas,
+                ),
+              if (showFilterButton && onFilterToggle != null)
+                _RoundIconButton(
+                  icon: Icons.filter_list,
+                  tooltip: 'Filtros',
+                  onPressed: onFilterToggle,
+                ),
+              if (onEmpresaTap != null)
+                _RoundIconButton(
+                  icon: Icons.business,
+                  tooltip: 'Empresa',
+                  onPressed: onEmpresaTap,
+                ),
+              if (actions != null) ...actions!,
+            ],
           ),
-        if (hasExcluir)
-          _IconAction(
-            icon: Icons.delete_outline,
-            tooltip: 'Excluir',
-            onPressed: onExcluir!,
-          ),
-      ],
-    );
-  }
-}
-
-class _AvatarUsuario extends StatelessWidget {
-  final String nomeUsuario;
-
-  const _AvatarUsuario({required this.nomeUsuario});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final iniciais = _iniciaisDe(nomeUsuario);
-
-    return CircleAvatar(
-      radius: 20,
-      backgroundColor: theme.colorScheme.secondaryContainer,
-      child: Text(
-        iniciais,
-        style: theme.textTheme.titleSmall?.copyWith(
-          color: theme.colorScheme.onSecondaryContainer,
-          fontWeight: FontWeight.w600,
         ),
       ),
     );
   }
 
-  String _iniciaisDe(String nome) {
-    final partes = nome.trim().split(RegExp(r'\s+'));
-    if (partes.isEmpty || partes.first.isEmpty) return '?';
-    if (partes.length == 1) return partes.first.substring(0, 1).toUpperCase();
-    return (partes.first.substring(0, 1) + partes.last.substring(0, 1))
-        .toUpperCase();
-  }
-}
-
-class _NotifBellButton extends StatelessWidget {
-  const _NotifBellButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      icon: const Icon(Icons.notifications_none),
-      tooltip: 'Notificações',
-      onPressed: () => NotificacoesDrawer.show(context),
-    );
-  }
-}
-
-class _ConfigColunasButton extends StatelessWidget {
-  final VoidCallback? onPressed;
-
-  const _ConfigColunasButton({this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      icon: const Icon(Icons.view_column_outlined),
-      tooltip: 'Configurar colunas',
-      onPressed: onPressed,
-    );
-  }
-}
-
-class _LogoutButton extends StatelessWidget {
-  final bool isWide;
-
-  const _LogoutButton({required this.isWide});
-
-  @override
-  Widget build(BuildContext context) {
-    if (isWide) {
-      return TextButton.icon(
-        icon: const Icon(Icons.logout, size: 18),
-        label: const Text('Sair'),
-        onPressed: () => LogoutDialog.show(context),
-      );
+  String get _nomePrincipal {
+    if (perfil == PerfilBanner.personal &&
+        (nomePersonal?.trim().isNotEmpty ?? false)) {
+      return nomePersonal!.trim();
     }
-    return IconButton(
-      icon: const Icon(Icons.logout),
-      tooltip: 'Sair',
-      onPressed: () => LogoutDialog.show(context),
-    );
+    if (nomeAluno?.trim().isNotEmpty ?? false) return nomeAluno!.trim();
+    if (nomePersonal?.trim().isNotEmpty ?? false) return nomePersonal!.trim();
+    return nomeUsuario.trim().isEmpty ? 'Usuario' : nomeUsuario.trim();
+  }
+
+  String? get _fotoPrincipal {
+    if (perfil == PerfilBanner.personal &&
+        (fotoPersonalBase64?.trim().isNotEmpty ?? false)) {
+      return fotoPersonalBase64;
+    }
+    if (fotoAlunoBase64?.trim().isNotEmpty ?? false) return fotoAlunoBase64;
+    return fotoPersonalBase64;
+  }
+
+  String get _subtitle {
+    if (cargo?.trim().isNotEmpty ?? false) return cargo!.trim();
+    if (perfil == PerfilBanner.personal) return 'Personal Trainer';
+    if (nomePersonal?.trim().isNotEmpty ?? false) {
+      return 'Personal: ${nomePersonal!.trim()}';
+    }
+    return '';
   }
 }
 
-class _IconAction extends StatelessWidget {
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onPressed;
+class UserHeaderBanner extends StatelessWidget {
+  final Color backgroundColor;
+  final EdgeInsets padding;
+  final Widget? trailing;
 
-  const _IconAction({
-    required this.icon,
-    required this.tooltip,
-    required this.onPressed,
+  const UserHeaderBanner({
+    super.key,
+    this.backgroundColor = const Color(0xFF6C4FB1),
+    this.padding = const EdgeInsets.fromLTRB(16, 12, 16, 16),
+    this.trailing,
   });
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      icon: Icon(icon),
-      tooltip: tooltip,
-      onPressed: onPressed,
+    return Container(
+      width: double.infinity,
+      padding: padding,
+      color: backgroundColor,
+      child: Row(
+        children: [
+          const _AvatarUsuario(nome: 'Usuario', size: 48),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text(
+              'Usuario',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          if (trailing != null) trailing!,
+        ],
+      ),
     );
+  }
+}
+
+class _RoundIconButton extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onPressed;
+  final bool loading;
+
+  const _RoundIconButton({
+    required this.icon,
+    required this.tooltip,
+    this.onPressed,
+    this.loading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 1),
+      child: Tooltip(
+        message: tooltip,
+        child: IconButton(
+          onPressed: onPressed,
+          color: Colors.white,
+          disabledColor: Colors.white.withValues(alpha: 0.48),
+          iconSize: 22,
+          visualDensity: VisualDensity.compact,
+          icon: loading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : Icon(icon),
+        ),
+      ),
+    );
+  }
+}
+
+class _AvatarUsuario extends StatelessWidget {
+  final String nome;
+  final String? fotoBase64;
+  final double size;
+
+  const _AvatarUsuario({
+    required this.nome,
+    this.fotoBase64,
+    this.size = 40,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bytes = _decodeBase64(fotoBase64);
+    final initials = _iniciais(nome);
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: bytes == null
+          ? Center(
+              child: Text(
+                initials,
+                style: TextStyle(
+                  color: const Color(0xFF5D35B1),
+                  fontSize: size * 0.34,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            )
+          : Image.memory(bytes, fit: BoxFit.cover),
+    );
+  }
+
+  Uint8List? _decodeBase64(String? value) {
+    final raw = value?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final normalized = raw.contains(',') ? raw.split(',').last : raw;
+      return convert.base64Decode(normalized);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String _iniciais(String value) {
+    final parts =
+        value.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    if (parts.isEmpty) return 'U';
+    if (parts.length == 1) return parts.first.characters.first.toUpperCase();
+    return '${parts.first.characters.first}${parts.last.characters.first}'
+        .toUpperCase();
   }
 }

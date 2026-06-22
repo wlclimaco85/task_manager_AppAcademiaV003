@@ -21,6 +21,7 @@ enum FieldType {
   currency,
   percentage,
   url,
+  multiselect,
 }
 
 // ---------------------- FileConfig ----------------------

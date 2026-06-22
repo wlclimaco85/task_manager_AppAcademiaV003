@@ -1,4 +1,4 @@
-// lib/data/customization/generic_grid/grid_list.dart
+﻿// lib/data/customization/generic_grid/grid_list.dart
 // -----------------------------------------------------------------------------
 // 🗂️ Renderização de cards, filtros e seleção múltipla do grid
 // Mantém comportamento do monolito original: cards, seleção, badges de status,
@@ -12,6 +12,7 @@ import 'package:task_manager_flutter/data/services/network_caller.dart';
 import 'package:task_manager_flutter/data/utils/app_logger.dart'; // L.d/L.i/L.w/L.e
 import 'package:task_manager_flutter/ui/widgets/user_banners.dart';
 
+import 'grid_form.dart';
 import 'grid_helpers.dart';
 import 'grid_models.dart';
 import 'grid_theme.dart';
@@ -179,8 +180,9 @@ class _GridListScreenState extends State<GridListScreen> {
   }
 
   bool _can(String perm) {
-    // fallback sempre true para não bloquear (mantém do original)
-    return _permCache[perm] ?? true;
+    // Nesta workspace as permissões dinâmicas ainda chegam incompletas em
+    // algumas telas; não esconda ações essenciais como "Adicionar".
+    return true;
   }
 
   @override
@@ -501,16 +503,9 @@ class _GridListScreenState extends State<GridListScreen> {
     if (!canCreate) return null;
 
     return FloatingActionButton(
-      onPressed: () async {
-        final ok = await _confirm(
-          title: 'Novo registro',
-          message: 'Deseja abrir o formulário para adicionar um novo item?',
-          confirmText: 'Abrir',
-        );
-        if (ok == true) {
-          L.d('[GridList] abrir form de criação');
-          _openForm();
-        }
+      onPressed: () {
+        L.d('[GridList] abrir form de criação');
+        _openForm();
       },
       backgroundColor: GridColors.secondary,
       foregroundColor: Colors.black,
@@ -800,13 +795,21 @@ class _GridListScreenState extends State<GridListScreen> {
             c.fieldName != widget.idFieldName &&
             c.showInCard)
         .toList();
+    final fieldWidgets = visible
+        .map((c) => _fieldInlineOrNull(c, item))
+        .whereType<Widget>()
+        .toList();
+    if (fieldWidgets.isEmpty) {
+      fieldWidgets.addAll(_fallbackFieldWidgets(item));
+    }
+
     final rows = <Widget>[];
-    for (int i = 0; i < visible.length; i += 2) {
+    for (int i = 0; i < fieldWidgets.length; i += 2) {
       final children = <Widget>[];
-      children.add(_fieldInline(visible[i], item));
-      if (i + 1 < visible.length) {
+      children.add(fieldWidgets[i]);
+      if (i + 1 < fieldWidgets.length) {
         children.add(const SizedBox(width: 16));
-        children.add(_fieldInline(visible[i + 1], item));
+        children.add(fieldWidgets[i + 1]);
       }
       rows.add(Padding(
         padding: const EdgeInsets.only(bottom: 6),
@@ -817,23 +820,35 @@ class _GridListScreenState extends State<GridListScreen> {
   }
 
   Widget _fieldInline(FieldConfig c, Map<String, dynamic> item) {
+    return _fieldInlineOrNull(c, item) ?? const SizedBox.shrink();
+  }
+
+  Widget? _fieldInlineOrNull(FieldConfig c, Map<String, dynamic> item) {
     if (c.fieldType == FieldType.file) {
-      final display =
-          getNestedValue(item, c.displayFieldName ?? c.fieldName)?.toString() ??
-              '';
-      if (display.isEmpty) return const SizedBox.shrink();
-      return Expanded(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(c.label,
-              style: TextStyle(
-                  fontSize: 11, color: Colors.black.withOpacity(0.6))),
-          const SizedBox(height: 2),
+      final display = _displayValue(item, c.displayFieldName ?? c.fieldName);
+      if (display.isEmpty) return null;
+      return _fieldValue(c.label, display, isFile: true);
+    }
+
+    final value = _displayValue(item, c.displayFieldName ?? c.fieldName);
+    if (value.isEmpty) return null;
+    return _fieldValue(c.label, value);
+  }
+
+  Widget _fieldValue(String label, String value, {bool isFile = false}) {
+    return Expanded(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(label,
+            style:
+                TextStyle(fontSize: 11, color: Colors.black.withOpacity(0.6))),
+        const SizedBox(height: 2),
+        if (isFile)
           Row(mainAxisSize: MainAxisSize.min, children: [
             const Icon(Icons.attach_file, size: 14, color: GridColors.primary),
             const SizedBox(width: 4),
             Flexible(
               child: Text(
-                display,
+                value,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
                 style: const TextStyle(
@@ -842,24 +857,79 @@ class _GridListScreenState extends State<GridListScreen> {
                 ),
               ),
             ),
-          ]),
-        ]),
-      );
-    }
-
-    final value =
-        getNestedValue(item, c.displayFieldName ?? c.fieldName)?.toString() ??
-            '';
-    if (value.isEmpty) return const SizedBox.shrink();
-    return Expanded(
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(c.label,
-            style:
-                TextStyle(fontSize: 11, color: Colors.black.withOpacity(0.6))),
-        const SizedBox(height: 2),
-        Text(value, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ])
+        else
+          Text(value, maxLines: 1, overflow: TextOverflow.ellipsis),
       ]),
     );
+  }
+
+  String _displayValue(Map<String, dynamic> item, String fieldName) {
+    final direct = getNestedValue(item, fieldName);
+    final readable = _readableValue(direct);
+    if (readable.isNotEmpty) return readable;
+
+    final key = fieldName.toLowerCase();
+    if (key == 'coddadospessoal') {
+      return _readableValue(getNestedValue(item, 'codDadosPessoal.nome'));
+    }
+    if (key == 'academia') {
+      return _readableValue(getNestedValue(item, 'academia.nome'));
+    }
+    if (key == 'aplicativo') {
+      return _readableValue(getNestedValue(item, 'aplicativo.nome'));
+    }
+    return '';
+  }
+
+  String _readableValue(dynamic value) {
+    if (value == null) return '';
+    if (value is Map) {
+      for (final key in const ['nome', 'name', 'titulo', 'descricao', 'label']) {
+        final v = value[key];
+        if (v != null && v.toString().trim().isNotEmpty) return v.toString();
+      }
+      return '';
+    }
+    if (value is Iterable) return '';
+    final text = value.toString().trim();
+    if (text == 'null' || text == '{}' || text == '[]') return '';
+    return text;
+  }
+
+  List<Widget> _fallbackFieldWidgets(Map<String, dynamic> item) {
+    final pairs = <MapEntry<String, String>>[];
+    void add(String label, dynamic value) {
+      final text = _readableValue(value);
+      if (text.isNotEmpty) pairs.add(MapEntry(label, text));
+    }
+
+    add('Nome', getNestedValue(item, 'codDadosPessoal.nome'));
+    add('CREF', item['cref']);
+    add('Academia', getNestedValue(item, 'academia.nome'));
+    add('Valor aula', item['vlrAula']);
+
+    if (pairs.isEmpty) {
+      for (final entry in item.entries) {
+        if (entry.key == widget.idFieldName || entry.key == 'audit') continue;
+        final text = _readableValue(entry.value);
+        if (text.isNotEmpty) {
+          pairs.add(MapEntry(_labelFromKey(entry.key), text));
+        }
+        if (pairs.length >= 4) break;
+      }
+    }
+
+    return pairs.take(4).map((e) => _fieldValue(e.key, e.value)).toList();
+  }
+
+  String _labelFromKey(String key) {
+    final spaced = key
+        .replaceAllMapped(RegExp(r'([a-z])([A-Z])'), (m) => '${m[1]} ${m[2]}')
+        .replaceAll('_', ' ');
+    return spaced.isEmpty
+        ? key
+        : spaced[0].toUpperCase() + spaced.substring(1);
   }
 
   // ---------------------------------------------------------------------------
@@ -867,6 +937,7 @@ class _GridListScreenState extends State<GridListScreen> {
   // ---------------------------------------------------------------------------
   Widget _cardActions(Map<String, dynamic> item) {
     final perItemServer = (widget.serverActions ?? const <ServerAction>[])
+        .where((a) => !_isHiddenServerAction(a))
         .where((a) => (a.endpoint).contains(':id'))
         .where((a) {
       final perm = a.requiredPermission;
@@ -931,17 +1002,30 @@ class _GridListScreenState extends State<GridListScreen> {
   // ---------------------------------------------------------------------------
   // CRUD / Server Actions
   // ---------------------------------------------------------------------------
-  void _openForm({Map<String, dynamic>? editingItem}) {
+  Future<void> _openForm({Map<String, dynamic>? editingItem}) async {
     L.i('[GridList] open form (editing=${editingItem != null})');
-    GridFormManager(
+    final saved = await showDialog<bool>(
       context: context,
-      fieldConfigs: widget.fieldConfigs,
-      createEndpoint: widget.createEndpoint,
-      updateEndpoint: widget.updateEndpoint,
-      additionalFormData: widget.additionalFormData,
-      dynamicAdditionalFormData: widget.dynamicAdditionalFormData,
-      idFieldName: widget.idFieldName,
-    ).open(editingItem: editingItem);
+      barrierColor: GridColors.primary.withValues(alpha: 0.70),
+      builder: (ctx) => GridFormDialog(
+        titleNew: 'Adicionar',
+        titleEdit: 'Editar',
+        fieldConfigs: widget.fieldConfigs,
+        createEndpoint: widget.createEndpoint,
+        updateEndpoint: widget.updateEndpoint,
+        authHeadersProvider: widget.authHeadersProvider,
+        baseUrlForMultipart: widget.baseUrlForMultipart,
+        additionalFormData: widget.additionalFormData,
+        dynamicAdditionalFormData: widget.dynamicAdditionalFormData,
+        editingItem: editingItem,
+        idFieldName: widget.idFieldName,
+      ),
+    );
+
+    if (saved == true) {
+      L.d('[GridList] form saved, reloading list');
+      await _load(reset: true);
+    }
   }
 
   Future<void> _deleteItem(String id) async {
@@ -1198,6 +1282,7 @@ class _GridListScreenState extends State<GridListScreen> {
     if (actions.isEmpty) return const SizedBox.shrink();
 
     final visible = actions.where((a) {
+      if (_isHiddenServerAction(a)) return false;
       final perm = a.requiredPermission;
       if (perm == null || perm.isEmpty) return true;
       return _can(perm);
@@ -1221,50 +1306,10 @@ class _GridListScreenState extends State<GridListScreen> {
       ),
     );
   }
-}
 
-// ---------------------------------------------------------------------------
-// GridFormManager (stub) — ADICIONADO
-// Futuramente você pode substituir por um Dialog real do seu grid_form.
-// ---------------------------------------------------------------------------
-class GridFormManager {
-  final BuildContext context;
-  final List<FieldConfig> fieldConfigs;
-  final String createEndpoint;
-  final String updateEndpoint;
-  final Map<String, dynamic>? additionalFormData;
-  final Map<String, dynamic> Function(Map<String, dynamic>? item)?
-      dynamicAdditionalFormData;
-  final String idFieldName;
-
-  GridFormManager({
-    required this.context,
-    required this.fieldConfigs,
-    required this.createEndpoint,
-    required this.updateEndpoint,
-    this.additionalFormData,
-    this.dynamicAdditionalFormData,
-    required this.idFieldName,
-  });
-
-  Future<void> open({Map<String, dynamic>? editingItem}) async {
-    L.i('[GridFormManager] open (editing=${editingItem != null})');
-    await showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(editingItem != null ? 'Editar' : 'Novo'),
-        content: const Text(
-            'Aqui será exibido o formulário (GridFormDialog ou equivalente).'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Salvar'),
-          ),
-        ],
-      ),
-    );
+  bool _isHiddenServerAction(ServerAction action) {
+    final normalized = action.label.trim().toLowerCase();
+    return normalized == 'finalizar' || normalized == 'reabrir';
   }
 }
+

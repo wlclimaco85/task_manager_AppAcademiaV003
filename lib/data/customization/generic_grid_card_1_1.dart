@@ -1,4 +1,4 @@
-// lib/data/customization/generic_grid_card_1_1.dart
+﻿// lib/data/customization/generic_grid_card_1_1.dart
 // -----------------------------------------------------------------------------
 // GenericMobileGridScreen v1.1
 // - Mantém API e comportamento base do 1_0 (busca, filtros, paginação infinita,
@@ -953,6 +953,7 @@ class _GenericMobileGridScreenState extends State<GenericMobileGridScreen> {
     if (actions.isEmpty) return const SizedBox.shrink();
 
     final visible = actions.where((a) {
+      if (_isHiddenServerAction(a)) return false;
       final perm = a.requiredPermission;
       if (perm == null || perm.isEmpty) return true;
       return _can(perm);
@@ -977,22 +978,18 @@ class _GenericMobileGridScreenState extends State<GenericMobileGridScreen> {
     );
   }
 
+  bool _isHiddenServerAction(ServerAction action) {
+    final normalized = action.label.trim().toLowerCase();
+    return normalized == 'finalizar' || normalized == 'reabrir';
+  }
+
   // ---------- FloatingActionButton (Create) ----------
   Widget? _buildFab() {
     final canCreate = _can('create');
     if (!canCreate) return null;
 
     return FloatingActionButton(
-      onPressed: () async {
-        final ok = await _confirm(
-          title: 'Novo registro',
-          message: 'Deseja abrir o formulário para adicionar um novo item?',
-          confirmText: 'Abrir',
-        );
-        if (ok == true) {
-          _openForm();
-        }
-      },
+      onPressed: _openForm,
       backgroundColor: GridColors.secondary,
       foregroundColor: Colors.black,
       tooltip: 'Adicionar',
@@ -1328,6 +1325,7 @@ class _GenericMobileGridScreenState extends State<GenericMobileGridScreen> {
   // ---------- Card Actions (Edit/Delete + Server) ----------
   Widget _buildCardActions(Map<String, dynamic> item) {
     final perItemServer = (widget.serverActions ?? const <ServerAction>[])
+        .where((a) => !_isHiddenServerAction(a))
         .where((a) => (a.endpoint).contains(':id'))
         .where((a) {
       final perm = a.requiredPermission;
