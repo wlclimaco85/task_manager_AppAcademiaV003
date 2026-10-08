@@ -35,7 +35,7 @@ class ExamesOfflineRepository {
     if (alunoId != null && alunoId.isNotEmpty) {
       return lista.where((e) => e.alunoId == alunoId).toList();
     }
-    return lista;
+    return lista.toList();
   }
 
   Future<void> salvarExame(ExameRegistroModel exame) async {

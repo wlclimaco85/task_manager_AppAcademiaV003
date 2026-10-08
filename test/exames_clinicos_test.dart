@@ -23,7 +23,7 @@ void main() {
       expect(hormonal.titulo, contains('Painel Hormonal'));
       expect(hormonal.nomeArquivoPdf, contains('.pdf'));
       expect(hormonal.dataExame, isNotEmpty);
-      expect(hormonal.laboratório, contains('Sabin'));
+      expect(hormonal.laboratorio, contains('Sabin'));
     });
 
     test('2. Cadastrar novo exame com anexo PDF e marcadores clínicos', () async {
@@ -36,7 +36,7 @@ void main() {
         titulo: 'Exame de Bioimpedância InBody 770',
         categoria: CategoriaExame.bioimpedancia,
         dataExame: '2026-10-08',
-        laboratório: 'Clínica BioNutri Uberaba',
+        laboratorio: 'Clínica BioNutri Uberaba',
         medicoSolicitante: 'Dr. Roberto Endocrinologista',
         nomeArquivoPdf: 'inbody_770_outubro_2026.pdf',
         urlPdf: 'https://appacademia.com.br/docs/inbody_770.pdf',
