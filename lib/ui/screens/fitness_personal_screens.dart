@@ -19,6 +19,7 @@ import 'package:task_manager_flutter/data/services/lembrete_caller.dart';
 import 'package:task_manager_flutter/data/services/medida_corporal_caller.dart';
 import 'package:task_manager_flutter/data/services/mural_caller.dart';
 import 'package:task_manager_flutter/data/services/saude_diaria_caller.dart';
+import 'package:task_manager_flutter/data/services/health_connect_service.dart';
 
 class _ModalidadeAerobicaInfo {
   final String nome;
@@ -126,10 +127,12 @@ class _SonoScreenData {
   const _SonoScreenData({
     required this.resumo,
     required this.lembretes,
+    required this.healthData,
   });
 
   final ResumoSaudeDiaria? resumo;
   final List<Lembrete> lembretes;
+  final Map<String, dynamic> healthData;
 }
 
 class _SonoScreenState extends State<SonoScreen> {
@@ -144,11 +147,13 @@ class _SonoScreenState extends State<SonoScreen> {
   Future<_SonoScreenData> _carregar() async {
     final resumo = await SaudeDiariaCaller().fetchResumo();
     final lembretes = await LembreteCaller().fetchLembretes(ativo: true);
+    final healthData = await HealthConnectService().fetchDailySummary();
     return _SonoScreenData(
       resumo: resumo,
       // Fallback gracioso: sem lembrete real -> lista vazia (nao inventar
       // lembrete ficticio).
       lembretes: lembretes ?? const <Lembrete>[],
+      healthData: healthData,
     );
   }
 
@@ -177,12 +182,15 @@ class _SonoScreenState extends State<SonoScreen> {
         }
 
         final data = snapshot.data ??
-            const _SonoScreenData(resumo: null, lembretes: <Lembrete>[]);
+            const _SonoScreenData(resumo: null, lembretes: <Lembrete>[], healthData: {});
 
-        final sonoMinutos = data.resumo?.sonoMinutos;
+        final healthSonoMinutos = data.healthData['sleepMinutes'] as int? ?? 0;
+        final isRealHealth = data.healthData['isRealData'] == true;
+
+        final sonoMinutos = data.resumo?.sonoMinutos ?? (healthSonoMinutos > 0 ? healthSonoMinutos : 0);
         // Fallback gracioso para o mock se a API falhar ou sonoMinutos
         // vier 0/null.
-        final sonoLabel = (sonoMinutos != null && sonoMinutos > 0)
+        final sonoLabel = (sonoMinutos > 0)
             ? _formatarMinutos(sonoMinutos)
             : '7h 30m';
 
@@ -200,7 +208,7 @@ class _SonoScreenState extends State<SonoScreen> {
           emptyLabel: 'Nenhum registro de sono ainda.',
           defaultTitle: 'Sono principal',
           defaultValue: sonoLabel,
-          defaultNote: 'Qualidade, despertares e recuperacao',
+          defaultNote: isRealHealth ? 'Dados sincronizados do Smartwatch' : 'Qualidade, despertares e recuperacao',
           metricCards: const [
             FitnessMetricSpec('Score', '84/100', Icons.stars_outlined),
             FitnessMetricSpec('Profundo', '2h 04m', Icons.nightlight_round),
@@ -232,35 +240,65 @@ String _formatarMinutos(int minutos) {
   return '${horas}h ${restoMinutos.toString().padLeft(2, '0')}m';
 }
 
-class BatimentosScreen extends StatelessWidget {
+class BatimentosScreen extends StatefulWidget {
   const BatimentosScreen({super.key});
 
   @override
+  State<BatimentosScreen> createState() => _BatimentosScreenState();
+}
+
+class _BatimentosScreenState extends State<BatimentosScreen> {
+  late Future<Map<String, dynamic>> _healthFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _healthFuture = HealthConnectService().fetchDailySummary();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const FitnessRecordScreen(
-      type: 'batimento',
-      title: 'Sinais Vitais',
-      subtitle: 'Frequencia cardiaca, zonas, SpO2, stress e integracoes',
-      icon: Icons.favorite,
-      primaryActionLabel: 'Registrar manualmente',
-      emptyLabel: 'Nenhuma leitura cardiaca registrada.',
-      defaultTitle: 'Frequencia em repouso',
-      defaultValue: '72 bpm',
-      defaultNote: 'Importacao manual ate aprovacao do spike',
-      metricCards: [
-        FitnessMetricSpec('Repouso', '72 bpm', Icons.favorite_border),
-        FitnessMetricSpec('Maximo', '148 bpm', Icons.north_east),
-        FitnessMetricSpec('SpO2', '97%', Icons.air_outlined),
-        FitnessMetricSpec('Stress', '31 baixo', Icons.psychology_outlined),
-      ],
-      extraCards: [
-        _HeartZonesCard(),
-        _IntegrationConsentCard(),
-      ],
-      tips: [
-        'Alertas sao informativos e nao substituem avaliacao medica.',
-        'Dados de wearable so entram com consentimento explicito.',
-      ],
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _healthFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            backgroundColor: GridColors.filterBackground,
+            appBar: AppBar(title: const Text('Sinais Vitais'), backgroundColor: GridColors.filterBackground),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final healthData = snapshot.data ?? {};
+        final isReal = healthData['isRealData'] == true;
+        final bpm = healthData['heartRate'] as int? ?? 72;
+
+        return FitnessRecordScreen(
+          type: 'batimento',
+          title: 'Sinais Vitais',
+          subtitle: 'Frequencia cardiaca, zonas, SpO2, stress e integracoes',
+          icon: Icons.favorite,
+          primaryActionLabel: 'Registrar manualmente',
+          emptyLabel: 'Nenhuma leitura cardiaca registrada.',
+          defaultTitle: 'Frequencia em repouso',
+          defaultValue: '$bpm bpm',
+          defaultNote: isReal ? 'Sincronizado via Health Connect / HealthKit' : 'Importacao manual ate aprovacao do spike',
+          metricCards: [
+            FitnessMetricSpec('Repouso', '$bpm bpm', Icons.favorite_border),
+            const FitnessMetricSpec('Maximo', '148 bpm', Icons.north_east),
+            const FitnessMetricSpec('SpO2', '97%', Icons.air_outlined),
+            const FitnessMetricSpec('Stress', '31 baixo', Icons.psychology_outlined),
+          ],
+          extraCards: const [
+            _HeartZonesCard(),
+            _IntegrationConsentCard(),
+          ],
+          tips: const [
+            'Alertas sao informativos e nao substituem avaliacao medica.',
+            'Dados de wearable so entram com consentimento explicito.',
+          ],
+        );
+      },
     );
   }
 }

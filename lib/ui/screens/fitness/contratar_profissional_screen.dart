@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/fitness/profissional_vitrine_model.dart';
 import 'package:task_manager_flutter/data/services/profissionais_vitrine_repository.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/checkout_pagamento_screen.dart';
 
 /// Tela de Vitrine / Contratação de Profissionais (Personal Trainer & Nutricionista)
 /// Foco Estratégico em Uberaba - MG com:
@@ -856,31 +857,62 @@ class _ContratarProfissionalScreenState
                             color: Color(0xFF8E9BAE), fontSize: 12),
                       ),
                       const SizedBox(height: 10),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.pop(ctx);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    'Iniciando conversa no WhatsApp com ${prof.nome} (${prof.whatsapp}) para o plano "${pacote.titulo}"!'),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CheckoutPagamentoScreen(
+                                      pacote: pacote,
+                                      profissional: prof,
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
                                 backgroundColor: CustomColors.primaryGreen,
+                                foregroundColor: const Color(0xFF0D131A),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF25D366), // Cor WhatsApp
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              icon: const Icon(Icons.payment, size: 16),
+                              label: const Text('Pagar com Pix/Cartão',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold, fontSize: 12)),
                             ),
                           ),
-                          icon: const Icon(Icons.chat, size: 16),
-                          label: const Text('Contratar via WhatsApp',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 12)),
-                        ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                        'Iniciando conversa no WhatsApp com ${prof.nome} (${prof.whatsapp}) para o plano "${pacote.titulo}"!'),
+                                    backgroundColor: CustomColors.primaryGreen,
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF25D366),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              icon: const Icon(Icons.chat, size: 16),
+                              label: const Text('Dúvidas? WhatsApp',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold, fontSize: 12)),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

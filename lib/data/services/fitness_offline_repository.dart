@@ -155,6 +155,17 @@ class FitnessOfflineRepository {
     await prefs.setString(_kSessoesKey, jsonStr);
   }
 
+  Future<void> atualizarSessaoTreino(SessaoTreinoRegistroModel sessaoAtualizada) async {
+    final sessoes = await getSessoesConcluidas();
+    final index = sessoes.indexWhere((s) => s.id == sessaoAtualizada.id);
+    if (index >= 0) {
+      sessoes[index] = sessaoAtualizada;
+      final prefs = await SharedPreferences.getInstance();
+      final jsonStr = json.encode(sessoes.map((s) => s.toMap()).toList());
+      await prefs.setString(_kSessoesKey, jsonStr);
+    }
+  }
+
   /// Retorna o último registro de execução de um exercício específico
   Future<ExercicioExecutadoRegistroModel?> getUltimaExecucaoExercicio(
       String exercicioId,
@@ -267,6 +278,7 @@ class FitnessOfflineRepository {
         nome: 'Supino Reto com Barra',
         grupoMuscular: 'Peitoral',
         equipamento: 'Barra',
+        videoUrl: 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/00251301-Barbell-Bench-Press_Chest.gif',
         instrucoes:
             'Deite-se no banco com os olhos alinhados à barra. Pegada ligeiramente mais larga que os ombros. Desça até tocar suavemente a linha dos mamilos e empurre com controle.',
         errosComuns: 'Descolar a lombar do banco ou projetar os cotovelos a 90 graus.',
@@ -295,6 +307,7 @@ class FitnessOfflineRepository {
         nome: 'Puxada Frontal na Polia',
         grupoMuscular: 'Costas',
         equipamento: 'Polia',
+        videoUrl: 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/01501301-Cable-Pulldown_Back.gif',
         instrucoes:
             'Pegada pronada aberta. Puxe a barra em direção ao peitoral superior, mantendo o peito estufado e cotovelos apontando para baixo.',
         errosComuns: 'Puxar a barra por trás do pescoço ou balançar o tronco para dar impulso.',
@@ -322,6 +335,7 @@ class FitnessOfflineRepository {
         nome: 'Agachamento Livre com Barra',
         grupoMuscular: 'Quadríceps',
         equipamento: 'Barra',
+        videoUrl: 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/00431301-Barbell-Full-Squat_Thighs.gif',
         instrucoes:
             'Pés alinhados à largura dos ombros. Desça flexionando quadril e joelhos simultaneamente até pelo menos 90 graus mantendo calcanhares no chão.',
         errosComuns: 'Valgo dinâmico (joelhos para dentro) e arredondamento da lombar.',
@@ -384,6 +398,7 @@ class FitnessOfflineRepository {
         nome: 'Elevação Lateral com Halteres',
         grupoMuscular: 'Ombros',
         equipamento: 'Halteres',
+        videoUrl: 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/03341301-Dumbbell-Lateral-Raise_Shoulders.gif',
         instrucoes:
             'Eleve os braços lateralmente até a altura dos ombros com os cotovelos levemente flexionados.',
       ),
@@ -402,6 +417,7 @@ class FitnessOfflineRepository {
         nome: 'Tríceps na Polia com Corda',
         grupoMuscular: 'Tríceps',
         equipamento: 'Polia',
+        videoUrl: 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/02411301-Cable-Triceps-Pushdown-(V-bar)_Upper-Arms.gif',
         instrucoes:
             'Estenda os cotovelos para baixo e afaste as pontas da corda na contração final.',
       ),

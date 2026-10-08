@@ -6,6 +6,7 @@ import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart
 import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
 import 'package:task_manager_flutter/data/services/fitness_push_notification_service.dart';
+import 'package:task_manager_flutter/data/models/fitness/exercicio_model.dart' as task_manager_flutter_models;
 
 /// Player de Treino Interativo ao Vivo (Padrão MyFitCoach / MFIT Aluno)
 /// Interface escura esportiva, algoritmo de sobrecarga progressiva, cronômetro automático de descanso e card de compartilhamento Stories.
@@ -278,6 +279,29 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                             style: const TextStyle(
                                 color: Color(0xFF94A3B8), fontSize: 13),
                           ),
+                          const SizedBox(height: 8),
+                          InkWell(
+                            onTap: () => _mostrarDemonstracao(exAtual.exercicioId),
+                            borderRadius: BorderRadius.circular(8),
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.play_circle_fill, color: Color(0xFF3B82F6), size: 18),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Ver Demonstração e Instruções',
+                                    style: TextStyle(
+                                      color: Color(0xFF3B82F6),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -364,6 +388,122 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> _mostrarDemonstracao(String exercicioId) async {
+    final todosExercicios = await _repository.getExercicios();
+    final exercicio = todosExercicios.firstWhere(
+      (e) => e.id == exercicioId,
+      orElse: () => const task_manager_flutter_models.ExercicioModel(
+        id: '', nome: 'Não encontrado', grupoMuscular: '', instrucoes: 'Sem instruções disponíveis.',
+      ),
+    );
+
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + 40),
+          child: DecoratedBox(
+            decoration: const BoxDecoration(
+              color: Color(0xFF1E293B),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          exercicio.nome,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Color(0xFF94A3B8)),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  if (exercicio.videoUrl != null && exercicio.videoUrl!.isNotEmpty)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.network(
+                        exercicio.videoUrl!,
+                        width: double.infinity,
+                        height: 250,
+                        fit: BoxFit.contain,
+                        errorBuilder: (ctx, err, stack) {
+                          return Container(
+                            height: 200,
+                            color: const Color(0xFF0F172A),
+                            alignment: Alignment.center,
+                            child: const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.broken_image, color: Color(0xFF475569), size: 48),
+                                SizedBox(height: 8),
+                                Text('Animação indisponível', style: TextStyle(color: Color(0xFF94A3B8))),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    )
+                  else
+                    Container(
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0F172A),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.ondemand_video, color: Color(0xFF475569), size: 48),
+                          SizedBox(height: 8),
+                          Text('Nenhuma demonstração visual', style: TextStyle(color: Color(0xFF94A3B8))),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 24),
+                  const Text('Instruções de Execução', style: TextStyle(color: Color(0xFF3B82F6), fontSize: 16, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 8),
+                  Text(
+                    exercicio.instrucoes.isNotEmpty ? exercicio.instrucoes : 'Não há instruções para este exercício.',
+                    style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
+                  ),
+                  if (exercicio.errosComuns != null && exercicio.errosComuns!.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    const Text('Erros Comuns', style: TextStyle(color: Color(0xFFEF4444), fontSize: 14, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 4),
+                    Text(
+                      exercicio.errosComuns!,
+                      style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

@@ -11,6 +11,7 @@ import 'package:task_manager_flutter/data/utils/api_links.dart';
 import 'package:task_manager_flutter/data/models/login_model.dart';
 import 'package:task_manager_flutter/data/utils/app_logger.dart';
 import 'package:task_manager_flutter/data/utils/tenant_context.dart';
+import 'package:task_manager_flutter/data/services/background_sync_service.dart';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
@@ -273,6 +274,9 @@ class NetworkCaller {
       }
     } catch (e) {
       log(e.toString());
+      if (url.contains('login') == false && url.contains('inserirAluno') == false) {
+        BackgroundSyncService().enqueueRequest('POST', url, body);
+      }
     }
     return NetworkResponse(false, -1, null);
   }
