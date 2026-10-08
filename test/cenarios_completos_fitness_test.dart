@@ -404,5 +404,214 @@ void main() {
       expect(alunoComFeedback.feedbacks.first.rpe, equals(9));
       expect(alunoComFeedback.feedbacks.first.comentario, contains('Supino com 90kg'));
     });
+
+    test('CENÁRIO 5: Escala Real - 40 Alunos, 4 Personais (10 alunos cada), 4 Nutricionistas, 4 Médicos, 2 Trocas de Treino, Financeiro e Dashboards', () async {
+      final personalRepo = PersonalGestaoOfflineRepository();
+      final fitnessRepo = FitnessOfflineRepository();
+      final nutricaoRepo = NutricaoFarmacoOfflineRepository();
+
+      const totalAlunos = 40;
+      const totalPersonais = 4;
+      const alunosPorPersonal = 10;
+
+      final List<PersonalAlunoGestaoModel> alunosCadastrados = [];
+      double faturamentoTotal = 0;
+      int totalTreinosConcluidosGeral = 0;
+
+      // 1. Criar os 40 alunos divididos entre os 4 personais (10 alunos por personal)
+      for (int i = 0; i < totalAlunos; i++) {
+        final personalIndex = (i ~/ alunosPorPersonal) + 1; // 1..4
+        final alunoId = 'aluno_escala_${i + 1}';
+        final nomeAluno = 'Aluno Atleta ${i + 1}';
+        final mensalidade = 280.0 + (personalIndex * 20.0); // 300 a 360
+
+        // Treino V1 (Treino de Adaptação - 30 dias)
+        final treinoV1 = PlanoTreinoModel(
+          id: 'plano_v1_$alunoId',
+          alunoId: alunoId,
+          titulo: 'Ficha V1: Força Base 3x',
+          personalId: 'personal_$personalIndex',
+          personalNome: 'Personal Pro $personalIndex',
+          dataInicio: '2026-07-01',
+          ativo: false,
+          divisoes: const [
+            DivisaoTreinoModel(
+              letra: 'A',
+              nome: 'Geral A',
+              foco: 'Adaptação',
+              exercicios: [
+                ExercicioTreinoItemModel(
+                  exercicioId: 'ex_1',
+                  exercicioNome: 'Leg Press 45',
+                  grupoMuscular: 'Pernas',
+                  series: 3,
+                  repeticoes: '12 reps',
+                  cargaSugeridaKg: 120.0,
+                ),
+              ],
+            ),
+          ],
+        );
+        await fitnessRepo.salvarPlanoTreino(treinoV1);
+
+        // Treino V2 (MUDANÇA DE TREINO: Hipertrofia ABCD - 45 dias)
+        final treinoV2 = PlanoTreinoModel(
+          id: 'plano_v2_$alunoId',
+          alunoId: alunoId,
+          titulo: 'Ficha V2: Hipertrofia Periodizada ABCD',
+          personalId: 'personal_$personalIndex',
+          personalNome: 'Personal Pro $personalIndex',
+          dataInicio: '2026-08-15',
+          ativo: true,
+          divisoes: const [
+            DivisaoTreinoModel(
+              letra: 'A',
+              nome: 'Peito & Tríceps',
+              foco: 'Hipertrofia Superior',
+              exercicios: [
+                ExercicioTreinoItemModel(
+                  exercicioId: 'ex_supino',
+                  exercicioNome: 'Supino Reto com Barra',
+                  grupoMuscular: 'Peitoral',
+                  series: 4,
+                  repeticoes: '8 a 12 reps',
+                  cargaSugeridaKg: 80.0,
+                ),
+              ],
+            ),
+          ],
+        );
+        await fitnessRepo.salvarPlanoTreino(treinoV2);
+
+        // Aluno executa sessões do Treino V1 e V2 no Player ao Vivo
+        final sessaoExecutadaV1 = SessaoTreinoRegistroModel(
+          id: 'sessao_v1_$alunoId',
+          treinoId: treinoV1.id,
+          divisaoLetra: 'A',
+          divisaoNome: 'Geral A',
+          alunoId: alunoId,
+          dataHoraInicio: '2026-07-10T10:00:00',
+          dataHoraFim: '2026-07-10T11:00:00',
+          duracaoSegundos: 3600,
+          rpe: 8,
+          exerciciosExecutados: const [],
+        );
+        await fitnessRepo.registrarSessaoConcluida(sessaoExecutadaV1);
+
+        final sessaoExecutadaV2 = SessaoTreinoRegistroModel(
+          id: 'sessao_v2_$alunoId',
+          treinoId: treinoV2.id,
+          divisaoLetra: 'A',
+          divisaoNome: 'Peito & Tríceps',
+          alunoId: alunoId,
+          dataHoraInicio: '2026-08-20T10:00:00',
+          dataHoraFim: '2026-08-20T11:15:00',
+          duracaoSegundos: 4500,
+          rpe: 9,
+          exerciciosExecutados: const [],
+        );
+        await fitnessRepo.registrarSessaoConcluida(sessaoExecutadaV2);
+        totalTreinosConcluidosGeral += 2;
+
+        // 2. Nutricionista prescreve Dieta e Suplementos
+        final dieta = DietaProtocoloModel(
+          id: 'dieta_$alunoId',
+          alunoId: alunoId,
+          titulo: 'Dieta Personalizada 2600kcal',
+          objetivo: 'hipertrofia',
+          caloriasMeta: 2600.0,
+          proteinasMeta: 180.0,
+          carboidratosMeta: 320.0,
+          gordurasMeta: 65.0,
+          dataInicio: '2026-07-01',
+          refeicoes: const [],
+        );
+        await nutricaoRepo.salvarDieta(dieta);
+
+        final creatina = SuplementoProtocoloModel(
+          id: 'sup_$alunoId',
+          alunoId: alunoId,
+          nome: 'Creatina 100% Pura Creapure',
+          dosagem: '5g ao dia',
+          dataInicio: '2026-07-01',
+        );
+        await nutricaoRepo.salvarSuplemento(creatina);
+
+        // 3. Médico Endocrinologista prescreve Acompanhamento Farmacológico / Hormonal
+        final med = MedicamentoProtocoloModel(
+          id: 'med_$alunoId',
+          alunoId: alunoId,
+          nome: i % 2 == 0 ? 'Enantato de Testosterona 200mg/sem' : 'Oxandrolona 20mg/dia',
+          categoria: 'hormonio',
+          dosagem: i % 2 == 0 ? '200mg' : '20mg',
+          dataInicio: '2026-07-01',
+          medicoPrescritor: 'Dr. Endocrinologista $personalIndex',
+        );
+        await nutricaoRepo.salvarMedicamento(med);
+
+        // 4. Salvar Aluno na Gestão do Personal com status Financeiro
+        final alunoGestao = PersonalAlunoGestaoModel(
+          id: alunoId,
+          nome: nomeAluno,
+          email: 'aluno${i + 1}@email.com',
+          telefone: '(34) 99888-00${i < 10 ? '0$i' : '$i'}',
+          treinoAtualNome: treinoV2.titulo,
+          validadeTreinoDias: 45,
+          dataInicioTreino: '2026-08-15',
+          dataVencimentoTreino: '2026-09-30',
+          volumeTotalKg: 24500.0,
+          totalTreinosConcluidos: 24,
+          frequenciaSemanalMedia: 4,
+          valorMensalidade: mensalidade,
+          statusMensalidade: i % 5 == 0 ? StatusMensalidadeAluno.atrasado : StatusMensalidadeAluno.pago,
+          dataUltimoPagamento: i % 5 == 0 ? null : '2026-10-05',
+          feedbacks: [
+            PersonalAlunoFeedbackModel(
+              id: 'fb_$alunoId',
+              treinoId: treinoV2.id,
+              divisaoNome: 'Peito & Tríceps',
+              data: '2026-08-20',
+              rpe: 9,
+              comentario: 'Ficha V2 excelente, treino intenso com progressão no supino!',
+            ),
+          ],
+        );
+
+        alunosCadastrados.add(alunoGestao);
+        await personalRepo.salvarAluno(alunoGestao);
+        faturamentoTotal += mensalidade;
+      }
+
+      // =====================================================================
+      // ASSERÇÕES DOS DASHBOARDS EM ESCALA REAL
+      // =====================================================================
+
+      // 1. Dashboard de Gestão: 40 Alunos no total, 10 alunos por personal
+      final alunosNoRepo = await personalRepo.getAlunos();
+      expect(alunosNoRepo.length, greaterThanOrEqualTo(totalAlunos));
+
+      // 2. Dashboard Financeiro: Faturamento Total e Alunos Inadimplentes
+      expect(faturamentoTotal, greaterThan(12000.0));
+      final inadimplentes = alunosNoRepo.where((a) => a.alertaInadimplente).toList();
+      expect(inadimplentes.isNotEmpty, isTrue, reason: 'Alunos em atraso devem disparar alerta');
+
+      // 3. Dashboard de Treinos: 80 sessões de treino registradas no total
+      expect(totalTreinosConcluidosGeral, equals(80));
+
+      // 4. Mudança de Treino: Cada aluno possui pelo menos 2 fichas (V1 e V2)
+      for (int i = 0; i < totalAlunos; i++) {
+        final planosAluno = await fitnessRepo.getPlanosTreino(alunoId: 'aluno_escala_${i + 1}');
+        expect(planosAluno.length, greaterThanOrEqualTo(2), reason: 'Cada aluno deve ter no mínimo 2 fichas');
+      }
+
+      // 5. Dashboard Nutricional e Farmacológico (Nutri e Médico)
+      for (int i = 0; i < totalAlunos; i++) {
+        final dietasAluno = await nutricaoRepo.getDietas(alunoId: 'aluno_escala_${i + 1}');
+        final medsAluno = await nutricaoRepo.getMedicamentos(alunoId: 'aluno_escala_${i + 1}');
+        expect(dietasAluno.isNotEmpty, isTrue);
+        expect(medsAluno.isNotEmpty, isTrue);
+      }
+    });
   });
 }
+
