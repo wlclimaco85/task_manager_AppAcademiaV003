@@ -12,9 +12,6 @@ import 'dart:typed_data';
 import 'package:task_manager_flutter/data/models/chat_model.dart';
 import 'package:task_manager_flutter/data/services/chat_caller.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:open_filex/open_filex.dart';
-
-import 'ticket_form_bottom_sheet.dart';
 
 class ChatMessageScreen extends StatefulWidget {
   final String sector;
@@ -293,42 +290,6 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
     }
   }
 
-  Future<void> _createTicket() async {
-    final result = await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.75,
-        minChildSize: 0.5,
-        maxChildSize: 0.9,
-        builder: (_, controller) => SingleChildScrollView(
-          controller: controller,
-          child: TicketFormBottomSheet(sectorDescricao: widget.sector),
-        ),
-      ),
-    );
-
-    // Se criou, “anuncia” no chat
-    if (result != null && mounted) {
-      try {
-        final criado = result; // Chamado retornado
-        final id = (criado as dynamic).id;
-        _channel.sink.add(json.encode({
-          'sender': _loggedUserName, // exibição
-          'senderName': _loggedUserName,
-          'senderEmail': _loggedUserEmail, // backend
-          'content': 'Chamado aberto com sucesso (ID $id)',
-          'sector': widget.sector,
-          'type': 'ticket',
-          'ticketId': id,
-          'timestamp': DateTime.now().toIso8601String(),
-          'chatId': widget.chatId,
-        }));
-      } catch (_) {}
-    }
-  }
-
   String _formatTime(String? timestamp) {
     if (timestamp == null) return '';
     final time = DateTime.tryParse(timestamp);
@@ -394,10 +355,6 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
                 IconButton(
                   icon: const Icon(Icons.attach_file, color: _kGreenDark),
                   onPressed: _uploadAndSendFile,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.support_agent, color: _kPrimaryRed),
-                  onPressed: _createTicket,
                 ),
                 Expanded(
                   child: TextField(
