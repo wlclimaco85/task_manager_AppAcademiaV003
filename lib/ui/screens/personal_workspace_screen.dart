@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/fitness/personal_gestao_model.dart';
+import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
+import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
 import 'package:task_manager_flutter/data/services/personal_gestao_offline_repository.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/montador_treino_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/avaliacao_fisica_pro_screen.dart';
@@ -237,7 +239,9 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                 icon: const Icon(Icons.more_vert, color: Color(0xFF8E9BAE)),
                 color: const Color(0xFF1E2B38),
                 onSelected: (val) {
-                  if (val == 'alterar_validade') {
+                  if (val == 'historico_treinos') {
+                    _modalHistoricoTreinosAluno(context, aluno);
+                  } else if (val == 'alterar_validade') {
                     _modalDefinirValidadeTreino(context, aluno);
                   } else if (val == 'montar_treino') {
                     Navigator.push(
@@ -254,6 +258,17 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                   }
                 },
                 itemBuilder: (ctx) => [
+                  const PopupMenuItem(
+                    value: 'historico_treinos',
+                    child: Row(
+                      children: [
+                        Icon(Icons.history, color: CustomColors.primaryGreen, size: 18),
+                        SizedBox(width: 8),
+                        Text('Histórico de Treinos e Cargas',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
                   const PopupMenuItem(
                     value: 'montar_treino',
                     child: Text('Montar / Atualizar Treino',
@@ -350,8 +365,48 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                   Icons.fitness_center,
                   CustomColors.primaryGreen),
               const SizedBox(width: 8),
-              _buildMiniMetrica('Concluídos', '${aluno.totalTreinosConcluidos}',
-                  Icons.check_circle_outline, Colors.cyanAccent),
+              Expanded(
+                child: InkWell(
+                  onTap: () => _modalHistoricoTreinosAluno(context, aluno),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0D131A),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.cyanAccent.withOpacity(0.3)),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.check_circle_outline, size: 14, color: Colors.cyanAccent),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${aluno.totalTreinosConcluidos}',
+                              style: const TextStyle(
+                                color: Colors.cyanAccent,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          'Concluídos (Ver)',
+                          style: TextStyle(
+                            color: Colors.cyanAccent,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
           if (aluno.feedbacks.isNotEmpty) ...[
@@ -408,6 +463,16 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
               ),
             ),
           ],
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () => _modalHistoricoTreinosAluno(context, aluno),
+              icon: const Icon(Icons.history_edu, size: 16, color: CustomColors.primaryGreen),
+              label: const Text('Ver Histórico de Treinos e Cargas',
+                  style: TextStyle(color: CustomColors.primaryGreen, fontSize: 12, fontWeight: FontWeight.bold)),
+            ),
+          ),
         ],
       ),
     );
@@ -1142,6 +1207,518 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
         ),
       ),
     );
+  }
+
+  void _modalHistoricoTreinosAluno(
+      BuildContext context, PersonalAlunoGestaoModel aluno) async {
+    final repoFitness = FitnessOfflineRepository();
+    List<SessaoTreinoRegistroModel> sessoes =
+        await repoFitness.getSessoesConcluidas(alunoId: aluno.id);
+
+    if (sessoes.isEmpty) {
+      sessoes = _gerarSessoesExemploAluno(aluno);
+    }
+
+    if (!context.mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF16202A),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) => SizedBox(
+          height: MediaQuery.of(context).size.height * 0.85,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: CustomColors.primaryGreen.withOpacity(0.2),
+                      foregroundColor: CustomColors.primaryGreen,
+                      child: const Icon(Icons.history),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Histórico de Treinos: ${aluno.nome}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            '${sessoes.length} sessões • Toque no treino para ver os exercícios e cargas',
+                            style: const TextStyle(
+                              color: Color(0xFF8E9BAE),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white70),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+                const Divider(color: Color(0xFF223140), height: 24),
+                Expanded(
+                  child: ListView.separated(
+                    itemCount: sessoes.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, idx) {
+                      final sessao = sessoes[idx];
+                      final minutos = sessao.duracaoSegundos ~/ 60;
+
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0D131A),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: idx == 0
+                                ? CustomColors.primaryGreen.withOpacity(0.5)
+                                : const Color(0xFF223140),
+                          ),
+                        ),
+                        child: Theme(
+                          data: Theme.of(context).copyWith(
+                            dividerColor: Colors.transparent,
+                          ),
+                          child: ExpansionTile(
+                            initiallyExpanded: idx == 0,
+                            iconColor: CustomColors.primaryGreen,
+                            collapsedIconColor: Colors.white70,
+                            tilePadding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 4),
+                            title: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 12,
+                                  backgroundColor: CustomColors.primaryGreen,
+                                  foregroundColor: const Color(0xFF0D131A),
+                                  child: Text(
+                                    sessao.divisaoLetra,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 11),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    sessao.divisaoNome,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    'RPE ${sessao.rpe}/10',
+                                    style: const TextStyle(
+                                      color: Colors.amber,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            subtitle: Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.calendar_today,
+                                      size: 12, color: Color(0xFF8E9BAE)),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    sessao.dataHoraInicio,
+                                    style: const TextStyle(
+                                      color: Color(0xFF8E9BAE),
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const Icon(Icons.timer_outlined,
+                                      size: 12, color: Color(0xFF8E9BAE)),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '$minutos min',
+                                    style: const TextStyle(
+                                      color: Color(0xFF8E9BAE),
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    '${sessao.exerciciosExecutados.length} exercícios',
+                                    style: const TextStyle(
+                                      color: CustomColors.primaryGreen,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            children: [
+                              if (sessao.feedbackAluno != null &&
+                                  sessao.feedbackAluno!.isNotEmpty) ...[
+                                Container(
+                                  margin: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 6),
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF16202A),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                        color: const Color(0xFF2A3B4D)),
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Icon(Icons.chat_bubble_outline,
+                                          size: 14, color: Colors.cyanAccent),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          '"${sessao.feedbackAluno}"',
+                                          style: const TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 12,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(14, 4, 14, 14),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Exercícios Realizados e Cargas:',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ...sessao.exerciciosExecutados
+                                        .map((ex) => _buildItemExercicioExecutado(ex)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildItemExercicioExecutado(ExercicioExecutadoRegistroModel ex) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF16202A),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFF223140)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  ex.exercicioNome,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: CustomColors.primaryGreen.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  ex.grupoMuscular,
+                  style: const TextStyle(
+                    color: CustomColors.primaryGreen,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Lista horizontal ou wrap de séries com repetições e carga
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: ex.series.map((s) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0D131A),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                      color: CustomColors.primaryGreen.withOpacity(0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'S${s.numero}: ',
+                      style: const TextStyle(
+                          color: Color(0xFF8E9BAE),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      '${s.repeticoesRealizadas} reps',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '@ ${s.cargaRealKg.toStringAsFixed(0)} kg',
+                      style: const TextStyle(
+                        color: CustomColors.primaryGreen,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+          if (ex.observacaoAluno != null && ex.observacaoAluno!.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Obs: ${ex.observacaoAluno}',
+              style: const TextStyle(
+                color: Color(0xFF8E9BAE),
+                fontSize: 11,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  List<SessaoTreinoRegistroModel> _gerarSessoesExemploAluno(
+      PersonalAlunoGestaoModel aluno) {
+    final hoje = DateTime.now();
+
+    return [
+      SessaoTreinoRegistroModel(
+        id: 'sessao-1',
+        treinoId: 'treino-a',
+        divisaoLetra: 'A',
+        divisaoNome: 'Treino A - Peito, Ombros e Tríceps',
+        alunoId: aluno.id,
+        dataHoraInicio:
+            '${hoje.subtract(const Duration(days: 1)).day.toString().padLeft(2, '0')}/${hoje.month.toString().padLeft(2, '0')}/${hoje.year} - 18:30',
+        dataHoraFim: '19:18',
+        duracaoSegundos: 2880,
+        rpe: 9,
+        feedbackAluno:
+            'Supino Reto com 100kg foi até a falha na 4ª série! Ombro sem dores.',
+        exerciciosExecutados: [
+          const ExercicioExecutadoRegistroModel(
+            exercicioId: 'ex-1',
+            exercicioNome: 'Supino Reto com Barra',
+            grupoMuscular: 'Peitoral',
+            series: [
+              SerieRegistroModel(numero: 1, cargaRealKg: 80, repeticoesRealizadas: 12),
+              SerieRegistroModel(numero: 2, cargaRealKg: 90, repeticoesRealizadas: 10),
+              SerieRegistroModel(numero: 3, cargaRealKg: 100, repeticoesRealizadas: 8),
+              SerieRegistroModel(numero: 4, cargaRealKg: 105, repeticoesRealizadas: 6),
+            ],
+            observacaoAluno: 'Carga recorde na 4ª série',
+          ),
+          const ExercicioExecutadoRegistroModel(
+            exercicioId: 'ex-2',
+            exercicioNome: 'Supino Inclinado com Halteres',
+            grupoMuscular: 'Peitoral Superior',
+            series: [
+              SerieRegistroModel(numero: 1, cargaRealKg: 28, repeticoesRealizadas: 12),
+              SerieRegistroModel(numero: 2, cargaRealKg: 30, repeticoesRealizadas: 10),
+              SerieRegistroModel(numero: 3, cargaRealKg: 32, repeticoesRealizadas: 8),
+            ],
+          ),
+          const ExercicioExecutadoRegistroModel(
+            exercicioId: 'ex-3',
+            exercicioNome: 'Desenvolvimento Militar com Halteres',
+            grupoMuscular: 'Ombros',
+            series: [
+              SerieRegistroModel(numero: 1, cargaRealKg: 22, repeticoesRealizadas: 10),
+              SerieRegistroModel(numero: 2, cargaRealKg: 24, repeticoesRealizadas: 10),
+              SerieRegistroModel(numero: 3, cargaRealKg: 26, repeticoesRealizadas: 8),
+            ],
+          ),
+          const ExercicioExecutadoRegistroModel(
+            exercicioId: 'ex-4',
+            exercicioNome: 'Tríceps Corda no Pulley',
+            grupoMuscular: 'Tríceps',
+            series: [
+              SerieRegistroModel(numero: 1, cargaRealKg: 30, repeticoesRealizadas: 15),
+              SerieRegistroModel(numero: 2, cargaRealKg: 35, repeticoesRealizadas: 12),
+              SerieRegistroModel(numero: 3, cargaRealKg: 40, repeticoesRealizadas: 10),
+            ],
+          ),
+        ],
+      ),
+      SessaoTreinoRegistroModel(
+        id: 'sessao-2',
+        treinoId: 'treino-c',
+        divisaoLetra: 'C',
+        divisaoNome: 'Treino C - Pernas Completo',
+        alunoId: aluno.id,
+        dataHoraInicio:
+            '${hoje.subtract(const Duration(days: 3)).day.toString().padLeft(2, '0')}/${hoje.month.toString().padLeft(2, '0')}/${hoje.year} - 19:15',
+        dataHoraFim: '20:10',
+        duracaoSegundos: 3300,
+        rpe: 10,
+        feedbackAluno:
+            'Agachamento livre muito pesado, precisei de 2min de descanso.',
+        exerciciosExecutados: [
+          const ExercicioExecutadoRegistroModel(
+            exercicioId: 'ex-5',
+            exercicioNome: 'Agachamento Livre com Barra',
+            grupoMuscular: 'Quadríceps',
+            series: [
+              SerieRegistroModel(numero: 1, cargaRealKg: 90, repeticoesRealizadas: 12),
+              SerieRegistroModel(numero: 2, cargaRealKg: 110, repeticoesRealizadas: 10),
+              SerieRegistroModel(numero: 3, cargaRealKg: 120, repeticoesRealizadas: 8),
+              SerieRegistroModel(numero: 4, cargaRealKg: 130, repeticoesRealizadas: 6),
+            ],
+          ),
+          const ExercicioExecutadoRegistroModel(
+            exercicioId: 'ex-6',
+            exercicioNome: 'Leg Press 45°',
+            grupoMuscular: 'Pernas',
+            series: [
+              SerieRegistroModel(numero: 1, cargaRealKg: 240, repeticoesRealizadas: 12),
+              SerieRegistroModel(numero: 2, cargaRealKg: 280, repeticoesRealizadas: 10),
+              SerieRegistroModel(numero: 3, cargaRealKg: 320, repeticoesRealizadas: 8),
+            ],
+          ),
+          const ExercicioExecutadoRegistroModel(
+            exercicioId: 'ex-7',
+            exercicioNome: 'Cadeira Extensora',
+            grupoMuscular: 'Quadríceps',
+            series: [
+              SerieRegistroModel(numero: 1, cargaRealKg: 65, repeticoesRealizadas: 15),
+              SerieRegistroModel(numero: 2, cargaRealKg: 75, repeticoesRealizadas: 12),
+              SerieRegistroModel(numero: 3, cargaRealKg: 85, repeticoesRealizadas: 10),
+            ],
+          ),
+        ],
+      ),
+      SessaoTreinoRegistroModel(
+        id: 'sessao-3',
+        treinoId: 'treino-b',
+        divisaoLetra: 'B',
+        divisaoNome: 'Treino B - Costas e Bíceps',
+        alunoId: aluno.id,
+        dataHoraInicio:
+            '${hoje.subtract(const Duration(days: 5)).day.toString().padLeft(2, '0')}/${hoje.month.toString().padLeft(2, '0')}/${hoje.year} - 18:00',
+        dataHoraFim: '18:50',
+        duracaoSegundos: 3000,
+        rpe: 8,
+        feedbackAluno:
+            'Puxada com boa ativação dorsal. Mantive cargas altas.',
+        exerciciosExecutados: [
+          const ExercicioExecutadoRegistroModel(
+            exercicioId: 'ex-8',
+            exercicioNome: 'Puxada Alta na Frente',
+            grupoMuscular: 'Dorsal',
+            series: [
+              SerieRegistroModel(numero: 1, cargaRealKg: 60, repeticoesRealizadas: 12),
+              SerieRegistroModel(numero: 2, cargaRealKg: 70, repeticoesRealizadas: 10),
+              SerieRegistroModel(numero: 3, cargaRealKg: 75, repeticoesRealizadas: 8),
+            ],
+          ),
+          const ExercicioExecutadoRegistroModel(
+            exercicioId: 'ex-9',
+            exercicioNome: 'Remada Curvada com Barra',
+            grupoMuscular: 'Costas',
+            series: [
+              SerieRegistroModel(numero: 1, cargaRealKg: 60, repeticoesRealizadas: 10),
+              SerieRegistroModel(numero: 2, cargaRealKg: 70, repeticoesRealizadas: 8),
+              SerieRegistroModel(numero: 3, cargaRealKg: 80, repeticoesRealizadas: 6),
+            ],
+          ),
+          const ExercicioExecutadoRegistroModel(
+            exercicioId: 'ex-10',
+            exercicioNome: 'Rosca Direta Barra W',
+            grupoMuscular: 'Bíceps',
+            series: [
+              SerieRegistroModel(numero: 1, cargaRealKg: 26, repeticoesRealizadas: 12),
+              SerieRegistroModel(numero: 2, cargaRealKg: 30, repeticoesRealizadas: 10),
+              SerieRegistroModel(numero: 3, cargaRealKg: 34, repeticoesRealizadas: 8),
+            ],
+          ),
+        ],
+      ),
+    ];
   }
 
   void _modalRemarcarAula(

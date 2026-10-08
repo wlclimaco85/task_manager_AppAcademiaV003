@@ -20,6 +20,38 @@ import 'package:task_manager_flutter/data/services/medida_corporal_caller.dart';
 import 'package:task_manager_flutter/data/services/mural_caller.dart';
 import 'package:task_manager_flutter/data/services/saude_diaria_caller.dart';
 
+class _ModalidadeAerobicaInfo {
+  final String nome;
+  final IconData icone;
+  final double kcalPorMinuto;
+  final bool usaDistanciaKm;
+  final double kmEstimadoPorMinuto;
+
+  const _ModalidadeAerobicaInfo({
+    required this.nome,
+    required this.icone,
+    required this.kcalPorMinuto,
+    this.usaDistanciaKm = false,
+    this.kmEstimadoPorMinuto = 0.0,
+  });
+}
+
+const _kModalidadesAerobicas = <_ModalidadeAerobicaInfo>[
+  _ModalidadeAerobicaInfo(nome: 'Caminhada', icone: Icons.directions_walk, kcalPorMinuto: 4.8, usaDistanciaKm: true, kmEstimadoPorMinuto: 0.08),
+  _ModalidadeAerobicaInfo(nome: 'Corrida', icone: Icons.directions_run, kcalPorMinuto: 11.0, usaDistanciaKm: true, kmEstimadoPorMinuto: 0.16),
+  _ModalidadeAerobicaInfo(nome: 'HIIT', icone: Icons.flash_on, kcalPorMinuto: 12.0),
+  _ModalidadeAerobicaInfo(nome: 'Vôlei', icone: Icons.sports_volleyball, kcalPorMinuto: 6.8),
+  _ModalidadeAerobicaInfo(nome: 'Tênis', icone: Icons.sports_tennis, kcalPorMinuto: 8.2),
+  _ModalidadeAerobicaInfo(nome: 'Beach Tennis', icone: Icons.beach_access, kcalPorMinuto: 8.8),
+  _ModalidadeAerobicaInfo(nome: 'Futebol', icone: Icons.sports_soccer, kcalPorMinuto: 9.8, usaDistanciaKm: true, kmEstimadoPorMinuto: 0.12),
+  _ModalidadeAerobicaInfo(nome: 'Basquete', icone: Icons.sports_basketball, kcalPorMinuto: 8.6),
+  _ModalidadeAerobicaInfo(nome: 'Ciclismo / Bike', icone: Icons.directions_bike, kcalPorMinuto: 8.5, usaDistanciaKm: true, kmEstimadoPorMinuto: 0.35),
+  _ModalidadeAerobicaInfo(nome: 'Natação', icone: Icons.pool, kcalPorMinuto: 9.2, usaDistanciaKm: true, kmEstimadoPorMinuto: 0.035),
+  _ModalidadeAerobicaInfo(nome: 'Pular Corda', icone: Icons.replay, kcalPorMinuto: 11.5),
+  _ModalidadeAerobicaInfo(nome: 'Treino Funcional', icone: Icons.fitness_center, kcalPorMinuto: 7.8),
+  _ModalidadeAerobicaInfo(nome: 'Lutas / Artes Marciais', icone: Icons.sports_kabaddi, kcalPorMinuto: 10.2),
+];
+
 class ExerciciosScreen extends StatelessWidget {
   const ExerciciosScreen({super.key});
 
@@ -40,7 +72,7 @@ class ExerciciosScreen extends StatelessWidget {
         FitnessMetricSpec('Calorias', '286 kcal', Icons.local_fire_department),
         FitnessMetricSpec('Distancia', '5,6 km', Icons.route_outlined),
         FitnessMetricSpec('Pace', '8:42/km', Icons.speed_outlined),
-        FitnessMetricSpec('Zona cardio', '24 min', Icons.monitor_heart),
+        FitnessMetricSpec('Intensidade', 'Moderada', Icons.bolt),
       ],
       tips: [
         'Acompanhe intensidade e descanso antes de repetir carga.',
@@ -58,22 +90,22 @@ class AtividadeScreen extends StatelessWidget {
     return const FitnessRecordScreen(
       type: 'atividade',
       title: 'Atividade',
-      subtitle: 'Passos, tempo ativo, calorias e tendencia semanal',
-      icon: Icons.directions_walk,
+      subtitle: 'Distancia (km), tempo ativo, calorias e tendencia semanal',
+      icon: Icons.directions_run,
       primaryActionLabel: 'Registrar atividade',
       emptyLabel: 'Nenhuma atividade registrada ainda.',
       defaultTitle: 'Caminhada',
-      defaultValue: '8000 passos',
-      defaultNote: 'Movimento diario do aluno',
+      defaultValue: '5,0 km',
+      defaultNote: 'Distancia aerobica diaria do aluno',
       metricCards: [
-        FitnessMetricSpec('Meta diaria', '78%', Icons.flag_outlined),
+        FitnessMetricSpec('Meta diaria', '82%', Icons.flag_outlined),
         FitnessMetricSpec('Calorias', '421 kcal', Icons.local_fire_department),
         FitnessMetricSpec('Tempo ativo', '64 min', Icons.timer_outlined),
         FitnessMetricSpec('Distancia', '5,6 km', Icons.route_outlined),
       ],
       tips: [
-        'Use a meta de passos para criar constancia sem sobrecarga.',
-        'Dias abaixo da meta entram nos insights semanais.',
+        'Acompanhe sua meta de quilometros (km) e tempo para consistencia.',
+        'Atividades como tenis, futebol, corrida e natacao somam nas calorias.',
       ],
     );
   }
@@ -588,6 +620,11 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
   }
 
   Future<void> _showRecordSheet() async {
+    if (widget.type == 'atividade') {
+      await _showAtividadeAerobicaSheet();
+      return;
+    }
+
     final title = TextEditingController(text: widget.defaultTitle);
     final value = TextEditingController(text: widget.defaultValue);
     final note = TextEditingController(text: widget.defaultNote);
@@ -632,7 +669,7 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: GridColors.secondary,
+                           backgroundColor: GridColors.secondary,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
@@ -660,6 +697,293 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
     title.dispose();
     value.dispose();
     note.dispose();
+
+    if (saved == true && mounted) {
+      setState(_reload);
+    }
+  }
+
+  Future<void> _showAtividadeAerobicaSheet() async {
+    var modalidade = _kModalidadesAerobicas.first;
+    final tempoController = TextEditingController(text: '45');
+    final distanciaController = TextEditingController(text: '4.0');
+    final noteController = TextEditingController(text: 'Treino aeróbico diário');
+
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final minutos = int.tryParse(tempoController.text.trim()) ?? 0;
+            final double distanciaInformada = double.tryParse(distanciaController.text.replaceAll(',', '.').trim()) ?? 0.0;
+            final caloriasCalculadas = (minutos * modalidade.kcalPorMinuto).round();
+            final distanciaFinalKm = modalidade.usaDistanciaKm
+                ? (distanciaInformada > 0 ? distanciaInformada : double.parse((minutos * modalidade.kmEstimadoPorMinuto).toStringAsFixed(1)))
+                : 0.0;
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.viewInsetsOf(context).bottom,
+              ),
+              child: DecoratedBox(
+                decoration: const BoxDecoration(
+                  color: GridColors.card,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: GridColors.primarySubtle,
+                              foregroundColor: GridColors.primary,
+                              child: Icon(modalidade.icone),
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Registrar Atividade Aeróbica',
+                                    style: TextStyle(
+                                      color: GridColors.textSecondary,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Calcule calorias por tempo e registre distância em km',
+                                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Dropdown de Modalidade
+                        const Text('Modalidade Aeróbica', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: GridColors.textSecondary)),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: GridColors.filterBackground,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<_ModalidadeAerobicaInfo>(
+                              value: modalidade,
+                              isExpanded: true,
+                              items: _kModalidadesAerobicas.map((m) {
+                                return DropdownMenuItem<_ModalidadeAerobicaInfo>(
+                                  value: m,
+                                  child: Row(
+                                    children: [
+                                      Icon(m.icone, size: 20, color: GridColors.primary),
+                                      const SizedBox(width: 10),
+                                      Text(m.nome, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                                      const Spacer(),
+                                      Text('~${m.kcalPorMinuto} kcal/min', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (novo) {
+                                if (novo != null) {
+                                  setModalState(() {
+                                    modalidade = novo;
+                                    if (modalidade.usaDistanciaKm) {
+                                      final m = int.tryParse(tempoController.text.trim()) ?? 0;
+                                      distanciaController.text = (m * modalidade.kmEstimadoPorMinuto).toStringAsFixed(1);
+                                    }
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        // Tempo (minutos)
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: tempoController,
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: 'Duração (minutos)',
+                                  prefixIcon: const Icon(Icons.timer_outlined, color: GridColors.primary),
+                                  filled: true,
+                                  fillColor: GridColors.filterBackground,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                ),
+                                onChanged: (_) => setModalState(() {}),
+                              ),
+                            ),
+                            if (modalidade.usaDistanciaKm) ...[
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: TextField(
+                                  controller: distanciaController,
+                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                  decoration: InputDecoration(
+                                    labelText: 'Distância (km)',
+                                    prefixIcon: const Icon(Icons.route_outlined, color: GridColors.primary),
+                                    filled: true,
+                                    fillColor: GridColors.filterBackground,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                  onChanged: (_) => setModalState(() {}),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        // Botões rápidos de duração
+                        Wrap(
+                          spacing: 8,
+                          children: [20, 30, 45, 60, 90].map((t) {
+                            return ActionChip(
+                              label: Text('$t min', style: const TextStyle(fontSize: 12)),
+                              backgroundColor: minutos == t ? GridColors.primarySubtle : GridColors.filterBackground,
+                              labelStyle: TextStyle(
+                                color: minutos == t ? GridColors.primaryDark : GridColors.textSecondary,
+                                fontWeight: minutos == t ? FontWeight.w800 : FontWeight.normal,
+                              ),
+                              onPressed: () {
+                                setModalState(() {
+                                  tempoController.text = '$t';
+                                  if (modalidade.usaDistanciaKm) {
+                                    distanciaController.text = (t * modalidade.kmEstimadoPorMinuto).toStringAsFixed(1);
+                                  }
+                                });
+                              },
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 14),
+                        // Card de Cálculo em Tempo Real
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: GridColors.primarySubtle.withOpacity(0.35),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: GridColors.primary.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Column(
+                                children: [
+                                  const Row(
+                                    children: [
+                                      Icon(Icons.local_fire_department, color: Colors.orange, size: 18),
+                                      SizedBox(width: 4),
+                                      Text('Calorias', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '$caloriasCalculadas kcal',
+                                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: GridColors.textSecondary),
+                                  ),
+                                ],
+                              ),
+                              if (modalidade.usaDistanciaKm)
+                                Column(
+                                  children: [
+                                    const Row(
+                                      children: [
+                                        Icon(Icons.route_outlined, color: Colors.blue, size: 18),
+                                        SizedBox(width: 4),
+                                        Text('Distância', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${distanciaFinalKm.toStringAsFixed(1)} km',
+                                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: GridColors.textSecondary),
+                                    ),
+                                  ],
+                                ),
+                              Column(
+                                children: [
+                                  const Row(
+                                    children: [
+                                      Icon(Icons.timer_outlined, color: Colors.green, size: 18),
+                                      SizedBox(width: 4),
+                                      Text('Tempo Ativo', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '$minutos min',
+                                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: GridColors.textSecondary),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _TextField(controller: noteController, label: 'Observação (Ex: intensidade, local)'),
+                        const SizedBox(height: 18),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: GridColors.secondary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                            onPressed: () async {
+                              final String valorFinal = modalidade.usaDistanciaKm && distanciaFinalKm > 0
+                                  ? '${distanciaFinalKm.toStringAsFixed(1)} km ($minutos min • $caloriasCalculadas kcal)'
+                                  : '$minutos min ($caloriasCalculadas kcal)';
+
+                              await Fitness360LocalStore.addRecord(
+                                type: 'atividade',
+                                title: modalidade.nome,
+                                value: valorFinal,
+                                note: noteController.text.trim().isNotEmpty
+                                    ? noteController.text.trim()
+                                    : 'Atividade aeróbica • $caloriasCalculadas kcal calculadas',
+                              );
+                              if (context.mounted) Navigator.pop(context, true);
+                            },
+                            child: const Text('Salvar Atividade', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    tempoController.dispose();
+    distanciaController.dispose();
+    noteController.dispose();
 
     if (saved == true && mounted) {
       setState(_reload);

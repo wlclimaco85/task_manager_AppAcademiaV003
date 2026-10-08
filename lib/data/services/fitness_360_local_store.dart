@@ -144,9 +144,7 @@ class Fitness360LocalStore {
 
   static const defaultHomeCards = [
     'steps',
-    'sleep',
     'workout',
-    'heart',
     'body',
     'goals',
     'community',
@@ -207,17 +205,18 @@ class Fitness360LocalStore {
     }
   }
 
-  /// Extrai "<numero> passos" ou "<numero> min" do texto livre do registro de
-  /// atividade e soma ao resumo diario real no backend (passos/treinoMinutos).
-  /// Falha silenciosa: o registro local ja foi salvo, o backend e um reforco.
-  static final _valorAtividadePattern =
-      RegExp(r'(\d+)\s*(passos?|min(?:utos?)?)', caseSensitive: false);
+  /// Extrai "<numero> km", "<numero> min" ou calorias do registro de
+  /// atividade e sincroniza com o backend.
+  static final _valorAtividadePattern = RegExp(
+      r'(\d+(?:[.,]\d+)?)\s*(km|quil[oô]metros?|min(?:utos?)?|passos?)',
+      caseSensitive: false);
 
   static Future<void> _sincronizarAtividadeComBackend(String value) async {
     final match = _valorAtividadePattern.firstMatch(value);
     if (match == null) return;
-    final quantidade = int.tryParse(match.group(1) ?? '');
-    if (quantidade == null) return;
+    final numStr = match.group(1)?.replaceAll(',', '.') ?? '';
+    final quantidadeDouble = double.tryParse(numStr);
+    if (quantidadeDouble == null) return;
     final unidade = match.group(2)!.toLowerCase();
 
     final caller = SaudeDiariaCaller();
@@ -233,9 +232,14 @@ class Fitness360LocalStore {
           historicoSemanal: const [],
         );
 
-    final atualizado = unidade.startsWith('passo')
-        ? atual.copyWith(passos: atual.passos + quantidade)
-        : atual.copyWith(treinoMinutos: atual.treinoMinutos + quantidade);
+    final atualizado = unidade.startsWith('km') || unidade.startsWith('quil')
+        ? atual.copyWith(
+            treinoMinutos: atual.treinoMinutos + (quantidadeDouble * 10).round(),
+            passos: atual.passos + (quantidadeDouble * 1300).round(),
+          )
+        : atual.copyWith(
+            treinoMinutos: atual.treinoMinutos + quantidadeDouble.round(),
+          );
 
     await caller.salvarResumo(atualizado);
   }
@@ -340,9 +344,13 @@ class Fitness360LocalStore {
     final sleep = all.where((item) => item.type == 'sono').toList();
     final heart = all.where((item) => item.type == 'batimento').toList();
 
+    final distance = _sumKm(activity, fallback: 5.6);
+    final calories = _sumCalories(activity, fallback: 421);
+    final minutes = _sumMinutes(activity, fallback: 64);
+
     return Fitness360Summary(
-      steps: _firstInt(activity, fallback: 7842),
-      trainingMinutes: _sumMinutes(activity, fallback: 32),
+      steps: (distance * 1300).round(),
+      trainingMinutes: minutes,
       heartRate: _firstInt(heart, fallback: 72),
       sleepMinutes: _firstSleepMinutes(sleep, fallback: 438),
       weightKg: _firstDouble(body, fallback: 76.4),
@@ -354,16 +362,38 @@ class Fitness360LocalStore {
       sleepScore: (74 + sleep.length * 3).clamp(0, 100),
       cardioScore: (68 + heart.length * 2).clamp(0, 100),
       bodyScore: (72 + body.length * 2).clamp(0, 100),
-      activeCalories: 286 + activity.length * 42,
-      distanceKm: 5.6 + activity.length * 0.4,
+      activeCalories: calories,
+      distanceKm: distance,
       spo2: 97,
       stress: 31,
       readiness: (70 + habits.length * 4).clamp(0, 100),
       weightGoalKg: 74,
       lastSyncAt: DateTime.tryParse(prefs.getString(_syncAtKey) ?? '') ??
           DateTime.now().subtract(const Duration(minutes: 28)),
-      syncSource: prefs.getString(_syncSourceKey) ?? 'Importacao manual',
+      syncSource: prefs.getString(_syncSourceKey) ?? 'Registro de Atividades',
     );
+  }
+
+  static double _sumKm(List<Fitness360Record> items, {required double fallback}) {
+    double total = 0.0;
+    for (final item in items) {
+      final match = RegExp(r'(\d+(?:[.,]\d+)?)\s*km', caseSensitive: false).firstMatch(item.value);
+      if (match != null) {
+        total += double.tryParse(match.group(1)!.replaceAll(',', '.')) ?? 0.0;
+      }
+    }
+    return total == 0.0 ? fallback : double.parse(total.toStringAsFixed(1));
+  }
+
+  static int _sumCalories(List<Fitness360Record> items, {required int fallback}) {
+    int total = 0;
+    for (final item in items) {
+      final match = RegExp(r'(\d+)\s*kcal', caseSensitive: false).firstMatch(item.value);
+      if (match != null) {
+        total += int.tryParse(match.group(1)!) ?? 0;
+      }
+    }
+    return total == 0 ? fallback : total;
   }
 
   static Future<List<int>> weeklySeries(String type) async {
@@ -475,39 +505,30 @@ class Fitness360LocalStore {
       'id': 1,
       'type': 'atividade',
       'title': 'Caminhada',
-      'value': '7842 passos',
-      'note': 'Meta diaria em 78%',
+      'value': '5,6 km',
+      'note': 'Distância diária concluída',
       'createdAt': DateTime.now().toIso8601String(),
     },
     {
       'id': 2,
       'type': 'atividade',
-      'title': 'Treino funcional',
-      'value': '32 min',
-      'note': 'Forca + cardio',
+      'title': 'Futebol',
+      'value': '60 min (570 kcal)',
+      'note': 'Partida com amigos • Alta intensidade',
       'createdAt':
           DateTime.now().subtract(const Duration(hours: 3)).toIso8601String(),
     },
     {
       'id': 3,
-      'type': 'sono',
-      'title': 'Sono principal',
-      'value': '7h 18m',
-      'note': 'Qualidade boa',
+      'type': 'atividade',
+      'title': 'Beach Tennis',
+      'value': '45 min (380 kcal)',
+      'note': 'Treino de areia / Alto gasto calórico',
       'createdAt':
-          DateTime.now().subtract(const Duration(hours: 8)).toIso8601String(),
+          DateTime.now().subtract(const Duration(hours: 6)).toIso8601String(),
     },
     {
       'id': 4,
-      'type': 'batimento',
-      'title': 'Repouso',
-      'value': '72 bpm',
-      'note': 'Dentro do esperado',
-      'createdAt':
-          DateTime.now().subtract(const Duration(hours: 1)).toIso8601String(),
-    },
-    {
-      'id': 5,
       'type': 'corpo',
       'title': 'Peso',
       'value': '76,4 kg',
@@ -516,11 +537,11 @@ class Fitness360LocalStore {
           DateTime.now().subtract(const Duration(days: 1)).toIso8601String(),
     },
     {
-      'id': 6,
+      'id': 5,
       'type': 'habito',
       'title': 'Agua',
-      'value': '2,1 L',
-      'note': 'Check-in diario',
+      'value': '2,5 L',
+      'note': 'Check-in diário de hidratação',
       'createdAt': DateTime.now()
           .subtract(const Duration(minutes: 40))
           .toIso8601String(),

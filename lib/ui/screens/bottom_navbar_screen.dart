@@ -388,11 +388,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         title: 'Evolucao',
         actions: [
           if (sec.canView(AppScreen.atividades))
-            const _FitnessAction(Icons.directions_walk, 'Atividade'),
-          if (sec.canView(AppScreen.sono))
-            const _FitnessAction(Icons.bedtime_outlined, 'Sono'),
-          if (sec.canView(AppScreen.batimentos))
-            const _FitnessAction(Icons.favorite_border, 'Batimentos'),
+            const _FitnessAction(Icons.directions_run, 'Atividade'),
           if (sec.canView(AppScreen.corpo))
             const _FitnessAction(Icons.scale_outlined, 'Corpo'),
           if (sec.canView(AppScreen.avaliacaoFisica))
@@ -490,11 +486,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
       if (sec.canView(AppScreen.exercicios))
         const _FitnessAction(Icons.directions_run, 'Treinos'),
       if (sec.canView(AppScreen.atividades))
-        const _FitnessAction(Icons.directions_walk, 'Atividade'),
-      if (sec.canView(AppScreen.sono))
-        const _FitnessAction(Icons.bedtime_outlined, 'Sono'),
-      if (sec.canView(AppScreen.batimentos))
-        const _FitnessAction(Icons.favorite_border, 'Batimentos'),
+        const _FitnessAction(Icons.directions_run, 'Atividade'),
       if (sec.canView(AppScreen.corpo))
         const _FitnessAction(Icons.scale_outlined, 'Corpo'),
       if (sec.canView(AppScreen.metas))
@@ -646,8 +638,10 @@ class _TodaySummaryCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _SummaryMetric(
-                      value: summary == null ? '--' : '${summary.steps}',
-                      label: 'passos',
+                      value: summary == null
+                          ? '--'
+                          : '${summary.distanceKm.toStringAsFixed(1)} km',
+                      label: 'distancia',
                     ),
                   ),
                   Expanded(
@@ -655,14 +649,15 @@ class _TodaySummaryCard extends StatelessWidget {
                       value: summary == null
                           ? '--'
                           : '${summary.trainingMinutes}m',
-                      label: 'treino',
+                      label: 'tempo ativo',
                     ),
                   ),
                   Expanded(
                     child: _SummaryMetric(
-                      value:
-                          summary == null ? '--' : '${summary.heartRate} bpm',
-                      label: 'batimentos',
+                      value: summary == null
+                          ? '--'
+                          : '${summary.activeCalories} kcal',
+                      label: 'calorias',
                     ),
                   ),
                 ],
@@ -682,7 +677,7 @@ class _TodaySummaryCard extends StatelessWidget {
               Text(
                 summary == null
                     ? 'Carregando metas e habitos...'
-                    : 'Sono ${summary.sleepLabel} • Habitos ${summary.habitsDone}/${summary.habitsTotal} • ${summary.points} pontos',
+                    : 'Atividade ${summary.distanceKm.toStringAsFixed(1)} km • Habitos ${summary.habitsDone}/${summary.habitsTotal} • ${summary.points} pontos',
                 style: const TextStyle(color: Color(0xFFEAE3FF), fontSize: 12),
               ),
             ],
@@ -1339,20 +1334,20 @@ class _EnhancedSyncStatusCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _SummaryMetric(
-                  value: '${summary.steps}',
-                  label: 'passos',
+                  value: '${summary.distanceKm.toStringAsFixed(1)} km',
+                  label: 'distancia',
                 ),
               ),
               Expanded(
                 child: _SummaryMetric(
                   value: '${summary.trainingMinutes}m',
-                  label: 'treino',
+                  label: 'tempo ativo',
                 ),
               ),
               Expanded(
                 child: _SummaryMetric(
-                  value: '${summary.heartRate} bpm',
-                  label: 'batimentos',
+                  value: '${summary.activeCalories} kcal',
+                  label: 'calorias',
                 ),
               ),
             ],
@@ -1369,7 +1364,7 @@ class _EnhancedSyncStatusCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Sono ${summary.sleepLabel} | Habitos ${summary.habitsDone}/${summary.habitsTotal} | ${summary.points} pontos | ${summary.syncSource}',
+            'Atividade ${summary.distanceKm.toStringAsFixed(1)} km | Habitos ${summary.habitsDone}/${summary.habitsTotal} | ${summary.points} pontos | ${summary.syncSource}',
             style: const TextStyle(color: Color(0xFFEAE3FF), fontSize: 12),
           ),
         ],
