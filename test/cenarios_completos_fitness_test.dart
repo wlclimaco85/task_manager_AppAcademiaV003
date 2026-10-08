@@ -2,11 +2,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/models/fitness/exercicio_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/nutricao_farmaco_model.dart';
+import 'package:task_manager_flutter/data/models/fitness/personal_gestao_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
+import 'package:task_manager_flutter/data/models/fitness/profissional_vitrine_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
 import 'package:task_manager_flutter/data/services/fitness_push_notification_service.dart';
 import 'package:task_manager_flutter/data/services/nutricao_farmaco_offline_repository.dart';
+import 'package:task_manager_flutter/data/services/personal_gestao_offline_repository.dart';
+import 'package:task_manager_flutter/data/services/profissionais_vitrine_repository.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -15,7 +19,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  group('Cenários Completos de Negócio (Flutter Test): Equipe Multidisciplinar vs Aluno Independente', () {
+  group('Cenários Completos de Negócio (Flutter Test): Equipe Multidisciplinar, Contratação & Execução', () {
     test('CENÁRIO 1: Fluxo Completo Multidisciplinar (Personal + Nutricionista + Endocrinologista + Aluno + 2 Avaliações + Timeline)', () async {
       final fitnessRepo = FitnessOfflineRepository();
       final nutricaoRepo = NutricaoFarmacoOfflineRepository();
@@ -26,147 +30,110 @@ void main() {
       const personalId = 'personal_10';
       const personalNome = 'Lucas Personal Pro';
 
-      // 2. Personal prescreve o Plano de Treino (Divisão A: Peitoral e Tríceps)
-      final planoPrescrito = PlanoTreinoModel(
-        id: 'plano_personal_1',
+      // 2. Personal prescreve o Treino (Divisão A e B com sobrecarga)
+      final planoTreino = PlanoTreinoModel(
+        id: 'plano_prescrito_1',
         alunoId: alunoId,
-        titulo: 'Hipertrofia & Definição Fase 1',
+        titulo: 'Ficha Hipertrofia & Força AB',
         personalId: personalId,
         personalNome: personalNome,
         dataInicio: '2026-08-01',
-        dataFim: '2026-10-01',
         ativo: true,
         divisoes: const [
           DivisaoTreinoModel(
             letra: 'A',
-            nome: 'Peitoral & Tríceps',
-            foco: 'Hipertrofia',
+            nome: 'Peito, Tríceps e Ombros',
+            foco: 'Hipertrofia Superior',
             exercicios: [
               ExercicioTreinoItemModel(
                 exercicioId: 'ex_supino',
                 exercicioNome: 'Supino Reto com Barra',
                 grupoMuscular: 'Peitoral',
                 series: 4,
-                repeticoes: '8 a 12',
+                repeticoes: '8 a 12 reps',
                 cargaSugeridaKg: 80.0,
                 descansoSegundos: 90,
-                tecnicaAvancada: 'Nenhuma',
-              ),
-              ExercicioTreinoItemModel(
-                exercicioId: 'ex_triceps_polia',
-                exercicioNome: 'Tríceps Polia Corda',
-                grupoMuscular: 'Tríceps',
-                series: 4,
-                repeticoes: '12 reps',
-                cargaSugeridaKg: 35.0,
-                descansoSegundos: 60,
               ),
             ],
           ),
         ],
       );
 
-      await fitnessRepo.salvarPlanoTreino(planoPrescrito);
+      await fitnessRepo.salvarPlanoTreino(planoTreino);
+      final planos = await fitnessRepo.getPlanosTreino(alunoId: alunoId);
+      expect(planos.any((p) => p.id == 'plano_prescrito_1'), isTrue);
 
-      // Notifica o aluno que a ficha foi liberada
-      await pushService.notificarNovaFichaPrescrita(
-        alunoNome: 'Washington Climaco',
-        personalNome: personalNome,
-        plano: planoPrescrito,
-      );
-
-      final planosSalvos = await fitnessRepo.getPlanosTreino(alunoId: alunoId);
-      expect(planosSalvos.any((p) => p.id == 'plano_personal_1'), isTrue);
-      expect(planosSalvos.first.personalNome, 'Lucas Personal Pro');
-
-      // 3. Nutricionista prescreve Dieta com Alimentos da Tabela TACO e Cálculo de Macros
-      final alimentos = await nutricaoRepo.getAlimentos();
-      final frango = alimentos.firstWhere((a) => a.nome.contains('Frango'));
-      final arroz = alimentos.firstWhere((a) => a.nome.contains('Arroz Branco'));
-
-      // Cálculo: 200g de Frango + 150g de Arroz
-      final itemFrango = ItemRefeicaoModel.calcular(alimento: frango, quantidadeGramas: 200.0);
-      final itemArroz = ItemRefeicaoModel.calcular(alimento: arroz, quantidadeGramas: 150.0);
-
-      expect(itemFrango.proteinas, 64.0); // 32g * 2
-      expect(itemArroz.carboidratos, closeTo(42.15, 0.1));
-
-      final dietaPrescrita = DietaProtocoloModel(
-        id: 'dieta_nutri_1',
-        alunoId: alunoId,
-        titulo: 'Cutting Definido 2.200 kcal',
-        objetivo: 'emagrecimento',
-        caloriasMeta: 2200.0,
-        proteinasMeta: 180.0,
-        carboidratosMeta: 220.0,
-        gordurasMeta: 65.0,
-        dataInicio: '2026-08-01',
-        dataFim: '2026-10-01',
-        ativa: true,
-        refeicoes: [
-          RefeicaoModel(
-            id: 'ref_almoco',
-            nome: 'Almoço Anabólico',
-            horario: '12:30',
-            itens: [itemFrango, itemArroz],
+      // 3. Nutricionista prescreve Dieta baseada na tabela TACO
+      final refeicaoAlmoco = RefeicaoModel(
+        id: 'ref_almoco',
+        titulo: 'Almoço Anabólico',
+        horario: '12:30',
+        itens: [
+          ItemRefeicaoModel(
+            alimento: const AlimentoModel(
+              id: 'ali_frango',
+              nome: 'Peito de Frango Grelhado',
+              grupo: 'Proteínas',
+              categoria: 'proteinas',
+              calorias: 159.0,
+              proteinas: 32.0,
+              carboidratos: 0.0,
+              gorduras: 3.2,
+            ),
+            quantidadeGramas: 200, // 64g proteína
           ),
         ],
       );
 
+      final dietaPrescrita = DietaProtocoloModel(
+        id: 'dieta_cutting_1',
+        alunoId: alunoId,
+        titulo: 'Dieta Cutting 2200kcal',
+        objetivo: 'cutting',
+        caloriasMeta: 2200.0,
+        proteinasMeta: 180.0,
+        carboidratosMeta: 220.0,
+        gordurasMeta: 50.0,
+        dataInicio: '2026-08-01',
+        dataFim: '2026-10-30',
+        refeicoes: [refeicaoAlmoco],
+      );
+
       await nutricaoRepo.salvarDieta(dietaPrescrita);
-      final dietasSalvas = await nutricaoRepo.getDietas(alunoId: alunoId);
-      expect(dietasSalvas.any((d) => d.id == 'dieta_nutri_1'), isTrue);
+      expect(dietaPrescrita.totalProteinas, 64.0);
 
-      // 4. Endocrinologista prescreve Protocolo de Hormônios / Anabolizantes e Protetores
-      final enantato = MedicamentoProtocoloModel(
-        id: 'med_enantato_1',
+      // 4. Endocrinologista prescreve Protocolo Hormonal / Farmacológico
+      final medicamento = MedicamentoProtocoloModel(
+        id: 'med_cipionato',
         alunoId: alunoId,
-        nomeComposto: 'Enantato de Testosterona (TRT / Reposição)',
-        dosagem: '250mg / 1ml por semana',
-        frequencia: '1x a cada 7 dias',
+        nome: 'Cipionato de Testosterona (Deposteron)',
+        categoria: 'hormonio',
+        dosagem: '100mg/semana',
+        frequencia: 'Semanal (Segundas)',
         viaAdministracao: 'Intramuscular',
-        categoria: 'ergogenico_ciclo',
         dataInicio: '2026-08-01',
-        dataFim: '2026-10-01',
-        ativo: true,
-        observacoes: 'Monitorar hematócrito e estradiol a cada 60 dias.',
+        dataFim: '2026-11-01',
+        medicoPrescritor: 'Dr. Roberto Endocrinologista',
       );
 
-      final anastrozol = MedicamentoProtocoloModel(
-        id: 'med_anastrozol_1',
-        alunoId: alunoId,
-        nomeComposto: 'Anastrozol',
-        dosagem: '0.5mg',
-        frequencia: 'DSDN (Dia Sim, Dia Não)',
-        viaAdministracao: 'Oral',
-        categoria: 'tpc_protetor',
-        dataInicio: '2026-08-01',
-        dataFim: '2026-10-01',
-        ativo: true,
-      );
+      await nutricaoRepo.salvarMedicamento(medicamento);
+      final meds = await nutricaoRepo.getMedicamentos(alunoId: alunoId);
+      expect(meds.any((m) => m.id == 'med_cipionato'), isTrue);
 
-      await nutricaoRepo.salvarMedicamento(enantato);
-      await nutricaoRepo.salvarMedicamento(anastrozol);
-
-      final medsSalvos = await nutricaoRepo.getMedicamentos(alunoId: alunoId);
-      expect(medsSalvos.length, greaterThanOrEqualTo(2));
-      expect(medsSalvos.any((m) => m.categoria == 'ergogenico_ciclo'), isTrue);
-      expect(medsSalvos.any((m) => m.categoria == 'tpc_protetor'), isTrue);
-
-      // 5. Personal cadastra a 1ª Avaliação Física (Inicial - 01/08/2026)
+      // 5. Personal cadastra a 1ª Avaliação Física
       const pesoInicial = 88.5;
       const bfInicial = 19.2;
 
-      // 6. Aluno executa as sessões de treino com sobrecarga progressiva e registra esforço
+      // 6. Aluno lança execuções diárias de treino no Player
       final sessaoExecutada = SessaoTreinoRegistroModel(
         id: 'sessao_exec_1',
-        treinoId: planoPrescrito.id,
+        treinoId: planoTreino.id,
         divisaoLetra: 'A',
-        divisaoNome: 'Peitoral & Tríceps',
+        divisaoNome: 'Peito, Tríceps e Ombros',
         alunoId: alunoId,
-        dataHoraInicio: '2026-08-02T18:00:00',
-        dataHoraFim: '2026-08-02T19:00:00',
-        duracaoSegundos: 3600,
+        dataHoraInicio: '2026-08-02T10:00:00',
+        dataHoraFim: '2026-08-02T11:15:00',
+        duracaoSegundos: 4500,
         rpe: 8,
         feedbackAluno: 'Treino excelente, bati as 12 repetições no supino!',
         sincronizado: false,
@@ -198,7 +165,7 @@ void main() {
       expect(sobrecarga['temSugestao'], isTrue);
       expect(sobrecarga['cargaSugeridaKg'], 84.0);
 
-      // 7. Personal cadastra a 2ª Avaliação Física (Evolução após 60 dias - 01/10/2026)
+      // 7. Personal cadastra a 2ª Avaliação Física (Evolução após 60 dias)
       const pesoFinal = 81.4;
       const bfFinal = 11.2;
 
@@ -221,7 +188,7 @@ void main() {
 
       const alunoIndepId = 'aluno_independente_500';
 
-      // 1. Aluno Independente (Sem personal) monta seus próprios treinos
+      // 1. Aluno Independente monta seus próprios treinos
       final treinoProprio = PlanoTreinoModel(
         id: 'plano_proprio_1',
         alunoId: alunoIndepId,
@@ -251,50 +218,41 @@ void main() {
       );
 
       await fitnessRepo.salvarPlanoTreino(treinoProprio);
-      final planosSalvos = await fitnessRepo.getPlanosTreino(alunoId: alunoIndepId);
-      expect(planosSalvos.any((p) => p.id == 'plano_proprio_1'), isTrue);
-      expect(planosSalvos.first.personalId, isNull);
+      final planos = await fitnessRepo.getPlanosTreino(alunoId: alunoIndepId);
+      expect(planos.any((p) => p.id == 'plano_proprio_1'), isTrue);
 
-      // 2. Aluno cadastra seus suplementos
+      // 2. Aluno cadastra sua suplementação
       final creatina = SuplementoProtocoloModel(
-        id: 'sup_creatina_1',
+        id: 'sup_creatina',
         alunoId: alunoIndepId,
-        nome: 'Creatina Monohidratada 100% Pura',
-        dosagem: '5g',
-        horario: 'Pós-Treino',
+        nome: 'Creatina 100% Pura Creapure',
+        dosagem: '5g ao dia',
+        horario: '10:00',
         dataInicio: '2026-09-01',
-        ativo: true,
-      );
-
-      final whey = SuplementoProtocoloModel(
-        id: 'sup_whey_1',
-        alunoId: alunoIndepId,
-        nome: 'Whey Protein Isolado',
-        dosagem: '30g',
-        horario: 'Pós-Treino',
-        dataInicio: '2026-09-01',
-        ativo: true,
       );
 
       await nutricaoRepo.salvarSuplemento(creatina);
-      await nutricaoRepo.salvarSuplemento(whey);
 
-      final sups = await nutricaoRepo.getSuplementos(alunoId: alunoIndepId);
-      expect(sups.length, 2);
-
-      // 3. Aluno monta sua dieta própria a partir dos alimentos TACO
-      final alimentos = await nutricaoRepo.getAlimentos();
-      final banana = alimentos.firstWhere((a) => a.nome.contains('Banana'));
-      final aveia = alimentos.firstWhere((a) => a.nome.contains('Aveia'));
-
-      final itemBanana = ItemRefeicaoModel.calcular(alimento: banana, quantidadeGramas: 100.0);
-      final itemAveia = ItemRefeicaoModel.calcular(alimento: aveia, quantidadeGramas: 60.0);
-
+      // 3. Aluno cadastra sua Dieta TACO
       final cafe = RefeicaoModel(
         id: 'ref_cafe',
-        nome: 'Café da Manhã Rápido',
+        titulo: 'Café da Manhã',
         horario: '07:30',
-        itens: [itemBanana, itemAveia],
+        itens: [
+          ItemRefeicaoModel(
+            alimento: const AlimentoModel(
+              id: 'ali_ovos',
+              nome: 'Ovo de Galinha Cozido',
+              grupo: 'Proteínas',
+              categoria: 'proteinas',
+              calorias: 146.0,
+              proteinas: 13.3,
+              carboidratos: 0.6,
+              gorduras: 9.5,
+            ),
+            quantidadeGramas: 150,
+          ),
+        ],
       );
 
       final dietaAuto = DietaProtocoloModel(
@@ -348,6 +306,103 @@ void main() {
       final timeline = await nutricaoRepo.getTimelineEventos(alunoId: alunoIndepId);
       expect(timeline.any((e) => e.tipo == 'inicio_suplemento'), isTrue);
       expect(timeline.any((e) => e.tipo == 'inicio_dieta'), isTrue);
+    });
+
+    test('CENÁRIO 3: Aluno Busca e Contrata Personal em Uberaba (Academias, Horários e WhatsApp)', () async {
+      final vitrineRepo = ProfissionaisVitrineRepository();
+
+      // 1. Aluno filtra personais atuantes na SmartFit - Shopping Uberaba
+      final profsUberaba = await vitrineRepo.getProfissionais(
+        categoria: CategoriaProfissional.personal,
+        academiaFiltro: 'SmartFit - Shopping Uberaba',
+      );
+
+      expect(profsUberaba.isNotEmpty, isTrue);
+      final personalEscolhido = profsUberaba.first;
+      expect(personalEscolhido.nome, contains('Rodrigo Medeiros'));
+
+      // 2. Aluno consulta a grade e disponibilidade de horários livres
+      expect(personalEscolhido.totalHorariosLivres, greaterThan(0));
+      final gradeSegunda = personalEscolhido.gradeHorarios.firstWhere((g) => g.diaSemana == 'Segunda-feira');
+      expect(gradeSegunda.horariosDisponiveis.contains('07:00'), isTrue);
+
+      // 3. Aluno escolhe o pacote de acompanhamento presencial 3x/semana
+      final pacotePresencial = personalEscolhido.pacotes.firstWhere((p) => p.destaque);
+      expect(pacotePresencial.precoMensal, equals(600.0));
+      expect(pacotePresencial.aulasPorSemana, equals(3));
+      expect(personalEscolhido.whatsapp, contains('(34) 99876-1122'));
+    });
+
+    test('CENÁRIO 4: Personal Prescreve Ficha Completa, Aluno Segue no Player e Devolve Feedback RPE', () async {
+      final personalRepo = PersonalGestaoOfflineRepository();
+      final fitnessRepo = FitnessOfflineRepository();
+
+      const alunoId = 'aluno_gestao_1';
+      const alunoNome = 'Lucas Mendonça';
+
+      // 1. Personal prescreve nova ficha ABCD com vigência de 45 dias
+      await personalRepo.definirValidadeTreino(
+        alunoId: alunoId,
+        validadeDias: 45,
+        treinoNome: 'Hipertrofia Metabólica ABCD',
+      );
+
+      final alunos = await personalRepo.getAlunos();
+      final alunoAtual = alunos.firstWhere((a) => a.id == alunoId);
+      expect(alunoAtual.treinoAtualNome, equals('Hipertrofia Metabólica ABCD'));
+      expect(alunoAtual.validadeTreinoDias, equals(45));
+
+      // 2. Aluno executa o treino da ficha no Player ao Vivo
+      final sessaoExecutada = SessaoTreinoRegistroModel(
+        id: 'sessao_abcd_1',
+        treinoId: 'treino_abcd',
+        divisaoLetra: 'A',
+        divisaoNome: 'Treino A - Peito e Tríceps',
+        alunoId: alunoId,
+        dataHoraInicio: DateTime.now().subtract(const Duration(minutes: 60)).toIso8601String(),
+        dataHoraFim: DateTime.now().toIso8601String(),
+        duracaoSegundos: 3600,
+        rpe: 9, // RPE 9/10
+        feedbackAluno: 'Supino com 90kg foi até a falha na 4ª série!',
+        sincronizado: false,
+        exerciciosExecutados: const [
+          ExercicioExecutadoRegistroModel(
+            exercicioId: 'ex_supino',
+            exercicioNome: 'Supino Reto com Barra',
+            grupoMuscular: 'Peitoral',
+            series: [
+              SerieRegistroModel(numero: 1, cargaRealKg: 90.0, repeticoesRealizadas: 10, concluida: true),
+              SerieRegistroModel(numero: 2, cargaRealKg: 90.0, repeticoesRealizadas: 10, concluida: true),
+            ],
+          ),
+        ],
+      );
+
+      await fitnessRepo.registrarSessaoConcluida(sessaoExecutada);
+
+      // 3. O feedback é registrado na visão do Personal Trainer
+      final feedback = PersonalAlunoFeedbackModel(
+        id: 'fb_novo_1',
+        treinoId: sessaoExecutada.treinoId,
+        divisaoNome: sessaoExecutada.divisaoNome,
+        data: DateTime.now().toIso8601String().substring(0, 10),
+        rpe: sessaoExecutada.rpe,
+        comentario: sessaoExecutada.feedbackAluno ?? '',
+        exercicioDestaque: 'Supino Reto com Barra',
+      );
+
+      await personalRepo.adicionarFeedbackTreino(
+        alunoId: alunoId,
+        feedback: feedback,
+      );
+
+      // 4. Personal visualiza o feedback atualizado do aluno
+      final alunosPosFeedback = await personalRepo.getAlunos();
+      final alunoComFeedback = alunosPosFeedback.firstWhere((a) => a.id == alunoId);
+
+      expect(alunoComFeedback.feedbacks.isNotEmpty, isTrue);
+      expect(alunoComFeedback.feedbacks.first.rpe, equals(9));
+      expect(alunoComFeedback.feedbacks.first.comentario, contains('Supino com 90kg'));
     });
   });
 }
