@@ -2,12 +2,12 @@ class ApiLinks {
   ApiLinks._();
   static const String _baseIp = String.fromEnvironment(
     'BACKEND_URL',
-    defaultValue: 'https://appacademia-production-be7e.up.railway.app',
+    defaultValue: 'http://localhost:9001',
   );
 
   static const String _chatId = String.fromEnvironment(
     'WS_BACKEND_URL',
-    defaultValue: 'wss://appacademia-production-be7e.up.railway.app/boletobancos',
+    defaultValue: 'ws://localhost:9001/boletobancos',
   );
   //"http://192.168.100.41:8088";
   //  "http://192.168.114.1:8088";
