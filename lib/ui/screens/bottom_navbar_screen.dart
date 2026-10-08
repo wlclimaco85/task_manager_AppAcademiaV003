@@ -15,6 +15,7 @@ import 'package:task_manager_flutter/ui/screens/modalidade_grid_screen_dynamic.d
 import 'package:task_manager_flutter/ui/screens/fitness/treinos_hub_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/avaliacao_fisica_pro_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/nutricao_protocolos_hub_screen.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/contratar_profissional_screen.dart';
 
 class BottomNavBarScreen extends StatefulWidget {
   const BottomNavBarScreen({super.key});
@@ -210,7 +211,11 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         _openDynamicGrid('academia', sec, AppScreen.academias);
         break;
       case 'Personal':
-        _openDynamicGrid('personal', sec, AppScreen.personais);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => const ContratarProfissionalScreen()),
+        );
         break;
       case 'Alunos do personal':
         Navigator.push(
