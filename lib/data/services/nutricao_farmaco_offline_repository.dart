@@ -327,7 +327,7 @@ class NutricaoFarmacoOfflineRepository {
             data: dtExame,
             tipo: 'exame_laboratorial',
             titulo: '📄 Exame: ${ex.titulo}',
-            descricao: 'Lab: ${ex.laboratório} • PDF: ${ex.nomeArquivoPdf ?? "laudo.pdf"}${ex.observacoesResultados != null ? " • " + ex.observacoesResultados! : ""}',
+            descricao: 'Lab: ${ex.laboratorio} • PDF: ${ex.nomeArquivoPdf ?? "laudo.pdf"}${ex.observacoesResultados != null ? " • " + ex.observacoesResultados! : ""}',
             tagCorHex: '#8B5CF6', // Purple
           ),
         );

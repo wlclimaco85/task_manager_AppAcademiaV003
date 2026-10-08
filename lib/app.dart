@@ -38,7 +38,7 @@ class TaskManagerApp extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           color: GridColors.card,
           elevation: 0,
           shape: RoundedRectangleBorder(

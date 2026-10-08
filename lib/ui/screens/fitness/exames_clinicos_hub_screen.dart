@@ -258,7 +258,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Data do Exame: ${exame.dataExame} • ${exame.laboratório}',
+                      'Data do Exame: ${exame.dataExame} • ${exame.laboratorio}',
                       style: const TextStyle(
                         color: Color(0xFF8E9BAE),
                         fontSize: 12,
@@ -391,7 +391,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
           children: [
             Text('Data: ${exame.dataExame}',
                 style: const TextStyle(color: Colors.white70, fontSize: 13)),
-            Text('Laboratório: ${exame.laboratório}',
+            Text('Laboratório: ${exame.laboratorio}',
                 style: const TextStyle(color: Colors.white70, fontSize: 13)),
             const SizedBox(height: 12),
             Container(
@@ -612,7 +612,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                         titulo: tituloController.text.trim(),
                         categoria: categoriaSelecionada,
                         dataExame: dataController.text.trim(),
-                        laboratório: labController.text.trim(),
+                        laboratorio: labController.text.trim(),
                         medicoSolicitante: medicoController.text.trim(),
                         observacoesResultados:
                             resultadosController.text.trim(),

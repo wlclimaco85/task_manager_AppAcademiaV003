@@ -51,6 +51,18 @@ class GridColors {
 }
 
 class CustomColors {
+  static const Color primaryGreen = GridColors.primary;
+  static const Color darkGreen = GridColors.primaryDark;
+  static const Color lightGreen = GridColors.primaryLight;
+  static const Color card = GridColors.card;
+  static const Color background = GridColors.background;
+  static const Color textPrimary = GridColors.textPrimary;
+  static const Color textSecondary = GridColors.textSecondary;
+  static const Color error = GridColors.error;
+  static const Color success = GridColors.success;
+  static const Color warning = GridColors.warning;
+  static const Color info = GridColors.info;
+
   final Color _lightGreenBackground = GridColors.card;
   final Color _darkGreenBorder = GridColors.primary;
   final Color _buttonBackground = GridColors.buttonBackground;

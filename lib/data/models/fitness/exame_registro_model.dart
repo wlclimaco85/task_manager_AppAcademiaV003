@@ -18,7 +18,7 @@ class ExameRegistroModel {
   final String titulo; // ex: "Hemograma Completo + Perfil Lipídico", "Painel Hormonal Total & Livre"
   final CategoriaExame categoria;
   final String dataExame; // YYYY-MM-DD
-  final String laboratório; // ex: "Laboratório Sabin Uberaba", "Laboratório Carlos Chagas"
+  final String laboratorio; // ex: "Laboratório Sabin Uberaba", "Laboratório Carlos Chagas"
   final String? medicoSolicitante; // ex: "Dr. Roberto Endocrinologista"
   final String? urlPdf; // Link / caminho do arquivo PDF do laudo
   final String? nomeArquivoPdf; // ex: "laudo_hormonal_outubro_2026.pdf"
@@ -34,7 +34,7 @@ class ExameRegistroModel {
     required this.titulo,
     this.categoria = CategoriaExame.sangue,
     required this.dataExame,
-    this.laboratório = 'Laboratório Sabin Uberaba',
+    this.laboratorio = 'Laboratório Sabin Uberaba',
     this.medicoSolicitante,
     this.urlPdf,
     this.nomeArquivoPdf,
@@ -51,7 +51,7 @@ class ExameRegistroModel {
     String? titulo,
     CategoriaExame? categoria,
     String? dataExame,
-    String? laboratório,
+    String? laboratorio,
     String? medicoSolicitante,
     String? urlPdf,
     String? nomeArquivoPdf,
@@ -67,7 +67,7 @@ class ExameRegistroModel {
       titulo: titulo ?? this.titulo,
       categoria: categoria ?? this.categoria,
       dataExame: dataExame ?? this.dataExame,
-      laboratório: laboratório ?? this.laboratório,
+      laboratorio: laboratorio ?? this.laboratorio,
       medicoSolicitante: medicoSolicitante ?? this.medicoSolicitante,
       urlPdf: urlPdf ?? this.urlPdf,
       nomeArquivoPdf: nomeArquivoPdf ?? this.nomeArquivoPdf,
@@ -88,7 +88,7 @@ class ExameRegistroModel {
       'titulo': titulo,
       'categoria': categoria.name,
       'dataExame': dataExame,
-      'laboratório': laboratório,
+      'laboratorio': laboratorio,
       'medicoSolicitante': medicoSolicitante,
       'urlPdf': urlPdf,
       'nomeArquivoPdf': nomeArquivoPdf,
@@ -111,8 +111,8 @@ class ExameRegistroModel {
       ),
       dataExame: map['dataExame']?.toString() ??
           DateTime.now().toIso8601String().substring(0, 10),
-      laboratório:
-          map['laboratório']?.toString() ?? 'Laboratório Sabin Uberaba',
+      laboratorio:
+          map['laboratorio']?.toString() ?? map['laboratório']?.toString() ?? 'Laboratório Sabin Uberaba',
       medicoSolicitante: map['medicoSolicitante']?.toString(),
       urlPdf: map['urlPdf']?.toString(),
       nomeArquivoPdf: map['nomeArquivoPdf']?.toString(),
