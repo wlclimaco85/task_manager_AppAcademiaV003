@@ -762,6 +762,8 @@ class _NutricaoProtocolosHubScreenState
       case 'inicio_medicamento':
       case 'fim_medicamento':
         return Icons.medication;
+      case 'exame_laboratorial':
+        return Icons.picture_as_pdf;
       default:
         return Icons.science;
     }

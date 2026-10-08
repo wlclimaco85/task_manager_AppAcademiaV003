@@ -16,6 +16,7 @@ import 'package:task_manager_flutter/ui/screens/fitness/treinos_hub_screen.dart'
 import 'package:task_manager_flutter/ui/screens/fitness/avaliacao_fisica_pro_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/nutricao_protocolos_hub_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/contratar_profissional_screen.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/exames_clinicos_hub_screen.dart';
 
 class BottomNavBarScreen extends StatefulWidget {
   const BottomNavBarScreen({super.key});
@@ -234,7 +235,11 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         break;
 
       case 'Exames':
-        _openDynamicGrid('exame', sec, AppScreen.exames);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => const ExamesClinicosHubScreen()),
+        );
         break;
       case 'Treinos':
         Navigator.push(

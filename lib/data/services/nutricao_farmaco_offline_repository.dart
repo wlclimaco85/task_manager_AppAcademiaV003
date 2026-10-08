@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/models/fitness/nutricao_farmaco_model.dart';
+import 'package:task_manager_flutter/data/models/fitness/exame_registro_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
+import 'package:task_manager_flutter/data/services/exames_offline_repository.dart';
 
 /// Repositório Offline-First de Nutrição, Farmacologia, Suplementação e Timeline 360
 class NutricaoFarmacoOfflineRepository {
@@ -310,6 +312,23 @@ class NutricaoFarmacoOfflineRepository {
             titulo: '🧪 Suplemento: ${s.nome}',
             descricao: '${s.dosagem} • ${s.horario}',
             tagCorHex: '#3B82F6', // Blue
+          ),
+        );
+      }
+    }
+
+    // 5. Exames Clínicos / Laboratoriais (Laudos PDF & Marcadores)
+    final exames = await ExamesOfflineRepository().getExames(alunoId: alunoId);
+    for (final ex in exames) {
+      final dtExame = DateTime.tryParse(ex.dataExame);
+      if (dtExame != null) {
+        eventos.add(
+          TimelineFitnessEventModel(
+            data: dtExame,
+            tipo: 'exame_laboratorial',
+            titulo: '📄 Exame: ${ex.titulo}',
+            descricao: 'Lab: ${ex.laboratório} • PDF: ${ex.nomeArquivoPdf ?? "laudo.pdf"}${ex.observacoesResultados != null ? " • " + ex.observacoesResultados! : ""}',
+            tagCorHex: '#8B5CF6', // Purple
           ),
         );
       }
