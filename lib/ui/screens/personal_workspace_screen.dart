@@ -1245,7 +1245,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
   void _modalAgendarAula(BuildContext context) {
     String alunoSelecionado = _alunos.isNotEmpty ? _alunos.first.id : '';
     final academiaController =
-        TextEditingController(text: 'SmartFit Jardins');
+        TextEditingController(text: 'SmartFit - Shopping Uberaba');
     final horarioController = TextEditingController(text: '10:00');
     final tipoController =
         TextEditingController(text: 'Musculação Acompanhada');

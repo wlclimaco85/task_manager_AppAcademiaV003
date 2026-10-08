@@ -4,12 +4,11 @@ import 'package:task_manager_flutter/data/models/fitness/profissional_vitrine_mo
 import 'package:task_manager_flutter/data/services/profissionais_vitrine_repository.dart';
 
 /// Tela de Vitrine / Contratação de Profissionais (Personal Trainer & Nutricionista)
-/// Experiência de Usuário Premium com:
-/// - Filtros por Categoria (Todos, Personais, Nutricionistas)
-/// - Busca Inteligente por Nome, Especialidade ou Academia
-/// - Chips de Academias Atendidas (SmartFit, Ironberg, BlueFit, Bio Ritmo)
-/// - Visualização de Grade de Horários Livres / Ocupados por Dia
-/// - Pacotes de Contratação e Contato Direto via WhatsApp
+/// Foco Estratégico em Uberaba - MG com:
+/// - Filtro Dinâmico por Academias de Uberaba (SmartFit Shopping, Leopoldino, World Fitness, Mega Fit, Fisio & Forma)
+/// - Opção para o Personal Cadastrar Nova Academia
+/// - Visualização da Disponibilidade / Grade de Horários Livres
+/// - Listagem e Contratação Direta de Planos com WhatsApp
 class ContratarProfissionalScreen extends StatefulWidget {
   const ContratarProfissionalScreen({super.key});
 
@@ -25,17 +24,10 @@ class _ContratarProfissionalScreenState
   final TextEditingController _buscaController = TextEditingController();
 
   CategoriaProfissional? _categoriaFiltro;
-  String _academiaFiltro = 'Todas as Academias';
+  String _academiaFiltro = 'Todas de Uberaba';
   bool _loading = true;
   List<ProfissionalVitrineModel> _profissionais = [];
-
-  final List<String> _academiasOpcoes = [
-    'Todas as Academias',
-    'Ironberg',
-    'SmartFit',
-    'BlueFit',
-    'Bio Ritmo',
-  ];
+  List<AcademiaAtendimentoModel> _academiasDisponiveis = [];
 
   @override
   void initState() {
@@ -47,12 +39,15 @@ class _ContratarProfissionalScreenState
     setState(() => _loading = true);
     final lista = await _repo.getProfissionais(
       categoria: _categoriaFiltro,
-      academiaFiltro: _academiaFiltro,
+      academiaFiltro: _academiaFiltro == 'Todas de Uberaba' ? null : _academiaFiltro,
       buscaTexto: _buscaController.text,
     );
+    final academias = await _repo.getAcademiasCadastradas();
+
     if (mounted) {
       setState(() {
         _profissionais = lista;
+        _academiasDisponiveis = academias;
         _loading = false;
       });
     }
@@ -68,24 +63,37 @@ class _ContratarProfissionalScreenState
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Encontrar Personal & Nutri',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              children: [
+                Text(
+                  'Personais & Nutris em Uberaba',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(width: 6),
+                Icon(Icons.location_on, color: CustomColors.primaryGreen, size: 16),
+              ],
             ),
             Text(
-              'Contrate os melhores profissionais para o seu objetivo',
+              'Encontre os melhores profissionais na sua academia',
               style: TextStyle(color: Color(0xFF8E9BAE), fontSize: 11),
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_business_outlined, color: CustomColors.primaryGreen),
+            tooltip: 'Cadastrar Academia',
+            onPressed: () => _modalCadastrarAcademia(context),
+          ),
+        ],
       ),
       body: Column(
         children: [
-          // Header com Busca e Filtros
+          // Header com Busca, Filtros e Academias
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             decoration: const BoxDecoration(
@@ -102,9 +110,9 @@ class _ContratarProfissionalScreenState
                   onChanged: (_) => _carregar(),
                   style: const TextStyle(color: Colors.white, fontSize: 14),
                   decoration: InputDecoration(
-                    hintText: 'Buscar por nome, academia ou especialidade...',
+                    hintText: 'Buscar por nome, especialidade ou academia em Uberaba...',
                     hintStyle:
-                        const TextStyle(color: Color(0xFF8E9BAE), fontSize: 13),
+                        const TextStyle(color: Color(0xFF8E9BAE), fontSize: 12),
                     prefixIcon:
                         const Icon(Icons.search, color: CustomColors.primaryGreen),
                     suffixIcon: _buscaController.text.isNotEmpty
@@ -136,7 +144,7 @@ class _ContratarProfissionalScreenState
                   ),
                 ),
                 const SizedBox(height: 10),
-                // Chips de Categoria
+                // Chips de Categoria e Dropdown de Academias de Uberaba
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -172,7 +180,7 @@ class _ContratarProfissionalScreenState
                         },
                       ),
                       const SizedBox(width: 12),
-                      // Dropdown de Academias
+                      // Dropdown de Academias de Uberaba
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 2),
@@ -189,10 +197,19 @@ class _ContratarProfissionalScreenState
                                 color: Colors.white, fontSize: 12),
                             icon: const Icon(Icons.arrow_drop_down,
                                 color: CustomColors.primaryGreen, size: 20),
-                            items: _academiasOpcoes
-                                .map((a) => DropdownMenuItem(
-                                    value: a, child: Text(a)))
-                                .toList(),
+                            items: [
+                              const DropdownMenuItem(
+                                  value: 'Todas de Uberaba',
+                                  child: Text('📍 Todas de Uberaba')),
+                              ..._academiasDisponiveis.map((a) => DropdownMenuItem(
+                                    value: a.nome,
+                                    child: Text(
+                                      a.nome.length > 26
+                                          ? '${a.nome.substring(0, 24)}...'
+                                          : a.nome,
+                                    ),
+                                  )),
+                            ],
                             onChanged: (val) {
                               if (val != null) {
                                 setState(() => _academiaFiltro = val);
@@ -233,7 +250,7 @@ class _ContratarProfissionalScreenState
                             ),
                             const SizedBox(height: 6),
                             const Text(
-                              'Tente alterar os filtros de categoria ou academia.',
+                              'Tente alterar os filtros de academia de Uberaba.',
                               style: TextStyle(
                                   color: Color(0xFF8E9BAE), fontSize: 13),
                             ),
@@ -304,7 +321,7 @@ class _ContratarProfissionalScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Topo: Foto, Nome, Selo e Avaliação
+                // Topo: Avatar, Nome, Categoria e Preço Mínimo
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -366,9 +383,9 @@ class _ContratarProfissionalScreenState
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '${prof.registroProfissional} • ${prof.anosExperiencia} anos exp.',
+                            '${prof.registroProfissional} • ${prof.anosExperiencia} anos exp. em Uberaba',
                             style: const TextStyle(
-                                color: Color(0xFF8E9BAE), fontSize: 12),
+                                color: Color(0xFF8E9BAE), fontSize: 11),
                           ),
                           const SizedBox(height: 4),
                           Row(
@@ -447,9 +464,9 @@ class _ContratarProfissionalScreenState
                 ),
                 const SizedBox(height: 12),
 
-                // Academias Atendidas (Badges)
+                // Academias Atendidas em Uberaba (Badges)
                 const Text(
-                  'Academias que Atende:',
+                  'Academias que Atende em Uberaba:',
                   style: TextStyle(
                     color: Color(0xFF8E9BAE),
                     fontSize: 11,
@@ -507,7 +524,7 @@ class _ContratarProfissionalScreenState
                               size: 14, color: Colors.greenAccent),
                           const SizedBox(width: 4),
                           Text(
-                            '${prof.totalHorariosLivres} horários livres esta semana',
+                            '${prof.totalHorariosLivres} horários livres disponíveis esta semana',
                             style: const TextStyle(
                               color: Colors.greenAccent,
                               fontSize: 11,
@@ -523,7 +540,7 @@ class _ContratarProfissionalScreenState
             ),
           ),
 
-          // Botões de Ação
+          // Botões de Ação: Ver Disponibilidade & Planos
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: const BoxDecoration(
@@ -546,7 +563,7 @@ class _ContratarProfissionalScreenState
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     icon: const Icon(Icons.calendar_month, size: 16),
-                    label: const Text('Ver Horários',
+                    label: const Text('Ver Disponibilidade',
                         style: TextStyle(fontSize: 12)),
                   ),
                 ),
@@ -563,7 +580,7 @@ class _ContratarProfissionalScreenState
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     icon: const Icon(Icons.chat_bubble_outline, size: 16),
-                    label: const Text('Contratar',
+                    label: const Text('Planos & Contratar',
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 12)),
                   ),
@@ -590,8 +607,8 @@ class _ContratarProfissionalScreenState
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        maxChildSize: 0.9,
+        initialChildSize: 0.75,
+        maxChildSize: 0.95,
         minChildSize: 0.5,
         expand: false,
         builder: (_, scrollController) => Padding(
@@ -606,16 +623,16 @@ class _ContratarProfissionalScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Horários de ${prof.nome}',
+                        'Disponibilidade: ${prof.nome}',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 18,
+                          fontSize: 17,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 2),
                       const Text(
-                        'Grade semanal de disponibilidade para aulas',
+                        'Consulte os horários vagos para agendamento presencial',
                         style: TextStyle(
                             color: Color(0xFF8E9BAE), fontSize: 12),
                       ),
@@ -659,7 +676,7 @@ class _ContratarProfissionalScreenState
                         ),
                         const SizedBox(height: 10),
                         const Text(
-                          'Horários Livres:',
+                          'Horários Livres (Disponíveis):',
                           style: TextStyle(
                               color: Colors.white70,
                               fontSize: 11,
@@ -769,10 +786,10 @@ class _ContratarProfissionalScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Planos de ${prof.nome}',
+                      'Planos & Valores: ${prof.nome}',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 18,
+                        fontSize: 17,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -860,7 +877,7 @@ class _ContratarProfissionalScreenState
                             ),
                           ),
                           icon: const Icon(Icons.chat, size: 16),
-                          label: const Text('Conversar no WhatsApp',
+                          label: const Text('Contratar via WhatsApp',
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 12)),
                         ),
@@ -868,6 +885,115 @@ class _ContratarProfissionalScreenState
                     ],
                   ),
                 )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // MODAL: CADASTRAR NOVA ACADEMIA
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  void _modalCadastrarAcademia(BuildContext context) {
+    final nomeController = TextEditingController();
+    final enderecoController = TextEditingController();
+    final bairroController =
+        TextEditingController(text: 'Centro, Uberaba - MG');
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF16202A),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Cadastrar Nova Academia em Uberaba',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: nomeController,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                labelText: 'Nome da Academia',
+                labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
+                filled: true,
+                fillColor: Color(0xFF0D131A),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: enderecoController,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                labelText: 'Endereço (Rua, Número)',
+                labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
+                filled: true,
+                fillColor: Color(0xFF0D131A),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: bairroController,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                labelText: 'Bairro e Cidade',
+                labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
+                filled: true,
+                fillColor: Color(0xFF0D131A),
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  if (nomeController.text.trim().isEmpty) return;
+                  final novaAcademia = AcademiaAtendimentoModel(
+                    id: 'acad-${DateTime.now().millisecondsSinceEpoch}',
+                    nome: nomeController.text.trim(),
+                    endereco: enderecoController.text.trim(),
+                    bairroCidade: bairroController.text.trim(),
+                  );
+                  await _repo.cadastrarNovaAcademia(novaAcademia);
+                  Navigator.pop(ctx);
+                  _carregar();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                            'Academia "${novaAcademia.nome}" cadastrada com sucesso em Uberaba!'),
+                        backgroundColor: CustomColors.primaryGreen,
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: CustomColors.primaryGreen,
+                  foregroundColor: const Color(0xFF0D131A),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: const Text('Cadastrar Academia',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
           ],
         ),
       ),

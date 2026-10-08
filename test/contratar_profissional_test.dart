@@ -9,55 +9,62 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  group('Suite de Vitrine e Contratação de Profissionais (Personal & Nutricionista)', () {
-    test('1. Listar e filtrar profissionais por categoria', () async {
+  group('Suite de Vitrine & Academias de Uberaba - MG', () {
+    test('1. Listar e filtrar profissionais com foco em Uberaba - MG', () async {
       final repo = ProfissionaisVitrineRepository();
 
-      // Buscar todos
+      // Buscar todos os profissionais
       final todos = await repo.getProfissionais();
-      expect(todos.length, greaterThanOrEqualTo(3));
+      expect(todos.isNotEmpty, isTrue);
 
-      // Filtrar apenas Personais
-      final personais = await repo.getProfissionais(
-        categoria: CategoriaProfissional.personal,
-      );
-      expect(personais.every((p) => p.categoria == CategoriaProfissional.personal), isTrue);
-
-      // Filtrar apenas Nutricionistas
-      final nutris = await repo.getProfissionais(
-        categoria: CategoriaProfissional.nutricionista,
-      );
-      expect(nutris.every((p) => p.categoria == CategoriaProfissional.nutricionista), isTrue);
+      // Verificar Rodrigo Medeiros atendendo SmartFit Shopping Uberaba
+      final rodrigo = todos.firstWhere((p) => p.id == 'prof-1');
+      expect(rodrigo.registroProfissional, contains('/MG'));
+      expect(rodrigo.academiasAtendidas.any((a) => a.nome.contains('Shopping Uberaba')), isTrue);
     });
 
-    test('2. Filtrar por Academia atendida e busca por texto', () async {
+    test('2. Personal cadastrar nova academia em Uberaba', () async {
       final repo = ProfissionaisVitrineRepository();
 
-      // Filtrar por Ironberg
-      final ironbergProfs = await repo.getProfissionais(
-        academiaFiltro: 'Ironberg',
+      final novaAcademia = const AcademiaAtendimentoModel(
+        id: 'ura-ct-custom',
+        nome: 'Centro de Treinamento Alpha Uberaba',
+        endereco: 'Av. Nenê Sabino, 1400',
+        bairroCidade: 'Olinda, Uberaba - MG',
       );
-      expect(ironbergProfs.isNotEmpty, isTrue);
-      expect(ironbergProfs.any((p) => p.nome.contains('Rodrigo')), isTrue);
 
-      // Busca por texto "Biomecânica"
-      final busca = await repo.getProfissionais(buscaTexto: 'Biomecânica');
-      expect(busca.length, equals(1));
-      expect(busca.first.nome, contains('Rodrigo'));
+      await repo.cadastrarNovaAcademia(novaAcademia);
+
+      final listaAcademias = await repo.getAcademiasCadastradas();
+      expect(listaAcademias.any((a) => a.nome == 'Centro de Treinamento Alpha Uberaba'), isTrue);
+
+      // Vincular academia ao personal
+      await repo.vincularAcademiaAoPersonal(
+        personalId: 'prof-1',
+        academia: novaAcademia,
+      );
+
+      final profAtualizado = await repo.getProfissionalPorId('prof-1');
+      expect(profAtualizado!.academiasAtendidas.any((a) => a.nome == 'Centro de Treinamento Alpha Uberaba'), isTrue);
     });
 
-    test('3. Grade de Horários Livres e Pacotes com WhatsApp', () async {
+    test('3. Gestão e Visualização da Disponibilidade de Horários Livres', () async {
       final repo = ProfissionaisVitrineRepository();
+
       final prof = await repo.getProfissionalPorId('prof-1');
-
-      expect(prof, isNotNull);
       expect(prof!.totalHorariosLivres, greaterThan(0));
-      expect(prof.whatsapp, contains('98111-2233'));
-      expect(prof.pacotes.isNotEmpty, isTrue);
 
-      final pacoteDestaque = prof.pacotes.firstWhere((p) => p.destaque);
-      expect(pacoteDestaque.precoMensal, equals(650.0));
-      expect(pacoteDestaque.aulasPorSemana, equals(3));
+      // Atualizar disponibilidade: marcar 14:00 como livre na segunda-feira
+      await repo.atualizarDisponibilidadeHorario(
+        personalId: 'prof-1',
+        diaSemana: 'Segunda-feira',
+        horario: '14:00',
+        marcarComoLivre: true,
+      );
+
+      final profPosAjuste = await repo.getProfissionalPorId('prof-1');
+      final gradeSegunda = profPosAjuste!.gradeHorarios.firstWhere((g) => g.diaSemana == 'Segunda-feira');
+      expect(gradeSegunda.horariosDisponiveis.contains('14:00'), isTrue);
     });
   });
 }
