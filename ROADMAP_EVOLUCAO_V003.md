@@ -135,9 +135,12 @@ task_manager_AppAcademiaV003/lib/
 │   │   └── fitness/
 │   │       ├── exercicio_model.dart              # Modelo de exercício com mídias e grupos musculares
 │   │       ├── plano_treino_model.dart           # Fichas de treino, divisões (A/B/C/D) e séries
-│   │       └── sessao_treino_registro_model.dart # Histórico de execuções reais, cargas e RPE
+│   │       ├── sessao_treino_registro_model.dart # Histórico de execuções reais, cargas e RPE
+│   │       └── nutricao_farmaco_model.dart       # Modelos de Alimentos (TACO), Dietas, Medicamentos/Ciclos e Suplementos
 │   └── services/
-│       ├── fitness_offline_repository.dart       # Repositório Offline-First com persistência local
+│       ├── fitness_offline_repository.dart       # Repositório Offline-First de treinos com sobrecarga inteligente
+│       ├── fitness_push_notification_service.dart # Notificações push de inatividade, fichas e metas
+│       ├── nutricao_farmaco_offline_repository.dart # Repositório Offline de Dietas, Farmacologia e Timeline 360
 │       └── fitness_360_local_store.dart          # Store local auxiliar
 └── ui/
     └── screens/
@@ -146,8 +149,9 @@ task_manager_AppAcademiaV003/lib/
             ├── treinos_hub_screen.dart           # Hub principal com fichas, métricas e atalhos rápidos
             ├── montador_treino_screen.dart       # Montador visual de fichas para personal trainers
             ├── biblioteca_exercicios_screen.dart # Catálogo de exercícios com filtros e buscas
-            ├── player_treino_ao_vivo_screen.dart # Player de execução de treino em tempo real do aluno
-            └── avaliacao_fisica_pro_screen.dart  # Avaliação física com protocolos de dobras e perimetria
+            ├── player_treino_ao_vivo_screen.dart # Player de treino com sobrecarga MyFitCoach e card Stories
+            ├── avaliacao_fisica_pro_screen.dart  # Avaliação física com protocolos de dobras e perimetria
+            └── nutricao_protocolos_hub_screen.dart # Hub de Dietas com cálculo automático de macros, Medicamentos/Ciclos e Timeline 360
 ```
 
 ---
@@ -159,9 +163,11 @@ task_manager_AppAcademiaV003/lib/
 | **Fase 1** | **Limpeza do Frontend & Desacoplamento do Legado ERP** | ✅ **Concluída** | 35 telas e widgets de contabilidade/ERP removidos; `bottom_navbar_screen.dart` reestruturado nas 5 abas do MFIT com NavigationRail para Web e NavigationBar para Mobile; Design System Emerald Pro atualizado em `custom_colors.dart` e `app.dart`. |
 | **Fase 2** | **Infraestrutura e Repositório Offline-First** | ✅ **Concluída** | Implementado `FitnessOfflineRepository` com persistência local de exercícios, treinos, divisões e sessões finalizadas com resiliência a quedas de rede. |
 | **Fase 3** | **Biblioteca de Exercícios & Montador de Treino (MFIT Core)** | ✅ **Concluída** | `montador_treino_screen.dart` e `biblioteca_exercicios_screen.dart` implementados com suporte a divisões A/B/C/D, busca inteligente, seleção de técnicas avançadas e criação de novos exercícios. |
-| **Fase 4** | **Player de Treino do Aluno (MyFitCoach Live Mode)** | ✅ **Concluída** | `player_treino_ao_vivo_screen.dart` implementado com cronômetro automático de descanso, substituição de aparelho no salão, registro de carga real e tonelagem total. |
+| **Fase 4** | **Player de Treino do Aluno (MyFitCoach Live Mode)** | ✅ **Concluída** | `player_treino_ao_vivo_screen.dart` implementado com algoritmo de sobrecarga inteligente (+2kg), cronômetro automático de descanso, substituição de aparelho no salão e card Stories 9:16. |
 | **Fase 5** | **Avaliação Física, Protocolos de Dobras & Medidas** | ✅ **Concluída** | `avaliacao_fisica_pro_screen.dart` implementada com Pollock 3 e 7 dobras, Petroski, medidas corporais completas e comparação postural. |
-| **Fase 6** | **Notificações Push, Polimento de UI & Validação Final** | 📋 **Em Andamento** | Ajustes finos de micro-animações, feedback tátil no mobile, push notifications de lembrete de treino e testes automatizados de paridade web/mobile. |
+| **Fase 6** | **Nutrição Esportiva, Farmacologia, Ciclos e Timeline 360** | ✅ **Concluída** | `nutricao_protocolos_hub_screen.dart` com banco TACO pré-carregado, cálculo em tempo real de macros por quantidade em gramas, registro de medicamentos/ciclos/suplementos com datas de início/fim e gráfico de linha do tempo integrado (Peso x % Gordura x Marcos). |
+| **Fase 7** | **Notificações Push, Polimento de UI & Validação Final** | 📋 **Em Andamento** | Push notifications integradas (`fitness_push_notification_service.dart`) para inatividade e metas batidas, e validações contínuas de paridade web/mobile. |
+
 
 ---
 

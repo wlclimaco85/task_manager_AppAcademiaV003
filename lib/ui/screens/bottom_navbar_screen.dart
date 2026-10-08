@@ -12,6 +12,9 @@ import 'package:task_manager_flutter/ui/screens/objetivo_grid_screen_dynamic.dar
 import 'package:task_manager_flutter/ui/screens/avaliacao_fisica_grid_screen_dynamic.dart';
 import 'package:task_manager_flutter/ui/screens/grupo_muscular_grid_screen_dynamic.dart';
 import 'package:task_manager_flutter/ui/screens/modalidade_grid_screen_dynamic.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/treinos_hub_screen.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/avaliacao_fisica_pro_screen.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/nutricao_protocolos_hub_screen.dart';
 
 class BottomNavBarScreen extends StatefulWidget {
   const BottomNavBarScreen({super.key});
@@ -34,13 +37,6 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
           onOpenModule: (action) => _openFitnessAction(action, sec),
         ),
       ),
-      if (sec.canView(AppScreen.exercicios))
-        const _FitnessNavItem(
-          label: 'Treinos',
-          icon: Icons.directions_run_outlined,
-          selectedIcon: Icons.directions_run,
-          screen: ExerciciosScreen(),
-        ),
       if (sec.canView(AppScreen.treinos))
         const _FitnessNavItem(
           label: 'Alunos',
@@ -48,19 +44,19 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
           selectedIcon: Icons.groups,
           screen: PersonalWorkspaceScreen(),
         ),
+      if (sec.canView(AppScreen.exercicios))
+        const _FitnessNavItem(
+          label: 'Treinos',
+          icon: Icons.fitness_center_outlined,
+          selectedIcon: Icons.fitness_center,
+          screen: TreinosHubScreen(),
+        ),
       if (sec.canView(AppScreen.atividades))
         const _FitnessNavItem(
           label: 'Atividade',
           icon: Icons.insights_outlined,
           selectedIcon: Icons.insights,
           screen: AtividadeScreen(),
-        ),
-      if (sec.canView(AppScreen.metas))
-        const _FitnessNavItem(
-          label: 'Metas',
-          icon: Icons.flag_outlined,
-          selectedIcon: Icons.flag,
-          screen: MetasScreen(),
         ),
       const _FitnessNavItem(
         label: 'Mais',
@@ -83,6 +79,87 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
 
     final safeIndex = selectedIndex.clamp(0, navItems.length - 1);
     final activeItem = navItems[safeIndex];
+    final width = MediaQuery.sizeOf(context).width;
+    final isDesktopOrWeb = width >= 800;
+
+    if (isDesktopOrWeb) {
+      return Scaffold(
+        body: Row(
+          children: [
+            NavigationRail(
+              selectedIndex: safeIndex,
+              onDestinationSelected: (index) {
+                if (navItems[index].opensMenu) {
+                  _showMenuOptions(context, sec);
+                  return;
+                }
+                setState(() => selectedIndex = index);
+              },
+              backgroundColor: GridColors.card,
+              indicatorColor: GridColors.primarySubtle,
+              selectedIconTheme: const IconThemeData(color: GridColors.primary),
+              unselectedIconTheme:
+                  const IconThemeData(color: GridColors.textSecondary),
+              selectedLabelTextStyle: const TextStyle(
+                color: GridColors.primary,
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+              ),
+              unselectedLabelTextStyle: const TextStyle(
+                color: GridColors.textSecondary,
+                fontWeight: FontWeight.w500,
+                fontSize: 11,
+              ),
+              labelType: NavigationRailLabelType.all,
+              leading: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: GridColors.primary,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.fitness_center,
+                        color: Colors.white,
+                        size: 26,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'AppAcademia',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: GridColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              destinations: [
+                for (final item in navItems)
+                  NavigationRailDestination(
+                    icon: Icon(item.icon),
+                    selectedIcon: Icon(item.selectedIcon),
+                    label: Text(item.label),
+                  ),
+              ],
+            ),
+            const VerticalDivider(
+                thickness: 1, width: 1, color: GridColors.divider),
+            Expanded(
+              child: activeItem.opensMenu
+                  ? navItems.first.screen
+                  : activeItem.screen,
+            ),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       body: activeItem.opensMenu ? navItems.first.screen : activeItem.screen,
@@ -94,22 +171,23 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
             boxShadow: [
               BoxShadow(
                 color: GridColors.shadow,
-                blurRadius: 18,
-                offset: Offset(0, -6),
+                blurRadius: 16,
+                offset: Offset(0, -4),
               ),
             ],
           ),
           child: NavigationBar(
             selectedIndex: safeIndex,
-            height: 72,
+            height: 68,
             backgroundColor: GridColors.card,
-            indicatorColor: GridColors.primary.withValues(alpha: 0.13),
-            labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+            indicatorColor: GridColors.primarySubtle,
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
             destinations: [
               for (final item in navItems)
                 NavigationDestination(
-                  icon: Icon(item.icon),
-                  selectedIcon: Icon(item.selectedIcon),
+                  icon: Icon(item.icon, color: GridColors.textSecondary),
+                  selectedIcon:
+                      Icon(item.selectedIcon, color: GridColors.primary),
                   label: item.label,
                 ),
             ],
@@ -141,21 +219,22 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         );
         break;
       case 'Dieta':
-        _openDynamicGrid('Dietas', sec, AppScreen.dieta);
-        break;
       case 'Suplementos':
-        _openDynamicGrid('suplemento', sec, AppScreen.suplementos);
-        break;
       case 'Medicamentos':
-        _openDynamicGrid('Medicamentos', sec, AppScreen.medicamentos);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => const NutricaoProtocolosHubScreen()),
+        );
         break;
+
       case 'Exames':
         _openDynamicGrid('exame', sec, AppScreen.exames);
         break;
       case 'Treinos':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const ExerciciosScreen()),
+          MaterialPageRoute(builder: (_) => const TreinosHubScreen()),
         );
         break;
       case 'Atividade':
@@ -204,7 +283,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (_) => const AvaliacaoFisicaScreenDynamic()),
+              builder: (_) => const AvaliacaoFisicaProScreen()),
         );
         break;
       case 'Grupo muscular':
