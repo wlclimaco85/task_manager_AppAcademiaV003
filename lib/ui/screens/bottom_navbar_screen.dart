@@ -760,15 +760,20 @@ class _FitnessModuleTile extends StatelessWidget {
                 ),
                 child: Icon(action.icon, color: color, size: 23),
               ),
-              Text(
-                action.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: GridColors.textSecondary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  height: 1.15,
+              Expanded(
+                child: Container(
+                  alignment: Alignment.bottomLeft,
+                  child: Text(
+                    action.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: GridColors.textSecondary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      height: 1.15,
+                    ),
+                  ),
                 ),
               ),
             ],
