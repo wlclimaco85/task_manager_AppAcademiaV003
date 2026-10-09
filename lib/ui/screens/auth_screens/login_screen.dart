@@ -113,14 +113,14 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  void _showCriarContaBottomSheet() {
-    showModalBottomSheet(
+  void _showCriarContaBottomSheet() async {
+    final String? result = await showModalBottomSheet<String>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       backgroundColor: GridColors.background,
-      builder: (context) {
+      builder: (bottomSheetContext) {
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
@@ -143,12 +143,7 @@ class _LoginScreenState extends State<LoginScreen>
                   titulo: 'Aluno',
                   descricao: 'Quero treinar',
                   onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const WizardAlunoScreen()),
-                    );
+                    Navigator.pop(bottomSheetContext, 'aluno');
                   },
                 ),
                 const SizedBox(height: 12),
@@ -157,12 +152,7 @@ class _LoginScreenState extends State<LoginScreen>
                   titulo: 'Personal',
                   descricao: 'Sou personal trainer',
                   onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const WizardPersonalScreen()),
-                    );
+                    Navigator.pop(bottomSheetContext, 'personal');
                   },
                 ),
                 const SizedBox(height: 12),
@@ -172,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen>
                   descricao: 'Tenho uma academia',
                   habilitado: false,
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    ScaffoldMessenger.of(bottomSheetContext).showSnackBar(
                       const SnackBar(content: Text('Em breve')),
                     );
                   },
@@ -183,6 +173,20 @@ class _LoginScreenState extends State<LoginScreen>
         );
       },
     );
+
+    if (!mounted) return;
+
+    if (result == 'aluno') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const WizardAlunoScreen()),
+      );
+    } else if (result == 'personal') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const WizardPersonalScreen()),
+      );
+    }
   }
 
   @override
