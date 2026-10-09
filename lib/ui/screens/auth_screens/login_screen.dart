@@ -406,7 +406,7 @@ class _OpcaoCadastroTile extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: habilitado
-                    ? GridColors.primary.withOpacity(0.1)
+                    ? GridColors.primary.withValues(alpha: 0.1)
                     : GridColors.background,
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -433,7 +433,7 @@ class _OpcaoCadastroTile extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: GridColors.secondary.withOpacity(0.15),
+                            color: GridColors.secondary.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Text(
