@@ -1289,34 +1289,38 @@ class _MetricTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Panel(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(spec.icon, color: GridColors.primary, size: 26),
+          Icon(spec.icon, color: GridColors.primary, size: 24),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  spec.value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: GridColors.textSecondary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                  ),
+            child: Align(
+              alignment: Alignment.bottomLeft,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      spec.value,
+                      maxLines: 1,
+                      style: const TextStyle(
+                        color: GridColors.textSecondary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Text(
+                      spec.label,
+                      maxLines: 1,
+                      style: const TextStyle(color: Color(0xFF6D647A), fontSize: 11),
+                    ),
+                  ],
                 ),
-                Text(
-                  spec.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Color(0xFF6D647A), fontSize: 12),
-                ),
-              ],
+              ),
             ),
           ),
         ],
