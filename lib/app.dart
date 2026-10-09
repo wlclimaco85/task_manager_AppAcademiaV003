@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/ui/screens/splash_screens.dart';
 
@@ -15,6 +16,14 @@ class TaskManagerApp extends StatelessWidget {
       navigatorKey: globalKey,
       debugShowCheckedModeBanner: false,
       title: "AppAcademia Pro",
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('pt', 'BR'),
+      ],
       theme: ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: GridColors.background,

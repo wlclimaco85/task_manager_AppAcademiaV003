@@ -1,2 +1,2 @@
 json_key_file(ENV["PLAY_STORE_JSON_KEY_PATH"] || "fastlane/play-store-key.json")
-package_name("com.washingtonclimaco.task_manager_appacademia")
+package_name("task.manager.flutter.AppAcademia")

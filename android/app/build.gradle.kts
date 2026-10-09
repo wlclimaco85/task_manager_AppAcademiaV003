@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -5,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com.washingtonclimaco.task_manager_appacademia"
+    namespace = "task.manager.flutter.AppAcademia"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -19,7 +22,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.washingtonclimaco.task_manager_appacademia"
+        applicationId = "task.manager.flutter.AppAcademia"
         minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = 1
@@ -28,10 +31,15 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile     = file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "keystore.jks")
-            storePassword = System.getenv("ANDROID_STORE_PASSWORD") ?: ""
-            keyAlias      = System.getenv("ANDROID_KEY_ALIAS") ?: "upload"
-            keyPassword   = System.getenv("ANDROID_KEY_PASSWORD") ?: ""
+            val keystorePropertiesFile = rootProject.file("key.properties")
+            val keystoreProperties = Properties()
+            if (keystorePropertiesFile.exists()) {
+                keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+            }
+            storeFile     = file(keystoreProperties.getProperty("storeFile") ?: System.getenv("ANDROID_KEYSTORE_PATH") ?: "keystore.jks")
+            storePassword = keystoreProperties.getProperty("storePassword") ?: System.getenv("ANDROID_STORE_PASSWORD") ?: ""
+            keyAlias      = keystoreProperties.getProperty("keyAlias") ?: System.getenv("ANDROID_KEY_ALIAS") ?: "upload"
+            keyPassword   = keystoreProperties.getProperty("keyPassword") ?: System.getenv("ANDROID_KEY_PASSWORD") ?: ""
         }
     }
 

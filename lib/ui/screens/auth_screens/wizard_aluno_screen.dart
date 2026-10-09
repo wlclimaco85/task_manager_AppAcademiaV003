@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/repository/cadastro_repository.dart';
 import 'package:task_manager_flutter/data/utils/grid_colors.dart';
@@ -16,12 +18,14 @@ class _PersonalDisponivel {
   final int id;
   final String nome;
   final String cref;
+  final int? academiaId;
   final List<_ModalidadeDisponivel> modalidades;
 
   _PersonalDisponivel({
     required this.id,
     required this.nome,
     required this.cref,
+    this.academiaId,
     required this.modalidades,
   });
 
@@ -32,8 +36,7 @@ class _PersonalDisponivel {
       nome: json['nome'] as String? ?? '',
       cref: json['cref'] as String? ?? '',
       modalidades: modalidadesJson
-          .map((m) =>
-              _ModalidadeDisponivel.fromJson(m as Map<String, dynamic>))
+          .map((m) => _ModalidadeDisponivel.fromJson(m as Map<String, dynamic>))
           .toList(),
     );
   }
@@ -48,6 +51,21 @@ class _ModalidadeDisponivel {
 
   factory _ModalidadeDisponivel.fromJson(Map<String, dynamic> json) {
     return _ModalidadeDisponivel(
+      id: json['id'] as int,
+      nome: json['nome'] as String? ?? '',
+    );
+  }
+}
+
+/// Representa uma Academia disponível.
+class _AcademiaDisponivel {
+  final int id;
+  final String nome;
+
+  _AcademiaDisponivel({required this.id, required this.nome});
+
+  factory _AcademiaDisponivel.fromJson(Map<String, dynamic> json) {
+    return _AcademiaDisponivel(
       id: json['id'] as int,
       nome: json['nome'] as String? ?? '',
     );
@@ -83,7 +101,14 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
   DateTime? _dataNascimento;
   String? _sexo;
 
+  // Passo 2 - Academia
+  bool _carregandoAcademias = false;
+  String? _erroCarregarAcademias;
+  List<_AcademiaDisponivel> _academiasDisponiveis = [];
+  _AcademiaDisponivel? _academiaSelecionada;
+
   // Passo 2 - Personal
+
   bool? _temPersonal;
   bool _carregandoPersonais = false;
   String? _erroCarregarPersonais;
@@ -96,8 +121,47 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
   final _objetivoController = TextEditingController();
   final _pesoController = TextEditingController();
 
+  final _cepFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _cepFocusNode.addListener(_onCepFocusChange);
+    _carregarAcademiasDisponiveis();
+  }
+
+  void _onCepFocusChange() {
+    if (!_cepFocusNode.hasFocus) {
+      _buscarCep();
+    }
+  }
+
+  Future<void> _buscarCep() async {
+    final cep = _cepController.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (cep.length != 8) return;
+    try {
+      final response =
+          await http.get(Uri.parse('https://viacep.com.br/ws/$cep/json/'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['erro'] == null) {
+          setState(() {
+            _logradouroController.text = data['logradouro'] ?? '';
+            _bairroController.text = data['bairro'] ?? '';
+            _cidadeController.text = data['localidade'] ?? '';
+            _estadoController.text = data['uf'] ?? '';
+          });
+        }
+      }
+    } catch (e) {
+      // Ignorar erro silenciosamente
+    }
+  }
+
   @override
   void dispose() {
+    _cepFocusNode.removeListener(_onCepFocusChange);
+    _cepFocusNode.dispose();
     _pageController.dispose();
     _nomeController.dispose();
     _emailController.dispose();
@@ -123,6 +187,7 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
       initialDate: DateTime(hoje.year - 18, hoje.month, hoje.day),
       firstDate: DateTime(1900),
       lastDate: hoje,
+      locale: const Locale('pt', 'BR'),
     );
     if (dataEscolhida != null) {
       setState(() => _dataNascimento = dataEscolhida);
@@ -139,6 +204,28 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
     final mes = data.month.toString().padLeft(2, '0');
     final dia = data.day.toString().padLeft(2, '0');
     return '$dia/$mes/${data.year}';
+  }
+
+  Future<void> _carregarAcademiasDisponiveis() async {
+    setState(() {
+      _carregandoAcademias = true;
+      _erroCarregarAcademias = null;
+    });
+
+    try {
+      final academiasJson =
+          await _cadastroRepository.listarAcademiasDisponiveis();
+      if (mounted) {
+        setState(() {
+          _academiasDisponiveis =
+              academiasJson.map(_AcademiaDisponivel.fromJson).toList();
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _erroCarregarAcademias = e.toString());
+    } finally {
+      if (mounted) setState(() => _carregandoAcademias = false);
+    }
   }
 
   Future<void> _carregarPersonaisDisponiveis() async {
@@ -344,12 +431,10 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
                 _obscurarSenha ? Icons.visibility_off : Icons.visibility,
                 color: GridColors.textPrimary,
               ),
-              onPressed: () =>
-                  setState(() => _obscurarSenha = !_obscurarSenha),
+              onPressed: () => setState(() => _obscurarSenha = !_obscurarSenha),
             ),
-            validator: (valor) => (valor == null || valor.isEmpty)
-                ? 'Informe a senha'
-                : null,
+            validator: (valor) =>
+                (valor == null || valor.isEmpty) ? 'Informe a senha' : null,
           ),
           const SizedBox(height: 12),
           _campoTexto(
@@ -399,6 +484,7 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
             controller: _cepController,
             label: 'CEP',
             keyboardType: TextInputType.number,
+            focusNode: _cepFocusNode,
           ),
           const SizedBox(height: 12),
           _campoTexto(controller: _logradouroController, label: 'Logradouro'),
@@ -416,9 +502,8 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
   }
 
   Widget _campoData() {
-    final texto = _dataNascimento != null
-        ? _formatarDataExibicao(_dataNascimento!)
-        : '';
+    final texto =
+        _dataNascimento != null ? _formatarDataExibicao(_dataNascimento!) : '';
     return InkWell(
       onTap: _selecionarDataNascimento,
       child: InputDecorator(
@@ -449,16 +534,56 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
   }
 
   // ---------------------------------------------------------------------
+
   // Passo 2 - Personal
+
   // ---------------------------------------------------------------------
+  Widget _buildAcademiaSelection() {
+    if (_carregandoAcademias) {
+      return const Center(child: CircularProgressIndicator(color: GridColors.secondary));
+    }
+    if (_erroCarregarAcademias != null) {
+      return Text(_erroCarregarAcademias!, style: const TextStyle(color: GridColors.error));
+    }
+    if (_academiasDisponiveis.isEmpty) {
+      return const Text('Nenhuma academia disponivel no momento.', style: TextStyle(color: GridColors.textPrimary));
+    }
+    return DropdownButtonFormField<int>(
+      value: _academiaSelecionada?.id,
+      decoration: _decoracaoCampo('Selecione sua Academia').copyWith(
+        labelStyle: const TextStyle(color: GridColors.textSecondary),
+      ),
+      style: const TextStyle(color: GridColors.textSecondary),
+      dropdownColor: GridColors.card,
+      items: _academiasDisponiveis.map((academia) {
+        return DropdownMenuItem<int>(
+          value: academia.id,
+          child: Text(academia.nome),
+        );
+      }).toList(),
+      onChanged: (valorId) {
+        if (valorId == null) return;
+        setState(() {
+          _academiaSelecionada = _academiasDisponiveis.firstWhere((a) => a.id == valorId);
+          _personalSelecionado = null;
+          _modalidadeSelecionada = null;
+        });
+      },
+    );
+  }
+
   Widget _buildPassoPersonal() {
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
+        const _TituloPasso(titulo: 'Academia'),
+        const SizedBox(height: 16),
+        _buildAcademiaSelection(),
+        const SizedBox(height: 24),
         const _TituloPasso(titulo: 'Personal Trainer'),
         const SizedBox(height: 16),
         const Text(
-          'Você já tem um Personal Trainer?',
+          'Voce ja tem um Personal Trainer?',
           style: TextStyle(color: GridColors.textPrimary, fontSize: 16),
         ),
         const SizedBox(height: 8),
@@ -474,7 +599,7 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: ChoiceChip(
-                label: const Text('Não'),
+                label: const Text('Nao'),
                 selected: _temPersonal == false,
                 onSelected: (_) => _onTemPersonalChanged(false),
               ),
@@ -482,7 +607,7 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        if (_temPersonal == true) _buildListaPersonais(),
+        if (_temPersonal == false && _academiaSelecionada != null) _buildListaPersonais(),
       ],
     );
   }
@@ -507,11 +632,17 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
       );
     }
 
-    if (_personaisDisponiveis.isEmpty) {
+    final personaisFiltrados = _academiaSelecionada != null
+        ? _personaisDisponiveis
+            .where((p) => p.academiaId == _academiaSelecionada!.id)
+            .toList()
+        : _personaisDisponiveis;
+
+    if (personaisFiltrados.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 16),
         child: Text(
-          'Nenhum personal disponível no momento.',
+          'Nenhum personal disponÃ­vel para esta academia.',
           style: TextStyle(color: GridColors.textPrimary),
         ),
       );
@@ -519,8 +650,7 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
 
     return Column(
       children: [
-        for (final personal in _personaisDisponiveis)
-          _buildCardPersonal(personal),
+        for (final personal in personaisFiltrados) _buildCardPersonal(personal),
       ],
     );
   }
@@ -643,8 +773,7 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
             Expanded(
               child: OutlinedButton(
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(
-                      color: GridColors.secondary, width: 2),
+                  side: const BorderSide(color: GridColors.secondary, width: 2),
                   minimumSize: const Size.fromHeight(50),
                 ),
                 onPressed: _enviando ? null : _passoAnterior,
@@ -718,9 +847,11 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
     TextInputType? keyboardType,
     Widget? suffixIcon,
     String? Function(String?)? validator,
+    FocusNode? focusNode,
   }) {
     return TextFormField(
       controller: controller,
+      focusNode: focusNode,
       obscureText: obscureText,
       keyboardType: keyboardType,
       style: const TextStyle(color: GridColors.textPrimary),
