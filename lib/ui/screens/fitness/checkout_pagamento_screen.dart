@@ -6,7 +6,7 @@ import 'dart:math';
 
 /// Tela de Checkout Simulado para Contratação de Personal
 class CheckoutPagamentoScreen extends StatefulWidget {
-  final PacoteProfissionalModel pacote;
+  final PacoteContratacaoModel pacote;
   final ProfissionalVitrineModel profissional;
 
   const CheckoutPagamentoScreen({
