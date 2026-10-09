@@ -18,8 +18,13 @@ class ApiLinks {
   //'https://academia-app-919f42758cd6.herokuapp.com'; // "http://192.168.12.28:8088";
   // "http://192.168.12.23:8088"; // "http://192.168.56.1:8088"; // ; // //"http://192.168.12.23:8088";
   //static const String _baseIp = "http://192.168.56.1:8088"; //"http://192.168.12.23:8088";
+  static const String _contextPath = String.fromEnvironment(
+    'BACKEND_CONTEXT_PATH',
+    defaultValue: '/boletobancos',
+  );
+
   static const String _baseUrl = 'https://task.teamrabbil.com/api/v1';
-  static const String _baseUrlNew = '$_baseIp/boletobancos';
+  static const String _baseUrlNew = '$_baseIp$_contextPath';
   //static const String _baseUrlNew =
   //    'https://academia-app-919f42758cd6.herokuapp.com/boletobancos';
   static const String allPersonal = '$_baseUrlNew/personal/findAll';
