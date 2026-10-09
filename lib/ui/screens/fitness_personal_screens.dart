@@ -1019,13 +1019,18 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
       },
     );
 
-    tempoController.dispose();
-    distanciaController.dispose();
-    noteController.dispose();
-
     if (saved == true && mounted) {
       setState(_reload);
     }
+
+    // Delay disposal to wait for the bottom sheet closing animation to finish.
+    // This prevents the StatefulBuilder from rebuilding with disposed controllers,
+    // which causes aborted builds and the '_dependents.isEmpty: is not true' framework crash.
+    Future.delayed(const Duration(milliseconds: 350), () {
+      tempoController.dispose();
+      distanciaController.dispose();
+      noteController.dispose();
+    });
   }
 }
 
