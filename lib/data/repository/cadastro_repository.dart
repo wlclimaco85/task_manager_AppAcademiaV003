@@ -22,9 +22,23 @@ class CadastroRepository {
         body: jsonEncode(body),
       );
 
-      final Map<String, dynamic> json =
-          jsonDecode(response.body) as Map<String, dynamic>;
-      return json;
+      if (response.body.trim().isEmpty) {
+        return {
+          'error': response.statusCode >= 400,
+          'message': response.statusCode >= 200 && response.statusCode < 300
+              ? 'Cadastro realizado com sucesso'
+              : 'Servidor retornou status ${response.statusCode} sem resposta.',
+        };
+      }
+
+      final dynamic decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+      return {
+        'error': response.statusCode >= 400,
+        'message': response.body,
+      };
     } catch (e) {
       return {
         'error': true,
@@ -60,9 +74,23 @@ class CadastroRepository {
         body: jsonEncode(body),
       );
 
-      final Map<String, dynamic> json =
-          jsonDecode(response.body) as Map<String, dynamic>;
-      return json;
+      if (response.body.trim().isEmpty) {
+        return {
+          'error': response.statusCode >= 400,
+          'message': response.statusCode >= 200 && response.statusCode < 300
+              ? 'Cadastro realizado com sucesso'
+              : 'Servidor retornou status ${response.statusCode} sem resposta.',
+        };
+      }
+
+      final dynamic decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+      return {
+        'error': response.statusCode >= 400,
+        'message': response.body,
+      };
     } catch (e) {
       return {
         'error': true,
