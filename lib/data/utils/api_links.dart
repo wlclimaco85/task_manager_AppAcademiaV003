@@ -1,13 +1,19 @@
+import 'package:flutter/foundation.dart';
+
 class ApiLinks {
   ApiLinks._();
   static const String _baseIp = String.fromEnvironment(
     'BACKEND_URL',
-    defaultValue: 'https://appacademia-production-be7e.up.railway.app',
+    defaultValue: kDebugMode
+        ? 'http://127.0.0.1:9001'
+        : 'https://appacademia-production-be7e.up.railway.app',
   );
 
   static const String _chatId = String.fromEnvironment(
     'WS_BACKEND_URL',
-    defaultValue: 'wss://appacademia-production-be7e.up.railway.app/boletobancos',
+    defaultValue: kDebugMode
+        ? 'ws://127.0.0.1:9001/boletobancos'
+        : 'wss://appacademia-production-be7e.up.railway.app/boletobancos',
   );
   //"http://192.168.100.41:8088";
   //  "http://192.168.114.1:8088";
