@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:task_manager_flutter/ui/widgets/exercicio_midia.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
@@ -443,27 +444,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                   if (exercicio.videoUrl != null && exercicio.videoUrl!.isNotEmpty)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: Image.network(
-                        exercicio.videoUrl!,
-                        width: double.infinity,
-                        height: 250,
-                        fit: BoxFit.contain,
-                        errorBuilder: (ctx, err, stack) {
-                          return Container(
-                            height: 200,
-                            color: const Color(0xFF0F172A),
-                            alignment: Alignment.center,
-                            child: const Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.broken_image, color: Color(0xFF475569), size: 48),
-                                SizedBox(height: 8),
-                                Text('Animação indisponível', style: TextStyle(color: Color(0xFF94A3B8))),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
+                      child: ExercicioMidia(url: exercicio.videoUrl!),
                     )
                   else
                     Container(

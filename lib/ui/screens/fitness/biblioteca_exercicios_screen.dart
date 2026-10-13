@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/fitness/exercicio_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
+import 'package:task_manager_flutter/data/utils/exercicio_video_link.dart';
+import 'package:task_manager_flutter/data/utils/app_logger.dart';
+import 'package:task_manager_flutter/ui/widgets/exercicio_midia.dart';
 
 /// Tela da Biblioteca de Exercícios (Padrão MFIT Personal)
 /// Suporta visualização, filtros musculares, detalhes biomecânicos e modo seleção.
@@ -385,6 +388,28 @@ class _BibliotecaExerciciosScreenState
                 ),
               ],
               const Divider(height: 28, color: GridColors.divider),
+              Wrap(spacing: 8, children: [
+                if (ex.videoUrl != null && ex.videoUrl!.isNotEmpty)
+                  TextButton.icon(
+                    icon: const Icon(Icons.play_circle_outline),
+                    label: const Text('Assistir demonstração'),
+                    onPressed: () => showDialog(
+                      context: context,
+                      builder: (videoContext) => AlertDialog(
+                        title: Text(ex.nome),
+                        content: SizedBox(width: 600,
+                          child: ExercicioMidia(url: ex.videoUrl!)),
+                        actions: [TextButton(onPressed: () => Navigator.pop(videoContext),
+                          child: const Text('Fechar'))],
+                      ),
+                    ),
+                  ),
+                TextButton.icon(
+                  icon: const Icon(Icons.video_library_outlined),
+                  label: Text(ex.videoUrl == null ? 'Adicionar vídeo' : 'Alterar vídeo'),
+                  onPressed: () { Navigator.pop(context); _editarVideoExercicio(ex); },
+                ),
+              ]),
               const Text(
                 'Execução Biomecânica:',
                 style: TextStyle(
@@ -435,9 +460,11 @@ class _BibliotecaExerciciosScreenState
     final nomeCtrl = TextEditingController();
     final equipCtrl = TextEditingController();
     final instrucaoCtrl = TextEditingController();
+    final videoCtrl = TextEditingController();
+    String? erroVideo;
     String grupo = _grupoSelecionado == 'Todos' ? 'Peitoral' : _grupoSelecionado;
 
-    showDialog(
+    final route = DialogRoute<void>(
       context: context,
       builder: (context) {
         return StatefulBuilder(
@@ -476,6 +503,16 @@ class _BibliotecaExerciciosScreenState
                       maxLines: 3,
                       decoration: const InputDecoration(labelText: 'Instruções de Execução'),
                     ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: videoCtrl,
+                      keyboardType: TextInputType.url,
+                      decoration: InputDecoration(
+                        labelText: 'Vídeo do YouTube ou Google Drive',
+                        helperText: 'Opcional. No Drive, permita acesso pelo link.',
+                        errorText: erroVideo,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -487,17 +524,26 @@ class _BibliotecaExerciciosScreenState
                 ElevatedButton(
                   onPressed: () async {
                     if (nomeCtrl.text.trim().isEmpty) return;
+                    final erro = validarLinkVideoExercicio(videoCtrl.text);
+                    if (erro != null) { setModalState(() => erroVideo = erro); return; }
                     final novo = ExercicioModel(
                       id: 'ex_custom_${DateTime.now().millisecondsSinceEpoch}',
                       nome: nomeCtrl.text.trim(),
                       grupoMuscular: grupo,
                       equipamento: equipCtrl.text.trim().isNotEmpty ? equipCtrl.text.trim() : null,
                       instrucoes: instrucaoCtrl.text.trim(),
+                      videoUrl: videoCtrl.text.trim().isEmpty ? null : videoCtrl.text.trim(),
                       isCustom: true,
                     );
-                    await _repository.addExercicio(novo);
-                    Navigator.pop(context);
-                    _carregarExercicios();
+                    try {
+                      await _repository.addExercicio(novo);
+                      if (!context.mounted) return;
+                      Navigator.pop(context);
+                      _carregarExercicios();
+                    } catch (error, stack) {
+                      AppLogger.i.error('Falha ao salvar exercicio.', stack);
+                      if (context.mounted) setModalState(() => erroVideo = 'Não foi possível salvar. Tente novamente.');
+                    }
                   },
                   child: const Text('Salvar'),
                 ),
@@ -507,6 +553,50 @@ class _BibliotecaExerciciosScreenState
         );
       },
     );
+    Navigator.of(context).push(route);
+    route.completed.then((_) {
+      nomeCtrl.dispose(); equipCtrl.dispose(); instrucaoCtrl.dispose(); videoCtrl.dispose();
+    });
+  }
+
+  Future<void> _editarVideoExercicio(ExercicioModel ex) async {
+    final controller = TextEditingController(text: ex.videoUrl ?? '');
+    final formKey = GlobalKey<FormState>();
+    bool salvando = false;
+    final route = DialogRoute<void>(context: context, builder: (dialogContext) => StatefulBuilder(
+      builder: (dialogContext, setModalState) => AlertDialog(
+        title: Text('Vídeo: ${ex.nome}'),
+        content: Form(key: formKey, child: TextFormField(
+          controller: controller, keyboardType: TextInputType.url,
+          validator: validarLinkVideoExercicio,
+          decoration: const InputDecoration(labelText: 'Link do YouTube ou Google Drive',
+            helperText: 'No Drive, permita acesso pelo link. Apague para remover.',
+            helperMaxLines: 3),
+        )),
+        actions: [
+          TextButton(onPressed: salvando ? null : () => Navigator.pop(dialogContext), child: const Text('Cancelar')),
+          FilledButton(onPressed: salvando ? null : () async {
+            if (!formKey.currentState!.validate()) return;
+            setModalState(() => salvando = true);
+            try {
+              final url = controller.text.trim();
+              await _repository.atualizarVideoExercicio(ex.id, url.isEmpty ? null : url);
+              if (dialogContext.mounted) Navigator.pop(dialogContext);
+              if (mounted) await _carregarExercicios();
+            } catch (error, stack) {
+              AppLogger.i.error('Falha ao atualizar video do exercicio.', stack);
+              if (dialogContext.mounted) {
+                setModalState(() => salvando = false);
+                ScaffoldMessenger.of(dialogContext).showSnackBar(const SnackBar(content: Text('Não foi possível salvar o vídeo. Tente novamente.')));
+              }
+            }
+          }, child: Text(salvando ? 'Salvando...' : 'Salvar')),
+        ],
+      ),
+    ));
+    await Navigator.of(context).push(route);
+    await route.completed;
+    controller.dispose();
   }
 
   IconData _iconePorGrupo(String grupo) {

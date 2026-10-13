@@ -58,6 +58,15 @@ class FitnessOfflineRepository {
     await _salvarExercicios(atuais);
   }
 
+  Future<void> atualizarVideoExercicio(String id, String? videoUrl) async {
+    final atuais = await getExercicios();
+    final index = atuais.indexWhere((ex) => ex.id == id);
+    if (index < 0) throw StateError('Exercicio nao encontrado.');
+    final dados = atuais[index].toMap()..['videoUrl'] = videoUrl;
+    atuais[index] = ExercicioModel.fromMap(dados);
+    await _salvarExercicios(atuais);
+  }
+
   Future<void> _salvarExercicios(List<ExercicioModel> lista) async {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = json.encode(lista.map((e) => e.toMap()).toList());
