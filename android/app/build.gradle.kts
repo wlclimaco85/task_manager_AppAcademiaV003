@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "task.manager.flutter.AppAcademia"
+    namespace = "com.washingtonclimaco.task_manager_appacademia"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -22,7 +22,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "task.manager.flutter.AppAcademia"
+        applicationId = "com.washingtonclimaco.task_manager_appacademia"
         minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = 1
