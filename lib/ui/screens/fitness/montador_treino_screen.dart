@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
-import 'package:task_manager_flutter/data/models/fitness/exercicio_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/biblioteca_exercicios_screen.dart';
@@ -376,6 +375,16 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
               ],
             ),
             const Divider(height: 20, color: GridColors.divider),
+            TextFormField(
+              initialValue: item.observacoes,
+              decoration: const InputDecoration(labelText: 'Observação para o aluno'),
+              maxLines: 3, minLines: 1,
+              onChanged: (valor) => _atualizarItem(divIndex, exIndex,
+                _divisoes[divIndex].exercicios[exIndex].copyWith(observacoes: valor)),
+            ),
+            if (item.exerciciosAlternativos.isNotEmpty)
+              Text('Alternativas: ${item.exerciciosAlternativos.join(' ou ')}'),
+            const SizedBox(height: 10),
 
             // Controles rápidos: Séries, Repetições, Carga, Descanso
             Wrap(
@@ -495,37 +504,24 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
   }
 
   Future<void> _selecionarExercicio(int divIndex) async {
-    final ExercicioModel? selecionado = await Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => const BibliotecaExerciciosScreen(modoSelecao: true),
+        builder: (_) => BibliotecaExerciciosScreen(modoSelecao: true,
+          onPrescrever: (item) {
+            if (!mounted) return;
+            setState(() {
+              final divisao = _divisoes[divIndex];
+              _divisoes[divIndex] = DivisaoTreinoModel(
+                id: divisao.id, letra: divisao.letra, nome: divisao.nome,
+                exercicios: [...divisao.exercicios, item],
+              );
+            });
+          }),
       ),
     );
 
-    if (selecionado != null) {
-      final novoItem = ItemTreinoModel(
-        id: 'it_${DateTime.now().millisecondsSinceEpoch}',
-        exercicioId: selecionado.id,
-        exercicioNome: selecionado.nome,
-        grupoMuscular: selecionado.grupoMuscular,
-        videoUrl: selecionado.videoUrl,
-        series: 3,
-        repeticoes: '10 a 12',
-        cargaSugeridaKg: 10,
-        descansoSegundos: 60,
-      );
 
-      setState(() {
-        final novaLista = List<ItemTreinoModel>.from(_divisoes[divIndex].exercicios)
-          ..add(novoItem);
-        _divisoes[divIndex] = DivisaoTreinoModel(
-          id: _divisoes[divIndex].id,
-          letra: _divisoes[divIndex].letra,
-          nome: _divisoes[divIndex].nome,
-          exercicios: novaLista,
-        );
-      });
-    }
   }
 
   Future<void> _salvarPlano() async {
@@ -584,6 +580,7 @@ extension on ItemTreinoModel {
       descansoSegundos: descansoSegundos ?? this.descansoSegundos,
       tecnica: tecnica ?? this.tecnica,
       observacoes: observacoes ?? this.observacoes,
+      exerciciosAlternativos: exerciciosAlternativos,
     );
   }
 }

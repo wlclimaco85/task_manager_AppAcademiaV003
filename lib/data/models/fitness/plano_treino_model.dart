@@ -13,6 +13,7 @@ class ItemTreinoModel {
   final int descansoSegundos;
   final String tecnica; // Normal, Bi-set, Drop-set, Rest-pause, Pirâmide
   final String? observacoes;
+  final List<String> exerciciosAlternativos;
 
   const ItemTreinoModel({
     required this.id,
@@ -26,6 +27,7 @@ class ItemTreinoModel {
     this.descansoSegundos = 60,
     this.tecnica = 'Normal',
     this.observacoes,
+    this.exerciciosAlternativos = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -41,6 +43,7 @@ class ItemTreinoModel {
       'descansoSegundos': descansoSegundos,
       'tecnica': tecnica,
       'observacoes': observacoes,
+      'exerciciosAlternativos': exerciciosAlternativos,
     };
   }
 
@@ -57,6 +60,8 @@ class ItemTreinoModel {
       descansoSegundos: (map['descansoSegundos'] as num?)?.toInt() ?? 60,
       tecnica: map['tecnica']?.toString() ?? 'Normal',
       observacoes: map['observacoes']?.toString(),
+      exerciciosAlternativos: (map['exerciciosAlternativos'] as List?)
+          ?.whereType<String>().take(2).toList() ?? const [],
     );
   }
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
+import 'package:task_manager_flutter/ui/widgets/prescricao_exercicio_inline.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/fitness/exercicio_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
@@ -10,10 +12,12 @@ import 'package:task_manager_flutter/ui/widgets/exercicio_midia.dart';
 /// Suporta visualização, filtros musculares, detalhes biomecânicos e modo seleção.
 class BibliotecaExerciciosScreen extends StatefulWidget {
   final bool modoSelecao; // Quando aberta pelo montador de treinos
+  final ValueChanged<ItemTreinoModel>? onPrescrever;
 
   const BibliotecaExerciciosScreen({
     super.key,
     this.modoSelecao = false,
+    this.onPrescrever,
   });
 
   @override
@@ -29,7 +33,10 @@ class _BibliotecaExerciciosScreenState
   String _grupoSelecionado = 'Todos';
   String _filtroTexto = '';
   List<ExercicioModel> _exercicios = [];
+  List<ExercicioModel> _catalogo = [];
   bool _loading = true;
+  String? _expandidoId;
+  int _adicionados = 0;
 
   final List<String> _gruposMusculares = [
     'Todos',
@@ -59,12 +66,13 @@ class _BibliotecaExerciciosScreenState
 
   Future<void> _carregarExercicios() async {
     setState(() => _loading = true);
-    final lista = await _repository.getExercicios(
-      grupoMuscular: _grupoSelecionado == 'Todos' ? null : _grupoSelecionado,
-    );
+    final catalogo = await _repository.getExercicios();
+    final lista = _grupoSelecionado == 'Todos' ? catalogo : catalogo
+        .where((e) => e.grupoMuscular == _grupoSelecionado).toList();
     if (mounted) {
       setState(() {
         _exercicios = lista;
+        _catalogo = catalogo;
         _loading = false;
       });
     }
@@ -100,6 +108,9 @@ class _BibliotecaExerciciosScreenState
           style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
         ),
         actions: [
+          if (widget.onPrescrever != null)
+            TextButton(onPressed: () => Navigator.pop(context),
+              child: Text('Concluir ($_adicionados)')),
           IconButton(
             tooltip: 'Novo Exercício',
             icon: const Icon(Icons.add, color: GridColors.primary),
@@ -212,6 +223,25 @@ class _BibliotecaExerciciosScreenState
   }
 
   Widget _buildCardExercicio(ExercicioModel ex) {
+    if (widget.onPrescrever != null) {
+      return Card(key: ValueKey(ex.id), child: Column(children: [
+        ListTile(title: Text(ex.nome), subtitle: Text(ex.grupoMuscular),
+          trailing: Icon(_expandidoId == ex.id ? Icons.expand_less : Icons.add_circle_outline),
+          onTap: () => setState(() => _expandidoId = _expandidoId == ex.id ? null : ex.id)),
+        if (_expandidoId == ex.id)
+          PrescricaoExercicioInline(exercicio: ex, catalogo: _catalogo,
+            onAdicionar: (item) {
+              widget.onPrescrever!(item);
+              final lista = _exerciciosFiltrados;
+              final index = lista.indexWhere((e) => e.id == ex.id);
+              setState(() {
+                _adicionados++;
+                _expandidoId = index >= 0 && index + 1 < lista.length
+                    ? lista[index + 1].id : null;
+              });
+            }),
+      ]));
+    }
     return Card(
       elevation: 0,
       color: GridColors.card,

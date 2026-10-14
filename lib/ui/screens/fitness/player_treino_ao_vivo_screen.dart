@@ -281,6 +281,12 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                                 color: Color(0xFF94A3B8), fontSize: 13),
                           ),
                           const SizedBox(height: 8),
+                          if (exAtual.observacoes?.isNotEmpty ?? false)
+                            Text('Observação: ${exAtual.observacoes}',
+                              style: const TextStyle(color: Colors.white)),
+                          if (exAtual.exerciciosAlternativos.isNotEmpty)
+                            Text('Máquina ocupada? Alternativas: ${exAtual.exerciciosAlternativos.join(' ou ')}',
+                              style: const TextStyle(color: Color(0xFF94A3B8))),
                           InkWell(
                             onTap: () => _mostrarDemonstracao(exAtual.exercicioId),
                             borderRadius: BorderRadius.circular(8),

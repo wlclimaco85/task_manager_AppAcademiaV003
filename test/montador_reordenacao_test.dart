@@ -33,7 +33,7 @@ void main() {
     expect(tester.getTopLeft(find.text('Exercicio 1')).dy, lessThan(antes));
     final card = find.ancestor(of: find.text('Exercicio 0'), matching: find.byType(Card));
     final campos = tester.widgetList<TextFormField>(find.descendant(of: card, matching: find.byType(TextFormField))).toList();
-    expect(campos.map((c) => c.initialValue), ['10', '20']);
+    expect(campos.skip(1).map((c) => c.initialValue), ['10', '20']);
     await tester.drag(find.byType(ReorderableDragStartListener).at(1), const Offset(0, -170));
     await tester.pumpAndSettle();
     expect(tester.getTopLeft(find.text('Exercicio 0')).dy,

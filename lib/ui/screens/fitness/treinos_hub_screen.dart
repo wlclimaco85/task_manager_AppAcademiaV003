@@ -646,6 +646,9 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                                     ),
                                   ),
                                 ],
+                                if (ex.exerciciosAlternativos.isNotEmpty)
+                                  Text('Máquina ocupada? ${ex.exerciciosAlternativos.join(' ou ')}',
+                                    style: const TextStyle(color: GridColors.textSecondary)),
                               ],
                             ),
                           );
