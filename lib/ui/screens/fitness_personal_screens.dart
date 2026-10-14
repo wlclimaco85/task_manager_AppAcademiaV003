@@ -72,7 +72,7 @@ class ExerciciosScreen extends StatelessWidget {
       liveWorkout: true,
       metricCards: [
         FitnessMetricSpec('Calorias', '286 kcal', Icons.local_fire_department),
-        FitnessMetricSpec('Distancia', '5,6 km', Icons.route_outlined),
+        FitnessMetricSpec('Distancia', '--', Icons.route_outlined),
         FitnessMetricSpec('Pace', '8:42/km', Icons.speed_outlined),
         FitnessMetricSpec('Intensidade', 'Moderada', Icons.bolt),
       ],
@@ -100,10 +100,10 @@ class AtividadeScreen extends StatelessWidget {
       defaultValue: '5,0 km',
       defaultNote: 'Distancia aerobica diaria do aluno',
       metricCards: [
-        FitnessMetricSpec('Meta diaria', '82%', Icons.flag_outlined),
-        FitnessMetricSpec('Calorias', '421 kcal', Icons.local_fire_department),
-        FitnessMetricSpec('Tempo ativo', '64 min', Icons.timer_outlined),
-        FitnessMetricSpec('Distancia', '5,6 km', Icons.route_outlined),
+        FitnessMetricSpec('Meta diaria', '--', Icons.flag_outlined),
+        FitnessMetricSpec('Calorias', '--', Icons.local_fire_department),
+        FitnessMetricSpec('Tempo ativo', '--', Icons.timer_outlined),
+        FitnessMetricSpec('Distancia', '--', Icons.route_outlined),
       ],
       tips: [
         'Acompanhe sua meta de quilometros (km) e tempo para consistencia.',
@@ -1222,7 +1222,7 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 3),
                           child: FractionallySizedBox(
-                            heightFactor: (value / max).clamp(0.08, 1.0),
+                            heightFactor: (value / max).clamp(0.0, 1.0),
                             alignment: Alignment.bottomCenter,
                             child: DecoratedBox(
                               decoration: BoxDecoration(

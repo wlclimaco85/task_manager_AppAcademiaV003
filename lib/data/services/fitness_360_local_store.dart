@@ -442,20 +442,17 @@ class Fitness360LocalStore {
   static String _chaveData(DateTime d) => '${d.year}-${d.month}-${d.day}';
 
   static Future<List<int>> insightSeries(String type, String range) async {
-    final weekly = await weeklySeries(type);
-    return switch (range) {
-      'Dia' => [
-          for (var i = 0; i < 6; i++)
-            (weekly[i % weekly.length] * (0.72 + i * 0.06)).round()
-        ],
-      'Mes' => [
-          for (var i = 0; i < 4; i++)
-            (weekly.skip(i).take(4).fold<int>(0, (sum, value) => sum + value) /
-                    4)
-                .round()
-        ],
-      _ => weekly,
-    };
+    if (range == 'Semana') return weeklySeries(type);
+    final all = await records(type: type);
+    final hoje = DateTime.now();
+    if (range == 'Dia') {
+      return [for (var i = 0; i < 6; i++)
+        all.where((r) => _chaveData(r.createdAt) == _chaveData(hoje) &&
+          r.createdAt.hour >= i * 4 && r.createdAt.hour < (i + 1) * 4).length];
+    }
+    return [for (var i = 0; i < 4; i++)
+      all.where((r) => r.createdAt.isAfter(hoje.subtract(Duration(days: (4 - i) * 7))) &&
+        !r.createdAt.isAfter(hoje.subtract(Duration(days: (3 - i) * 7)))).length];
   }
 
   static int _firstInt(List<Fitness360Record> items, {required int fallback}) {
