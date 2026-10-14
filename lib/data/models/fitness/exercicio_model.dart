@@ -10,6 +10,12 @@ class ExercicioModel {
   final String? thumbnailUrl;
   final String instrucoes;
   final String? errosComuns;
+
+  /// Passo a passo numerado da execução (ex.: "1. Posicione a barra...").
+  final String descricao;
+
+  /// 1 = iniciante, 2 = intermediário, 3 = avançado.
+  final int? nivel;
   final bool isCustom; // Criado pelo personal
 
   const ExercicioModel({
@@ -21,8 +27,22 @@ class ExercicioModel {
     this.thumbnailUrl,
     this.instrucoes = '',
     this.errosComuns,
+    this.descricao = '',
+    this.nivel,
     this.isCustom = false,
   });
+
+  /// Mídia exibida: vídeo cadastrado ou, sem vídeo, a imagem demonstrativa.
+  String? get midiaUrl => (videoUrl != null && videoUrl!.isNotEmpty)
+      ? videoUrl
+      : ((thumbnailUrl != null && thumbnailUrl!.isNotEmpty) ? thumbnailUrl : null);
+
+  String? get nivelTexto => switch (nivel) {
+        1 => 'Iniciante',
+        2 => 'Intermediário',
+        3 => 'Avançado',
+        _ => null,
+      };
 
   Map<String, dynamic> toMap() {
     return {
@@ -34,6 +54,8 @@ class ExercicioModel {
       'thumbnailUrl': thumbnailUrl,
       'instrucoes': instrucoes,
       'errosComuns': errosComuns,
+      'descricao': descricao,
+      'nivel': nivel,
       'isCustom': isCustom,
     };
   }
@@ -48,6 +70,8 @@ class ExercicioModel {
       thumbnailUrl: map['thumbnailUrl']?.toString(),
       instrucoes: map['instrucoes']?.toString() ?? '',
       errosComuns: map['errosComuns']?.toString(),
+      descricao: map['descricao']?.toString() ?? '',
+      nivel: map['nivel'] is int ? map['nivel'] as int : int.tryParse('${map['nivel']}'),
       isCustom: map['isCustom'] == true,
     );
   }

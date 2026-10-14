@@ -441,10 +441,10 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  if (exercicio.videoUrl != null && exercicio.videoUrl!.isNotEmpty)
+                  if (exercicio.midiaUrl != null)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: ExercicioMidia(url: exercicio.videoUrl!),
+                      child: ExercicioMidia(url: exercicio.midiaUrl!),
                     )
                   else
                     Container(
@@ -470,6 +470,15 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                     exercicio.instrucoes.isNotEmpty ? exercicio.instrucoes : 'Não há instruções para este exercício.',
                     style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
                   ),
+                  if (exercicio.descricao.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    const Text('Passo a Passo', style: TextStyle(color: Color(0xFF3B82F6), fontSize: 16, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 8),
+                    Text(
+                      exercicio.descricao,
+                      style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
+                    ),
+                  ],
                   if (exercicio.errosComuns != null && exercicio.errosComuns!.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     const Text('Erros Comuns', style: TextStyle(color: Color(0xFFEF4444), fontSize: 14, fontWeight: FontWeight.w700)),

@@ -41,8 +41,14 @@ class _BibliotecaExerciciosScreenState
     'Ombros',
     'Bíceps',
     'Tríceps',
+    'Antebraço',
+    'Lombar',
+    'Adutores e Abdutores',
+    'Panturrilha',
     'Abdômen',
     'Cárdio',
+    'Funcional',
+    'Mobilidade',
   ];
 
   @override
@@ -387,9 +393,14 @@ class _BibliotecaExerciciosScreenState
                   style: const TextStyle(color: GridColors.textSecondary, fontSize: 13),
                 ),
               ],
+              if (ex.nivelTexto != null)
+                Text(
+                  'Nível: ${ex.nivelTexto}',
+                  style: const TextStyle(color: GridColors.textSecondary, fontSize: 13),
+                ),
               const Divider(height: 28, color: GridColors.divider),
               Wrap(spacing: 8, children: [
-                if (ex.videoUrl != null && ex.videoUrl!.isNotEmpty)
+                if (ex.midiaUrl != null)
                   TextButton.icon(
                     icon: const Icon(Icons.play_circle_outline),
                     label: const Text('Assistir demonstração'),
@@ -398,7 +409,7 @@ class _BibliotecaExerciciosScreenState
                       builder: (videoContext) => AlertDialog(
                         title: Text(ex.nome),
                         content: SizedBox(width: 600,
-                          child: ExercicioMidia(url: ex.videoUrl!)),
+                          child: ExercicioMidia(url: ex.midiaUrl!)),
                         actions: [TextButton(onPressed: () => Navigator.pop(videoContext),
                           child: const Text('Fechar'))],
                       ),
@@ -425,6 +436,22 @@ class _BibliotecaExerciciosScreenState
                     : 'Execute o movimento com controle e amplitude completa.',
                 style: const TextStyle(fontSize: 13, height: 1.4, color: GridColors.textSecondary),
               ),
+              if (ex.descricao.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                const Text(
+                  'Passo a Passo:',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: GridColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  ex.descricao,
+                  style: const TextStyle(fontSize: 13, height: 1.5, color: GridColors.textSecondary),
+                ),
+              ],
               if (ex.errosComuns != null && ex.errosComuns!.isNotEmpty) ...[
                 const SizedBox(height: 14),
                 const Text(
@@ -460,6 +487,7 @@ class _BibliotecaExerciciosScreenState
     final nomeCtrl = TextEditingController();
     final equipCtrl = TextEditingController();
     final instrucaoCtrl = TextEditingController();
+    final descricaoCtrl = TextEditingController();
     final videoCtrl = TextEditingController();
     String? erroVideo;
     String grupo = _grupoSelecionado == 'Todos' ? 'Peitoral' : _grupoSelecionado;
@@ -505,6 +533,16 @@ class _BibliotecaExerciciosScreenState
                     ),
                     const SizedBox(height: 12),
                     TextField(
+                      controller: descricaoCtrl,
+                      maxLines: 6,
+                      decoration: const InputDecoration(
+                        labelText: 'Descrição - passo a passo',
+                        hintText: '1. Posicione a barra na altura do ombro...\n2. Feche as escápulas...',
+                        alignLabelWithHint: true,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
                       controller: videoCtrl,
                       keyboardType: TextInputType.url,
                       decoration: InputDecoration(
@@ -532,6 +570,7 @@ class _BibliotecaExerciciosScreenState
                       grupoMuscular: grupo,
                       equipamento: equipCtrl.text.trim().isNotEmpty ? equipCtrl.text.trim() : null,
                       instrucoes: instrucaoCtrl.text.trim(),
+                      descricao: descricaoCtrl.text.trim(),
                       videoUrl: videoCtrl.text.trim().isEmpty ? null : videoCtrl.text.trim(),
                       isCustom: true,
                     );

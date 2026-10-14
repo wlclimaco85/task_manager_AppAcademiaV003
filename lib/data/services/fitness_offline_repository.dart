@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:task_manager_flutter/data/utils/app_logger.dart';
 import 'package:task_manager_flutter/data/models/fitness/exercicio_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
@@ -25,19 +27,26 @@ class FitnessOfflineRepository {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_kExerciciosKey);
 
+    final catalogo = await _seedExercicios();
     List<ExercicioModel> lista = [];
     if (raw == null || raw.isEmpty) {
-      lista = _seedExercicios();
+      lista = catalogo;
       await _salvarExercicios(lista);
     } else {
       try {
         final decoded = json.decode(raw) as List<dynamic>;
-        lista = decoded
+        final salvos = decoded
             .map((e) => ExercicioModel.fromMap(e as Map<String, dynamic>))
             .toList();
+        // Aparelhos com o catálogo antigo recebem os exercícios novos e a
+        // descrição passo a passo sem perder vídeos ou exercícios próprios.
+        lista = mesclarCatalogo(salvos, catalogo);
+        if (json.encode(lista.map((e) => e.toMap()).toList()) != raw) {
+          await _salvarExercicios(lista);
+        }
       } catch (e) {
-        debugPrint('[FitnessOfflineRepository] Erro decode exercicios: $e');
-        lista = _seedExercicios();
+        AppLogger.i.warn('Erro ao ler exercícios salvos; usando o catálogo padrão: $e');
+        lista = catalogo;
       }
     }
 
@@ -279,176 +288,67 @@ class FitnessOfflineRepository {
   // Seeds Iniciais (Padrão MFIT Personal)
   // ─────────────────────────────────────────────────────────────────────────────
 
-  List<ExercicioModel> _seedExercicios() {
-    return const [
-      // PEITO
-      ExercicioModel(
-        id: 'ex_supino_reto',
-        nome: 'Supino Reto com Barra',
-        grupoMuscular: 'Peitoral',
-        equipamento: 'Barra',
-        videoUrl: 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/00251301-Barbell-Bench-Press_Chest.gif',
-        instrucoes:
-            'Deite-se no banco com os olhos alinhados à barra. Pegada ligeiramente mais larga que os ombros. Desça até tocar suavemente a linha dos mamilos e empurre com controle.',
-        errosComuns: 'Descolar a lombar do banco ou projetar os cotovelos a 90 graus.',
-      ),
-      ExercicioModel(
-        id: 'ex_supino_inclinado',
-        nome: 'Supino Inclinado com Halteres',
-        grupoMuscular: 'Peitoral',
-        equipamento: 'Halteres',
-        instrucoes:
-            'Banco regulado a 30-45 graus. Mantenha as escápulas aduzidas e desça os halteres alongando a porção clavicular do peitoral.',
-        errosComuns: 'Inclinar o banco em excesso (acima de 45 graus) sobrecarregando o ombro.',
-      ),
-      ExercicioModel(
-        id: 'ex_crucifixo_polia',
-        nome: 'Crucifixo na Polia (Cross Over)',
-        grupoMuscular: 'Peitoral',
-        equipamento: 'Polia',
-        instrucoes:
-            'Braços semi-flexionados. Junte as mãos à frente do peito esmagando a musculatura na contração de pico.',
-      ),
+  /// Catálogo padrão de exercícios (assets/data/exercicios_catalogo.json).
+  /// Mesma fonte da migration V2026101404 do backend; descrição passo a passo
+  /// e imagens da free-exercise-db (domínio público).
+  static const String catalogoAsset = 'assets/data/exercicios_catalogo.json';
+  List<ExercicioModel>? _catalogoCache;
 
-      // COSTAS
-      ExercicioModel(
-        id: 'ex_puxada_frente',
-        nome: 'Puxada Frontal na Polia',
-        grupoMuscular: 'Costas',
-        equipamento: 'Polia',
-        videoUrl: 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/01501301-Cable-Pulldown_Back.gif',
-        instrucoes:
-            'Pegada pronada aberta. Puxe a barra em direção ao peitoral superior, mantendo o peito estufado e cotovelos apontando para baixo.',
-        errosComuns: 'Puxar a barra por trás do pescoço ou balançar o tronco para dar impulso.',
-      ),
-      ExercicioModel(
-        id: 'ex_remada_curvada',
-        nome: 'Remada Curvada com Barra',
-        grupoMuscular: 'Costas',
-        equipamento: 'Barra',
-        instrucoes:
-            'Tronco inclinado a 45 graus, coluna totalmente alinhada. Puxe a barra em direção ao umbigo aproximando as escápulas.',
-      ),
-      ExercicioModel(
-        id: 'ex_remada_baixa',
-        nome: 'Remada Baixa no Triângulo',
-        grupoMuscular: 'Costas',
-        equipamento: 'Polia',
-        instrucoes:
-            'Joelhos levemente flexionados. Puxe o triângulo contra o abdômen sem jogar o tronco para trás.',
-      ),
+  Future<List<ExercicioModel>> _seedExercicios() async {
+    if (_catalogoCache != null) return _catalogoCache!;
+    try {
+      final raw = await rootBundle.loadString(catalogoAsset);
+      final decoded = json.decode(raw) as List<dynamic>;
+      _catalogoCache = decoded
+          .map((e) => ExercicioModel.fromMap(Map<String, dynamic>.from(e as Map)))
+          .toList();
+    } catch (e, st) {
+      AppLogger.i.error('Falha ao carregar o catálogo de exercícios: $e', st);
+      _catalogoCache = [];
+    }
+    return _catalogoCache!;
+  }
 
-      // QUADRÍCEPS
-      ExercicioModel(
-        id: 'ex_agachamento_livre',
-        nome: 'Agachamento Livre com Barra',
-        grupoMuscular: 'Quadríceps',
-        equipamento: 'Barra',
-        videoUrl: 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/00431301-Barbell-Full-Squat_Thighs.gif',
-        instrucoes:
-            'Pés alinhados à largura dos ombros. Desça flexionando quadril e joelhos simultaneamente até pelo menos 90 graus mantendo calcanhares no chão.',
-        errosComuns: 'Valgo dinâmico (joelhos para dentro) e arredondamento da lombar.',
-      ),
-      ExercicioModel(
-        id: 'ex_leg_press',
-        nome: 'Leg Press 45°',
-        grupoMuscular: 'Quadríceps',
-        equipamento: 'Máquina',
-        instrucoes:
-            'Apoie os pés na plataforma na largura do quadril. Desça sem descolar o quadril do encosto.',
-        errosComuns: 'Travar os joelhos em hiperextensão no ponto alto do movimento.',
-      ),
-      ExercicioModel(
-        id: 'ex_cadeira_extensora',
-        nome: 'Cadeira Extensora',
-        grupoMuscular: 'Quadríceps',
-        equipamento: 'Máquina',
-        instrucoes:
-            'Alinhe o eixo da máquina com a linha do joelho. Estenda os joelhos completamente com 1 segundo de isometria no topo.',
-      ),
+  /// Une o catálogo salvo no aparelho com o catálogo padrão atual: inclui os
+  /// exercícios novos e atualiza textos/imagem dos padrões, preservando o
+  /// vídeo que o personal cadastrou e todos os exercícios personalizados.
+  static List<ExercicioModel> mesclarCatalogo(
+    List<ExercicioModel> salvos,
+    List<ExercicioModel> catalogo,
+  ) {
+    final porId = {for (final e in catalogo) e.id: e};
+    final resultado = <ExercicioModel>[];
+    final vistos = <String>{};
+    for (final salvo in salvos) {
+      vistos.add(salvo.id);
+      final padrao = porId[salvo.id];
+      if (padrao == null || salvo.isCustom) {
+        resultado.add(salvo);
+        continue;
+      }
+      resultado.add(ExercicioModel(
+        id: padrao.id,
+        nome: padrao.nome,
+        grupoMuscular: padrao.grupoMuscular,
+        equipamento: padrao.equipamento,
+        videoUrl: _videoValido(salvo.videoUrl),
+        thumbnailUrl: padrao.thumbnailUrl,
+        instrucoes: padrao.instrucoes,
+        errosComuns: padrao.errosComuns,
+        descricao: padrao.descricao,
+        nivel: padrao.nivel,
+      ));
+    }
+    resultado.addAll(catalogo.where((e) => !vistos.contains(e.id)));
+    return resultado;
+  }
 
-      // POSTERIOR & GLÚTEO
-      ExercicioModel(
-        id: 'ex_mesa_flexora',
-        nome: 'Mesa Flexora',
-        grupoMuscular: 'Posterior',
-        equipamento: 'Máquina',
-        instrucoes:
-            'Deite-se no aparelho e ajuste a almofada acima do calcanhar. Flexione os joelhos puxando os pés em direção ao glúteo.',
-      ),
-      ExercicioModel(
-        id: 'ex_stiff',
-        nome: 'Stiff com Barra ou Halteres',
-        grupoMuscular: 'Posterior',
-        equipamento: 'Halteres',
-        instrucoes:
-            'Joelhos semi-flexionados. Empurre o quadril para trás como se quisesse tocar a parede com o glúteo.',
-      ),
-      ExercicioModel(
-        id: 'ex_elevacao_pelvica',
-        nome: 'Elevação Pélvica com Barra',
-        grupoMuscular: 'Glúteo',
-        equipamento: 'Barra',
-        instrucoes:
-            'Costas apoiadas no banco. Eleve o quadril contraindo fortemente os glúteos até formar uma linha reta entre tronco e joelhos.',
-      ),
-
-      // OMBROS
-      ExercicioModel(
-        id: 'ex_desenvolvimento_halteres',
-        nome: 'Desenvolvimento com Halteres',
-        grupoMuscular: 'Ombros',
-        equipamento: 'Halteres',
-        instrucoes:
-            'Sentado com costas apoiadas. Empurre os halteres para cima sem bater um no outro no topo.',
-      ),
-      ExercicioModel(
-        id: 'ex_elevacao_lateral',
-        nome: 'Elevação Lateral com Halteres',
-        grupoMuscular: 'Ombros',
-        equipamento: 'Halteres',
-        videoUrl: 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/03341301-Dumbbell-Lateral-Raise_Shoulders.gif',
-        instrucoes:
-            'Eleve os braços lateralmente até a altura dos ombros com os cotovelos levemente flexionados.',
-      ),
-
-      // BÍCEPS & TRÍCEPS
-      ExercicioModel(
-        id: 'ex_rosca_direta',
-        nome: 'Rosca Direta com Barra W',
-        grupoMuscular: 'Bíceps',
-        equipamento: 'Barra',
-        instrucoes:
-            'Cotovelos fixos ao lado do tronco. Flexione os cotovelos subindo a barra sem jogar o ombro para frente.',
-      ),
-      ExercicioModel(
-        id: 'ex_triceps_corda',
-        nome: 'Tríceps na Polia com Corda',
-        grupoMuscular: 'Tríceps',
-        equipamento: 'Polia',
-        videoUrl: 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/02411301-Cable-Triceps-Pushdown-(V-bar)_Upper-Arms.gif',
-        instrucoes:
-            'Estenda os cotovelos para baixo e afaste as pontas da corda na contração final.',
-      ),
-
-      // ABDÔMEN & CÁRDIO
-      ExercicioModel(
-        id: 'ex_prancha',
-        nome: 'Prancha Abdominal Isométrica',
-        grupoMuscular: 'Abdômen',
-        equipamento: 'Peso Corporal',
-        instrucoes:
-            'Apoie antebraços e pontas dos pés no chão. Mantenha o corpo em linha reta e abdômen totalmente contraído.',
-      ),
-      ExercicioModel(
-        id: 'ex_esteira_hiit',
-        nome: 'Corrida / HIIT na Esteira',
-        grupoMuscular: 'Cárdio',
-        equipamento: 'Máquina',
-        instrucoes:
-            'Tiro de alta intensidade intercalado com caminhada de recuperação ativa.',
-      ),
-    ];
+  /// O seed antigo gravava GIFs da free-exercise-db que não existem (404).
+  static String? _videoValido(String? url) {
+    if (url == null || url.isEmpty) return null;
+    final gifQuebrado =
+        url.contains('/free-exercise-db/main/exercises/') && url.endsWith('.gif');
+    return gifQuebrado ? null : url;
   }
 
   List<PlanoTreinoModel> _seedPlanosTreino() {
