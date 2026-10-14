@@ -1476,9 +1476,8 @@ _HomeCardData _homeCardData(String cardId, Fitness360Summary summary) {
         color: GridColors.error,
       ),
     'body' => _HomeCardData(
-        title: 'Corpo ${summary.weightKg.toStringAsFixed(1)} kg',
-        subtitle:
-            'Meta ${summary.weightGoalKg.toStringAsFixed(1)} kg | score ${summary.bodyScore}',
+        title: summary.pesoTitulo,
+        subtitle: '${summary.metaPesoTexto} | score ${summary.bodyScore}',
         icon: Icons.scale_outlined,
         color: GridColors.info,
       ),

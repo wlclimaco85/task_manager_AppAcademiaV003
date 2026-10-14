@@ -33,7 +33,10 @@ class Fitness360Summary {
   final int trainingMinutes;
   final int heartRate;
   final int sleepMinutes;
-  final double weightKg;
+
+  /// Peso real (API ou registro local). Null quando o aluno ainda não tem
+  /// peso: o Hub mostra "sem registro" em vez de um valor de demonstração.
+  final double? weightKg;
   final int habitsDone;
   final int habitsTotal;
   final double weeklyProgress;
@@ -46,7 +49,17 @@ class Fitness360Summary {
   final int spo2;
   final int stress;
   final int readiness;
-  final double weightGoalKg;
+  final double? weightGoalKg;
+
+  /// Título do card "Corpo" no Hub.
+  String get pesoTitulo => weightKg != null
+      ? 'Corpo ${weightKg!.toStringAsFixed(1)} kg'
+      : 'Corpo sem registro';
+
+  /// Texto da meta de peso no card "Corpo".
+  String get metaPesoTexto => weightGoalKg != null
+      ? 'Meta ${weightGoalKg!.toStringAsFixed(1)} kg'
+      : 'Meta não definida';
   final DateTime lastSyncAt;
   final String syncSource;
 
@@ -72,7 +85,7 @@ class Fitness360Summary {
       trainingMinutes: r.treinoMinutos,
       heartRate: r.batimentos ?? 72,
       sleepMinutes: r.sonoMinutos,
-      weightKg: r.pesoKg ?? 76.4,
+      weightKg: r.pesoKg,
       habitsDone: 0,
       habitsTotal: 6,
       weeklyProgress: (dias / 7).clamp(0.0, 1.0),
@@ -85,7 +98,7 @@ class Fitness360Summary {
       spo2: 97,
       stress: 31,
       readiness: 70,
-      weightGoalKg: r.pesoMetaKg ?? 74,
+      weightGoalKg: r.pesoMetaKg,
       lastSyncAt: DateTime.now(),
       syncSource: 'API',
     );
@@ -353,7 +366,7 @@ class Fitness360LocalStore {
       trainingMinutes: minutes,
       heartRate: _firstInt(heart, fallback: 72),
       sleepMinutes: _firstSleepMinutes(sleep, fallback: 438),
-      weightKg: _firstDouble(body, fallback: 76.4),
+      weightKg: _firstDouble(body),
       habitsDone: habits.length.clamp(0, 6),
       habitsTotal: 6,
       weeklyProgress: ((activity.length + habits.length + body.length) / 18)
@@ -367,7 +380,7 @@ class Fitness360LocalStore {
       spo2: 97,
       stress: 31,
       readiness: (70 + habits.length * 4).clamp(0, 100),
-      weightGoalKg: 74,
+      weightGoalKg: null,
       lastSyncAt: DateTime.tryParse(prefs.getString(_syncAtKey) ?? '') ??
           DateTime.now().subtract(const Duration(minutes: 28)),
       syncSource: prefs.getString(_syncSourceKey) ?? 'Registro de Atividades',
@@ -461,16 +474,13 @@ class Fitness360LocalStore {
     return fallback;
   }
 
-  static double _firstDouble(
-    List<Fitness360Record> items, {
-    required double fallback,
-  }) {
+  static double? _firstDouble(List<Fitness360Record> items) {
     for (final item in items) {
       final normalized = item.value.replaceAll(',', '.');
       final match = RegExp(r'\d+(\.\d+)?').firstMatch(normalized);
-      if (match != null) return double.tryParse(match.group(0)!) ?? fallback;
+      if (match != null) return double.tryParse(match.group(0)!);
     }
-    return fallback;
+    return null;
   }
 
   static int _sumMinutes(
