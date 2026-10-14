@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/ui/widgets/compartilhar_treino_sheet.dart';
 import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
 import 'package:task_manager_flutter/ui/widgets/exercicio_midia.dart';
 
@@ -44,6 +45,18 @@ class DetalhesSessaoTreino extends StatelessWidget {
         ],
       ),
     )),
-    actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Fechar'))],
+    actions: [
+      TextButton.icon(icon: const Icon(Icons.share), label: const Text('Compartilhar treino'),
+        onPressed: () {
+          final series = sessao.exerciciosExecutados.expand((e) => e.series).where((s) => s.concluida).toList();
+          final volume = series.fold<double>(0, (v, s) => v + s.cargaRealKg * s.repeticoesRealizadas);
+          showModalBottomSheet(context: context, isScrollControlled: true,
+            builder: (sheetContext) => SizedBox(height: MediaQuery.sizeOf(sheetContext).height * 0.9,
+              child: CompartilharTreinoSheet(treino: 'Treino ${sessao.divisaoLetra} - ${sessao.divisaoNome}',
+                minutos: (sessao.duracaoSegundos / 60).round(), series: series.length,
+                tonelagemKg: volume, rpe: sessao.rpe, onFechar: () => Navigator.pop(sheetContext))));
+        }),
+      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Fechar')),
+    ],
   );
 }

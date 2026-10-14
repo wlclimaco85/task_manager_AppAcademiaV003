@@ -1,11 +1,9 @@
 import 'dart:async';
-import 'package:task_manager_flutter/data/models/auth_utility.dart';
-import 'package:task_manager_flutter/data/models/login_model.dart';
+import 'package:task_manager_flutter/ui/widgets/compartilhar_treino_sheet.dart';
 import 'package:task_manager_flutter/data/utils/exercicio_video_link.dart';
 import 'package:task_manager_flutter/data/utils/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:task_manager_flutter/ui/widgets/exercicio_midia.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
@@ -843,6 +841,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     final videoCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
     bool salvando = false;
+    bool compartilhar = false;
 
     final route = DialogRoute<void>(
       context: context,
@@ -969,6 +968,16 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                         helperStyle: TextStyle(color: Color(0xFF94A3B8)),
                       ),
                     ),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: compartilhar,
+                      activeColor: const Color(0xFF10B981),
+                      title: const Text('Compartilhar meu treino com foto',
+                        style: TextStyle(color: Colors.white)),
+                      subtitle: const Text('Opcional: Instagram ou Facebook',
+                        style: TextStyle(color: Color(0xFF94A3B8))),
+                      onChanged: salvando ? null : (v) => setDialogState(() => compartilhar = v ?? false),
+                    ),
                   ],
                 )),
               ),
@@ -1034,7 +1043,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
 
                     if (!context.mounted || !mounted) return;
                     Navigator.pop(context); // Fecha dialog
-                    if (AuthUtility.userInfo.login?.tipoLogin == LoginEnum.APP_ALUNO) {
+                    if (!compartilhar) {
                       ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(
                         backgroundColor: Color(0xFF10B981),
                         content: Text('Treino salvo no histórico.', style: TextStyle(color: Colors.white)),
@@ -1100,233 +1109,17 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
-            color: Color(0xFF0F172A),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 18),
-
-              // Card Visual Estilo Instagram Stories
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF064E3B), Color(0xFF022C22), Color(0xFF0B1120)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: const Color(0xFF10B981), width: 1.5),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x3310B981),
-                      blurRadius: 20,
-                      offset: Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Row(
-                          children: [
-                            Icon(Icons.bolt, color: Color(0xFF34D399), size: 24),
-                            SizedBox(width: 6),
-                            Text('APPACADEMIA PRO',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 1.2,
-                                    fontSize: 13)),
-                          ],
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF10B981).withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '🔥 $streakDias Dias Seguidos',
-                            style: const TextStyle(
-                                color: Color(0xFF34D399),
-                                fontWeight: FontWeight.w800,
-                                fontSize: 11),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-
-                    const Text(
-                      'TREINO CONCLUÍDO!',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${widget.divisao.letra} • ${widget.divisao.nome}',
-                      style: const TextStyle(
-                        color: Color(0xFF34D399),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Grid de Conquistas
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildStoriesStat(
-                            'TONELAGEM TOTAL',
-                            '${(tonelagemKg / 1000).toStringAsFixed(1)} ton',
-                            Icons.fitness_center,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _buildStoriesStat(
-                            'DURAÇÃO',
-                            '$duracaoMinutos min',
-                            Icons.timer_outlined,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildStoriesStat(
-                            'SÉRIES FEITAS',
-                            '$totalSeries',
-                            Icons.checklist,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _buildStoriesStat(
-                            'INTENSIDADE',
-                            'RPE $rpe',
-                            Icons.local_fire_department,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-
-                    const Text(
-                      '#NoExcuses #AppAcademia #ProgressoReal',
-                      style: TextStyle(
-                          color: Color(0xFF94A3B8),
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Ações de Compartilhamento
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        side: const BorderSide(color: Color(0xFF475569)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      onPressed: () {
-                        Navigator.pop(context); // fecha modal
-                        Navigator.pop(context, true); // volta tela treinos
-                      },
-                      child: const Text('Fechar'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF059669),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      icon: const Icon(Icons.share, size: 20),
-                      label: const Text('Compartilhar Stories',
-                          style: TextStyle(fontWeight: FontWeight.w800)),
-                      onPressed: () {
-                        final shareText = '''🔥 Treino Batido com Sucesso no AppAcademia Pro!
-
-🏋️ Treino: ${widget.divisao.letra} - ${widget.divisao.nome}
-⏱ Tempo: $duracaoMinutos min
-💪 Tonelagem Total: ${(tonelagemKg / 1000).toStringAsFixed(1)} toneladas levantadas
-🎯 Séries Concluídas: $totalSeries
-🔥 Sequência: $streakDias dias consecutivos!
-
-#Foco #Treino #AppAcademia #MyFitCoach #SobrecargaProgressiva''';
-
-                        Share.share(shareText);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildStoriesStat(String label, String value, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: const Color(0xFF34D399), size: 20),
-          const SizedBox(height: 4),
-          Text(value,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14)),
-          Text(label,
-              style: const TextStyle(
-                  color: Color(0xFF94A3B8),
-                  fontSize: 9,
-                  letterSpacing: 0.5,
-                  fontWeight: FontWeight.w600)),
-        ],
+      builder: (sheetContext) => SizedBox(
+        height: MediaQuery.sizeOf(sheetContext).height * 0.9,
+        child: CompartilharTreinoSheet(
+          treino: 'Treino ${widget.divisao.letra} - ${widget.divisao.nome}',
+          minutos: duracaoMinutos, tonelagemKg: tonelagemKg,
+          series: totalSeries, rpe: rpe,
+          onFechar: () {
+            Navigator.pop(sheetContext);
+            Navigator.of(context).pop(true);
+          },
+        ),
       ),
     );
   }
