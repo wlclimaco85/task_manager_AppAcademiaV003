@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:task_manager_flutter/data/services/fitness_conta_sync.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/models/fitness/personal_gestao_model.dart';
@@ -20,11 +21,11 @@ class PersonalGestaoOfflineRepository {
 
   Future<List<PersonalAlunoGestaoModel>> getAlunos() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_kAlunosKey);
+    final raw = prefs.getString(FitnessContaSync.chave(_kAlunosKey + '_real'));
 
     List<PersonalAlunoGestaoModel> lista = [];
     if (raw == null || raw.isEmpty) {
-      lista = _seedAlunos();
+      lista = [];
       await _salvarAlunos(lista);
     } else {
       try {
@@ -35,7 +36,7 @@ class PersonalGestaoOfflineRepository {
             .toList();
       } catch (e) {
         debugPrint('[PersonalGestaoOfflineRepository] Erro decode alunos: $e');
-        lista = _seedAlunos();
+        lista = [];
       }
     }
     return lista;
@@ -44,7 +45,7 @@ class PersonalGestaoOfflineRepository {
   Future<void> _salvarAlunos(List<PersonalAlunoGestaoModel> alunos) async {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = json.encode(alunos.map((e) => e.toMap()).toList());
-    await prefs.setString(_kAlunosKey, jsonStr);
+    await prefs.setString(FitnessContaSync.chave(_kAlunosKey + '_real'), jsonStr);
   }
 
   Future<void> salvarAluno(PersonalAlunoGestaoModel aluno) async {
@@ -140,11 +141,11 @@ class PersonalGestaoOfflineRepository {
 
   Future<List<PersonalAgendamentoAulaModel>> getAgendamentos() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_kAgendasKey);
+    final raw = prefs.getString(FitnessContaSync.chave(_kAgendasKey + '_real'));
 
     List<PersonalAgendamentoAulaModel> lista = [];
     if (raw == null || raw.isEmpty) {
-      lista = _seedAgendamentos();
+      lista = [];
       await _salvarAgendamentos(lista);
     } else {
       try {
@@ -155,7 +156,7 @@ class PersonalGestaoOfflineRepository {
             .toList();
       } catch (e) {
         debugPrint('[PersonalGestaoOfflineRepository] Erro decode agendas: $e');
-        lista = _seedAgendamentos();
+        lista = [];
       }
     }
     return lista;
@@ -165,7 +166,7 @@ class PersonalGestaoOfflineRepository {
       List<PersonalAgendamentoAulaModel> lista) async {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = json.encode(lista.map((e) => e.toMap()).toList());
-    await prefs.setString(_kAgendasKey, jsonStr);
+    await prefs.setString(FitnessContaSync.chave(_kAgendasKey + '_real'), jsonStr);
   }
 
   Future<void> agendarAula(PersonalAgendamentoAulaModel aula) async {
@@ -208,156 +209,7 @@ class PersonalGestaoOfflineRepository {
   // 4. Seed de Dados de Demonstração (MFIT Pro Standard)
   // ─────────────────────────────────────────────────────────────────────────────
 
-  List<PersonalAlunoGestaoModel> _seedAlunos() {
-    final hoje = DateTime.now();
-    return [
-      PersonalAlunoGestaoModel(
-        id: 'aluno-1',
-        nome: 'Lucas Mendonça',
-        email: 'lucas.mendonca@email.com',
-        telefone: '(11) 98765-4321',
-        objetivo: 'Hipertrofia & Ganho de Massa',
-        nivel: 'Avançado',
-        ativo: true,
-        treinoAtualNome: 'ABC Hipertrofia Pesada 4x',
-        dataInicioTreino: hoje.subtract(const Duration(days: 40)).toIso8601String().substring(0, 10),
-        validadeTreinoDias: 45,
-        dataVencimentoTreino: hoje.add(const Duration(days: 5)).toIso8601String().substring(0, 10), // Vence em 5 dias (Alerta)
-        diasSemTreinar: 1,
-        frequenciaSemanalMedia: 5,
-        volumeTotalKg: 48500.0,
-        totalTreinosConcluidos: 28,
-        valorMensalidade: 350.0,
-        diaVencimento: 10,
-        statusMensalidade: StatusMensalidadeAluno.pago,
-        dataUltimoPagamento: hoje.toIso8601String().substring(0, 10),
-        feedbacks: [
-          PersonalAlunoFeedbackModel(
-            id: 'fb-1',
-            treinoId: 'treino-a',
-            divisaoNome: 'Treino A - Peito e Tríceps',
-            data: hoje.subtract(const Duration(days: 1)).toIso8601String().substring(0, 10),
-            rpe: 9,
-            comentario: 'Supino Reto com 100kg foi até a falha na 4ª série! Ombro sem dores.',
-            exercicioDestaque: 'Supino Reto com Barra',
-          ),
-          PersonalAlunoFeedbackModel(
-            id: 'fb-2',
-            treinoId: 'treino-c',
-            divisaoNome: 'Treino C - Pernas Completo',
-            data: hoje.subtract(const Duration(days: 3)).toIso8601String().substring(0, 10),
-            rpe: 10,
-            comentario: 'Agachamento livre muito pesado, precisei de 2min de descanso.',
-            exercicioDestaque: 'Agachamento Livre com Barra',
-          ),
-        ],
-      ),
-      PersonalAlunoGestaoModel(
-        id: 'aluno-2',
-        nome: 'Camila Rodrigues',
-        email: 'camila.rodrigues@email.com',
-        telefone: '(11) 91234-5678',
-        objetivo: 'Emagrecimento & Definição Glúteos',
-        nivel: 'Intermediário',
-        ativo: true,
-        treinoAtualNome: 'Glúteos & Inferiores 360',
-        dataInicioTreino: hoje.subtract(const Duration(days: 65)).toIso8601String().substring(0, 10),
-        validadeTreinoDias: 60,
-        dataVencimentoTreino: hoje.subtract(const Duration(days: 5)).toIso8601String().substring(0, 10), // Vencido há 5 dias!
-        diasSemTreinar: 4, // Alerta assiduidade
-        frequenciaSemanalMedia: 3,
-        volumeTotalKg: 31200.0,
-        totalTreinosConcluidos: 22,
-        valorMensalidade: 300.0,
-        diaVencimento: 5,
-        statusMensalidade: StatusMensalidadeAluno.atrasado, // Em débito
-        dataUltimoPagamento: hoje.subtract(const Duration(days: 35)).toIso8601String().substring(0, 10),
-        feedbacks: [
-          PersonalAlunoFeedbackModel(
-            id: 'fb-3',
-            treinoId: 'treino-b',
-            divisaoNome: 'Treino B - Glúteos & Posterior',
-            data: hoje.subtract(const Duration(days: 4)).toIso8601String().substring(0, 10),
-            rpe: 8,
-            comentario: 'Elevação pélvica rendeu bem com 80kg, sentindo muito o glúteo.',
-            exercicioDestaque: 'Elevação Pélvica',
-          ),
-        ],
-      ),
-      PersonalAlunoGestaoModel(
-        id: 'aluno-3',
-        nome: 'Gabriel Santos',
-        email: 'gabriel.santos@email.com',
-        telefone: '(11) 99887-7665',
-        objetivo: 'Condicionamento & Força',
-        nivel: 'Iniciante',
-        ativo: true,
-        treinoAtualNome: 'Full Body Adaptação',
-        dataInicioTreino: hoje.subtract(const Duration(days: 10)).toIso8601String().substring(0, 10),
-        validadeTreinoDias: 30,
-        dataVencimentoTreino: hoje.add(const Duration(days: 20)).toIso8601String().substring(0, 10),
-        diasSemTreinar: 0,
-        frequenciaSemanalMedia: 3,
-        volumeTotalKg: 14500.0,
-        totalTreinosConcluidos: 8,
-        valorMensalidade: 280.0,
-        diaVencimento: 15,
-        statusMensalidade: StatusMensalidadeAluno.pendente,
-        feedbacks: [
-          PersonalAlunoFeedbackModel(
-            id: 'fb-4',
-            treinoId: 'treino-fb',
-            divisaoNome: 'Treino Full Body A',
-            data: hoje.toIso8601String().substring(0, 10),
-            rpe: 6,
-            comentario: 'Treino suave hoje, adaptando bem a postura no leg press.',
-            exercicioDestaque: 'Leg Press 45',
-          ),
-        ],
-      ),
-    ];
-  }
 
-  List<PersonalAgendamentoAulaModel> _seedAgendamentos() {
-    final hoje = DateTime.now().toIso8601String().substring(0, 10);
-    return [
-      PersonalAgendamentoAulaModel(
-        id: 'agenda-1',
-        alunoId: 'aluno-1',
-        alunoNome: 'Lucas Mendonça',
-        academiaNome: 'Ironberg Alphaville',
-        data: hoje,
-        horarioInicio: '07:00',
-        horarioFim: '08:00',
-        tipoAula: 'Musculação Acompanhada (Peito)',
-        status: StatusAgendamentoAula.agendada,
-        observacao: 'Foco em progressão de carga no supino e crossover.',
-      ),
-      PersonalAgendamentoAulaModel(
-        id: 'agenda-2',
-        alunoId: 'aluno-2',
-        alunoNome: 'Camila Rodrigues',
-        academiaNome: 'SmartFit Jardins',
-        data: hoje,
-        horarioInicio: '09:00',
-        horarioFim: '10:00',
-        tipoAula: 'Avaliação Física & Reavaliação de Ficha',
-        status: StatusAgendamentoAula.agendada,
-        observacao: 'Levar adipômetro e fita métrica para nova dobra cutânea.',
-      ),
-      PersonalAgendamentoAulaModel(
-        id: 'agenda-3',
-        alunoId: 'aluno-3',
-        alunoNome: 'Gabriel Santos',
-        academiaNome: 'BlueFit Paulista',
-        data: hoje,
-        horarioInicio: '18:00',
-        horarioFim: '19:00',
-        tipoAula: 'Musculação Acompanhada',
-        status: StatusAgendamentoAula.remarcada,
-        motivoRemarcacao: 'Aluno solicitou alteração das 17h para 18h devido a trânsito.',
-        observacao: 'Ajuste de postura no agachamento.',
-      ),
-    ];
-  }
+
+
 }

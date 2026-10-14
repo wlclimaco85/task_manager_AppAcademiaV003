@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/ui/widgets/fitness_graficos_hub.dart';
 import 'package:task_manager_flutter/ui/widgets/fitness_menu_page.dart';
 import 'package:task_manager_flutter/data/utils/fitness_access.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
@@ -1029,6 +1030,8 @@ class _EnhancedFitnessHubScreenState extends State<_EnhancedFitnessHubScreen> {
                   ),
                   const SizedBox(height: 14),
                   _EnhancedSyncStatusCard(summary: state.summary),
+                  const SizedBox(height: 12),
+                  FitnessGraficosHub(key: ObjectKey(state)),
                   const SizedBox(height: 12),
                   _CommunityParticipationBanner(
                     enabled: state.communityOptIn,

@@ -96,7 +96,7 @@ class FitnessOfflineRepository {
 
     List<PlanoTreinoModel> lista = [];
     if (raw == null || raw.isEmpty) {
-      lista = FitnessContaSync.autenticado ? [] : _seedPlanosTreino();
+      lista = [];
       await _salvarPlanos(lista);
     } else {
       try {
@@ -106,7 +106,7 @@ class FitnessOfflineRepository {
             .toList();
       } catch (e) {
         debugPrint('[FitnessOfflineRepository] Erro decode planos: $e');
-        lista = FitnessContaSync.autenticado ? [] : _seedPlanosTreino();
+        lista = [];
       }
     }
 
@@ -361,154 +361,4 @@ class FitnessOfflineRepository {
     return gifQuebrado ? null : url;
   }
 
-  List<PlanoTreinoModel> _seedPlanosTreino() {
-    return [
-      PlanoTreinoModel(
-        id: 'plano_template_abc',
-        alunoId: 'aluno_demo',
-        alunoNome: 'Aluno Demonstração',
-        personalId: 'personal_logado',
-        titulo: 'Ficha Hipertrofia ABC Pro',
-        objetivo: 'Hipertrofia',
-        dataInicio: '2026-10-01',
-        dataValidade: '2026-11-30',
-        isTemplate: false,
-        ativo: true,
-        divisoes: [
-          DivisaoTreinoModel(
-            id: 'div_a',
-            letra: 'A',
-            nome: 'Peito, Ombros e Tríceps (Push)',
-            exercicios: [
-              ItemTreinoModel(
-                id: 'it_1',
-                exercicioId: 'ex_supino_reto',
-                exercicioNome: 'Supino Reto com Barra',
-                grupoMuscular: 'Peitoral',
-                series: 4,
-                repeticoes: '8 a 10',
-                cargaSugeridaKg: 30.0,
-                descansoSegundos: 90,
-                tecnica: 'Normal',
-              ),
-              ItemTreinoModel(
-                id: 'it_2',
-                exercicioId: 'ex_supino_inclinado',
-                exercicioNome: 'Supino Inclinado com Halteres',
-                grupoMuscular: 'Peitoral',
-                series: 3,
-                repeticoes: '10 a 12',
-                cargaSugeridaKg: 18.0,
-                descansoSegundos: 60,
-                tecnica: 'Normal',
-              ),
-              ItemTreinoModel(
-                id: 'it_3',
-                exercicioId: 'ex_elevacao_lateral',
-                exercicioNome: 'Elevação Lateral com Halteres',
-                grupoMuscular: 'Ombros',
-                series: 4,
-                repeticoes: '12 a 15',
-                cargaSugeridaKg: 8.0,
-                descansoSegundos: 45,
-                tecnica: 'Drop-set',
-                observacoes: 'Última série com drop de 30% da carga.',
-              ),
-              ItemTreinoModel(
-                id: 'it_4',
-                exercicioId: 'ex_triceps_corda',
-                exercicioNome: 'Tríceps na Polia com Corda',
-                grupoMuscular: 'Tríceps',
-                series: 3,
-                repeticoes: '12',
-                cargaSugeridaKg: 25.0,
-                descansoSegundos: 45,
-                tecnica: 'Normal',
-              ),
-            ],
-          ),
-          DivisaoTreinoModel(
-            id: 'div_b',
-            letra: 'B',
-            nome: 'Costas e Bíceps (Pull)',
-            exercicios: [
-              ItemTreinoModel(
-                id: 'it_5',
-                exercicioId: 'ex_puxada_frente',
-                exercicioNome: 'Puxada Frontal na Polia',
-                grupoMuscular: 'Costas',
-                series: 4,
-                repeticoes: '10',
-                cargaSugeridaKg: 45.0,
-                descansoSegundos: 75,
-                tecnica: 'Normal',
-              ),
-              ItemTreinoModel(
-                id: 'it_6',
-                exercicioId: 'ex_remada_baixa',
-                exercicioNome: 'Remada Baixa no Triângulo',
-                grupoMuscular: 'Costas',
-                series: 3,
-                repeticoes: '12',
-                cargaSugeridaKg: 40.0,
-                descansoSegundos: 60,
-                tecnica: 'Normal',
-              ),
-              ItemTreinoModel(
-                id: 'it_7',
-                exercicioId: 'ex_rosca_direta',
-                exercicioNome: 'Rosca Direta com Barra W',
-                grupoMuscular: 'Bíceps',
-                series: 3,
-                repeticoes: '10 a 12',
-                cargaSugeridaKg: 12.0,
-                descansoSegundos: 60,
-                tecnica: 'Normal',
-              ),
-            ],
-          ),
-          DivisaoTreinoModel(
-            id: 'div_c',
-            letra: 'C',
-            nome: 'Pernas Completas (Legs)',
-            exercicios: [
-              ItemTreinoModel(
-                id: 'it_8',
-                exercicioId: 'ex_agachamento_livre',
-                exercicioNome: 'Agachamento Livre com Barra',
-                grupoMuscular: 'Quadríceps',
-                series: 4,
-                repeticoes: '8 a 10',
-                cargaSugeridaKg: 40.0,
-                descansoSegundos: 120,
-                tecnica: 'Normal',
-              ),
-              ItemTreinoModel(
-                id: 'it_9',
-                exercicioId: 'ex_leg_press',
-                exercicioNome: 'Leg Press 45°',
-                grupoMuscular: 'Quadríceps',
-                series: 3,
-                repeticoes: '12',
-                cargaSugeridaKg: 120.0,
-                descansoSegundos: 90,
-                tecnica: 'Normal',
-              ),
-              ItemTreinoModel(
-                id: 'it_10',
-                exercicioId: 'ex_mesa_flexora',
-                exercicioNome: 'Mesa Flexora',
-                grupoMuscular: 'Posterior',
-                series: 4,
-                repeticoes: '12',
-                cargaSugeridaKg: 35.0,
-                descansoSegundos: 60,
-                tecnica: 'Normal',
-              ),
-            ],
-          ),
-        ],
-      ),
-    ];
-  }
 }

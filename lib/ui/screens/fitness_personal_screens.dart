@@ -193,7 +193,7 @@ class _SonoScreenState extends State<SonoScreen> {
         // vier 0/null.
         final sonoLabel = (sonoMinutos > 0)
             ? _formatarMinutos(sonoMinutos)
-            : '7h 30m';
+            : '--';
 
         final lembretesOrdenados = [...data.lembretes]
           ..sort((a, b) => (a.horario ?? '99:99').compareTo(
@@ -272,7 +272,7 @@ class _BatimentosScreenState extends State<BatimentosScreen> {
 
         final healthData = snapshot.data ?? {};
         final isReal = healthData['isRealData'] == true;
-        final bpm = healthData['heartRate'] as int? ?? 72;
+        final bpm = healthData['heartRate'] as int?;
 
         return FitnessRecordScreen(
           type: 'batimento',
@@ -282,10 +282,10 @@ class _BatimentosScreenState extends State<BatimentosScreen> {
           primaryActionLabel: 'Registrar manualmente',
           emptyLabel: 'Nenhuma leitura cardiaca registrada.',
           defaultTitle: 'Frequencia em repouso',
-          defaultValue: '$bpm bpm',
+          defaultValue: bpm == null ? '--' : '$bpm bpm',
           defaultNote: isReal ? 'Sincronizado via Health Connect / HealthKit' : 'Importacao manual ate aprovacao do spike',
           metricCards: [
-            FitnessMetricSpec('Repouso', '$bpm bpm', Icons.favorite_border),
+            FitnessMetricSpec('Repouso', bpm == null ? '--' : '$bpm bpm', Icons.favorite_border),
             const FitnessMetricSpec('Maximo', '148 bpm', Icons.north_east),
             const FitnessMetricSpec('SpO2', '97%', Icons.air_outlined),
             const FitnessMetricSpec('Stress', '31 baixo', Icons.psychology_outlined),
@@ -1512,70 +1512,16 @@ class _RecordTile extends StatelessWidget {
 
 class _SleepPhasesCard extends StatelessWidget {
   const _SleepPhasesCard({this.sonoMinutosTotal});
-
-  /// Total real de minutos de sono (GET /api/fitness/resumo). Pode ser null
-  /// se a API falhar ou nao houver registro do dia.
   final int? sonoMinutosTotal;
-
   @override
-  Widget build(BuildContext context) {
-    // Fases do sono sao estimativa proporcional - backend so expoe total.
-    // Os percentuais abaixo sao os mesmos do mock anterior, aplicados sobre
-    // o total real quando disponivel.
-    const percentualProfundo = 0.28;
-    const percentualLeve = 0.62;
-    const percentualAcordado = 0.10;
-
-    final temDadoReal = sonoMinutosTotal != null && sonoMinutosTotal! > 0;
-    final trailing = temDadoReal
-        ? _formatarMinutos(sonoMinutosTotal!)
-        : 'Score 84';
-
-    return _Panel(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SectionTitle(title: 'Fases do sono', trailing: trailing),
-          const SizedBox(height: 12),
-          const _SegmentBar(
-            segments: [
-              _SegmentSpec(percentualProfundo, Color(0xFF32117A), 'Profundo'),
-              _SegmentSpec(percentualLeve, GridColors.primary, 'Leve'),
-              _SegmentSpec(
-                percentualAcordado,
-                GridColors.secondary,
-                'Acordado',
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => const _Panel(
+    child: Text('Fases do sono indisponíveis: não há registros detalhados do dispositivo.'));
 }
-
 class _HeartZonesCard extends StatelessWidget {
   const _HeartZonesCard();
-
   @override
-  Widget build(BuildContext context) {
-    return const _Panel(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SectionTitle(title: 'Zonas cardiacas', trailing: 'Hoje'),
-          SizedBox(height: 12),
-          _SegmentBar(
-            segments: [
-              _SegmentSpec(0.36, Color(0xFF2E7D32), 'Leve'),
-              _SegmentSpec(0.42, GridColors.warning, 'Cardio'),
-              _SegmentSpec(0.22, GridColors.error, 'Pico'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => const _Panel(
+    child: Text('Zonas cardíacas indisponíveis: não há registros detalhados do dispositivo.'));
 }
 
 class _BodyCompositionCard extends StatelessWidget {
@@ -3108,52 +3054,6 @@ class _SectionTitle extends StatelessWidget {
         Text(
           trailing,
           style: const TextStyle(color: Color(0xFF6D647A), fontSize: 12),
-        ),
-      ],
-    );
-  }
-}
-
-class _SegmentSpec {
-  const _SegmentSpec(this.value, this.color, this.label);
-
-  final double value;
-  final Color color;
-  final String label;
-}
-
-class _SegmentBar extends StatelessWidget {
-  const _SegmentBar({required this.segments});
-
-  final List<_SegmentSpec> segments;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(99),
-          child: Row(
-            children: [
-              for (final segment in segments)
-                Expanded(
-                  flex: (segment.value * 100).round(),
-                  child: Container(height: 12, color: segment.color),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 10,
-          runSpacing: 6,
-          children: [
-            for (final segment in segments)
-              Text(
-                segment.label,
-                style: TextStyle(color: segment.color, fontSize: 12),
-              ),
-          ],
         ),
       ],
     );

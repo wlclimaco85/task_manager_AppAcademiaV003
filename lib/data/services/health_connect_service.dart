@@ -14,9 +14,9 @@ class HealthConnectService {
 
   Future<bool> authorize() async {
     if (kIsWeb) {
-      debugPrint('[HealthConnectService] Web não suporta HealthKit / Health Connect. Usando modo mock.');
-      _isAuthorized = true;
-      return true;
+      debugPrint('[HealthConnectService] Web não suporta HealthKit / Health Connect. Sem dados nativos disponíveis.');
+      _isAuthorized = false;
+      return false;
     }
 
     final types = [
@@ -47,12 +47,12 @@ class HealthConnectService {
     if (!_isAuthorized) {
       final auth = await authorize();
       if (!auth) {
-        return _getMockData();
+        return _semDados();
       }
     }
 
     if (kIsWeb) {
-      return _getMockData();
+      return _semDados();
     }
 
     try {
@@ -90,22 +90,22 @@ class HealthConnectService {
       }
 
       return {
-        'steps': steps ?? 0,
-        'heartRate': averageHeartRate.round(),
-        'sleepMinutes': sleepMinutes,
+        'steps': steps,
+        'heartRate': heartRateCount > 0 ? averageHeartRate.round() : null,
+        'sleepMinutes': cleanData.any((d) => d.type == HealthDataType.SLEEP_SESSION) ? sleepMinutes : null,
         'isRealData': true,
       };
     } catch (e) {
       debugPrint('[HealthConnectService] Erro ao buscar dados: $e');
-      return _getMockData();
+      return _semDados();
     }
   }
 
-  Map<String, dynamic> _getMockData() {
+  Map<String, dynamic> _semDados() {
     return {
-      'steps': 6500,
-      'heartRate': 72,
-      'sleepMinutes': 420, // 7 hours
+      'steps': null,
+      'heartRate': null,
+      'sleepMinutes': null,
       'isRealData': false,
     };
   }
