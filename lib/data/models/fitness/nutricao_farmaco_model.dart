@@ -13,6 +13,12 @@ class AlimentoModel {
   final double fibras; // g por 100g
   final String? unidadeMedida; // 'g', 'ml', 'unidade', 'fatia', 'colher'
 
+  /// Porção caseira, destaque nutricional, como usar e valores por 100 g.
+  final String descricao;
+
+  /// Grupo da TACO (ex.: "Cereais e derivados").
+  final String? grupo;
+
   const AlimentoModel({
     required this.id,
     required this.nome,
@@ -24,6 +30,8 @@ class AlimentoModel {
     required this.gorduras,
     this.fibras = 0.0,
     this.unidadeMedida = 'g',
+    this.descricao = '',
+    this.grupo,
   });
 
   Map<String, dynamic> toMap() => {
@@ -37,6 +45,8 @@ class AlimentoModel {
         'gorduras': gorduras,
         'fibras': fibras,
         'unidadeMedida': unidadeMedida,
+        'descricao': descricao,
+        'grupo': grupo,
       };
 
   factory AlimentoModel.fromMap(Map<String, dynamic> map) => AlimentoModel(
@@ -51,6 +61,8 @@ class AlimentoModel {
         gorduras: (map['gorduras'] as num?)?.toDouble() ?? 0.0,
         fibras: (map['fibras'] as num?)?.toDouble() ?? 0.0,
         unidadeMedida: map['unidadeMedida']?.toString() ?? 'g',
+        descricao: map['descricao']?.toString() ?? '',
+        grupo: map['grupo']?.toString(),
       );
 }
 

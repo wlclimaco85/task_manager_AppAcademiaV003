@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:task_manager_flutter/data/utils/app_logger.dart';
 import 'package:task_manager_flutter/data/models/fitness/nutricao_farmaco_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/exame_registro_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
@@ -26,19 +28,25 @@ class NutricaoFarmacoOfflineRepository {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_kAlimentosKey);
 
+    final catalogo = await _seedAlimentos();
     List<AlimentoModel> lista = [];
     if (raw == null || raw.isEmpty) {
-      lista = _seedAlimentos();
+      lista = catalogo;
       await _salvarAlimentos(lista);
     } else {
       try {
         final decoded = json.decode(raw) as List<dynamic>;
-        lista = decoded
+        final salvos = decoded
             .map((e) => AlimentoModel.fromMap(e as Map<String, dynamic>))
             .toList();
+        // Aparelhos com a lista antiga recebem os alimentos novos e as descrições.
+        lista = mesclarCatalogo(salvos, catalogo);
+        if (json.encode(lista.map((e) => e.toMap()).toList()) != raw) {
+          await _salvarAlimentos(lista);
+        }
       } catch (e) {
-        debugPrint('[NutricaoRepo] Erro decode alimentos: $e');
-        lista = _seedAlimentos();
+        AppLogger.i.warn('Erro ao ler alimentos salvos; usando o catálogo padrão: $e');
+        lista = catalogo;
       }
     }
 
@@ -53,7 +61,8 @@ class NutricaoFarmacoOfflineRepository {
       lista = lista
           .where((a) =>
               a.nome.toLowerCase().contains(query) ||
-              a.categoria.toLowerCase().contains(query))
+              a.categoria.toLowerCase().contains(query) ||
+              (a.grupo ?? '').toLowerCase().contains(query))
           .toList();
     }
 
@@ -369,35 +378,42 @@ class NutricaoFarmacoOfflineRepository {
   // SEEDS INICIAIS (Tabela Nutricional & Medicamentos)
   // ─────────────────────────────────────────────────────────────────────────────
 
-  List<AlimentoModel> _seedAlimentos() {
-    return const [
-      // CARBOIDRATOS
-      AlimentoModel(id: 'alim_1', nome: 'Arroz Branco Cozido', categoria: 'carboidratos', calorias: 128.0, proteinas: 2.5, carboidratos: 28.1, gorduras: 0.2, fibras: 1.6),
-      AlimentoModel(id: 'alim_2', nome: 'Arroz Integral Cozido', categoria: 'carboidratos', calorias: 124.0, proteinas: 2.6, carboidratos: 25.8, gorduras: 1.0, fibras: 2.7),
-      AlimentoModel(id: 'alim_3', nome: 'Feijão Carioca Cozido', categoria: 'carboidratos', calorias: 76.0, proteinas: 4.8, carboidratos: 13.6, gorduras: 0.5, fibras: 8.5),
-      AlimentoModel(id: 'alim_4', nome: 'Feijão Preto Cozido', categoria: 'carboidratos', calorias: 77.0, proteinas: 4.5, carboidratos: 14.0, gorduras: 0.5, fibras: 8.4),
-      AlimentoModel(id: 'alim_5', nome: 'Batata Doce Cozida', categoria: 'carboidratos', calorias: 77.0, proteinas: 0.6, carboidratos: 18.4, gorduras: 0.1, fibras: 2.2),
-      AlimentoModel(id: 'alim_6', nome: 'Mandioca / Aipim Cozido', categoria: 'carboidratos', calorias: 125.0, proteinas: 0.6, carboidratos: 30.1, gorduras: 0.3, fibras: 1.6),
-      AlimentoModel(id: 'alim_7', nome: 'Aveia em Flocos', categoria: 'carboidratos', calorias: 394.0, proteinas: 13.9, carboidratos: 66.6, gorduras: 8.5, fibras: 9.1),
-      AlimentoModel(id: 'alim_8', nome: 'Pão Integral (Fatia)', categoria: 'carboidratos', porcaoPadraoGramas: 50.0, calorias: 120.0, proteinas: 5.0, carboidratos: 22.0, gorduras: 1.5, fibras: 3.5),
+  /// Catálogo padrão de alimentos (assets/data/alimentos_catalogo.json).
+  /// Valores por 100 g da TACO 4ª ed. (NEPA/UNICAMP); mesma fonte da migration
+  /// V2026101405 do backend. Gerado por tool/catalogo_alimentos.
+  static const String catalogoAsset = 'assets/data/alimentos_catalogo.json';
+  List<AlimentoModel>? _catalogoCache;
 
-      // PROTEÍNAS
-      AlimentoModel(id: 'alim_9', nome: 'Peito de Frango Grelhado', categoria: 'proteinas', calorias: 159.0, proteinas: 32.0, carboidratos: 0.0, gorduras: 3.2, fibras: 0.0),
-      AlimentoModel(id: 'alim_10', nome: 'Carne Bovina Patinho Grelhado', categoria: 'proteinas', calorias: 185.0, proteinas: 35.9, carboidratos: 0.0, gorduras: 4.5, fibras: 0.0),
-      AlimentoModel(id: 'alim_11', nome: 'Filé de Tilápia Grelhado', categoria: 'proteinas', calorias: 128.0, proteinas: 26.0, carboidratos: 0.0, gorduras: 2.7, fibras: 0.0),
-      AlimentoModel(id: 'alim_12', nome: 'Ovo de Galinha Cozido (Unidade)', categoria: 'proteinas', porcaoPadraoGramas: 50.0, calorias: 72.0, proteinas: 6.3, carboidratos: 0.6, gorduras: 4.8, fibras: 0.0),
-      AlimentoModel(id: 'alim_13', nome: 'Clara de Ovo Cozida (Unidade)', categoria: 'proteinas', porcaoPadraoGramas: 33.0, calorias: 17.0, proteinas: 3.6, carboidratos: 0.2, gorduras: 0.1, fibras: 0.0),
-      AlimentoModel(id: 'alim_14', nome: 'Whey Protein Concentrado 80%', categoria: 'proteinas', porcaoPadraoGramas: 30.0, calorias: 120.0, proteinas: 24.0, carboidratos: 3.0, gorduras: 1.5, fibras: 0.0),
-      AlimentoModel(id: 'alim_15', nome: 'Whey Protein Isolado 90%', categoria: 'proteinas', porcaoPadraoGramas: 30.0, calorias: 110.0, proteinas: 27.0, carboidratos: 0.5, gorduras: 0.2, fibras: 0.0),
+  Future<List<AlimentoModel>> _seedAlimentos() async {
+    if (_catalogoCache != null) return _catalogoCache!;
+    try {
+      final raw = await rootBundle.loadString(catalogoAsset);
+      final decoded = json.decode(raw) as List<dynamic>;
+      _catalogoCache = decoded
+          .map((e) => AlimentoModel.fromMap(Map<String, dynamic>.from(e as Map)))
+          .toList();
+    } catch (e, st) {
+      AppLogger.i.error('Falha ao carregar o catálogo de alimentos: $e', st);
+      _catalogoCache = [];
+    }
+    return _catalogoCache!;
+  }
 
-      // FRUTAS & GORDURAS
-      AlimentoModel(id: 'alim_16', nome: 'Banana Prata', categoria: 'frutas', porcaoPadraoGramas: 100.0, calorias: 98.0, proteinas: 1.3, carboidratos: 26.0, gorduras: 0.1, fibras: 2.0),
-      AlimentoModel(id: 'alim_17', nome: 'Abacate', categoria: 'frutas', calorias: 96.0, proteinas: 1.2, carboidratos: 6.0, gorduras: 8.4, fibras: 6.3),
-      AlimentoModel(id: 'alim_18', nome: 'Maçã Fuji com Casca', categoria: 'frutas', calorias: 56.0, proteinas: 0.3, carboidratos: 15.2, gorduras: 0.2, fibras: 1.3),
-      AlimentoModel(id: 'alim_19', nome: 'Pasta de Amendoim Integral', categoria: 'gorduras', porcaoPadraoGramas: 30.0, calorias: 180.0, proteinas: 8.0, carboidratos: 6.0, gorduras: 15.0, fibras: 2.0),
-      AlimentoModel(id: 'alim_20', nome: 'Azeite de Oliva Extra Virgem (Colher de Sopa)', categoria: 'gorduras', porcaoPadraoGramas: 13.0, calorias: 119.0, proteinas: 0.0, carboidratos: 0.0, gorduras: 13.5, fibras: 0.0),
-      AlimentoModel(id: 'alim_21', nome: 'Leite Desnatado (Copo 200ml)', categoria: 'laticinios', porcaoPadraoGramas: 200.0, calorias: 70.0, proteinas: 6.2, carboidratos: 10.0, gorduras: 0.4, fibras: 0.0),
+  /// Une os alimentos salvos no aparelho com o catálogo padrão atual: os itens
+  /// do catálogo são atualizados (descrição e valores TACO por 100 g), os novos
+  /// são incluídos e alimentos que não fazem parte do catálogo são preservados.
+  static List<AlimentoModel> mesclarCatalogo(
+    List<AlimentoModel> salvos,
+    List<AlimentoModel> catalogo,
+  ) {
+    final porId = {for (final a in catalogo) a.id: a};
+    final vistos = <String>{};
+    final resultado = <AlimentoModel>[
+      for (final salvo in salvos)
+        if (vistos.add(salvo.id)) porId[salvo.id] ?? salvo,
     ];
+    resultado.addAll(catalogo.where((a) => !vistos.contains(a.id)));
+    return resultado;
   }
 
   List<DietaProtocoloModel> _seedDietas() {
