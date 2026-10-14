@@ -93,6 +93,7 @@ class SessaoTreinoRegistroModel {
   final List<ExercicioExecutadoRegistroModel> exerciciosExecutados;
   final int rpe; // Esforço percebido (1 a 10)
   final String? feedbackAluno;
+  final String? videoUrl;
   final bool sincronizado;
 
   const SessaoTreinoRegistroModel({
@@ -107,6 +108,7 @@ class SessaoTreinoRegistroModel {
     required this.exerciciosExecutados,
     this.rpe = 7,
     this.feedbackAluno,
+    this.videoUrl,
     this.sincronizado = false,
   });
 
@@ -123,6 +125,7 @@ class SessaoTreinoRegistroModel {
       'exerciciosExecutados': exerciciosExecutados.map((e) => e.toMap()).toList(),
       'rpe': rpe,
       'feedbackAluno': feedbackAluno,
+      'videoUrl': videoUrl,
       'sincronizado': sincronizado,
     };
   }
@@ -144,6 +147,7 @@ class SessaoTreinoRegistroModel {
           [],
       rpe: (map['rpe'] as num?)?.toInt() ?? 7,
       feedbackAluno: map['feedbackAluno']?.toString(),
+      videoUrl: map['videoUrl']?.toString(),
       sincronizado: map['sincronizado'] == true,
     );
   }

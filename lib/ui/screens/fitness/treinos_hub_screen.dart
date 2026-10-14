@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/ui/widgets/exercicio_midia.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
@@ -377,6 +378,19 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
               children: [
                 const SizedBox(height: 4),
                 Text('Data: $data • Duração: $duracaoMin min • RPE ${sessao.rpe}/10'),
+                if (sessao.videoUrl?.isNotEmpty ?? false)
+                  TextButton.icon(
+                    icon: const Icon(Icons.play_circle_outline),
+                    label: const Text('Ver vídeo do meu treino'),
+                    onPressed: () => showDialog(context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Vídeo do treino'),
+                        content: SizedBox(width: 600,
+                          child: ExercicioMidia(url: sessao.videoUrl!, abrirAoExibir: true)),
+                        actions: [TextButton(onPressed: () => Navigator.pop(context),
+                          child: const Text('Fechar'))],
+                      )),
+                  ),
                 if (sessao.feedbackAluno != null)
                   Text(
                     '"${sessao.feedbackAluno}"',

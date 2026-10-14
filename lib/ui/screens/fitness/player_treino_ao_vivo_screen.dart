@@ -1,4 +1,8 @@
 import 'dart:async';
+import 'package:task_manager_flutter/data/models/auth_utility.dart';
+import 'package:task_manager_flutter/data/models/login_model.dart';
+import 'package:task_manager_flutter/data/utils/exercicio_video_link.dart';
+import 'package:task_manager_flutter/data/utils/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -833,11 +837,14 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     });
   }
 
-  void _confirmarFinalizarTreino() {
+  Future<void> _confirmarFinalizarTreino() async {
     int rpeSelecionado = 7;
     final feedbackCtrl = TextEditingController();
+    final videoCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool salvando = false;
 
-    showDialog(
+    final route = DialogRoute<void>(
       context: context,
       builder: (context) {
         return StatefulBuilder(
@@ -873,7 +880,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                 ],
               ),
               content: SingleChildScrollView(
-                child: Column(
+                child: Form(key: formKey, child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -938,17 +945,32 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                     const SizedBox(height: 14),
                     TextField(
                       controller: feedbackCtrl,
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: Color(0xFF0F172A)),
+                      maxLines: 3,
+                      minLines: 1,
                       decoration: const InputDecoration(
-                        labelText: 'Recado para o Personal (Opcional)',
+                        labelText: 'Observação sobre o treino (opcional)',
                         labelStyle: TextStyle(color: Color(0xFF94A3B8)),
                         hintText:
                             'Ex: Treino muito bom, apliquei sobrecarga!',
                         hintStyle: TextStyle(color: Color(0xFF64748B)),
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: videoCtrl,
+                      validator: validarLinkVideoExercicio,
+                      keyboardType: TextInputType.url,
+                      style: const TextStyle(color: Color(0xFF0F172A)),
+                      decoration: const InputDecoration(
+                        labelText: 'Vídeo do meu treino (opcional)',
+                        hintText: 'Link do YouTube ou Google Drive',
+                        helperText: 'No Drive, permita acesso pelo link.',
+                        helperStyle: TextStyle(color: Color(0xFF94A3B8)),
+                      ),
+                    ),
                   ],
-                ),
+                )),
               ),
               actions: [
                 TextButton(
@@ -961,9 +983,12 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                     backgroundColor: const Color(0xFF10B981),
                     foregroundColor: Colors.white,
                   ),
-                  icon: const Icon(Icons.share, size: 18),
-                  label: const Text('Salvar & Compartilhar'),
-                  onPressed: () async {
+                  icon: const Icon(Icons.check, size: 18),
+                  label: Text(salvando ? 'Salvando...' : 'Salvar treino'),
+                  onPressed: salvando ? null : () async {
+                    if (!formKey.currentState!.validate()) return;
+                    setDialogState(() => salvando = true);
+                    try {
                     // 1. Gravar sessão no repositório offline
                     final sessao = SessaoTreinoRegistroModel(
                       id: 'sessao_${DateTime.now().millisecondsSinceEpoch}',
@@ -980,6 +1005,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                           ? feedbackCtrl.text.trim()
                           : null,
                       sincronizado: false,
+                      videoUrl: videoCtrl.text.trim().isEmpty ? null : videoCtrl.text.trim(),
                       exerciciosExecutados: [
                         for (int i = 0;
                             i < widget.divisao.exercicios.length;
@@ -1006,8 +1032,16 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                       tonelagemKg: tonelagemKg,
                     );
 
+                    if (!context.mounted || !mounted) return;
                     Navigator.pop(context); // Fecha dialog
-                    if (!context.mounted) return;
+                    if (AuthUtility.userInfo.login?.tipoLogin == LoginEnum.APP_ALUNO) {
+                      ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(
+                        backgroundColor: Color(0xFF10B981),
+                        content: Text('Treino salvo no histórico.', style: TextStyle(color: Colors.white)),
+                      ));
+                      Navigator.of(this.context).pop(true);
+                      return;
+                    }
 
                     // 3. Exibir Card Visual Stories / Strava para compartilhamento
                     _exibirModalStoriesCompartilhamento(
@@ -1017,6 +1051,14 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                       streakDias: streak,
                       rpe: rpeSelecionado,
                     );
+                    } catch (error, stack) {
+                      AppLogger.i.error('Falha ao salvar conclusão do treino.', stack);
+                      if (context.mounted) {
+                        setDialogState(() => salvando = false);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('Não foi possível finalizar o treino. Tente novamente.')));
+                      }
+                    }
                   },
                 ),
               ],
@@ -1025,6 +1067,10 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
         );
       },
     );
+    await Navigator.of(context).push(route);
+    await route.completed;
+    feedbackCtrl.dispose();
+    videoCtrl.dispose();
   }
 
   Widget _buildMiniStat(String label, String value, IconData icon) {
