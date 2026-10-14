@@ -11,6 +11,15 @@ class WizardPersonalScreen extends StatefulWidget {
   State<WizardPersonalScreen> createState() => _WizardPersonalScreenState();
 }
 
+/// A academia só é obrigatória quando há academias para escolher. Se a carga
+/// falhou, continua obrigatória (não dá para saber se existem). Sem nenhuma
+/// academia cadastrada, o personal segue sem vínculo (o backend aceita).
+bool exigeSelecaoAcademia({
+  required int quantidadeAcademias,
+  required bool falhaAoCarregar,
+}) =>
+    falhaAoCarregar || quantidadeAcademias > 0;
+
 /// Representa uma academia disponível para o personal escolher no passo 2.
 class _AcademiaDisponivel {
   final int id;
@@ -169,7 +178,11 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
       case 0:
         return _formKeyDadosPessoais.currentState?.validate() ?? false;
       case 1:
-        if (_academiaSelecionadaId == null) {
+        if (_academiaSelecionadaId == null &&
+            exigeSelecaoAcademia(
+              quantidadeAcademias: _academiasDisponiveis.length,
+              falhaAoCarregar: _erroCarregarAcademias != null,
+            )) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Selecione a academia que atende.'),
@@ -504,6 +517,17 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
         child: Text(
           _erroCarregarAcademias!,
           style: const TextStyle(color: GridColors.error),
+        ),
+      );
+    }
+
+    if (_academiasDisponiveis.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Text(
+          'Nenhuma academia cadastrada ainda. Você pode concluir o cadastro '
+          'como personal independente.',
+          style: TextStyle(color: GridColors.textSecondary),
         ),
       );
     }
