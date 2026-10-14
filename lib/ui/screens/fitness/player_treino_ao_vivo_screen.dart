@@ -441,10 +441,20 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
+                  if (exercicio.videoUrl == null || exercicio.videoUrl!.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        'Este exercício ainda não tem vídeo cadastrado. A imagem e as instruções estão disponíveis abaixo.',
+                        style: TextStyle(color: Color(0xFF94A3B8)),
+                      ),
+                    ),
                   if (exercicio.midiaUrl != null)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: ExercicioMidia(url: exercicio.midiaUrl!),
+                      child: ExercicioMidia(
+                        url: exercicio.midiaUrl!, abrirAoExibir: true,
+                      ),
                     )
                   else
                     Container(

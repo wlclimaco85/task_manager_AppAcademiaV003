@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/data/utils/fitness_access.dart';
+import 'package:task_manager_flutter/ui/screens/sem_acesso_screen.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/fitness/personal_gestao_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
@@ -35,7 +37,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    _carregarDados();
+    if (podeGerenciarAlunos()) _carregarDados();
   }
 
   @override
@@ -59,6 +61,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (!podeGerenciarAlunos()) return const SemAcessoScreen();
     return Scaffold(
       backgroundColor: const Color(0xFF0D131A),
       appBar: AppBar(

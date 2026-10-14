@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/data/models/auth_utility.dart';
+import 'package:task_manager_flutter/data/models/login_model.dart';
+import 'package:task_manager_flutter/ui/widgets/perfil_fitness_header.dart';
+import 'package:task_manager_flutter/data/utils/fitness_access.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/customization/dynamic_grid_dynamic_screen.dart';
 import 'package:task_manager_flutter/data/services/fitness_360_local_store.dart';
@@ -41,7 +45,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
           onOpenModule: (action) => _openFitnessAction(action, sec),
         ),
       ),
-      if (sec.canView(AppScreen.treinos))
+      if (podeGerenciarAlunos() && sec.canView(AppScreen.treinos))
         const _FitnessNavItem(
           label: 'Alunos',
           icon: Icons.groups_outlined,
@@ -221,6 +225,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         );
         break;
       case 'Alunos do personal':
+        if (!podeGerenciarAlunos()) return;
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const PersonalWorkspaceScreen()),
@@ -358,7 +363,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
       _FitnessMenuSection(
         title: 'Treino do aluno',
         actions: [
-          if (sec.canView(AppScreen.treinos))
+          if (podeGerenciarAlunos() && sec.canView(AppScreen.treinos))
             const _FitnessAction(Icons.groups, 'Alunos do personal'),
           if (sec.canView(AppScreen.exercicios))
             const _FitnessAction(Icons.directions_run, 'Treinos'),
@@ -483,7 +488,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
 
   List<_FitnessAction> _allFitnessActions(SecurityMatrix sec) {
     return [
-      if (sec.canView(AppScreen.treinos))
+      if (podeGerenciarAlunos() && sec.canView(AppScreen.treinos))
         const _FitnessAction(Icons.groups, 'Alunos do personal'),
       if (sec.canView(AppScreen.exercicios))
         const _FitnessAction(Icons.directions_run, 'Treinos'),
@@ -1023,6 +1028,19 @@ class _EnhancedFitnessHubScreenState extends State<_EnhancedFitnessHubScreen> {
                         icon: const Icon(Icons.tune),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 14),
+                  PerfilFitnessHeader(
+                    nome: AuthUtility.userInfo.login?.nome ??
+                        AuthUtility.userInfo.data?.codDadosPessoal?.nome ??
+                        [AuthUtility.userInfo.data?.firstName,
+                          AuthUtility.userInfo.data?.lastName]
+                            .whereType<String>().join(' '),
+                    foto: AuthUtility.userInfo.data?.codDadosPessoal?.photo ??
+                        AuthUtility.userInfo.data?.photo,
+                    perfil: podeGerenciarAlunos() ? 'Personal' :
+                        AuthUtility.userInfo.login?.tipoLogin == LoginEnum.APP_ALUNO
+                            ? 'Aluno' : 'Minha conta',
                   ),
                   const SizedBox(height: 14),
                   _EnhancedSyncStatusCard(summary: state.summary),

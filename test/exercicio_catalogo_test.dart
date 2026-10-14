@@ -9,6 +9,19 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
+  test('remada baixa recebe video inclusive em catalogo antigo sem link', () async {
+    SharedPreferences.setMockInitialValues({
+      'appacademia_exercicios_v1': json.encode([
+        const ExercicioModel(id: 'ex_remada_baixa', nome: 'Remada',
+            grupoMuscular: 'Costas').toMap(),
+      ]),
+    });
+    final remada = (await FitnessOfflineRepository().getExercicios())
+        .singleWhere((e) => e.id == 'ex_remada_baixa');
+    expect(remada.videoUrl, 'https://youtu.be/HpWWreyaBN0');
+    expect(remada.midiaUrl, remada.videoUrl);
+  });
+
   test('catalogo padrao traz mais de 100 exercicios com passo a passo e imagem', () async {
     final lista = await FitnessOfflineRepository().getExercicios();
 

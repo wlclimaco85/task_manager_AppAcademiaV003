@@ -8,7 +8,9 @@ import 'package:task_manager_flutter/data/utils/app_logger.dart';
 class ExercicioMidia extends StatefulWidget {
   final String url;
   final double height;
-  const ExercicioMidia({super.key, required this.url, this.height = 250});
+  final bool abrirAoExibir;
+  const ExercicioMidia({super.key, required this.url, this.height = 250,
+    this.abrirAoExibir = false});
   @override
   State<ExercicioMidia> createState() => _ExercicioMidiaState();
 }
@@ -16,6 +18,11 @@ class ExercicioMidia extends StatefulWidget {
 class _ExercicioMidiaState extends State<ExercicioMidia> {
   bool _abrir = false;
   bool _erro = false;
+  @override
+  void initState() {
+    super.initState();
+    _abrir = widget.abrirAoExibir;
+  }
   @override
   Widget build(BuildContext context) {
     final embed = exercicioVideoEmbed(widget.url);
