@@ -18,7 +18,7 @@ void main() {
     });
     final remada = (await FitnessOfflineRepository().getExercicios())
         .singleWhere((e) => e.id == 'ex_remada_baixa');
-    expect(remada.videoUrl, 'https://youtu.be/HpWWreyaBN0');
+    expect(remada.videoUrl, 'https://youtu.be/2YebbYuuBJQ');
     expect(remada.midiaUrl, remada.videoUrl);
   });
 
@@ -92,8 +92,8 @@ void main() {
 
     expect(lista.length, greaterThanOrEqualTo(100));
     expect(porId('ex_supino_reto').descricao, startsWith('1. '));
-    expect(porId('ex_supino_reto').videoUrl, isNull, reason: 'GIF 404 removido');
-    expect(porId('ex_supino_reto').midiaUrl, contains('/0.jpg'));
+    expect(porId('ex_supino_reto').videoUrl, 'https://youtu.be/pCPyqW60Wuk', reason: 'GIF 404 substituido pelo video real');
+    expect(porId('ex_supino_reto').midiaUrl, porId('ex_supino_reto').videoUrl);
     expect(porId('ex_leg_press').videoUrl, 'https://www.youtube.com/watch?v=abc123');
     expect(porId('ex_custom_1').descricao, 'Texto do personal');
     expect(lista.any((e) => e.id == 'ex_kettlebell_swing'), isTrue);

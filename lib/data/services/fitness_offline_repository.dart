@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:task_manager_flutter/data/services/fitness_conta_sync.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -88,11 +89,14 @@ class FitnessOfflineRepository {
 
   Future<List<PlanoTreinoModel>> getPlanosTreino({String? alunoId}) async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_kPlanosKey);
+    final key = FitnessContaSync.chave(_kPlanosKey);
+    final remotos = await FitnessContaSync.carregar('planos');
+    if (remotos != null) await prefs.setString(key, jsonEncode(remotos));
+    final raw = prefs.getString(key);
 
     List<PlanoTreinoModel> lista = [];
     if (raw == null || raw.isEmpty) {
-      lista = _seedPlanosTreino();
+      lista = FitnessContaSync.autenticado ? [] : _seedPlanosTreino();
       await _salvarPlanos(lista);
     } else {
       try {
@@ -102,7 +106,7 @@ class FitnessOfflineRepository {
             .toList();
       } catch (e) {
         debugPrint('[FitnessOfflineRepository] Erro decode planos: $e');
-        lista = _seedPlanosTreino();
+        lista = FitnessContaSync.autenticado ? [] : _seedPlanosTreino();
       }
     }
 
@@ -130,12 +134,13 @@ class FitnessOfflineRepository {
       atuais.insert(0, plano);
     }
     await _salvarPlanos(atuais);
+    await FitnessContaSync.salvar('planos', plano.toMap());
   }
 
   Future<void> _salvarPlanos(List<PlanoTreinoModel> lista) async {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = json.encode(lista.map((e) => e.toMap()).toList());
-    await prefs.setString(_kPlanosKey, jsonStr);
+    await prefs.setString(FitnessContaSync.chave(_kPlanosKey), jsonStr);
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -145,7 +150,10 @@ class FitnessOfflineRepository {
   Future<List<SessaoTreinoRegistroModel>> getSessoesConcluidas(
       {String? alunoId}) async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_kSessoesKey);
+    final key = FitnessContaSync.chave(_kSessoesKey);
+    final remotos = await FitnessContaSync.carregar('sessoes');
+    if (remotos != null) await prefs.setString(key, jsonEncode(remotos));
+    final raw = prefs.getString(key);
 
     if (raw == null || raw.isEmpty) return [];
     try {
@@ -170,7 +178,8 @@ class FitnessOfflineRepository {
     sessoes.insert(0, sessao);
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = json.encode(sessoes.map((s) => s.toMap()).toList());
-    await prefs.setString(_kSessoesKey, jsonStr);
+    await prefs.setString(FitnessContaSync.chave(_kSessoesKey), jsonStr);
+    await FitnessContaSync.salvar('sessoes', sessao.toMap());
   }
 
   Future<void> atualizarSessaoTreino(SessaoTreinoRegistroModel sessaoAtualizada) async {
@@ -180,7 +189,7 @@ class FitnessOfflineRepository {
       sessoes[index] = sessaoAtualizada;
       final prefs = await SharedPreferences.getInstance();
       final jsonStr = json.encode(sessoes.map((s) => s.toMap()).toList());
-      await prefs.setString(_kSessoesKey, jsonStr);
+      await prefs.setString(FitnessContaSync.chave(_kSessoesKey), jsonStr);
     }
   }
 
@@ -331,7 +340,8 @@ class FitnessOfflineRepository {
         nome: padrao.nome,
         grupoMuscular: padrao.grupoMuscular,
         equipamento: padrao.equipamento,
-        videoUrl: _videoValido(salvo.videoUrl),
+        // Vídeo do personal tem prioridade; sem ele, usa o vídeo do catálogo.
+        videoUrl: _videoValido(salvo.videoUrl) ?? padrao.videoUrl,
         thumbnailUrl: padrao.thumbnailUrl,
         instrucoes: padrao.instrucoes,
         errosComuns: padrao.errosComuns,

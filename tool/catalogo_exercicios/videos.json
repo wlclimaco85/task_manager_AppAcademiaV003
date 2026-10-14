@@ -1,8 +1,72 @@
 {
+  "ex_supino_reto": {
+    "url": "https://youtu.be/pCPyqW60Wuk",
+    "canal": "https://www.youtube.com/@treinomestre",
+    "validacao": "YouTube oEmbed: author_url @treinomestre, HTTP 200, titulo compativel com exercicio"
+  },
   "ex_remada_baixa": {
-    "url": "https://youtu.be/HpWWreyaBN0",
-    "fonte": "https://www.leandrotwin.com.br/assessoria/lista-de-videos-de-exercicios.pdf",
-    "referencia": "Remada Cross Peg Neutra",
-    "observacao": "Referência oficial de execução em polia. Views e reprodução não verificadas."
+    "url": "https://youtu.be/2YebbYuuBJQ",
+    "canal": "https://www.youtube.com/@treinomestre",
+    "validacao": "YouTube oEmbed: author_url @treinomestre, HTTP 200, titulo compativel com exercicio"
+  },
+  "ex_passada_barra": {
+    "url": "https://youtu.be/ntYn2HDw32I",
+    "canal": "https://www.youtube.com/@treinomestre",
+    "validacao": "YouTube oEmbed: author_url @treinomestre, HTTP 200, titulo compativel com exercicio"
+  },
+  "ex_leg_press": {
+    "url": "https://youtu.be/waAxlYvtCcI",
+    "canal": "https://www.youtube.com/@treinomestre",
+    "validacao": "YouTube oEmbed: author_url @treinomestre, HTTP 200, titulo compativel com exercicio"
+  },
+  "ex_agachamento_livre": {
+    "url": "https://youtu.be/rM6SDUdl9fs",
+    "canal": "https://www.youtube.com/@treinomestre",
+    "validacao": "YouTube oEmbed: author_url @treinomestre, HTTP 200, titulo compativel com exercicio"
+  },
+  "ex_hack_squat": {
+    "url": "https://youtu.be/Whp712OHPl8",
+    "canal": "https://www.youtube.com/@treinomestre",
+    "validacao": "YouTube oEmbed: author_url @treinomestre, HTTP 200, titulo compativel com exercicio"
+  },
+  "ex_agachamento_smith": {
+    "url": "https://youtu.be/uCT5wfQIQpk",
+    "canal": "https://www.youtube.com/@treinomestre",
+    "validacao": "YouTube oEmbed: author_url @treinomestre, HTTP 200, titulo compativel com exercicio"
+  },
+  "ex_stiff": {
+    "url": "https://youtu.be/BHfY5-jGNDA",
+    "canal": "https://www.youtube.com/@treinomestre",
+    "validacao": "YouTube oEmbed: author_url @treinomestre, HTTP 200, titulo compativel com exercicio"
+  },
+  "ex_mesa_flexora": {
+    "url": "https://youtu.be/8Nat6GRiEoc",
+    "canal": "https://www.youtube.com/@treinomestre",
+    "validacao": "YouTube oEmbed: author_url @treinomestre, HTTP 200, titulo compativel com exercicio"
+  },
+  "ex_cadeira_adutora": {
+    "url": "https://youtu.be/goQVyEGMYMM",
+    "canal": "https://www.youtube.com/@treinomestre",
+    "validacao": "YouTube oEmbed: author_url @treinomestre, HTTP 200, titulo compativel com exercicio"
+  },
+  "ex_cadeira_abdutora": {
+    "url": "https://youtu.be/50qHGus1TZk",
+    "canal": "https://www.youtube.com/@treinomestre",
+    "validacao": "YouTube oEmbed: author_url @treinomestre, HTTP 200, titulo compativel com exercicio"
+  },
+  "ex_supino_reto_halteres": {
+    "url": "https://youtu.be/tDxKGeY-hjQ",
+    "canal": "https://www.youtube.com/@treinomestre",
+    "validacao": "YouTube oEmbed: author_url @treinomestre, HTTP 200, titulo compativel com exercicio"
+  },
+  "ex_supino_inclinado": {
+    "url": "https://youtu.be/rCPwrZkrVVQ",
+    "canal": "https://www.youtube.com/@treinomestre",
+    "validacao": "YouTube oEmbed: author_url @treinomestre, HTTP 200, titulo compativel com exercicio"
+  },
+  "ex_crucifixo_halteres": {
+    "url": "https://youtu.be/ZjIKUMtW37c",
+    "canal": "https://www.youtube.com/@treinomestre",
+    "validacao": "YouTube oEmbed: author_url @treinomestre, HTTP 200, titulo compativel com exercicio"
   }
 }

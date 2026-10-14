@@ -2,8 +2,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
 import 'package:task_manager_flutter/data/services/network_caller.dart';
-import 'package:task_manager_flutter/data/utils/api_links.dart';
-import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -51,38 +49,8 @@ class BackgroundSyncService {
   }
 
   Future<void> _syncSessoesTreino() async {
-    final sessoes = await _offlineRepository.getSessoesConcluidas();
-    final pendentes = sessoes.where((s) => !s.sincronizado).toList();
-
-    if (pendentes.isEmpty) return;
-    debugPrint('📤 [BackgroundSyncService] Sincronizando ${pendentes.length} treinos pendentes com o servidor.');
-
-    // Simulação do envio das sessões pendentes para o Backend
-    for (var sessao in pendentes) {
-      // Exemplo: final response = await _networkCaller.postRequest(ApiLinks.registrarTreino, sessao.toMap());
-      // Vamos simular sucesso para atualizar o banco local
-      await Future.delayed(const Duration(milliseconds: 500));
-      
-      // Atualiza o status localmente (sincronizado: true)
-      final atualizada = SessaoTreinoRegistroModel(
-        id: sessao.id,
-        treinoId: sessao.treinoId,
-        divisaoLetra: sessao.divisaoLetra,
-        divisaoNome: sessao.divisaoNome,
-        alunoId: sessao.alunoId,
-        dataHoraInicio: sessao.dataHoraInicio,
-        dataHoraFim: sessao.dataHoraFim,
-        duracaoSegundos: sessao.duracaoSegundos,
-        rpe: sessao.rpe,
-        feedbackAluno: sessao.feedbackAluno,
-        exerciciosExecutados: sessao.exerciciosExecutados,
-        sincronizado: true, // AGORA ESTÁ SINCRONIZADO
-      );
-      
-      await _offlineRepository.atualizarSessaoTreino(atualizada);
-    }
-    
-    debugPrint('✅ [BackgroundSyncService] Sincronização de treinos finalizada.');
+    await _offlineRepository.getSessoesConcluidas();
+    await _offlineRepository.getPlanosTreino();
   }
 
   // Fila genérica para outras requisições (POST/PUT/DELETE) que falharam por falta de internet

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/data/models/auth_utility.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
@@ -534,9 +535,11 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
 
     final plano = PlanoTreinoModel(
       id: widget.planoParaEditar?.id ?? 'plano_${DateTime.now().millisecondsSinceEpoch}',
-      alunoId: widget.alunoId ?? 'aluno_demo',
-      alunoNome: widget.alunoNome ?? 'Aluno Demonstração',
-      personalId: 'personal_logado',
+      alunoId: widget.alunoId ?? widget.planoParaEditar?.alunoId ??
+          AuthUtility.userInfo.login?.id?.toString() ?? 'aluno_demo',
+      alunoNome: widget.alunoNome ?? widget.planoParaEditar?.alunoNome ??
+          AuthUtility.userInfo.login?.nome ?? 'Aluno Demonstração',
+      personalId: widget.planoParaEditar?.personalId ?? '',
       titulo: _tituloController.text.trim(),
       objetivo: _objetivoController.text.trim(),
       dataInicio: DateTime.now().toIso8601String().split('T').first,

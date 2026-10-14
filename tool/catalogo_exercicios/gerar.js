@@ -4,6 +4,9 @@ const fs = require('fs');
 const path = require('path');
 const fonte = require(path.join(__dirname, 'catalogo_fonte.js'));
 const [, , fedbPath, saidaJson, saidaSql] = process.argv;
+// Videos de execucao no YouTube (gerados por buscar_videos.js e validados via oEmbed).
+const videosPath = path.join(__dirname, 'videos.json');
+const videos = fs.existsSync(videosPath) ? JSON.parse(fs.readFileSync(videosPath, 'utf8')) : {};
 
 const fedbIds = new Set(JSON.parse(fs.readFileSync(fedbPath, 'utf8')).map(e => e.id));
 const IMG = id => `https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/${id}/0.jpg`;
@@ -18,6 +21,7 @@ const lista = fonte.map(([id, nome, grupo, equip, nivel, img, dica, errosComuns,
   return {
     id, nome, grupoMuscular: grupo, equipamento: equip, nivel,
     thumbnailUrl: IMG(img),
+    videoUrl: videos[id] ? videos[id].url : null,
     instrucoes: dica,
     errosComuns: errosComuns,
     descricao: passos.map((p, i) => `${i + 1}. ${p}`).join('\n'),
