@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/ui/widgets/detalhes_sessao_treino.dart';
 import 'package:task_manager_flutter/ui/widgets/exercicio_midia.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
@@ -378,6 +379,12 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
               children: [
                 const SizedBox(height: 4),
                 Text('Data: $data • Duração: $duracaoMin min • RPE ${sessao.rpe}/10'),
+                TextButton.icon(
+                  icon: const Icon(Icons.visibility_outlined),
+                  label: const Text('Ver detalhes'),
+                  onPressed: () => showDialog(context: context,
+                    builder: (_) => DetalhesSessaoTreino(sessao: sessao)),
+                ),
                 if (sessao.videoUrl?.isNotEmpty ?? false)
                   TextButton.icon(
                     icon: const Icon(Icons.play_circle_outline),
