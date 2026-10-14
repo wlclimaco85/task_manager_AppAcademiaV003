@@ -239,6 +239,13 @@ class _BibliotecaExerciciosScreenState
                 _expandidoId = index >= 0 && index + 1 < lista.length
                     ? lista[index + 1].id : null;
               });
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(SnackBar(
+                  backgroundColor: GridColors.primary,
+                  content: Text('${item.exercicioNome} adicionado ao treino.',
+                    style: const TextStyle(color: Colors.white)),
+                ));
             }),
       ]));
     }
