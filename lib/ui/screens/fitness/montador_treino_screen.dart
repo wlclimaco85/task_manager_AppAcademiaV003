@@ -24,7 +24,7 @@ class MontadorTreinoScreen extends StatefulWidget {
 }
 
 class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final _repository = FitnessOfflineRepository();
   final _tituloController = TextEditingController();
   final _objetivoController = TextEditingController();
@@ -69,7 +69,9 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
 
   void _adicionarDivisao() {
     if (_divisoes.length >= _letrasDisponiveis.length) return;
-    final proximaLetra = _letrasDisponiveis[_divisoes.length];
+    final proximaLetra = _letrasDisponiveis.firstWhere(
+      (letra) => !_divisoes.any((divisao) => divisao.letra == letra),
+    );
     _divisoes.add(DivisaoTreinoModel(
       id: 'div_${proximaLetra.toLowerCase()}_${DateTime.now().millisecondsSinceEpoch}',
       letra: proximaLetra,
