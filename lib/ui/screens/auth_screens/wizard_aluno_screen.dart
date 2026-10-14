@@ -13,6 +13,15 @@ class WizardAlunoScreen extends StatefulWidget {
   State<WizardAlunoScreen> createState() => _WizardAlunoScreenState();
 }
 
+/// Lê o academiaId de um personal vindo de /personais-disponiveis.
+/// Sem esse campo o filtro por academia do passo 2 nunca encontrava ninguém.
+int? lerAcademiaIdPersonal(Map<String, dynamic> json) {
+  final valor = json['academiaId'];
+  if (valor is int) return valor;
+  if (valor is String) return int.tryParse(valor);
+  return null;
+}
+
 /// Representa um Personal disponível para o aluno escolher no passo 2.
 class _PersonalDisponivel {
   final int id;
@@ -35,6 +44,7 @@ class _PersonalDisponivel {
       id: json['id'] as int,
       nome: json['nome'] as String? ?? '',
       cref: json['cref'] as String? ?? '',
+      academiaId: lerAcademiaIdPersonal(json),
       modalidades: modalidadesJson
           .map((m) => _ModalidadeDisponivel.fromJson(m as Map<String, dynamic>))
           .toList(),
@@ -326,6 +336,7 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
       'bairro': _bairroController.text.trim(),
       'cidade': _cidadeController.text.trim(),
       'estado': _estadoController.text.trim(),
+      'academiaId': _academiaSelecionada?.id,
       'personalId': _personalSelecionado?.id,
       'modalidadeId': _modalidadeSelecionada?.id,
       'objetivo': _objetivoController.text.trim(),
@@ -642,7 +653,7 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 16),
         child: Text(
-          'Nenhum personal disponÃ­vel para esta academia.',
+          'Nenhum personal disponível para esta academia.',
           style: TextStyle(color: GridColors.textPrimary),
         ),
       );
