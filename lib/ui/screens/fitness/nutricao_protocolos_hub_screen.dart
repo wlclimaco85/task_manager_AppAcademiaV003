@@ -1,6 +1,9 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
+import 'package:task_manager_flutter/data/models/auth_utility.dart';
+import 'package:task_manager_flutter/data/services/pdf/ficha_dieta_pdf.dart';
+import 'package:task_manager_flutter/ui/widgets/imprimir_pdf.dart';
 import 'package:task_manager_flutter/data/models/fitness/nutricao_farmaco_model.dart';
 import 'package:task_manager_flutter/data/services/nutricao_farmaco_offline_repository.dart';
 
@@ -219,7 +222,27 @@ class _NutricaoProtocolosHubScreenState
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              key: Key('btn_imprimir_dieta_${dieta.id}'),
+              icon: const Icon(Icons.print_outlined, size: 16),
+              label: const Text('Imprimir PDF'),
+              onPressed: () => imprimirPdf(
+                context,
+                nomeArquivo: nomeArquivoPdf('Dieta', dieta.titulo),
+                gerar: () async {
+                  final alimentos = {for (final a in await _repository.getAlimentos()) a.id: a};
+                  return FichaDietaPdf.dieta(
+                    dieta,
+                    alunoNome: AuthUtility.userInfo.login?.nome ?? '',
+                    alimentos: alimentos,
+                  );
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
 
           // Painel de Metas de Macronutrientes
           Container(

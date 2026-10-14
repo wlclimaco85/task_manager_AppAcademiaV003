@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/ui/widgets/detalhes_sessao_treino.dart';
 import 'package:task_manager_flutter/ui/widgets/exercicio_midia.dart';
+import 'package:task_manager_flutter/ui/widgets/imprimir_pdf.dart';
+import 'package:task_manager_flutter/data/services/pdf/ficha_dieta_pdf.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
@@ -299,21 +301,39 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
               ),
 
             const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                icon: const Icon(Icons.edit, size: 16),
-                label: const Text('Editar Prescrição'),
-                onPressed: () async {
-                  final res = await Navigator.push(
+            Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 4,
+              children: [
+                TextButton.icon(
+                  key: const Key('btn_imprimir_ficha'),
+                  icon: const Icon(Icons.print_outlined, size: 16),
+                  label: const Text('Imprimir PDF'),
+                  onPressed: () => imprimirPdf(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => MontadorTreinoScreen(planoParaEditar: plano),
-                    ),
-                  );
-                  if (res != null) _carregarDados();
-                },
-              ),
+                    nomeArquivo: nomeArquivoPdf('Ficha', plano.titulo),
+                    gerar: () async {
+                      final catalogo = {
+                        for (final e in await FitnessOfflineRepository().getExercicios()) e.id: e,
+                      };
+                      return FichaDietaPdf.fichaTreino(plano, catalogo: catalogo);
+                    },
+                  ),
+                ),
+                TextButton.icon(
+                  icon: const Icon(Icons.edit, size: 16),
+                  label: const Text('Editar Prescrição'),
+                  onPressed: () async {
+                    final res = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MontadorTreinoScreen(planoParaEditar: plano),
+                      ),
+                    );
+                    if (res != null) _carregarDados();
+                  },
+                ),
+              ],
             ),
           ],
         ),
