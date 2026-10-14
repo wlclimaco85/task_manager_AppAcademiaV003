@@ -407,6 +407,18 @@ class _NutricaoProtocolosHubScreenState
                             '${med.dosagem} • ${med.frequencia} (${med.viaAdministracao})',
                             style: TextStyle(color: corDestaque, fontSize: 12, fontWeight: FontWeight.w700),
                           ),
+                          if (!med.visivelParaPersonal)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 4),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.lock_outline, size: 13, color: GridColors.textSecondary),
+                                  SizedBox(width: 4),
+                                  Text('Privado • oculto para o personal',
+                                      style: TextStyle(fontSize: 11, color: GridColors.textSecondary)),
+                                ],
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -910,6 +922,7 @@ class _NutricaoProtocolosHubScreenState
     final dosagemCtrl = TextEditingController(text: '250mg');
     final freqCtrl = TextEditingController(text: '1x por semana');
     String categoria = 'ergogenico_ciclo';
+    bool privado = false;
 
     showDialog(
       context: context,
@@ -952,6 +965,18 @@ class _NutricaoProtocolosHubScreenState
                       controller: freqCtrl,
                       decoration: const InputDecoration(labelText: 'Frequência (ex: 1x semana, DSDN)'),
                     ),
+                    if (MedicamentoProtocoloModel.permitePrivado(categoria)) ...[
+                      const SizedBox(height: 6),
+                      SwitchListTile(
+                        key: const Key('switch_ciclo_privado'),
+                        contentPadding: EdgeInsets.zero,
+                        value: privado,
+                        onChanged: (val) => setDialogState(() => privado = val),
+                        secondary: const Icon(Icons.lock_outline),
+                        title: const Text('Privado'),
+                        subtitle: const Text('Não compartilhar este ciclo com o personal'),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -969,6 +994,7 @@ class _NutricaoProtocolosHubScreenState
                       frequencia: freqCtrl.text.trim(),
                       categoria: categoria,
                       dataInicio: DateTime.now().toIso8601String().substring(0, 10),
+                      privado: privado && MedicamentoProtocoloModel.permitePrivado(categoria),
                     );
                     await _repository.salvarMedicamento(novo);
                     Navigator.pop(context);

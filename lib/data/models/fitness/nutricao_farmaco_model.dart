@@ -269,6 +269,16 @@ class MedicamentoProtocoloModel {
   final String? horario; // '08:00', 'Noite'
   final String? observacoes; // 'Tomar junto com refeição com gordura'
 
+  /// Ciclo anabolizante marcado pelo aluno como privado: não deve ser
+  /// compartilhado com o personal. Só vale para a categoria de ciclo.
+  final bool privado;
+
+  /// Apenas ciclo anabolizante (hormônio) pode ser marcado como privado.
+  static bool permitePrivado(String categoria) => categoria == 'ergogenico_ciclo';
+
+  /// Pode ser exibido para o personal do aluno?
+  bool get visivelParaPersonal => !(privado && permitePrivado(categoria));
+
   const MedicamentoProtocoloModel({
     required this.id,
     required this.alunoId,
@@ -282,12 +292,14 @@ class MedicamentoProtocoloModel {
     this.ativo = true,
     this.horario,
     this.observacoes,
+    this.privado = false,
   });
 
   Map<String, dynamic> toMap() => {
         'id': id,
         'alunoId': alunoId,
         'nomeComposto': nomeComposto,
+        'privado': privado,
         'dosagem': dosagem,
         'frequencia': frequencia,
         'viaAdministracao': viaAdministracao,
@@ -314,6 +326,7 @@ class MedicamentoProtocoloModel {
         ativo: map['ativo'] != false,
         horario: map['horario']?.toString(),
         observacoes: map['observacoes']?.toString(),
+        privado: map['privado'] == true,
       );
 }
 
