@@ -4,8 +4,13 @@ library;
 /// Dias da semana: abreviação exibida nos chips e nome enviado à API.
 const diasSemanaAbrev = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 const diasSemanaApi = [
-  'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira',
-  'Sexta-feira', 'Sábado', 'Domingo',
+  'Segunda-feira',
+  'Terça-feira',
+  'Quarta-feira',
+  'Quinta-feira',
+  'Sexta-feira',
+  'Sábado',
+  'Domingo',
 ];
 
 /// Presets de planos sugeridos ao personal (nome, aulas por mês).
@@ -18,8 +23,33 @@ const presetsPlano = [
 
 /// UFs aceitas no CREF.
 const ufs = [
-  'AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA',
-  'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO',
+  'AC',
+  'AL',
+  'AM',
+  'AP',
+  'BA',
+  'CE',
+  'DF',
+  'ES',
+  'GO',
+  'MA',
+  'MG',
+  'MS',
+  'MT',
+  'PA',
+  'PB',
+  'PE',
+  'PI',
+  'PR',
+  'RJ',
+  'RN',
+  'RO',
+  'RR',
+  'RS',
+  'SC',
+  'SE',
+  'SP',
+  'TO',
 ];
 
 String somenteDigitos(String texto) => texto.replaceAll(RegExp(r'\D'), '');
@@ -71,8 +101,7 @@ String mascararMoeda(String texto) {
 
 String formatarMoeda(double valor) {
   final partes = valor.toStringAsFixed(2).split('.');
-  final inteiro = partes[0].replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]}.');
+  final inteiro = partes[0].replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]}.');
   return 'R\$ $inteiro,${partes[1]}';
 }
 
@@ -105,7 +134,36 @@ class FaixaAtendimento {
       };
 
   String get resumo => '${resumoDias(dias)} · $inicio–$fim';
+
+  /// Formato salvo no rascunho local do wizard.
+  Map<String, dynamic> toRascunho() => {
+        'academiaId': academiaId,
+        'localNome': localNome,
+        'dias': dias.toList()..sort(),
+        'inicio': inicio,
+        'fim': fim,
+      };
+
+  factory FaixaAtendimento.fromRascunho(Map<String, dynamic> m) => FaixaAtendimento(
+        academiaId: m['academiaId'] as int?,
+        localNome: m['localNome']?.toString() ?? '',
+        dias: {for (final d in (m['dias'] as List? ?? const [])) d as int},
+        inicio: m['inicio']?.toString() ?? '06:00',
+        fim: m['fim']?.toString() ?? '10:00',
+      );
 }
+
+/// Chave do rascunho local do wizard (a senha nunca é salva).
+const chaveRascunhoPersonal = 'rascunho_cadastro_personal_v1';
+
+/// Campos que nunca podem ir para o rascunho local.
+const camposProibidosRascunho = {'senha', 'confirmarSenha'};
+
+/// Remove dados sensíveis antes de salvar o rascunho no aparelho.
+Map<String, dynamic> limparRascunho(Map<String, dynamic> dados) => {
+      for (final e in dados.entries)
+        if (!camposProibidosRascunho.contains(e.key)) e.key: e.value
+    };
 
 int _minutos(String hhmm) {
   final p = hhmm.split(':');
@@ -145,8 +203,7 @@ String? validarFaixa(Set<int> dias, String inicio, String fim) {
 String? conflitoFaixa(FaixaAtendimento nova, List<FaixaAtendimento> existentes) {
   for (final f in existentes) {
     for (final dia in nova.dias.intersection(f.dias).toList()..sort()) {
-      final sobrepoe = _minutos(nova.inicio) < _minutos(f.fim) &&
-          _minutos(f.inicio) < _minutos(nova.fim);
+      final sobrepoe = _minutos(nova.inicio) < _minutos(f.fim) && _minutos(f.inicio) < _minutos(nova.fim);
       if (sobrepoe) {
         return 'Conflito: ${diasSemanaAbrev[dia]} ${f.inicio}–${f.fim} já está em ${f.localNome}';
       }

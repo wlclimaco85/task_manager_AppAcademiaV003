@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:task_manager_flutter/data/repository/cadastro_repository.dart';
 import 'package:task_manager_flutter/data/utils/app_logger.dart';
@@ -90,6 +93,12 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
   String? _crefUf;
   final _whatsapp = TextEditingController();
   bool _whatsappIgualTelefone = true;
+  final _bio = TextEditingController();
+
+  // Passo 5 e navegação
+  bool _declaracaoAceita = false;
+  String? _erroDeclaracao;
+  bool _voltarParaRevisao = false;
 
   // Passo 3
   bool _carregandoAcademias = false;
@@ -109,13 +118,155 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
     super.initState();
     _carregarAcademias();
     _telefone.addListener(_sincronizarWhatsapp);
+    _restaurarRascunho();
+  }
+
+  // ───────────────────────── rascunho local ─────────────────────────
+
+  Map<String, dynamic> _rascunho() => limparRascunho({
+        'passo': _passoAtual,
+        'nome': _nome.text,
+        'email': _email.text,
+        'cpf': _cpf.text,
+        'telefone': _telefone.text,
+        'dataNascimento': _dataNascimento?.toIso8601String(),
+        'sexo': _sexo,
+        'cep': _cep.text,
+        'logradouro': _logradouro.text,
+        'numero': _numero.text,
+        'bairro': _bairro.text,
+        'cidade': _cidade.text,
+        'estado': _estado.text,
+        'crefNumero': _crefNumero.text,
+        'crefCategoria': _crefCategoria,
+        'crefUf': _crefUf,
+        'whatsapp': _whatsapp.text,
+        'whatsappIgualTelefone': _whatsappIgualTelefone,
+        'bio': _bio.text,
+        'faixas': [for (final f in _faixas) f.toRascunho()],
+        'academiaPrincipalId': _academiaPrincipalId,
+        'valorAvulso': _valorAvulso.text,
+        'planos': [
+          for (final p in _planos)
+            {'nome': p.nome.text, 'aulas': p.aulas, 'valor': p.valor.text, 'descricao': p.descricao.text},
+        ],
+      });
+
+  bool get _temDados =>
+      _nome.text.isNotEmpty || _email.text.isNotEmpty || _faixas.isNotEmpty || _planos.isNotEmpty;
+
+  Future<void> _salvarRascunho() async {
+    if (!_temDados) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(chaveRascunhoPersonal, jsonEncode(_rascunho()));
+    } catch (e, st) {
+      AppLogger.i.error('Falha ao salvar rascunho do cadastro do personal: $e', st);
+    }
+  }
+
+  Future<void> _apagarRascunho() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(chaveRascunhoPersonal);
+    } catch (e, st) {
+      AppLogger.i.error('Falha ao apagar rascunho do cadastro do personal: $e', st);
+    }
+  }
+
+  Future<void> _restaurarRascunho() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(chaveRascunhoPersonal);
+      if (raw == null || !mounted) return;
+      final m = jsonDecode(raw) as Map<String, dynamic>;
+      String s(String k) => m[k]?.toString() ?? '';
+      setState(() {
+        _nome.text = s('nome');
+        _email.text = s('email');
+        _cpf.text = s('cpf');
+        _whatsappIgualTelefone = m['whatsappIgualTelefone'] != false;
+        _telefone.text = s('telefone');
+        _dataNascimento = DateTime.tryParse(s('dataNascimento'));
+        _sexo = m['sexo'] as String?;
+        _cep.text = s('cep');
+        _logradouro.text = s('logradouro');
+        _numero.text = s('numero');
+        _bairro.text = s('bairro');
+        _cidade.text = s('cidade');
+        _estado.text = s('estado');
+        _crefNumero.text = s('crefNumero');
+        _crefCategoria = m['crefCategoria'] == 'P' ? 'P' : 'G';
+        _crefUf = ufs.contains(m['crefUf']) ? m['crefUf'] as String : null;
+        _whatsapp.text = s('whatsapp');
+        _bio.text = s('bio');
+        _faixas
+          ..clear()
+          ..addAll([
+            for (final f in (m['faixas'] as List? ?? const []))
+              FaixaAtendimento.fromRascunho(Map<String, dynamic>.from(f as Map)),
+          ]);
+        _academiaPrincipalId = m['academiaPrincipalId'] as int?;
+        _valorAvulso.text = s('valorAvulso');
+        for (final p in (m['planos'] as List? ?? const [])) {
+          final mp = Map<String, dynamic>.from(p as Map);
+          _planos.add(_PlanoEdicao(nome: mp['nome']?.toString() ?? '', aulas: (mp['aulas'] as int?) ?? 8)
+            ..valor.text = mp['valor']?.toString() ?? ''
+            ..descricao.text = mp['descricao']?.toString() ?? '');
+        }
+      });
+      final passo = (m['passo'] as int? ?? 0).clamp(0, _titulos.length - 1);
+      if (passo > 0) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_pageController.hasClients) _pageController.jumpToPage(passo);
+        });
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Retomamos seu cadastro de onde você parou. Digite a senha novamente.')));
+      }
+    } catch (e, st) {
+      AppLogger.i.error('Falha ao restaurar rascunho do cadastro do personal: $e', st);
+    }
+  }
+
+  Future<bool> _confirmarSaida() async {
+    if (!_temDados) return true;
+    await _salvarRascunho();
+    if (!mounted) return true;
+    final sair = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sair do cadastro?'),
+        content: const Text('Seus dados ficam salvos neste aparelho para você continuar depois.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Continuar cadastro')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Sair')),
+        ],
+      ),
+    );
+    return sair ?? false;
   }
 
   @override
   void dispose() {
     for (final c in [
-      _nome, _email, _senha, _confirmarSenha, _cpf, _telefone, _cep, _logradouro,
-      _numero, _bairro, _cidade, _estado, _crefNumero, _whatsapp, _valorAvulso,
+      _nome,
+      _email,
+      _senha,
+      _confirmarSenha,
+      _cpf,
+      _telefone,
+      _cep,
+      _logradouro,
+      _numero,
+      _bairro,
+      _cidade,
+      _estado,
+      _crefNumero,
+      _whatsapp,
+      _valorAvulso,
+      _bio,
     ]) {
       c.dispose();
     }
@@ -173,7 +324,18 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
 
   void _continuar() {
     if (!_validarPasso(_passoAtual)) return;
+    if (_voltarParaRevisao) {
+      setState(() => _voltarParaRevisao = false);
+      _irPara(_titulos.length - 1);
+      return;
+    }
     if (_passoAtual < _titulos.length - 1) _irPara(_passoAtual + 1);
+  }
+
+  /// "Editar" na revisão: abre o passo e volta direto à revisão ao salvar.
+  void _editarNaRevisao(int passo) {
+    setState(() => _voltarParaRevisao = true);
+    _irPara(passo);
   }
 
   // ───────────────────────── envio ─────────────────────────
@@ -189,6 +351,10 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
       ];
 
   Future<void> _concluir() async {
+    if (!_declaracaoAceita) {
+      setState(() => _erroDeclaracao = 'Confirme a declaração para concluir.');
+      return;
+    }
     setState(() => _enviando = true);
     final body = <String, dynamic>{
       'nome': _nome.text.trim(),
@@ -206,6 +372,7 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
       'estado': _estado.text.trim(),
       'cref': montarCref(_crefNumero.text, _crefCategoria, _crefUf ?? ''),
       'whatsapp': whatsappComDdi(_whatsapp.text),
+      'bio': _bio.text.trim(),
       'vlrAula': lerMoeda(_valorAvulso.text),
       'academiaId': _academiaPrincipalId,
       'atendimentos': [for (final f in _faixas) f.toApi()],
@@ -222,8 +389,10 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
       ));
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Cadastro realizado com sucesso! Faça login para continuar.')));
+    await _apagarRascunho();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cadastro realizado com sucesso! Faça login para continuar.')));
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
@@ -232,31 +401,41 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
   @override
   Widget build(BuildContext context) {
     final ultimo = _passoAtual == _titulos.length - 1;
-    return Scaffold(
-      backgroundColor: GridColors.background,
-      appBar: AppBar(title: const Text('Criar conta - Personal')),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
-            child: Column(children: [
-              _progresso(),
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  onPageChanged: (i) => setState(() => _passoAtual = i),
-                  children: [
-                    _passoConta(),
-                    _passoRegistro(),
-                    _passoLocais(),
-                    _passoPlanos(),
-                    _passoRevisao(),
-                  ],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        if (await _confirmarSaida() && context.mounted) Navigator.of(context).pop();
+      },
+      child: Scaffold(
+        backgroundColor: GridColors.background,
+        appBar: AppBar(title: const Text('Criar conta - Personal')),
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: Column(children: [
+                _progresso(),
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    onPageChanged: (i) {
+                      setState(() => _passoAtual = i);
+                      _salvarRascunho();
+                    },
+                    children: [
+                      _passoConta(),
+                      _passoRegistro(),
+                      _passoLocais(),
+                      _passoPlanos(),
+                      _passoRevisao(),
+                    ],
+                  ),
                 ),
-              ),
-              _rodape(ultimo),
-            ]),
+                _rodape(ultimo),
+              ]),
+            ),
           ),
         ),
       ),
@@ -291,46 +470,73 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
         ),
       );
 
-  Widget _rodape(bool ultimo) => Container(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+  /// Declaração obrigatória, fixa acima do botão "Concluir cadastro".
+  Widget _declaracao() => CheckboxListTile(
+        key: const Key('chk_declaracao'),
+        contentPadding: EdgeInsets.zero,
+        dense: true,
+        controlAffinity: ListTileControlAffinity.leading,
+        value: _declaracaoAceita,
+        onChanged: (v) => setState(() {
+          _declaracaoAceita = v ?? false;
+          _erroDeclaracao = null;
+        }),
+        title: const Text('Declaro que as informações são verdadeiras e que meu CREF está ativo.'),
+        subtitle: _erroDeclaracao == null
+            ? null
+            : Text(_erroDeclaracao!, style: const TextStyle(color: GridColors.error)),
+      );
+
+  Widget _rodape(bool ultimo) => Material(
         color: GridColors.background,
-        child: Row(children: [
-          if (_passoAtual > 0) ...[
-            Expanded(
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-                onPressed: _enviando ? null : () => _irPara(_passoAtual - 1),
-                child: const Text('Voltar'),
-              ),
-            ),
-            const SizedBox(width: 12),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            if (ultimo) _declaracao(),
+            _botoesRodape(ultimo),
+          ]),
+        ),
+      );
+
+  Widget _botoesRodape(bool ultimo) => Row(children: [
+        if (_passoAtual > 0) ...[
           Expanded(
-            flex: 2,
-            child: ElevatedButton(
-              key: const Key('btn_wizard_continuar'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: GridColors.primary,
-                foregroundColor: Colors.white,
-                minimumSize: const Size.fromHeight(48),
-              ),
-              onPressed: _enviando ? null : (ultimo ? _concluir : _continuar),
-              child: _enviando
-                  ? const SizedBox(
-                      width: 22, height: 22,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                  : Text(ultimo ? 'Concluir cadastro' : 'Continuar'),
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+              onPressed: _enviando ? null : () => _irPara(_passoAtual - 1),
+              child: const Text('Voltar'),
             ),
           ),
-        ]),
-      );
+          const SizedBox(width: 12),
+        ],
+        Expanded(
+          flex: 2,
+          child: ElevatedButton(
+            key: const Key('btn_wizard_continuar'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: GridColors.primary,
+              foregroundColor: Colors.white,
+              minimumSize: const Size.fromHeight(48),
+            ),
+            onPressed: _enviando ? null : (ultimo ? _concluir : _continuar),
+            child: _enviando
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                : Text(ultimo
+                    ? 'Concluir cadastro'
+                    : (_voltarParaRevisao ? 'Salvar e voltar à revisão' : 'Continuar')),
+          ),
+        ),
+      ]);
 
   Widget _cabecalhoPasso(int passo) => Padding(
         padding: const EdgeInsets.only(bottom: 16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(_titulos[passo],
-              style: const TextStyle(
-                  fontSize: 22, fontWeight: FontWeight.bold, color: GridColors.textPrimary)),
+              style:
+                  const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: GridColors.textPrimary)),
           const SizedBox(height: 4),
           Text(_subtitulos[passo], style: const TextStyle(color: GridColors.textSecondary)),
         ]),
@@ -394,8 +600,7 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
               ),
               validator: (v) => (v ?? '').length < 6 ? 'A senha precisa ter pelo menos 6 caracteres' : null),
           _campo(_confirmarSenha, 'Confirmar senha *',
-              obscure: _obscurarSenha,
-              validator: (v) => v != _senha.text ? 'As senhas não coincidem' : null),
+              obscure: _obscurarSenha, validator: (v) => v != _senha.text ? 'As senhas não coincidem' : null),
           _campo(_cpf, 'CPF *',
               teclado: TextInputType.number,
               formatadores: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(11)],
@@ -416,7 +621,8 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
               if (d != null) setState(() => _dataNascimento = d);
             },
             child: InputDecorator(
-              decoration: _decoracao('Data de nascimento (opcional)', sufixo: const Icon(Icons.calendar_today)),
+              decoration:
+                  _decoracao('Data de nascimento (opcional)', sufixo: const Icon(Icons.calendar_today)),
               child: Text(_dataNascimento == null
                   ? 'Selecione'
                   : '${_dataNascimento!.day.toString().padLeft(2, '0')}/'
@@ -467,7 +673,10 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
                 key: const Key('campo_cref_numero'),
                 controller: _crefNumero,
                 keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6)],
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(6)
+                ],
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 decoration: _decoracao('Número'),
                 onChanged: (_) => setState(() {}),
@@ -550,6 +759,17 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
                     },
             ),
           ),
+          const SizedBox(height: 12),
+          TextFormField(
+            key: const Key('campo_bio'),
+            controller: _bio,
+            maxLength: 160,
+            maxLines: 3,
+            onChanged: (_) => setState(() {}),
+            decoration: _decoracao('Mini-bio (opcional)',
+                ajuda:
+                    'Conte em uma frase como você trabalha. Ex.: "Foco em hipertrofia e emagrecimento, 8 anos de experiência."'),
+          ),
         ]),
       );
 
@@ -563,7 +783,18 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
     final soSemAcademia = _faixas.isNotEmpty && _faixas.every((f) => f.academiaId == null);
     return ListView(padding: const EdgeInsets.all(16), children: [
       _cabecalhoPasso(2),
-      if (_carregandoAcademias) const LinearProgressIndicator(),
+      if (_carregandoAcademias)
+        Semantics(
+          label: 'Carregando academias',
+          child: Column(children: [
+            for (var i = 0; i < 2; i++)
+              Container(
+                height: 56,
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(color: GridColors.divider, borderRadius: BorderRadius.circular(12)),
+              ),
+          ]),
+        ),
       if (_erroAcademias != null)
         Row(children: [
           Expanded(child: Text(_erroAcademias!, style: const TextStyle(color: GridColors.error))),
@@ -579,8 +810,7 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
       if (soSemAcademia)
         const Padding(
           padding: EdgeInsets.only(bottom: 8),
-          child: Text(
-              'Você não aparecerá na busca por academia; alunos te acham pelo nome.',
+          child: Text('Você não aparecerá na busca por academia; alunos te acham pelo nome.',
               style: TextStyle(color: GridColors.secondaryDark, fontSize: 13)),
         ),
       if (_erroLocais != null)
@@ -629,14 +859,16 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
                 color: GridColors.primary),
             const SizedBox(width: 8),
             Expanded(
-                child: Text(local.localNome,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15))),
+                child:
+                    Text(local.localNome, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15))),
             if (principal)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(color: GridColors.secondary, borderRadius: BorderRadius.circular(8)),
+                decoration:
+                    BoxDecoration(color: GridColors.secondary, borderRadius: BorderRadius.circular(8)),
                 child: const Text('Principal',
-                    style: TextStyle(color: GridColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w700)),
+                    style:
+                        TextStyle(color: GridColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w700)),
               ),
             if (local.academiaId != null && !principal)
               TextButton(
@@ -676,9 +908,8 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
     setState(() {
       _faixas.remove(f);
       if (!_faixas.any((x) => x.academiaId == _academiaPrincipalId)) {
-        _academiaPrincipalId = _faixas
-            .map((x) => x.academiaId)
-            .firstWhere((id) => id != null, orElse: () => null);
+        _academiaPrincipalId =
+            _faixas.map((x) => x.academiaId).firstWhere((id) => id != null, orElse: () => null);
       }
     });
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -784,10 +1015,20 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
                 validator: (v) {
                   final nome = (v ?? '').trim();
                   if (nome.isEmpty) return 'Dê um nome ao plano';
-                  final repetidos = _planos.where((x) => x.nome.text.trim().toLowerCase() == nome.toLowerCase());
+                  final repetidos =
+                      _planos.where((x) => x.nome.text.trim().toLowerCase() == nome.toLowerCase());
                   return repetidos.length > 1 ? 'Já existe um plano com esse nome' : null;
                 },
               ),
+            ),
+            IconButton(
+              tooltip: 'Duplicar plano',
+              icon: const Icon(Icons.copy_outlined),
+              onPressed: () => setState(() => _planos.insert(
+                  i + 1,
+                  _PlanoEdicao(nome: '${p.nome.text.trim()} (cópia)', aulas: p.aulas)
+                    ..valor.text = p.valor.text
+                    ..descricao.text = p.descricao.text)),
             ),
             IconButton(
               tooltip: 'Remover plano',
@@ -847,12 +1088,13 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
 
   Widget _passoRevisao() {
     final nome = _nome.text.trim();
-    final iniciais = nome.isEmpty
-        ? '?'
-        : nome.split(RegExp(r'\s+')).take(2).map((p) => p[0].toUpperCase()).join();
+    final iniciais =
+        nome.isEmpty ? '?' : nome.split(RegExp(r'\s+')).take(2).map((p) => p[0].toUpperCase()).join();
     final principal = _academias.where((a) => a.id == _academiaPrincipalId).map((a) => a.nome).firstOrNull;
-    final menorPlano = _planos.map((p) => lerMoeda(p.valor.text)).whereType<double>().fold<double?>(
-        null, (m, v) => m == null || v < m ? v : m);
+    final menorPlano = _planos
+        .map((p) => lerMoeda(p.valor.text))
+        .whereType<double>()
+        .fold<double?>(null, (m, v) => m == null || v < m ? v : m);
     final cref = _crefUf == null ? '—' : montarCref(_crefNumero.text, _crefCategoria, _crefUf!);
 
     Widget secao(String titulo, int passo, List<String> linhas) => Card(
@@ -862,7 +1104,7 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
                 Expanded(child: Text(titulo, style: const TextStyle(fontWeight: FontWeight.w700))),
-                TextButton(onPressed: () => _irPara(passo), child: const Text('Editar')),
+                TextButton(onPressed: () => _editarNaRevisao(passo), child: const Text('Editar')),
               ]),
               for (final l in linhas) Text(l, style: const TextStyle(color: GridColors.textSecondary)),
             ]),
@@ -892,7 +1134,13 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
                   const SizedBox(width: 4),
                   Text('CREF $cref'),
                 ]),
-                if (principal != null) Text(principal, style: const TextStyle(color: GridColors.textSecondary)),
+                if (principal != null)
+                  Text(principal, style: const TextStyle(color: GridColors.textSecondary)),
+                if (_bio.text.trim().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Text(_bio.text.trim(), style: const TextStyle(fontStyle: FontStyle.italic)),
+                  ),
                 Text(
                   menorPlano != null
                       ? 'A partir de ${formatarMoeda(menorPlano)}/mês'
@@ -907,7 +1155,11 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
       ),
       const SizedBox(height: 12),
       secao('Conta', 0, [nome, _email.text.trim(), _telefone.text]),
-      secao('Registro e contato', 1, ['CREF $cref', 'WhatsApp +55 ${_whatsapp.text}']),
+      secao('Registro e contato', 1, [
+        'CREF $cref',
+        'WhatsApp +55 ${_whatsapp.text}',
+        if (_bio.text.trim().isNotEmpty) 'Bio: ${_bio.text.trim()}',
+      ]),
       secao('Locais e horários', 2, [
         for (final f in _faixas) '${f.localNome}: ${f.resumo}',
         if (_faixas.isEmpty) 'Nenhum local informado',
@@ -1001,7 +1253,8 @@ class _EditorFaixaState extends State<_EditorFaixa> {
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.of(context).viewInsets.bottom),
       child: SingleChildScrollView(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
           Text(widget.semAcademia ? 'Atendimento sem academia' : 'Atendimento em academia',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
           const SizedBox(height: 14),
@@ -1032,8 +1285,10 @@ class _EditorFaixaState extends State<_EditorFaixa> {
           const SizedBox(height: 16),
           Row(children: [
             const Expanded(child: Text('Dias', style: TextStyle(fontWeight: FontWeight.w700))),
-            TextButton(onPressed: () => setState(() => _dias = {0, 1, 2, 3, 4}), child: const Text('Seg–Sex')),
-            TextButton(onPressed: () => setState(() => _dias = {0, 1, 2, 3, 4, 5, 6}), child: const Text('Todos')),
+            TextButton(
+                onPressed: () => setState(() => _dias = {0, 1, 2, 3, 4}), child: const Text('Seg–Sex')),
+            TextButton(
+                onPressed: () => setState(() => _dias = {0, 1, 2, 3, 4, 5, 6}), child: const Text('Todos')),
             TextButton(onPressed: () => setState(() => _dias = {}), child: const Text('Limpar')),
           ]),
           Wrap(spacing: 8, runSpacing: 8, children: [

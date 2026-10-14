@@ -63,6 +63,16 @@ void main() {
       expect(conflitoFaixa(encostada, [smart]), isNull);
     });
 
+    test('rascunho: faixa ida e volta e senha nunca salva', () {
+      final f = FaixaAtendimento(
+          academiaId: 153, localNome: 'SmartFit', dias: {4, 0}, inicio: '06:00', fim: '10:00');
+      final volta = FaixaAtendimento.fromRascunho(f.toRascunho());
+      expect(volta.toApi(), f.toApi());
+      expect(volta.localNome, 'SmartFit');
+
+      expect(limparRascunho({'nome': 'A', 'senha': 'x', 'confirmarSenha': 'x'}), {'nome': 'A'});
+    });
+
     test('payload da API usa nomes completos dos dias', () {
       final f = FaixaAtendimento(
           academiaId: null, localNome: 'Online', dias: {4, 0}, inicio: '19:00', fim: '21:00');

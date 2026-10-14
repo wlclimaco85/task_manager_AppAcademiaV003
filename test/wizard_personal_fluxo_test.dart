@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/ui/screens/auth_screens/wizard_personal_screen.dart';
 
 /// Percorre os 5 passos do wizard do personal e confere o corpo enviado à API.
@@ -37,6 +38,32 @@ void main() {
     await t.tap(find.byKey(const Key('btn_wizard_continuar')));
     await t.pumpAndSettle();
   }
+
+  setUp(() {
+    enviado = null;
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  testWidgets('retoma o rascunho salvo no passo em que parou', (t) async {
+    SharedPreferences.setMockInitialValues({
+      'rascunho_cadastro_personal_v1': jsonEncode({
+        'passo': 2,
+        'nome': 'Ana Personal',
+        'email': 'ana@example.invalid',
+        'faixas': [
+          {'academiaId': null, 'localNome': 'Online', 'dias': [0, 2], 'inicio': '19:00', 'fim': '21:00'}
+        ],
+      }),
+    });
+    await http.runWithClient(() async {
+      await t.pumpWidget(const MaterialApp(home: WizardPersonalScreen()));
+      await t.pumpAndSettle();
+    }, () => cliente);
+
+    expect(find.text('Passo 3 de 5 · Onde e quando você atende'), findsOneWidget);
+    expect(find.text('Seg, Qua · 19:00–21:00'), findsOneWidget);
+    expect(find.textContaining('Retomamos seu cadastro'), findsOneWidget);
+  });
 
   testWidgets('cadastro completo envia CREF, WhatsApp, valor avulso, horarios e planos', (t) async {
     t.view.physicalSize = const Size(1080, 2400);
@@ -97,11 +124,26 @@ void main() {
       expect(find.text(r'≈ R$ 31,25 por aula'), findsOneWidget);
       await continuar(t);
 
-      // Passo 5: revisao e envio.
+      // Passo 5: revisao; sem a declaracao nao envia.
       expect(find.text('Passo 5 de 5 · Revisão'), findsOneWidget);
       expect(find.text('CREF 012345-G/MG'), findsWidgets);
       await t.tap(find.byKey(const Key('btn_wizard_continuar')));
       await t.pumpAndSettle();
+      expect(find.text('Confirme a declaração para concluir.'), findsOneWidget);
+      expect(enviado, isNull);
+
+      // Rascunho salvo no aparelho nunca contem a senha.
+      final prefs = await SharedPreferences.getInstance();
+      final rascunho = prefs.getString('rascunho_cadastro_personal_v1')!;
+      expect(rascunho, isNot(contains('segredo1')));
+      expect(rascunho, contains('Carlos Personal'));
+
+      await t.tap(find.byKey(const Key('chk_declaracao')));
+      await t.pump();
+      await t.tap(find.byKey(const Key('btn_wizard_continuar')));
+      await t.pumpAndSettle();
+      expect(prefs.getString('rascunho_cadastro_personal_v1'), isNull,
+          reason: 'rascunho apagado apos cadastro concluido');
     }, () => cliente);
 
     expect(enviado, isNotNull);
