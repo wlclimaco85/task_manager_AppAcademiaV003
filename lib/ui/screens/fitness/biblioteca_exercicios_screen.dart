@@ -134,41 +134,48 @@ class _BibliotecaExerciciosScreenState
                 ),
               ),
 
-              // 2. Chips de Grupos Musculares (Carrossel Horizontal)
-              SizedBox(
-                height: 48,
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _gruposMusculares.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (context, index) {
-                    final grupo = _gruposMusculares[index];
-                    final isSelected = grupo == _grupoSelecionado;
+              // 2. Chips de Grupos Musculares com quebra de linha
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: _gruposMusculares.map((grupo) {
+                      final isSelected = grupo == _grupoSelecionado;
 
-                    return FilterChip(
-                      selected: isSelected,
-                      showCheckmark: false,
-                      label: Text(
-                        grupo,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                          color: isSelected ? GridColors.textOnPrimary : GridColors.textPrimary,
+                      return FilterChip(
+                        selected: isSelected,
+                        showCheckmark: false,
+                        label: Text(
+                          grupo,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight:
+                                isSelected ? FontWeight.w700 : FontWeight.w500,
+                            color: isSelected
+                                ? GridColors.textOnPrimary
+                                : GridColors.textPrimary,
+                          ),
                         ),
-                      ),
-                      backgroundColor: GridColors.card,
-                      selectedColor: GridColors.primary,
-                      side: BorderSide(
-                        color: isSelected ? GridColors.primary : GridColors.divider,
-                      ),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      onSelected: (val) {
-                        setState(() => _grupoSelecionado = grupo);
-                        _carregarExercicios();
-                      },
-                    );
-                  },
+                        backgroundColor: GridColors.card,
+                        selectedColor: GridColors.primary,
+                        side: BorderSide(
+                          color: isSelected
+                              ? GridColors.primary
+                              : GridColors.divider,
+                        ),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20)),
+                        onSelected: (val) {
+                          setState(() => _grupoSelecionado = grupo);
+                          _carregarExercicios();
+                        },
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
 
