@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/ui/widgets/fitness_menu_page.dart';
 import 'package:task_manager_flutter/data/utils/fitness_access.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/customization/dynamic_grid_dynamic_screen.dart';
@@ -218,14 +219,14 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (_) => const ContratarProfissionalScreen()),
+              builder: (_) => const FitnessMenuPage(child: ContratarProfissionalScreen())),
         );
         break;
       case 'Alunos do personal':
         if (!podeGerenciarAlunos()) return;
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const PersonalWorkspaceScreen()),
+          MaterialPageRoute(builder: (_) => const FitnessMenuPage(child: PersonalWorkspaceScreen())),
         );
         break;
       case 'Dieta':
@@ -234,7 +235,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (_) => const NutricaoProtocolosHubScreen()),
+              builder: (_) => const FitnessMenuPage(child: NutricaoProtocolosHubScreen())),
         );
         break;
 
@@ -242,74 +243,74 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (_) => const ExamesClinicosHubScreen()),
+              builder: (_) => const FitnessMenuPage(child: ExamesClinicosHubScreen())),
         );
         break;
       case 'Treinos':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const TreinosHubScreen()),
+          MaterialPageRoute(builder: (_) => const FitnessMenuPage(child: TreinosHubScreen())),
         );
         break;
       case 'Atividade':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const AtividadeScreen()),
+          MaterialPageRoute(builder: (_) => const FitnessMenuPage(child: AtividadeScreen())),
         );
         break;
       case 'Sono':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const SonoScreen()),
+          MaterialPageRoute(builder: (_) => const FitnessMenuPage(child: SonoScreen())),
         );
         break;
       case 'Batimentos':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const BatimentosScreen()),
+          MaterialPageRoute(builder: (_) => const FitnessMenuPage(child: BatimentosScreen())),
         );
         break;
       case 'Corpo':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const CorpoScreen()),
+          MaterialPageRoute(builder: (_) => const FitnessMenuPage(child: CorpoScreen())),
         );
         break;
       case 'Metas':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const MetasScreen()),
+          MaterialPageRoute(builder: (_) => const FitnessMenuPage(child: MetasScreen())),
         );
         break;
       case 'Alimentos':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const AlimentoScreenDynamic()),
+          MaterialPageRoute(builder: (_) => const FitnessMenuPage(child: AlimentoScreenDynamic())),
         );
         break;
       case 'Objetivos':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const ObjetivoScreenDynamic()),
+          MaterialPageRoute(builder: (_) => const FitnessMenuPage(child: ObjetivoScreenDynamic())),
         );
         break;
       case 'Avaliacao fisica':
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (_) => const AvaliacaoFisicaProScreen()),
+              builder: (_) => const FitnessMenuPage(child: AvaliacaoFisicaProScreen())),
         );
         break;
       case 'Grupo muscular':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const GrupoMuscularScreenDynamic()),
+          MaterialPageRoute(builder: (_) => const FitnessMenuPage(child: GrupoMuscularScreenDynamic())),
         );
         break;
       case 'Modalidades':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const ModalidadeScreenDynamic()),
+          MaterialPageRoute(builder: (_) => const FitnessMenuPage(child: ModalidadeScreenDynamic())),
         );
         break;
       case 'Sair':
@@ -322,13 +323,13 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => DynamicGridDynamicScreen(
+        builder: (_) => FitnessMenuPage(child: DynamicGridDynamicScreen(
           key: ValueKey('fitness_dynamic_$telaNome'),
           telaNome: telaNome,
           hasPermission: (permission) =>
               _hasPermissionFor(sec, screen, permission),
           storageKey: 'fitness_dynamic_$telaNome',
-        ),
+        )),
       ),
     );
   }
