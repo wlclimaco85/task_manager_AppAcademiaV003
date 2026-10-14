@@ -2,6 +2,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:task_manager_flutter/ui/screens/auth_screens/wizard_aluno_screen.dart';
 
 void main() {
+  group('mostrarListaPersonais', () {
+    test('mostra a lista quando responde Sim', () {
+      expect(mostrarListaPersonais(true), isTrue);
+    });
+
+    test('mostra a lista quando responde Nao', () {
+      expect(mostrarListaPersonais(false), isTrue);
+    });
+
+    test('esconde enquanto o aluno nao respondeu', () {
+      expect(mostrarListaPersonais(null), isFalse);
+    });
+  });
+
   group('lerAcademiaIdPersonal', () {
     test('le academiaId inteiro do contrato de personais-disponiveis', () {
       expect(

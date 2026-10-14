@@ -13,6 +13,10 @@ class WizardAlunoScreen extends StatefulWidget {
   State<WizardAlunoScreen> createState() => _WizardAlunoScreenState();
 }
 
+/// A lista de personais aparece assim que o aluno responde "Sim" ou "Nao"
+/// (filtrada pela academia escolhida, quando houver).
+bool mostrarListaPersonais(bool? temPersonal) => temPersonal != null;
+
 /// Lê o academiaId de um personal vindo de /personais-disponiveis.
 /// Sem esse campo o filtro por academia do passo 2 nunca encontrava ninguém.
 int? lerAcademiaIdPersonal(Map<String, dynamic> json) {
@@ -261,14 +265,11 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
   }
 
   void _onTemPersonalChanged(bool valor) {
-    setState(() {
-      _temPersonal = valor;
-      if (!valor) {
-        _personalSelecionado = null;
-        _modalidadeSelecionada = null;
-      }
-    });
-    if (valor && _personaisDisponiveis.isEmpty && !_carregandoPersonais) {
+    setState(() => _temPersonal = valor);
+    // "Sim" (indica o personal atual) e "Nao" (escolhe um novo) usam a mesma lista.
+    if (mostrarListaPersonais(valor) &&
+        _personaisDisponiveis.isEmpty &&
+        !_carregandoPersonais) {
       _carregarPersonaisDisponiveis();
     }
   }
@@ -618,7 +619,7 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        if (_temPersonal == false && _academiaSelecionada != null) _buildListaPersonais(),
+        if (mostrarListaPersonais(_temPersonal)) _buildListaPersonais(),
       ],
     );
   }
