@@ -19,7 +19,7 @@ class FitnessContaSync {
     final prefs = await SharedPreferences.getInstance();
     final chaveFila = chave('fitness_pendentes_$tipo');
     final fila = Map<String, dynamic>.from(jsonDecode(prefs.getString(chaveFila) ?? '{}'));
-    fila[documento['id']] = documento;
+    fila[documento['id'].toString()] = documento;
     await prefs.setString(chaveFila, jsonEncode(fila));
     await carregar(tipo);
   }
@@ -36,7 +36,9 @@ class FitnessContaSync {
     _emAndamento.add(chaveFila);
     try {
       for (final id in fila.keys.toList()) {
-        final response = await http.put(Uri.parse('$_url/$tipo/$id'),
+        final response = fila[id]['_excluir'] == true
+          ? await http.delete(Uri.parse('$_url/$tipo/$id'), headers: headers).timeout(const Duration(seconds: 10))
+          : await http.put(Uri.parse('$_url/$tipo/$id'),
           headers: {...headers, 'Content-Type': 'application/json'}, body: jsonEncode(fila[id]))
           .timeout(const Duration(seconds: 10));
         if (response.statusCode == 200) { fila.remove(id); }
@@ -59,7 +61,10 @@ class FitnessContaSync {
       final remotos = (jsonDecode(response.body)['data'] as List)
           .map((e) => Map<String, dynamic>.from(e)).toList();
       final porId = {for (final e in remotos) e['id']: e};
-      for (final e in fila.values) { porId[e['id']] = Map<String, dynamic>.from(e); }
+      for (final e in fila.values) {
+        if (e['_excluir'] == true) { porId.remove(e['id']); }
+        else { porId[e['id']] = Map<String, dynamic>.from(e); }
+      }
       if (tipo == 'sessoes') {
         for (final e in porId.values) { e['sincronizado'] = !fila.containsKey(e['id']); }
       }

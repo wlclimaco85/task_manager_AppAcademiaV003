@@ -1,11 +1,9 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:task_manager_flutter/data/services/fitness_conta_sync.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/utils/app_logger.dart';
 import 'package:task_manager_flutter/data/models/fitness/nutricao_farmaco_model.dart';
-import 'package:task_manager_flutter/data/models/fitness/exame_registro_model.dart';
-import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
 import 'package:task_manager_flutter/data/services/exames_offline_repository.dart';
 
 /// Repositório Offline-First de Nutrição, Farmacologia, Suplementação e Timeline 360
@@ -87,11 +85,14 @@ class NutricaoFarmacoOfflineRepository {
 
   Future<List<DietaProtocoloModel>> getDietas({String? alunoId}) async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_kDietasKey);
+    final key = FitnessContaSync.chave(_kDietasKey);
+    final remoto = await FitnessContaSync.carregar('dietas');
+    if (remoto != null) await prefs.setString(key, json.encode(remoto));
+    final raw = prefs.getString(key);
 
     List<DietaProtocoloModel> lista = [];
     if (raw == null || raw.isEmpty) {
-      lista = _seedDietas();
+      lista = [];
       await _salvarDietas(lista);
     } else {
       try {
@@ -100,8 +101,8 @@ class NutricaoFarmacoOfflineRepository {
             .map((e) => DietaProtocoloModel.fromMap(e as Map<String, dynamic>))
             .toList();
       } catch (e) {
-        debugPrint('[NutricaoRepo] Erro decode dietas: $e');
-        lista = _seedDietas();
+        AppLogger.i.warn('[NutricaoRepo] Erro decode dietas: $e');
+        lista = [];
       }
     }
 
@@ -120,12 +121,13 @@ class NutricaoFarmacoOfflineRepository {
       lista.insert(0, dieta);
     }
     await _salvarDietas(lista);
+    await FitnessContaSync.salvar('dietas', dieta.toMap());
   }
 
   Future<void> _salvarDietas(List<DietaProtocoloModel> lista) async {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = json.encode(lista.map((e) => e.toMap()).toList());
-    await prefs.setString(_kDietasKey, jsonStr);
+    await prefs.setString(FitnessContaSync.chave(_kDietasKey), jsonStr);
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -134,11 +136,14 @@ class NutricaoFarmacoOfflineRepository {
 
   Future<List<MedicamentoProtocoloModel>> getMedicamentos({String? alunoId}) async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_kMedicamentosKey);
+    final key = FitnessContaSync.chave(_kMedicamentosKey);
+    final remoto = await FitnessContaSync.carregar('medicamentos');
+    if (remoto != null) await prefs.setString(key, json.encode(remoto));
+    final raw = prefs.getString(key);
 
     List<MedicamentoProtocoloModel> lista = [];
     if (raw == null || raw.isEmpty) {
-      lista = _seedMedicamentos();
+      lista = [];
       await _salvarMedicamentos(lista);
     } else {
       try {
@@ -148,8 +153,8 @@ class NutricaoFarmacoOfflineRepository {
                 MedicamentoProtocoloModel.fromMap(e as Map<String, dynamic>))
             .toList();
       } catch (e) {
-        debugPrint('[NutricaoRepo] Erro decode medicamentos: $e');
-        lista = _seedMedicamentos();
+        AppLogger.i.warn('[NutricaoRepo] Erro decode medicamentos: $e');
+        lista = [];
       }
     }
 
@@ -168,12 +173,13 @@ class NutricaoFarmacoOfflineRepository {
       lista.insert(0, med);
     }
     await _salvarMedicamentos(lista);
+    await FitnessContaSync.salvar('medicamentos', med.toMap());
   }
 
   Future<void> _salvarMedicamentos(List<MedicamentoProtocoloModel> lista) async {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = json.encode(lista.map((e) => e.toMap()).toList());
-    await prefs.setString(_kMedicamentosKey, jsonStr);
+    await prefs.setString(FitnessContaSync.chave(_kMedicamentosKey), jsonStr);
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -182,11 +188,14 @@ class NutricaoFarmacoOfflineRepository {
 
   Future<List<SuplementoProtocoloModel>> getSuplementos({String? alunoId}) async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_kSuplementosKey);
+    final key = FitnessContaSync.chave(_kSuplementosKey);
+    final remoto = await FitnessContaSync.carregar('suplementos');
+    if (remoto != null) await prefs.setString(key, json.encode(remoto));
+    final raw = prefs.getString(key);
 
     List<SuplementoProtocoloModel> lista = [];
     if (raw == null || raw.isEmpty) {
-      lista = _seedSuplementos();
+      lista = [];
       await _salvarSuplementos(lista);
     } else {
       try {
@@ -196,8 +205,8 @@ class NutricaoFarmacoOfflineRepository {
                 SuplementoProtocoloModel.fromMap(e as Map<String, dynamic>))
             .toList();
       } catch (e) {
-        debugPrint('[NutricaoRepo] Erro decode suplementos: $e');
-        lista = _seedSuplementos();
+        AppLogger.i.warn('[NutricaoRepo] Erro decode suplementos: $e');
+        lista = [];
       }
     }
 
@@ -216,12 +225,13 @@ class NutricaoFarmacoOfflineRepository {
       lista.insert(0, sup);
     }
     await _salvarSuplementos(lista);
+    await FitnessContaSync.salvar('suplementos', sup.toMap());
   }
 
   Future<void> _salvarSuplementos(List<SuplementoProtocoloModel> lista) async {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = json.encode(lista.map((e) => e.toMap()).toList());
-    await prefs.setString(_kSuplementosKey, jsonStr);
+    await prefs.setString(FitnessContaSync.chave(_kSuplementosKey), jsonStr);
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -232,7 +242,7 @@ class NutricaoFarmacoOfflineRepository {
     final eventos = <TimelineFitnessEventModel>[];
 
     // 1. Avaliações Físicas (Peso & % BF ao longo do tempo)
-    final avaliacoes = _seedAvaliacoesHistorico();
+    final avaliacoes = <Map<String, dynamic>>[];
     for (final av in avaliacoes) {
       eventos.add(
         TimelineFitnessEventModel(
@@ -348,31 +358,7 @@ class NutricaoFarmacoOfflineRepository {
     return eventos;
   }
 
-  List<Map<String, dynamic>> _seedAvaliacoesHistorico() {
-    final hoje = DateTime.now();
-    return [
-      {
-        'data': hoje.subtract(const Duration(days: 90)),
-        'peso': 88.5,
-        'bf': 19.2,
-      },
-      {
-        'data': hoje.subtract(const Duration(days: 60)),
-        'peso': 85.8,
-        'bf': 16.4,
-      },
-      {
-        'data': hoje.subtract(const Duration(days: 30)),
-        'peso': 83.2,
-        'bf': 13.8,
-      },
-      {
-        'data': hoje,
-        'peso': 81.4,
-        'bf': 11.2,
-      },
-    ];
-  }
+
 
   // ─────────────────────────────────────────────────────────────────────────────
   // SEEDS INICIAIS (Tabela Nutricional & Medicamentos)
@@ -416,132 +402,9 @@ class NutricaoFarmacoOfflineRepository {
     return resultado;
   }
 
-  List<DietaProtocoloModel> _seedDietas() {
-    final hoje = DateTime.now();
-    return [
-      DietaProtocoloModel(
-        id: 'dieta_1',
-        alunoId: 'aluno_1',
-        titulo: 'Cutting Definido 2.200 kcal',
-        objetivo: 'emagrecimento',
-        caloriasMeta: 2200.0,
-        proteinasMeta: 180.0,
-        carboidratosMeta: 220.0,
-        gordurasMeta: 65.0,
-        dataInicio: hoje.subtract(const Duration(days: 60)).toIso8601String().substring(0, 10),
-        dataFim: hoje.add(const Duration(days: 30)).toIso8601String().substring(0, 10),
-        ativa: true,
-        refeicoes: [
-          const RefeicaoModel(
-            id: 'ref_1',
-            nome: 'Café da Manhã',
-            horario: '07:30',
-            itens: [
-              ItemRefeicaoModel(alimentoId: 'alim_12', alimentoNome: 'Ovo de Galinha Cozido', quantidadeGramas: 150, calorias: 216, proteinas: 18.9, carboidratos: 1.8, gorduras: 14.4),
-              ItemRefeicaoModel(alimentoId: 'alim_7', alimentoNome: 'Aveia em Flocos', quantidadeGramas: 50, calorias: 197, proteinas: 7.0, carboidratos: 33.3, gorduras: 4.2),
-              ItemRefeicaoModel(alimentoId: 'alim_16', alimentoNome: 'Banana Prata', quantidadeGramas: 100, calorias: 98, proteinas: 1.3, carboidratos: 26.0, gorduras: 0.1),
-            ],
-          ),
-          const RefeicaoModel(
-            id: 'ref_2',
-            nome: 'Almoço',
-            horario: '12:30',
-            itens: [
-              ItemRefeicaoModel(alimentoId: 'alim_9', alimentoNome: 'Peito de Frango Grelhado', quantidadeGramas: 180, calorias: 286, proteinas: 57.6, carboidratos: 0.0, gorduras: 5.7),
-              ItemRefeicaoModel(alimentoId: 'alim_1', alimentoNome: 'Arroz Branco Cozido', quantidadeGramas: 150, calorias: 192, proteinas: 3.7, carboidratos: 42.1, gorduras: 0.3),
-              ItemRefeicaoModel(alimentoId: 'alim_3', alimentoNome: 'Feijão Carioca Cozido', quantidadeGramas: 100, calorias: 76, proteinas: 4.8, carboidratos: 13.6, gorduras: 0.5),
-              ItemRefeicaoModel(alimentoId: 'alim_20', alimentoNome: 'Azeite de Oliva Extra Virgem', quantidadeGramas: 13, calorias: 119, proteinas: 0.0, carboidratos: 0.0, gorduras: 13.5),
-            ],
-          ),
-          const RefeicaoModel(
-            id: 'ref_3',
-            nome: 'Pré-Treino & Lanche da Tarde',
-            horario: '16:30',
-            itens: [
-              ItemRefeicaoModel(alimentoId: 'alim_5', alimentoNome: 'Batata Doce Cozida', quantidadeGramas: 150, calorias: 115, proteinas: 0.9, carboidratos: 27.6, gorduras: 0.1),
-              ItemRefeicaoModel(alimentoId: 'alim_14', alimentoNome: 'Whey Protein Concentrado 80%', quantidadeGramas: 30, calorias: 120, proteinas: 24.0, carboidratos: 3.0, gorduras: 1.5),
-            ],
-          ),
-          const RefeicaoModel(
-            id: 'ref_4',
-            nome: 'Jantar',
-            horario: '20:00',
-            itens: [
-              ItemRefeicaoModel(alimentoId: 'alim_10', alimentoNome: 'Carne Bovina Patinho Grelhado', quantidadeGramas: 160, calorias: 296, proteinas: 57.4, carboidratos: 0.0, gorduras: 7.2),
-              ItemRefeicaoModel(alimentoId: 'alim_1', alimentoNome: 'Arroz Branco Cozido', quantidadeGramas: 120, calorias: 153, proteinas: 3.0, carboidratos: 33.7, gorduras: 0.2),
-            ],
-          ),
-        ],
-      ),
-    ];
-  }
 
-  List<MedicamentoProtocoloModel> _seedMedicamentos() {
-    final hoje = DateTime.now();
-    return [
-      MedicamentoProtocoloModel(
-        id: 'med_1',
-        alunoId: 'aluno_1',
-        nomeComposto: 'Enantato de Testosterona (TRT / Reposição)',
-        dosagem: '250 mg / 1 ml',
-        frequencia: '1x a cada 7 dias',
-        viaAdministracao: 'Intramuscular',
-        categoria: 'ergogenico_ciclo',
-        dataInicio: hoje.subtract(const Duration(days: 75)).toIso8601String().substring(0, 10),
-        dataFim: hoje.add(const Duration(days: 45)).toIso8601String().substring(0, 10),
-        ativo: true,
-        horario: 'Segunda-feira 09:00',
-        observacoes: 'Aplicação no glúteo ou vasto lateral. Manter exames de hematócrito e estradiol a cada 60 dias.',
-      ),
-      MedicamentoProtocoloModel(
-        id: 'med_2',
-        alunoId: 'aluno_1',
-        nomeComposto: 'Anastrozol (Inibidor de Aromatase)',
-        dosagem: '0.5 mg',
-        frequencia: 'DSDN (Dia Sim, Dia Não)',
-        viaAdministracao: 'Oral',
-        categoria: 'tpc_protetor',
-        dataInicio: hoje.subtract(const Duration(days: 60)).toIso8601String().substring(0, 10),
-        dataFim: hoje.add(const Duration(days: 45)).toIso8601String().substring(0, 10),
-        ativo: true,
-        horario: 'Junto com almoço',
-        observacoes: 'Controle de sensibilidade e ginecomastia.',
-      ),
-    ];
-  }
 
-  List<SuplementoProtocoloModel> _seedSuplementos() {
-    final hoje = DateTime.now();
-    return [
-      SuplementoProtocoloModel(
-        id: 'sup_1',
-        alunoId: 'aluno_1',
-        nome: 'Creatina Monohidratada 100% Pura',
-        dosagem: '5 g',
-        horario: 'Pós-Treino com carboidrato',
-        dataInicio: hoje.subtract(const Duration(days: 90)).toIso8601String().substring(0, 10),
-        ativo: true,
-        observacoes: 'Uso contínuo mesmo nos dias sem treino para saturação celular.',
-      ),
-      SuplementoProtocoloModel(
-        id: 'sup_2',
-        alunoId: 'aluno_1',
-        nome: 'Ômega 3 (EPA 840mg / DHA 560mg)',
-        dosagem: '2 cápsulas',
-        horario: 'Almoço e Jantar',
-        dataInicio: hoje.subtract(const Duration(days: 90)).toIso8601String().substring(0, 10),
-        ativo: true,
-        observacoes: 'Ação anti-inflamatória e melhora do perfil lipídico.',
-      ),
-      SuplementoProtocoloModel(
-        id: 'sup_3',
-        alunoId: 'aluno_1',
-        nome: 'Multivitamínico de Alta Potência',
-        dosagem: '1 tablete',
-        horario: 'Café da manhã',
-        dataInicio: hoje.subtract(const Duration(days: 90)).toIso8601String().substring(0, 10),
-        ativo: true,
-      ),
-    ];
-  }
+
+
+
 }

@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:task_manager_flutter/data/utils/app_logger.dart';
+import 'package:task_manager_flutter/data/services/fitness_conta_sync.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/models/hidratacao_model.dart';
@@ -208,7 +210,10 @@ class Fitness360LocalStore {
 
   static Future<List<Fitness360Record>> records({String? type}) async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_recordsKey);
+    final key = FitnessContaSync.chave(_recordsKey);
+    final remoto = await FitnessContaSync.carregar('registros');
+    if (remoto != null) await prefs.setString(key, jsonEncode(remoto));
+    final raw = prefs.getString(key);
     final parsed = _decodeRecords(raw);
     final list = parsed
         .map((item) => Fitness360Record.fromJson(item as Map<String, dynamic>))
@@ -219,14 +224,15 @@ class Fitness360LocalStore {
   }
 
   static List<dynamic> _decodeRecords(String? raw) {
-    if (raw == null || raw.isEmpty) return _seed;
+    if (raw == null || raw.isEmpty) return [];
     try {
       final decoded = jsonDecode(raw);
       if (decoded is List<dynamic>) return decoded;
-    } catch (_) {
-      return _seed;
+    } catch (error) {
+      AppLogger.i.warn("Falha ao ler registros reais do cache; dados originais preservados: $error");
+      return [];
     }
-    return _seed;
+    return [];
   }
 
   static Future<void> addRecord({
@@ -237,9 +243,7 @@ class Fitness360LocalStore {
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final current = await records();
-    final nextId = current.isEmpty
-        ? 1
-        : current.map((item) => item.id).reduce((a, b) => a > b ? a : b) + 1;
+    final nextId = DateTime.now().microsecondsSinceEpoch;
     final updated = [
       Fitness360Record(
         id: nextId,
@@ -252,52 +256,11 @@ class Fitness360LocalStore {
       ...current,
     ];
     await prefs.setString(
-      _recordsKey,
+      FitnessContaSync.chave(_recordsKey),
       jsonEncode(updated.map((item) => item.toJson()).toList()),
     );
 
-    if (type == 'atividade') {
-      await _sincronizarAtividadeComBackend(value);
-    }
-  }
-
-  /// Extrai "<numero> km", "<numero> min" ou calorias do registro de
-  /// atividade e sincroniza com o backend.
-  static final _valorAtividadePattern = RegExp(
-      r'(\d+(?:[.,]\d+)?)\s*(km|quil[oô]metros?|min(?:utos?)?|passos?)',
-      caseSensitive: false);
-
-  static Future<void> _sincronizarAtividadeComBackend(String value) async {
-    final match = _valorAtividadePattern.firstMatch(value);
-    if (match == null) return;
-    final numStr = match.group(1)?.replaceAll(',', '.') ?? '';
-    final quantidadeDouble = double.tryParse(numStr);
-    if (quantidadeDouble == null) return;
-    final unidade = match.group(2)!.toLowerCase();
-
-    final caller = SaudeDiariaCaller();
-    final atual = await caller.fetchResumo() ??
-        ResumoSaudeDiaria(
-          data: DateTime.now(),
-          passos: 0,
-          treinoMinutos: 0,
-          batimentos: null,
-          sonoMinutos: 0,
-          pesoKg: null,
-          pesoMetaKg: null,
-          historicoSemanal: const [],
-        );
-
-    final atualizado = unidade.startsWith('km') || unidade.startsWith('quil')
-        ? atual.copyWith(
-            treinoMinutos: atual.treinoMinutos + (quantidadeDouble * 10).round(),
-            passos: atual.passos + (quantidadeDouble * 1300).round(),
-          )
-        : atual.copyWith(
-            treinoMinutos: atual.treinoMinutos + quantidadeDouble.round(),
-          );
-
-    await caller.salvarResumo(atualizado);
+    await FitnessContaSync.salvar('registros', updated.first.toJson());
   }
 
   static Future<List<String>> homeCardOrder() async {
@@ -395,7 +358,7 @@ class Fitness360LocalStore {
     final prefs = await SharedPreferences.getInstance();
     final all = await records();
     final activity = all.where((item) => item.type == 'atividade').toList();
-    final body = all.where((item) => item.type == 'corpo').toList();
+    final body = all.where((item) => item.type == 'corpo' && item.title.toLowerCase() == 'peso').toList();
     final habits = all.where((item) => item.type == 'habito').toList();
     final sleep = all.where((item) => item.type == 'sono').toList();
     final heart = all.where((item) => item.type == 'batimento').toList();
@@ -456,19 +419,9 @@ class Fitness360LocalStore {
       }
     }
     final all = await records(type: type);
-    final seed = switch (type) {
-      'sono' => [72, 78, 81, 69, 84, 88, 80],
-      'batimento' => [68, 74, 71, 79, 76, 72, 70],
-      'corpo' => [78, 77, 77, 76, 76, 75, 76],
-      'meta' => [20, 35, 48, 60, 74, 82, 90],
-      _ => [4200, 6200, 8000, 5400, 9200, 7600, 8400],
-    };
-    if (all.isEmpty) return seed;
-    return [
-      for (var i = 0; i < 7; i++)
-        seed[i] +
-            all.where((item) => item.createdAt.weekday == i + 1).length * 5
-    ];
+    final hoje = DateTime.now();
+    return [for (var i = 6; i >= 0; i--)
+      all.where((r) => _chaveData(r.createdAt) == _chaveData(hoje.subtract(Duration(days: i)))).length];
   }
 
   /// Serie real de passos dos ultimos 7 dias via GET /api/fitness/resumo
@@ -549,51 +502,4 @@ class Fitness360LocalStore {
     return fallback;
   }
 
-  static final List<Map<String, dynamic>> _seed = [
-    {
-      'id': 1,
-      'type': 'atividade',
-      'title': 'Caminhada',
-      'value': '5,6 km',
-      'note': 'Distância diária concluída',
-      'createdAt': DateTime.now().toIso8601String(),
-    },
-    {
-      'id': 2,
-      'type': 'atividade',
-      'title': 'Futebol',
-      'value': '60 min (570 kcal)',
-      'note': 'Partida com amigos • Alta intensidade',
-      'createdAt':
-          DateTime.now().subtract(const Duration(hours: 3)).toIso8601String(),
-    },
-    {
-      'id': 3,
-      'type': 'atividade',
-      'title': 'Beach Tennis',
-      'value': '45 min (380 kcal)',
-      'note': 'Treino de areia / Alto gasto calórico',
-      'createdAt':
-          DateTime.now().subtract(const Duration(hours: 6)).toIso8601String(),
-    },
-    {
-      'id': 4,
-      'type': 'corpo',
-      'title': 'Peso',
-      'value': '76,4 kg',
-      'note': 'IMC estimado 23,8',
-      'createdAt':
-          DateTime.now().subtract(const Duration(days: 1)).toIso8601String(),
-    },
-    {
-      'id': 5,
-      'type': 'habito',
-      'title': 'Agua',
-      'value': '2,5 L',
-      'note': 'Check-in diário de hidratação',
-      'createdAt': DateTime.now()
-          .subtract(const Duration(minutes: 40))
-          .toIso8601String(),
-    },
-  ];
 }

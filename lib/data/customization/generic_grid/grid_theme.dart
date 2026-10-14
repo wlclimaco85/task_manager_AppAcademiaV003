@@ -4,19 +4,8 @@
 // -----------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 
-class GridColors {
-  static const Color primary = Color(0xFF5937B2);
-  static const Color primaryDark = Color(0xFF340A9C);
-  static const Color secondary = Color(0xFFFA903A);
-  static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFF241B3F);
-  static const Color background = Color(0xFF5937B2);
-  static const Color card = Color(0xFFFFFFFF);
-  static const Color error = Color(0xFFD32F2F);
-  static const Color warning = Color(0xFFFFA000);
-  static const Color success = Color(0xFF2E7D32);
-  static const Color divider = Color(0xFFBDBDBD);
-}
+import 'package:task_manager_flutter/data/utils/grid_colors.dart';
+export 'package:task_manager_flutter/data/utils/grid_colors.dart';
 
 // -----------------------------------------------------------------------------
 // 🎛️ Estilos de texto (opcional para centralizar padrões de texto do grid)

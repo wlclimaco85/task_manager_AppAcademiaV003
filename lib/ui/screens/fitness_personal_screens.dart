@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/ui/widgets/registro_medida_sheet.dart';
 import 'package:intl/intl.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/exame_registro_model.dart';
@@ -588,6 +589,28 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
     _future = Fitness360LocalStore.records(type: widget.type);
   }
 
+  List<FitnessMetricSpec> _metricasReais(List<Fitness360Record> records) {
+    final hoje = DateTime.now();
+    double somar(String unidade) {
+      double total = 0;
+      for (final r in records.where((r) => r.createdAt.year == hoje.year &&
+          r.createdAt.month == hoje.month && r.createdAt.day == hoje.day)) {
+        final match = RegExp(r'(\d+(?:[.,]\d+)?)\s*' + unidade).firstMatch(r.value);
+        if (match != null) total += double.tryParse(match.group(1)!.replaceAll(',', '.')) ?? 0;
+      }
+      return total;
+    }
+    return widget.metricCards.map((m) {
+      String valor = widget.type == 'corpo' ? m.value : '--';
+      if (widget.type == 'atividade') {
+        if (m.label == 'Calorias') valor = '${somar('kcal').round()} kcal';
+        if (m.label == 'Tempo ativo') valor = '${somar('min').round()} min';
+        if (m.label == 'Distancia') valor = '${somar('km').toStringAsFixed(1)} km';
+      }
+      return FitnessMetricSpec(m.label, valor, m.icon);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -619,7 +642,7 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
               children: [
                 _HeroCard(
                   title: widget.subtitle,
-                  value: records.isEmpty ? '--' : records.first.value,
+                  value: records.isEmpty ? (widget.type == 'corpo' ? widget.defaultValue : '--') : records.first.value,
                   label:
                       records.isEmpty ? widget.emptyLabel : records.first.title,
                   icon: widget.icon,
@@ -630,7 +653,7 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                 ],
                 const SizedBox(height: 14),
                 if (widget.metricCards.isNotEmpty)
-                  _MetricGrid(metrics: widget.metricCards),
+                  _MetricGrid(metrics: _metricasReais(records)),
                 const SizedBox(height: 14),
                 _WeeklyInsightCard(type: widget.type),
                 const SizedBox(height: 14),
@@ -658,6 +681,12 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
   }
 
   Future<void> _showRecordSheet() async {
+    if (widget.type == 'corpo') {
+      final salvo = await showModalBottomSheet<bool>(context: context,
+        isScrollControlled: true, builder: (_) => const RegistroMedidaSheet());
+      if (salvo == true && mounted) setState(_reload);
+      return;
+    }
     if (widget.type == 'atividade') {
       await _showAtividadeAerobicaSheet();
       return;
@@ -667,8 +696,7 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
     final value = TextEditingController(text: widget.defaultValue);
     final note = TextEditingController(text: widget.defaultNote);
 
-    final saved = await showModalBottomSheet<bool>(
-      context: context,
+    final route = ModalBottomSheetRoute<bool>(
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
@@ -732,6 +760,8 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
       },
     );
 
+    final saved = await Navigator.of(context).push(route);
+    await route.completed;
     title.dispose();
     value.dispose();
     note.dispose();
@@ -1146,7 +1176,11 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
     return FutureBuilder<List<int>>(
       future: Fitness360LocalStore.insightSeries(widget.type, _range),
       builder: (context, snapshot) {
-        final values = snapshot.data ?? const [1, 2, 3, 4, 5, 6, 7];
+        final values = snapshot.data ?? const <int>[];
+        if (values.isEmpty || values.every((v) => v == 0)) {
+          return _Panel(child: Text(snapshot.connectionState == ConnectionState.waiting
+            ? 'Carregando evolução...' : 'Ainda não há registros para mostrar a evolução.'));
+        }
         final max = values.reduce((a, b) => a > b ? a : b).toDouble();
         final labels = _chartLabels(values.length);
         return _Panel(
@@ -1238,7 +1272,7 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
       'Mes' =>
         'No mes, mantenha a meta progressiva e revise quedas antes de virar rotina.',
       _ =>
-        'Tendencia positiva: mantenha a rotina e ajuste a meta se ficar facil por muitos dias.',
+        'Tendência baseada nos registros disponíveis. Registre suas atividades para acompanhar a evolução.',
     };
   }
 
