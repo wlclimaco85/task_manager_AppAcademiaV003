@@ -274,13 +274,32 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
                     ),
                   ),
                 )
-              : ListView.separated(
+              : ReorderableListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                   itemCount: divisao.exercicios.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  buildDefaultDragHandles: false,
+                  onReorderItem: (oldIndex, newIndex) {
+                    setState(() {
+                      final atual = _divisoes[divisaoIndex];
+                      final itens = List<ItemTreinoModel>.from(atual.exercicios);
+                      itens.insert(newIndex, itens.removeAt(oldIndex));
+                      _divisoes[divisaoIndex] = DivisaoTreinoModel(
+                        id: atual.id,
+                        letra: atual.letra,
+                        nome: atual.nome,
+                        exercicios: itens,
+                      );
+                    });
+                  },
                   itemBuilder: (context, exIndex) {
                     final item = divisao.exercicios[exIndex];
-                    return _buildCardItemTreino(item, divisaoIndex, exIndex);
+                    return Padding(
+                      key: ValueKey(item.id),
+                      padding: EdgeInsets.only(
+                        bottom: exIndex < divisao.exercicios.length - 1 ? 12 : 0,
+                      ),
+                      child: _buildCardItemTreino(item, divisaoIndex, exIndex),
+                    );
                   },
                 ),
         ),
@@ -304,7 +323,11 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
             // Topo do card com nome e ações
             Row(
               children: [
-                CircleAvatar(
+                ReorderableDragStartListener(
+                  index: exIndex,
+                  child: Tooltip(
+                    message: 'Arraste para alterar a ordem',
+                    child: CircleAvatar(
                   radius: 14,
                   backgroundColor: GridColors.primarySubtle,
                   child: Text(
@@ -313,6 +336,8 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
                       color: GridColors.primaryDark,
                       fontWeight: FontWeight.w800,
                       fontSize: 12,
+                    ),
+                  ),
                     ),
                   ),
                 ),
