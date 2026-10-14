@@ -990,6 +990,19 @@ class _EnhancedFitnessHubScreenState extends State<_EnhancedFitnessHubScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
                 children: [
+                  PerfilFitnessHeader(
+                    nome: AuthUtility.userInfo.login?.nome ??
+                        AuthUtility.userInfo.data?.codDadosPessoal?.nome ??
+                        [AuthUtility.userInfo.data?.firstName,
+                          AuthUtility.userInfo.data?.lastName]
+                            .whereType<String>().join(' '),
+                    foto: AuthUtility.userInfo.data?.codDadosPessoal?.photo ??
+                        AuthUtility.userInfo.data?.photo,
+                    perfil: podeGerenciarAlunos() ? 'Personal' :
+                        AuthUtility.userInfo.login?.tipoLogin == LoginEnum.APP_ALUNO
+                            ? 'Aluno' : 'Minha conta',
+                  ),
+                  const SizedBox(height: 14),
                   Row(
                     children: [
                       const Expanded(
@@ -1028,19 +1041,6 @@ class _EnhancedFitnessHubScreenState extends State<_EnhancedFitnessHubScreen> {
                         icon: const Icon(Icons.tune),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 14),
-                  PerfilFitnessHeader(
-                    nome: AuthUtility.userInfo.login?.nome ??
-                        AuthUtility.userInfo.data?.codDadosPessoal?.nome ??
-                        [AuthUtility.userInfo.data?.firstName,
-                          AuthUtility.userInfo.data?.lastName]
-                            .whereType<String>().join(' '),
-                    foto: AuthUtility.userInfo.data?.codDadosPessoal?.photo ??
-                        AuthUtility.userInfo.data?.photo,
-                    perfil: podeGerenciarAlunos() ? 'Personal' :
-                        AuthUtility.userInfo.login?.tipoLogin == LoginEnum.APP_ALUNO
-                            ? 'Aluno' : 'Minha conta',
                   ),
                   const SizedBox(height: 14),
                   _EnhancedSyncStatusCard(summary: state.summary),

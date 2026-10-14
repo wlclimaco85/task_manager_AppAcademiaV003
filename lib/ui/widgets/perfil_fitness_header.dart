@@ -68,7 +68,15 @@ class PerfilFitnessHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: GridColors.primarySubtle,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: GridColors.primary.withValues(alpha: 0.25)),
+      ),
+      child: Row(
       children: [
         Semantics(
           label: 'Foto de $_nomeExibido',
@@ -95,7 +103,7 @@ class PerfilFitnessHeader extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 20,
                   fontWeight: FontWeight.w700,
                   color: GridColors.textPrimary,
                 ),
@@ -111,6 +119,7 @@ class PerfilFitnessHeader extends StatelessWidget {
           ),
         ),
       ],
+      ),
     );
   }
 }
