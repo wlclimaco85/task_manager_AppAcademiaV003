@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:task_manager_flutter/data/models/auth_utility.dart';
-import 'package:task_manager_flutter/data/models/login_model.dart';
-import 'package:task_manager_flutter/ui/widgets/perfil_fitness_header.dart';
 import 'package:task_manager_flutter/data/utils/fitness_access.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/customization/dynamic_grid_dynamic_screen.dart';
@@ -990,19 +987,6 @@ class _EnhancedFitnessHubScreenState extends State<_EnhancedFitnessHubScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
                 children: [
-                  PerfilFitnessHeader(
-                    nome: AuthUtility.userInfo.login?.nome ??
-                        AuthUtility.userInfo.data?.codDadosPessoal?.nome ??
-                        [AuthUtility.userInfo.data?.firstName,
-                          AuthUtility.userInfo.data?.lastName]
-                            .whereType<String>().join(' '),
-                    foto: AuthUtility.userInfo.data?.codDadosPessoal?.photo ??
-                        AuthUtility.userInfo.data?.photo,
-                    perfil: podeGerenciarAlunos() ? 'Personal' :
-                        AuthUtility.userInfo.login?.tipoLogin == LoginEnum.APP_ALUNO
-                            ? 'Aluno' : 'Minha conta',
-                  ),
-                  const SizedBox(height: 14),
                   Row(
                     children: [
                       const Expanded(

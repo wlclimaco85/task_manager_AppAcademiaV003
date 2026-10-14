@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:task_manager_flutter/data/models/auth_utility.dart';
+import 'package:task_manager_flutter/data/services/auth_service.dart';
+import 'package:task_manager_flutter/data/utils/app_logger.dart';
+import 'package:task_manager_flutter/ui/widgets/authenticated_header_shell.dart';
+import 'package:task_manager_flutter/ui/screens/auth_screens/login_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
@@ -14,6 +20,25 @@ class TaskManagerApp extends StatelessWidget {
 
     return MaterialApp(
       navigatorKey: globalKey,
+      builder: (context, child) => AuthenticatedHeaderShell(
+        child: child ?? const SizedBox.shrink(),
+        onSair: () async {
+          try {
+            await AuthService().clearToken();
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.remove('user_permissions');
+            await AuthUtility.clearUserInfo();
+            globalKey.currentState?.pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const LoginScreen()), (route) => false);
+          } catch (error, stack) {
+            AppLogger.i.error('Falha ao encerrar sessão.', stack);
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text('Não foi possível sair. Tente novamente.')));
+            }
+          }
+        },
+      ),
       debugShowCheckedModeBanner: false,
       title: "AppAcademia Pro",
       localizationsDelegates: const [

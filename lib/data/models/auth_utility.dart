@@ -1,12 +1,15 @@
 // ignore_for_file: no_leading_underscores_for_local_identifiers
 
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/models/login_model.dart';
 
 class AuthUtility {
   // Mantém não-nullable com valor padrão para compatibilidade com código legado
-  static LoginModel userInfo = LoginModel();
+  static final ValueNotifier<LoginModel> session = ValueNotifier(LoginModel());
+  static LoginModel get userInfo => session.value;
+  static set userInfo(LoginModel model) => session.value = model;
 
   static Future<void> setUserInfo(LoginModel model) async {
     SharedPreferences _sharedPreferences =
