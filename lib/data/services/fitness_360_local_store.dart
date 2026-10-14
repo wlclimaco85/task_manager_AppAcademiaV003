@@ -1,10 +1,21 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:task_manager_flutter/data/models/hidratacao_model.dart';
 import 'package:task_manager_flutter/data/models/saude_diaria_model.dart';
 import 'package:task_manager_flutter/data/services/gamificacao_caller.dart';
 import 'package:task_manager_flutter/data/services/saude_diaria_caller.dart';
 
+/// Hábito de hidratação concluído: total do dia atingiu a meta configurada.
+bool hidratacaoMetaAtingida(ResumoHidratacao? resumo) {
+  final meta = resumo?.metaDiariaMl;
+  if (resumo == null || meta == null || meta <= 0) return false;
+  return resumo.totalMl >= meta;
+}
+
+/// Resumo exibido no Hub Fitness. Todos os valores vêm de dados reais (API ou
+/// registros locais do aluno); o que não tem fonte fica null/zero e a tela
+/// mostra "sem registro" em vez de número de demonstração.
 class Fitness360Summary {
   const Fitness360Summary({
     required this.steps,
@@ -13,43 +24,42 @@ class Fitness360Summary {
     required this.sleepMinutes,
     required this.weightKg,
     required this.habitsDone,
-    required this.habitsTotal,
-    required this.weeklyProgress,
-    required this.points,
-    required this.sleepScore,
-    required this.cardioScore,
-    required this.bodyScore,
     required this.activeCalories,
     required this.distanceKm,
-    required this.spo2,
-    required this.stress,
-    required this.readiness,
+    required this.activeDaysWeek,
     required this.weightGoalKg,
     required this.lastSyncAt,
     required this.syncSource,
+    this.heightCm,
   });
+
+  /// Hábitos diários contados: treino, passos, sono, hidratação e check-in.
+  static const int totalHabitos = 5;
+
+  int get habitsTotal => totalHabitos;
+
+  /// Meta de sono usada no card (8 horas).
+  static const int sleepGoalMinutes = 480;
 
   final int steps;
   final int trainingMinutes;
-  final int heartRate;
+  final int? heartRate;
   final int sleepMinutes;
 
-  /// Peso real (API ou registro local). Null quando o aluno ainda não tem
-  /// peso: o Hub mostra "sem registro" em vez de um valor de demonstração.
+  /// Peso real (API ou registro local). Null quando o aluno ainda não tem peso.
   final double? weightKg;
+  final double? weightGoalKg;
+  final int? heightCm;
   final int habitsDone;
-  final int habitsTotal;
-  final double weeklyProgress;
-  final int points;
-  final int sleepScore;
-  final int cardioScore;
-  final int bodyScore;
   final int activeCalories;
   final double distanceKm;
-  final int spo2;
-  final int stress;
-  final int readiness;
-  final double? weightGoalKg;
+
+  /// Dias com atividade (passos ou treino) nos últimos 7 dias.
+  final int activeDaysWeek;
+  final DateTime lastSyncAt;
+  final String syncSource;
+
+  double get weeklyProgress => (activeDaysWeek / 7).clamp(0.0, 1.0);
 
   /// Título do card "Corpo" no Hub.
   String get pesoTitulo => weightKg != null
@@ -60,8 +70,16 @@ class Fitness360Summary {
   String get metaPesoTexto => weightGoalKg != null
       ? 'Meta ${weightGoalKg!.toStringAsFixed(1)} kg'
       : 'Meta não definida';
-  final DateTime lastSyncAt;
-  final String syncSource;
+
+  /// IMC real (peso / altura²); null sem peso ou altura.
+  double? get imc {
+    if (weightKg == null || heightCm == null || heightCm! <= 0) return null;
+    final alturaM = heightCm! / 100;
+    return weightKg! / (alturaM * alturaM);
+  }
+
+  String get imcTexto =>
+      imc != null ? 'IMC ${imc!.toStringAsFixed(1)}' : 'IMC sem altura';
 
   String get sleepLabel {
     final hours = sleepMinutes ~/ 60;
@@ -69,39 +87,64 @@ class Fitness360Summary {
     return '${hours}h ${minutes.toString().padLeft(2, '0')}m';
   }
 
-  /// Converte um [ResumoSaudeDiaria] da API REAL em [Fitness360Summary],
-  /// reaproveitando as MESMAS fórmulas derivadas do store local.
-  ///
-  /// - steps/trainingMinutes/heartRate/sleepMinutes/weightKg vêm da API
-  ///   (com fallback para os campos opcionais que podem vir null).
-  /// - spo2, stress, habits, points, weeklyProgress, scores e syncSource seguem
-  ///   a mesma lógica/fallback de [Fitness360LocalStore.summary]. O tamanho do
-  ///   histórico semanal substitui a "quantidade de registros" como base das
-  ///   derivações que dependiam dela.
-  factory Fitness360Summary.fromApi(ResumoSaudeDiaria r) {
-    final dias = r.historicoSemanal.length;
+  String get sonoTitulo =>
+      sleepMinutes > 0 ? 'Sono $sleepLabel' : 'Sono sem registro';
+
+  String get sonoSubtitulo => sleepMinutes > 0
+      ? '${(sleepMinutes * 100 ~/ sleepGoalMinutes).clamp(0, 999)}% da meta de 8h'
+      : 'Registre seu sono para acompanhar a recuperação';
+
+  String get cardioTitulo =>
+      heartRate != null ? 'Cardio $heartRate bpm' : 'Cardio sem registro';
+
+  String get cardioSubtitulo => heartRate != null
+      ? 'Frequência cardíaca registrada hoje'
+      : 'Registre seus batimentos';
+
+  String get diasAtivosTexto => '$activeDaysWeek/7 dias ativos';
+
+  /// Converte o resumo REAL da API. [hidratacaoMetaAtingida] e [checkinFeito]
+  /// vêm das APIs de hidratação e check-in e completam os hábitos do dia.
+  factory Fitness360Summary.fromApi(
+    ResumoSaudeDiaria r, {
+    bool hidratacaoMetaAtingida = false,
+    bool checkinFeito = false,
+  }) {
+    final habitos = [
+      r.treinoMinutos > 0,
+      r.passos > 0,
+      r.sonoMinutos > 0,
+      hidratacaoMetaAtingida,
+      checkinFeito,
+    ].where((feito) => feito).length;
+
     return Fitness360Summary(
       steps: r.passos,
       trainingMinutes: r.treinoMinutos,
-      heartRate: r.batimentos ?? 72,
+      heartRate: r.batimentos,
       sleepMinutes: r.sonoMinutos,
       weightKg: r.pesoKg,
-      habitsDone: 0,
-      habitsTotal: 6,
-      weeklyProgress: (dias / 7).clamp(0.0, 1.0),
-      points: 120 + (dias * 20),
-      sleepScore: (74 + dias * 3).clamp(0, 100),
-      cardioScore: (68 + dias * 2).clamp(0, 100),
-      bodyScore: (72 + dias * 2).clamp(0, 100),
-      activeCalories: 286 + dias * 42,
-      distanceKm: 5.6 + dias * 0.4,
-      spo2: 97,
-      stress: 31,
-      readiness: 70,
       weightGoalKg: r.pesoMetaKg,
+      heightCm: r.alturaCm,
+      habitsDone: habitos,
+      activeCalories: r.caloriasAtivas,
+      distanceKm: r.distanciaKm,
+      activeDaysWeek: diasAtivosNaSemana(r),
       lastSyncAt: DateTime.now(),
       syncSource: 'API',
     );
+  }
+
+  /// Dias distintos com passos ou treino no histórico semanal (inclui hoje).
+  static int diasAtivosNaSemana(ResumoSaudeDiaria r) {
+    final dias = <String>{
+      for (final d in r.historicoSemanal)
+        if (d.passos > 0 || d.treinoMinutos > 0)
+          '${d.data.year}-${d.data.month}-${d.data.day}',
+      if (r.passos > 0 || r.treinoMinutos > 0)
+        '${r.data.year}-${r.data.month}-${r.data.day}',
+    };
+    return dias.length.clamp(0, 7);
   }
 }
 
@@ -357,32 +400,28 @@ class Fitness360LocalStore {
     final sleep = all.where((item) => item.type == 'sono').toList();
     final heart = all.where((item) => item.type == 'batimento').toList();
 
-    final distance = _sumKm(activity, fallback: 5.6);
-    final calories = _sumCalories(activity, fallback: 421);
-    final minutes = _sumMinutes(activity, fallback: 64);
+    // Modo offline: somente o que o aluno registrou localmente; sem registro
+    // os valores ficam zerados/nulos (nada de números de demonstração).
+    final limiteSemana = DateTime.now().subtract(const Duration(days: 7));
+    final diasAtivos = <String>{
+      for (final item in activity)
+        if (item.createdAt.isAfter(limiteSemana))
+          '${item.createdAt.year}-${item.createdAt.month}-${item.createdAt.day}',
+    };
 
     return Fitness360Summary(
-      steps: (distance * 1300).round(),
-      trainingMinutes: minutes,
-      heartRate: _firstInt(heart, fallback: 72),
-      sleepMinutes: _firstSleepMinutes(sleep, fallback: 438),
+      steps: 0,
+      trainingMinutes: _sumMinutes(activity, fallback: 0),
+      heartRate: heart.isEmpty ? null : _firstInt(heart, fallback: 0),
+      sleepMinutes: _firstSleepMinutes(sleep, fallback: 0),
       weightKg: _firstDouble(body),
-      habitsDone: habits.length.clamp(0, 6),
-      habitsTotal: 6,
-      weeklyProgress: ((activity.length + habits.length + body.length) / 18)
-          .clamp(0.0, 1.0),
-      points: 120 + (activity.length * 20) + (habits.length * 10),
-      sleepScore: (74 + sleep.length * 3).clamp(0, 100),
-      cardioScore: (68 + heart.length * 2).clamp(0, 100),
-      bodyScore: (72 + body.length * 2).clamp(0, 100),
-      activeCalories: calories,
-      distanceKm: distance,
-      spo2: 97,
-      stress: 31,
-      readiness: (70 + habits.length * 4).clamp(0, 100),
+      habitsDone: habits.length.clamp(0, Fitness360Summary.totalHabitos),
+      activeCalories: _sumCalories(activity, fallback: 0),
+      distanceKm: _sumKm(activity, fallback: 0),
+      activeDaysWeek: diasAtivos.length.clamp(0, 7),
       weightGoalKg: null,
       lastSyncAt: DateTime.tryParse(prefs.getString(_syncAtKey) ?? '') ??
-          DateTime.now().subtract(const Duration(minutes: 28)),
+          DateTime.now(),
       syncSource: prefs.getString(_syncSourceKey) ?? 'Registro de Atividades',
     );
   }

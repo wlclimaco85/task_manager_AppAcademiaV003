@@ -15,6 +15,8 @@ class ResumoSaudeDiaria {
   final double? pesoKg;
   final double? pesoMetaKg;
   final int? alturaCm;
+  final double distanciaKm;
+  final int caloriasAtivas;
   final List<DiaResumoSaude> historicoSemanal;
 
   const ResumoSaudeDiaria({
@@ -26,6 +28,8 @@ class ResumoSaudeDiaria {
     required this.pesoKg,
     required this.pesoMetaKg,
     this.alturaCm,
+    this.distanciaKm = 0,
+    this.caloriasAtivas = 0,
     required this.historicoSemanal,
   });
 
@@ -43,6 +47,8 @@ class ResumoSaudeDiaria {
       pesoKg: pesoKg,
       pesoMetaKg: pesoMetaKg,
       alturaCm: alturaCm ?? this.alturaCm,
+      distanciaKm: distanciaKm,
+      caloriasAtivas: caloriasAtivas,
       historicoSemanal: historicoSemanal,
     );
   }
@@ -72,6 +78,8 @@ class ResumoSaudeDiaria {
       pesoKg: _toDouble(map['pesoKg']),
       pesoMetaKg: _toDouble(map['pesoMetaKg']),
       alturaCm: _toInt(map['alturaCm']),
+      distanciaKm: _toDouble(map['distanciaKm']) ?? 0,
+      caloriasAtivas: _toInt(map['caloriasAtivas']) ?? 0,
       historicoSemanal: historico,
     );
   }

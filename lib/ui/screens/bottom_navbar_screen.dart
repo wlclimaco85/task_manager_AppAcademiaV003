@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/customization/dynamic_grid_dynamic_screen.dart';
 import 'package:task_manager_flutter/data/services/fitness_360_local_store.dart';
+import 'package:task_manager_flutter/data/services/checkin_diario_caller.dart';
+import 'package:task_manager_flutter/data/services/hidratacao_caller.dart';
 import 'package:task_manager_flutter/data/services/saude_diaria_caller.dart';
 import 'package:task_manager_flutter/data/utils/security_matrix.dart';
 import 'package:task_manager_flutter/ui/screens/fitness_personal_screens.dart';
@@ -677,7 +679,7 @@ class _TodaySummaryCard extends StatelessWidget {
               Text(
                 summary == null
                     ? 'Carregando metas e habitos...'
-                    : 'Atividade ${summary.distanceKm.toStringAsFixed(1)} km • Habitos ${summary.habitsDone}/${summary.habitsTotal} • ${summary.points} pontos',
+                    : 'Atividade ${summary.distanceKm.toStringAsFixed(1)} km • Habitos ${summary.habitsDone}/${summary.habitsTotal} • ${summary.diasAtivosTexto}',
                 style: const TextStyle(color: Color(0xFFEAE3FF), fontSize: 12),
               ),
             ],
@@ -1203,9 +1205,21 @@ class _EnhancedHubState {
   static Future<_EnhancedHubState> load() async {
     // Tenta a API REAL primeiro; em caso de null (offline/erro) cai no store local.
     final resumoApi = await SaudeDiariaCaller().fetchResumo();
-    final summary = resumoApi != null
-        ? Fitness360Summary.fromApi(resumoApi)
-        : await Fitness360LocalStore.summary();
+    final Fitness360Summary summary;
+    if (resumoApi != null) {
+      // Hidratação e check-in completam os hábitos reais do dia.
+      final hidratacaoFuture = HidratacaoCaller().fetchResumo();
+      final checkinFuture = CheckinDiarioCaller().fetchResumo();
+      final hidratacao = await hidratacaoFuture;
+      final checkin = await checkinFuture;
+      summary = Fitness360Summary.fromApi(
+        resumoApi,
+        hidratacaoMetaAtingida: hidratacaoMetaAtingida(hidratacao),
+        checkinFeito: (checkin?.humor ?? '').trim().isNotEmpty,
+      );
+    } else {
+      summary = await Fitness360LocalStore.summary();
+    }
 
     return _EnhancedHubState(
       summary: summary,
@@ -1369,7 +1383,7 @@ class _EnhancedSyncStatusCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Atividade ${summary.distanceKm.toStringAsFixed(1)} km | Habitos ${summary.habitsDone}/${summary.habitsTotal} | ${summary.points} pontos | ${summary.syncSource}',
+            'Atividade ${summary.distanceKm.toStringAsFixed(1)} km | Habitos ${summary.habitsDone}/${summary.habitsTotal} | ${summary.diasAtivosTexto} | ${summary.syncSource}',
             style: const TextStyle(color: Color(0xFFEAE3FF), fontSize: 12),
           ),
         ],
@@ -1456,8 +1470,8 @@ class _HomeCardData {
 _HomeCardData _homeCardData(String cardId, Fitness360Summary summary) {
   return switch (cardId) {
     'sleep' => _HomeCardData(
-        title: 'Sono ${summary.sleepScore}/100',
-        subtitle: '${summary.sleepLabel} com sugestoes de recuperacao',
+        title: summary.sonoTitulo,
+        subtitle: summary.sonoSubtitulo,
         icon: Icons.bedtime_outlined,
         color: const Color(0xFF32117A),
       ),
@@ -1469,22 +1483,21 @@ _HomeCardData _homeCardData(String cardId, Fitness360Summary summary) {
         color: GridColors.secondary,
       ),
     'heart' => _HomeCardData(
-        title: 'Cardio ${summary.cardioScore}/100',
-        subtitle:
-            '${summary.heartRate} bpm | SpO2 ${summary.spo2}% | stress ${summary.stress}',
+        title: summary.cardioTitulo,
+        subtitle: summary.cardioSubtitulo,
         icon: Icons.favorite_border,
         color: GridColors.error,
       ),
     'body' => _HomeCardData(
         title: summary.pesoTitulo,
-        subtitle: '${summary.metaPesoTexto} | score ${summary.bodyScore}',
+        subtitle: '${summary.metaPesoTexto} | ${summary.imcTexto}',
         icon: Icons.scale_outlined,
         color: GridColors.info,
       ),
     'goals' => _HomeCardData(
         title: 'Metas e habitos',
         subtitle:
-            '${summary.habitsDone}/${summary.habitsTotal} feitos | ${summary.points} pontos',
+            '${summary.habitsDone}/${summary.habitsTotal} feitos | ${summary.diasAtivosTexto}',
         icon: Icons.flag_outlined,
         color: GridColors.success,
       ),
@@ -1496,7 +1509,7 @@ _HomeCardData _homeCardData(String cardId, Fitness360Summary summary) {
       ),
     _ => _HomeCardData(
         title: 'Passos ${summary.steps}',
-        subtitle: 'Readiness ${summary.readiness}/100 | progresso semanal',
+        subtitle: '${summary.diasAtivosTexto} | progresso semanal',
         icon: Icons.directions_walk,
         color: GridColors.primary,
       ),
