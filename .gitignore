@@ -55,3 +55,6 @@ Gemfile.lock
 opencode.json
 # Build artifacts
 android/build/
+
+# Contas de teste locais (credenciais) - nao versionar
+docs/qa_contas_locais.md
