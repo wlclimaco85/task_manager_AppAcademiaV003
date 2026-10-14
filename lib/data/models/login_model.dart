@@ -64,17 +64,9 @@ class Login {
           : null;
 
       // Corrigido: use o value para converter
-      if (json['tipoLogin'] != null) {
-        final tipoLoginValue = json['tipoLogin'] is String
-            ? int.tryParse(json['tipoLogin'])
-            : json['tipoLogin'] as int?;
-
-        tipoLogin = tipoLoginValue != null
-            ? LoginEnum.fromValue(tipoLoginValue)
-            : LoginEnum.APP_ABRACO;
-      } else {
-        tipoLogin = LoginEnum.APP_ABRACO;
-      }
+      // Backend serializa pelo nome (@JsonValue -> "APP_ALUNO"); a sessao
+      // local salva o value inteiro. Aceita os dois formatos.
+      tipoLogin = LoginEnum.fromJsonValue(json['tipoLogin']);
 
       // CORRIGIDO: estava 'endereco' em vez de 'aplicativo'
       aplicativo = json['aplicativo'] != null
@@ -179,6 +171,21 @@ enum LoginEnum {
       (e) => e.value == value,
       orElse: () => LoginEnum.APP_ABRACO, // valor padrão se não encontrado
     );
+  }
+
+  /// Converte o tipoLogin vindo do JSON: nome do enum ("APP_ALUNO"),
+  /// inteiro (value) ou string numerica. Padrao APP_ABRACO se ausente/invalido.
+  static LoginEnum fromJsonValue(dynamic raw) {
+    if (raw is int) return fromValue(raw);
+    if (raw is String) {
+      final texto = raw.trim();
+      final numero = int.tryParse(texto);
+      if (numero != null) return fromValue(numero);
+      for (final e in LoginEnum.values) {
+        if (e.name.toUpperCase() == texto.toUpperCase()) return e;
+      }
+    }
+    return LoginEnum.APP_ABRACO;
   }
 }
 
