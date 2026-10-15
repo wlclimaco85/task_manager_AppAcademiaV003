@@ -717,7 +717,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
               children: [
                 Text(
                   temSugestao
-                      ? '⚡ Sobrecarga Recomendada (MyFitCoach)'
+                      ? '⚡ Sobrecarga Recomendada (Eu Atleta)'
                       : 'Histórico & Carga',
                   style: TextStyle(
                     color: temSugestao
