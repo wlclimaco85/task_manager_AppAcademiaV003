@@ -5,9 +5,10 @@ import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart
 class PrescricaoExercicioInline extends StatefulWidget {
   final ExercicioModel exercicio;
   final List<ExercicioModel> catalogo;
+  final String? grupoAlternativas;
   final ValueChanged<ItemTreinoModel> onAdicionar;
   const PrescricaoExercicioInline({super.key, required this.exercicio,
-    required this.catalogo, required this.onAdicionar});
+    required this.catalogo, this.grupoAlternativas, required this.onAdicionar});
   @override
   State<PrescricaoExercicioInline> createState() => _PrescricaoExercicioInlineState();
 }
@@ -52,7 +53,8 @@ class _PrescricaoExercicioInlineState extends State<PrescricaoExercicioInline> {
             isExpanded: true, initialValue: _alternativas[i],
             decoration: InputDecoration(labelText: 'Alternativa ${i + 1}'),
             items: [const DropdownMenuItem<String>(value: '', child: Text('Nenhuma')),
-              for (final ex in widget.catalogo.where((e) => e.id != widget.exercicio.id))
+              for (final ex in widget.catalogo.where((e) => e.id != widget.exercicio.id &&
+                  e.grupoMuscular == (widget.grupoAlternativas ?? widget.exercicio.grupoMuscular)))
                 DropdownMenuItem(value: ex.id, child: Text(ex.nome, overflow: TextOverflow.ellipsis)),
             ],
             validator: (v) => v != null && v.isNotEmpty && v == _alternativas[1 - i]

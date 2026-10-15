@@ -48,6 +48,12 @@ void main() {
     expect(salvo.divisoes.single.exercicios.map((e) => e.id),
         ['item_1', 'item_0', 'item_2']);
     expect(salvo.divisoes.single.exercicios[1].toMap(), itens[0].toMap());
+    await tester.pumpWidget(MaterialApp(
+      key: UniqueKey(), home: MontadorTreinoScreen(planoParaEditar: salvo)));
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(find.text('Exercicio 1')).dy,
+      lessThan(tester.getTopLeft(find.text('Exercicio 0')).dy));
+    expect(find.byIcon(Icons.drag_indicator), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 }

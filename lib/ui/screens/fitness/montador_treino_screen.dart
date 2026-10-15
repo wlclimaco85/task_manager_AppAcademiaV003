@@ -252,6 +252,12 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
           ),
         ),
 
+        if (divisao.exercicios.length > 1)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Text('Arraste pelo ícone ⋮⋮ para ordenar. Salve a ficha para manter a ordem.',
+              style: TextStyle(fontSize: 12, color: GridColors.textSecondary)),
+          ),
         // Lista de Exercícios da Divisão
         Expanded(
           child: divisao.exercicios.isEmpty
@@ -330,17 +336,13 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
                   index: exIndex,
                   child: Tooltip(
                     message: 'Arraste para alterar a ordem',
-                    child: CircleAvatar(
-                  radius: 14,
-                  backgroundColor: GridColors.primarySubtle,
-                  child: Text(
-                    '${exIndex + 1}',
-                    style: const TextStyle(
-                      color: GridColors.primaryDark,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 12,
-                    ),
-                  ),
+                    child: SizedBox(
+                      width: 56, height: 48,
+                      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        const Icon(Icons.drag_indicator, color: GridColors.primary, size: 22),
+                        Text('${exIndex + 1}', style: const TextStyle(
+                          color: GridColors.primaryDark, fontWeight: FontWeight.w800)),
+                      ]),
                     ),
                   ),
                 ),
@@ -512,6 +514,14 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
       context,
       MaterialPageRoute(
         builder: (_) => BibliotecaExerciciosScreen(modoSelecao: true,
+          tituloFicha: _tituloController.text.trim(),
+          divisaoDestino: 'Treino ${_divisoes[divIndex].letra}',
+          exerciciosNaDivisao: _divisoes[divIndex].exercicios.map((e) => e.exercicioId).toSet(),
+          exerciciosNaFicha: {
+            for (final id in _divisoes.expand((d) => d.exercicios).map((e) => e.exercicioId).toSet())
+              id: [for (final d in _divisoes)
+                if (d.exercicios.any((e) => e.exercicioId == id)) 'Treino ${d.letra}'],
+          },
           onPrescrever: (item) {
             if (!mounted) return;
             setState(() {

@@ -13,11 +13,19 @@ import 'package:task_manager_flutter/ui/widgets/exercicio_midia.dart';
 class BibliotecaExerciciosScreen extends StatefulWidget {
   final bool modoSelecao; // Quando aberta pelo montador de treinos
   final ValueChanged<ItemTreinoModel>? onPrescrever;
+  final String? tituloFicha;
+  final String? divisaoDestino;
+  final Map<String, List<String>> exerciciosNaFicha;
+  final Set<String> exerciciosNaDivisao;
 
   const BibliotecaExerciciosScreen({
     super.key,
     this.modoSelecao = false,
     this.onPrescrever,
+    this.tituloFicha,
+    this.divisaoDestino,
+    this.exerciciosNaFicha = const {},
+    this.exerciciosNaDivisao = const {},
   });
 
   @override
@@ -36,7 +44,8 @@ class _BibliotecaExerciciosScreenState
   List<ExercicioModel> _catalogo = [];
   bool _loading = true;
   String? _expandidoId;
-  int _adicionados = 0;
+  late final Map<String, List<String>> _naFicha;
+  late final Set<String> _naDivisao;
 
   final List<String> _gruposMusculares = [
     'Todos',
@@ -61,6 +70,8 @@ class _BibliotecaExerciciosScreenState
   @override
   void initState() {
     super.initState();
+    _naFicha = {for (final e in widget.exerciciosNaFicha.entries) e.key: List.of(e.value)};
+    _naDivisao = Set.of(widget.exerciciosNaDivisao);
     _carregarExercicios();
   }
 
@@ -110,7 +121,7 @@ class _BibliotecaExerciciosScreenState
         actions: [
           if (widget.onPrescrever != null)
             TextButton(onPressed: () => Navigator.pop(context),
-              child: Text('Concluir ($_adicionados)')),
+              child: Text('Concluir (${_naDivisao.length})')),
           IconButton(
             tooltip: 'Novo Exercício',
             icon: const Icon(Icons.add, color: GridColors.primary),
@@ -123,6 +134,18 @@ class _BibliotecaExerciciosScreenState
           constraints: BoxConstraints(maxWidth: isDesktopOrWeb ? 1100 : double.infinity),
           child: Column(
             children: [
+              if (widget.onPrescrever != null && widget.tituloFicha != null)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: GridColors.primarySubtle,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text('Ficha: ${widget.tituloFicha}\nDestino: ${widget.divisaoDestino ?? ""}',
+                    style: const TextStyle(color: GridColors.primaryDark, fontWeight: FontWeight.w600)),
+                ),
               // 1. Barra de Pesquisa
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -224,20 +247,31 @@ class _BibliotecaExerciciosScreenState
 
   Widget _buildCardExercicio(ExercicioModel ex) {
     if (widget.onPrescrever != null) {
-      return Card(key: ValueKey(ex.id), child: Column(children: [
-        ListTile(title: Text(ex.nome), subtitle: Text(ex.grupoMuscular),
-          trailing: Icon(_expandidoId == ex.id ? Icons.expand_less : Icons.add_circle_outline),
-          onTap: () => setState(() => _expandidoId = _expandidoId == ex.id ? null : ex.id)),
+      final incluido = _naDivisao.contains(ex.id);
+      final divisoes = _naFicha[ex.id] ?? const <String>[];
+      return Card(key: ValueKey(ex.id),
+        color: incluido ? GridColors.primarySubtle : GridColors.card,
+        child: Column(children: [
+        ListTile(title: Text(ex.nome),
+          subtitle: Text([
+            ex.grupoMuscular,
+            if (divisoes.isNotEmpty) 'Na ficha • ${divisoes.join(", ")}',
+          ].join('\n')),
+          leading: incluido ? const Icon(Icons.check_circle, color: GridColors.primary) : null,
+          trailing: incluido ? const Text('Incluído', style: TextStyle(color: GridColors.primaryDark)) : Icon(_expandidoId == ex.id ? Icons.expand_less : Icons.add_circle_outline),
+          onTap: incluido ? null : () => setState(() => _expandidoId = _expandidoId == ex.id ? null : ex.id)),
         if (_expandidoId == ex.id)
           PrescricaoExercicioInline(exercicio: ex, catalogo: _catalogo,
+            grupoAlternativas: _grupoSelecionado == 'Todos' ? ex.grupoMuscular : _grupoSelecionado,
             onAdicionar: (item) {
               widget.onPrescrever!(item);
               final lista = _exerciciosFiltrados;
               final index = lista.indexWhere((e) => e.id == ex.id);
               setState(() {
-                _adicionados++;
-                _expandidoId = index >= 0 && index + 1 < lista.length
-                    ? lista[index + 1].id : null;
+                _naDivisao.add(ex.id);
+                (_naFicha[ex.id] ??= []).add(widget.divisaoDestino ?? 'Treino atual');
+                _expandidoId = lista.skip(index + 1)
+                    .where((e) => !_naDivisao.contains(e.id)).firstOrNull?.id;
               });
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()

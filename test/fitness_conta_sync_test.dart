@@ -27,10 +27,21 @@ void main() {
     });
     await http.runWithClient(() async {
       const plano = PlanoTreinoModel(id: 'ficha', alunoId: '101', alunoNome: 'Aluno',
-        personalId: '', titulo: 'Minha ficha alterada', dataInicio: '2026-10-14', divisoes: []);
+        personalId: '', titulo: 'Minha ficha alterada', dataInicio: '2026-10-14', divisoes: [
+          DivisaoTreinoModel(id: 'a', letra: 'A', nome: 'Treino A', exercicios: [
+            ItemTreinoModel(id: 'item_b', exercicioId: 'b', exercicioNome: 'Segundo escolhido',
+              grupoMuscular: 'Costas', cargaSugeridaKg: 35, observacoes: 'Controle',
+              exerciciosAlternativos: ['Alternativa cadastrada']),
+            ItemTreinoModel(id: 'item_a', exercicioId: 'a', exercicioNome: 'Primeiro escolhido',
+              grupoMuscular: 'Costas', cargaSugeridaKg: 20),
+          ]),
+        ]);
       await FitnessOfflineRepository().salvarPlanoTreino(plano);
       SharedPreferences.setMockInitialValues({});
-      expect((await FitnessOfflineRepository().getPlanosTreino()).single.titulo, 'Minha ficha alterada');
+      final recuperado = (await FitnessOfflineRepository().getPlanosTreino()).single;
+      expect(recuperado.titulo, 'Minha ficha alterada');
+      expect(recuperado.divisoes.single.exercicios.map((e) => e.id), ['item_b', 'item_a']);
+      expect(recuperado.toMap(), plano.toMap());
       AuthUtility.userInfo = LoginModel(token: 'conta_b', login: Login(id: 102));
       expect(await FitnessOfflineRepository().getPlanosTreino(), isEmpty);
     }, () => client);
