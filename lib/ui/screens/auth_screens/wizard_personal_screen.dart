@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -77,6 +78,9 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
   final _cpf = TextEditingController();
   final _telefone = TextEditingController();
   final _cep = TextEditingController();
+  final _cepFocus = FocusNode();
+  String? _erroCep;
+  bool _buscandoCep = false;
   final _logradouro = TextEditingController();
   final _numero = TextEditingController();
   final _bairro = TextEditingController();
@@ -116,9 +120,42 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
   @override
   void initState() {
     super.initState();
+    _cepFocus.addListener(_aoSairCep);
     _carregarAcademias();
     _telefone.addListener(_sincronizarWhatsapp);
     _restaurarRascunho();
+  }
+
+  void _aoSairCep() {
+    if (!_cepFocus.hasFocus) _buscarCep();
+  }
+
+  Future<void> _buscarCep() async {
+    final cep = _cep.text.replaceAll(RegExp(r'\D'), '');
+    if (cep.length != 8 || _buscandoCep) return;
+    setState(() { _buscandoCep = true; _erroCep = null; });
+    try {
+      final response = await http.get(Uri.parse('https://viacep.com.br/ws/$cep/json/'))
+          .timeout(const Duration(seconds: 10));
+      if (!mounted || _cep.text.replaceAll(RegExp(r'\D'), '') != cep) return;
+      if (response.statusCode != 200) throw Exception('CEP indisponível');
+      final data = jsonDecode(response.body);
+      if (data['erro'] == true || data['erro'] == 'true') {
+        setState(() => _erroCep = 'CEP não encontrado.');
+      } else {
+        setState(() {
+          _logradouro.text = data['logradouro'] ?? '';
+          _bairro.text = data['bairro'] ?? '';
+          _cidade.text = data['localidade'] ?? '';
+          _estado.text = data['uf'] ?? '';
+        });
+      }
+    } catch (error, stack) {
+      AppLogger.i.error('Não foi possível consultar o CEP.', stack);
+      if (mounted) setState(() => _erroCep = 'Não foi possível buscar o CEP. Preencha o endereço ou tente novamente.');
+    } finally {
+      if (mounted) setState(() => _buscandoCep = false);
+    }
   }
 
   // ───────────────────────── rascunho local ─────────────────────────
@@ -250,6 +287,8 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
 
   @override
   void dispose() {
+    _cepFocus.removeListener(_aoSairCep);
+    _cepFocus.dispose();
     for (final c in [
       _nome,
       _email,
@@ -562,11 +601,13 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
     String? ajuda,
     List<TextInputFormatter>? formatadores,
     bool readOnly = false,
+    FocusNode? focusNode,
   }) =>
       Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: TextFormField(
           controller: c,
+          focusNode: focusNode,
           obscureText: obscure,
           readOnly: readOnly,
           keyboardType: teclado,
@@ -644,7 +685,9 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
             tilePadding: EdgeInsets.zero,
             title: const Text('Adicionar endereço (opcional)'),
             children: [
-              _campo(_cep, 'CEP', teclado: TextInputType.number),
+              _campo(_cep, 'CEP', teclado: TextInputType.number, focusNode: _cepFocus,
+                sufixo: _buscandoCep ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))) : IconButton(tooltip: 'Buscar CEP', onPressed: _buscarCep, icon: const Icon(Icons.search))),
+              if (_erroCep != null) Text(_erroCep!, style: const TextStyle(color: Colors.red)),
               _campo(_logradouro, 'Logradouro'),
               _campo(_numero, 'Número'),
               _campo(_bairro, 'Bairro'),

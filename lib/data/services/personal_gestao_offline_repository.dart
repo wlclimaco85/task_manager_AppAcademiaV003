@@ -1,4 +1,10 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:task_manager_flutter/data/utils/api_links.dart';
+import 'package:task_manager_flutter/data/utils/tenant_context.dart';
+import 'package:task_manager_flutter/data/utils/app_logger.dart';
+import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
+import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_conta_sync.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,12 +21,158 @@ class PersonalGestaoOfflineRepository {
   factory PersonalGestaoOfflineRepository() => _instance;
   PersonalGestaoOfflineRepository._internal();
 
+  String get _url =>
+      ApiLinks.fitnessResumo.replaceFirst('/resumo', '/personal');
+  String get _filaKey => FitnessContaSync.chave('personal_pendentes_v1');
+  bool _sincronizando = false;
+  Map<String, dynamic> _fila(SharedPreferences p) =>
+      Map<String, dynamic>.from(jsonDecode(p.getString(_filaKey) ?? '{}'));
+
+  Future<void> _enfileirar(String caminho, Map<String, dynamic> dados) async {
+    final p = await SharedPreferences.getInstance();
+    final fila = _fila(p)..[caminho] = dados;
+    await p.setString(_filaKey, jsonEncode(fila));
+    await sincronizarPendencias();
+  }
+
+  Future<void> sincronizarPendencias() async {
+    if (!FitnessContaSync.autenticado || _sincronizando) return;
+    _sincronizando = true;
+    final p = await SharedPreferences.getInstance();
+    final key = _filaKey;
+    final enviados = _fila(p);
+    final headers = {...TenantContext.headers, 'Content-Type': 'application/json'};
+    try {
+      for (final e in enviados.entries) {
+        final response = await http
+            .put(Uri.parse('$_url${e.key}'),
+                headers: headers,
+                body: jsonEncode(e.value))
+            .timeout(const Duration(seconds: 10));
+        if (response.statusCode == 200) {
+          final atual =
+              Map<String, dynamic>.from(jsonDecode(p.getString(key) ?? '{}'));
+          if (jsonEncode(atual[e.key]) == jsonEncode(e.value)) {
+            atual.remove(e.key);
+            await p.setString(key, jsonEncode(atual));
+          }
+        } else {
+          AppLogger.i
+              .warn('Gestão do personal pendente: HTTP ${response.statusCode}');
+        }
+      }
+    } catch (e, stack) {
+      AppLogger.i
+          .error('Gestão preservada offline; sincronização pendente.', stack);
+    } finally {
+      _sincronizando = false;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>?> _lerRemoto(String caminho) async {
+    if (!FitnessContaSync.autenticado) return null;
+    final conta = _filaKey;
+    try {
+      final response = await http
+          .get(Uri.parse('$_url$caminho'), headers: TenantContext.headers)
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode != 200 || conta != _filaKey) return null;
+      return (jsonDecode(response.body)['data'] as List)
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+    } catch (e, stack) {
+      AppLogger.i
+          .error('Leitura personal indisponível; usando cache real.', stack);
+      return null;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> buscarAlunos(String busca) async {
+    final resultado = await _lerRemoto(
+        '/buscar-alunos?q=${Uri.encodeQueryComponent(busca.trim())}');
+    if (resultado == null)
+      throw Exception('Não foi possível buscar alunos. Verifique sua conexão.');
+    return resultado;
+  }
+
+  Future<PersonalAlunoGestaoModel> vincularAluno(String alunoId) async {
+    final r = await http
+        .post(Uri.parse('$_url/alunos/vincular'),
+            headers: {
+              ...TenantContext.headers,
+              'Content-Type': 'application/json'
+            },
+            body: jsonEncode({'alunoId': alunoId}))
+        .timeout(const Duration(seconds: 10));
+    if (r.statusCode != 200)
+      throw Exception(
+          'Não foi possível vincular o aluno. Verifique se ele já possui outro personal.');
+    final json = jsonDecode(r.body);
+    return PersonalAlunoGestaoModel.fromMap(
+        Map<String, dynamic>.from(json['data'] ?? json));
+  }
+
+  Future<List<Map<String, dynamic>>> getPlanosCobranca() async {
+    final p = await SharedPreferences.getInstance();
+    final key = FitnessContaSync.chave('personal_planos_cobranca');
+    final remoto = await _lerRemoto('/planos');
+    if (remoto != null) await p.setString(key, jsonEncode(remoto));
+    return (jsonDecode(p.getString(key) ?? '[]') as List)
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
+  }
+
+  Future<List<SessaoTreinoRegistroModel>> getHistoricoAluno(
+      String alunoId) async {
+    final p = await SharedPreferences.getInstance();
+    final key = FitnessContaSync.chave('personal_sessoes_$alunoId');
+    final remoto = await _lerRemoto('/alunos/$alunoId/sessoes');
+    if (remoto != null) await p.setString(key, jsonEncode(remoto));
+    return (jsonDecode(p.getString(key) ?? '[]') as List)
+        .map((e) =>
+            SessaoTreinoRegistroModel.fromMap(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
+  Future<bool> publicarTreino(String alunoId, PlanoTreinoModel plano) async {
+    final caminho = '/alunos/$alunoId/planos/${plano.id}';
+    await _enfileirar(caminho, plano.toMap());
+    return !_fila(await SharedPreferences.getInstance()).containsKey(caminho);
+  }
+
   // ─────────────────────────────────────────────────────────────────────────────
   // 1. Gestão de Alunos do Personal
   // ─────────────────────────────────────────────────────────────────────────────
 
   Future<List<PersonalAlunoGestaoModel>> getAlunos() async {
     final prefs = await SharedPreferences.getInstance();
+    // Migra cadastros locais reais já existentes antes da primeira leitura remota.
+    final migrado = FitnessContaSync.chave('personal_gestao_backend_v1');
+    final localKey = FitnessContaSync.chave(_kAlunosKey + '_real');
+    if (prefs.getBool(migrado) != true && FitnessContaSync.autenticado) {
+      final locais = jsonDecode(prefs.getString(localKey) ?? '[]') as List;
+      final fila = _fila(prefs);
+      for (final aluno in locais) {
+        final documento = Map<String, dynamic>.from(aluno);
+        // O formulário anterior gravava este e-mail fixo sem perguntar ao usuário.
+        if (documento['email'] == 'aluno@email.com') documento['email'] = '';
+        fila.putIfAbsent('/alunos/${aluno['id']}', () => documento);
+      }
+      await prefs.setString(_filaKey, jsonEncode(fila));
+      await prefs.setBool(migrado, true);
+    }
+    await sincronizarPendencias();
+    final remoto = await _lerRemoto('/alunos');
+    if (localKey != FitnessContaSync.chave(_kAlunosKey + '_real')) return [];
+    if (remoto != null) {
+      final porId = {for (final e in remoto) e['id'].toString(): e};
+      for (final e in _fila(prefs).entries.where(
+          (e) => e.key.startsWith('/alunos/') && !e.key.contains('/planos/'))) {
+        porId[e.value['id'].toString()] = Map<String, dynamic>.from(e.value);
+      }
+      await prefs.setString(FitnessContaSync.chave(_kAlunosKey + '_real'),
+          jsonEncode(porId.values.toList()));
+    }
     final raw = prefs.getString(FitnessContaSync.chave(_kAlunosKey + '_real'));
 
     List<PersonalAlunoGestaoModel> lista = [];
@@ -45,7 +197,8 @@ class PersonalGestaoOfflineRepository {
   Future<void> _salvarAlunos(List<PersonalAlunoGestaoModel> alunos) async {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = json.encode(alunos.map((e) => e.toMap()).toList());
-    await prefs.setString(FitnessContaSync.chave(_kAlunosKey + '_real'), jsonStr);
+    await prefs.setString(
+        FitnessContaSync.chave(_kAlunosKey + '_real'), jsonStr);
   }
 
   Future<void> salvarAluno(PersonalAlunoGestaoModel aluno) async {
@@ -57,6 +210,7 @@ class PersonalGestaoOfflineRepository {
       lista.insert(0, aluno);
     }
     await _salvarAlunos(lista);
+    await _enfileirar('/alunos/${aluno.id}', aluno.toMap());
   }
 
   /// Define o período de vigência e alerta de troca do treino do aluno
@@ -78,6 +232,7 @@ class PersonalGestaoOfflineRepository {
       );
       lista[idx] = alunoAtualizado;
       await _salvarAlunos(lista);
+      await _enfileirar('/alunos/${lista[idx].id}', lista[idx].toMap());
     }
   }
 
@@ -97,6 +252,7 @@ class PersonalGestaoOfflineRepository {
         totalTreinosConcluidos: aluno.totalTreinosConcluidos + 1,
       );
       await _salvarAlunos(lista);
+      await _enfileirar('/alunos/${lista[idx].id}', lista[idx].toMap());
     }
   }
 
@@ -119,6 +275,7 @@ class PersonalGestaoOfflineRepository {
         mesReferencia: mesReferencia,
       );
       await _salvarAlunos(lista);
+      await _enfileirar('/alunos/${lista[idx].id}', lista[idx].toMap());
     }
   }
 
@@ -132,6 +289,7 @@ class PersonalGestaoOfflineRepository {
     if (idx >= 0) {
       lista[idx] = lista[idx].copyWith(statusMensalidade: status);
       await _salvarAlunos(lista);
+      await _enfileirar('/alunos/${lista[idx].id}', lista[idx].toMap());
     }
   }
 
@@ -151,8 +309,8 @@ class PersonalGestaoOfflineRepository {
       try {
         final decoded = json.decode(raw) as List<dynamic>;
         lista = decoded
-            .map((e) => PersonalAgendamentoAulaModel.fromMap(
-                e as Map<String, dynamic>))
+            .map((e) =>
+                PersonalAgendamentoAulaModel.fromMap(e as Map<String, dynamic>))
             .toList();
       } catch (e) {
         debugPrint('[PersonalGestaoOfflineRepository] Erro decode agendas: $e');
@@ -166,7 +324,8 @@ class PersonalGestaoOfflineRepository {
       List<PersonalAgendamentoAulaModel> lista) async {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = json.encode(lista.map((e) => e.toMap()).toList());
-    await prefs.setString(FitnessContaSync.chave(_kAgendasKey + '_real'), jsonStr);
+    await prefs.setString(
+        FitnessContaSync.chave(_kAgendasKey + '_real'), jsonStr);
   }
 
   Future<void> agendarAula(PersonalAgendamentoAulaModel aula) async {
@@ -208,8 +367,4 @@ class PersonalGestaoOfflineRepository {
   // ─────────────────────────────────────────────────────────────────────────────
   // 4. Seed de Dados de Demonstração (MFIT Pro Standard)
   // ─────────────────────────────────────────────────────────────────────────────
-
-
-
-
 }

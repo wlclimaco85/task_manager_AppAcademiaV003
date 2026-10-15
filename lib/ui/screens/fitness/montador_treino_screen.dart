@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/data/services/personal_gestao_offline_repository.dart';
 import 'package:task_manager_flutter/data/models/auth_utility.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
@@ -551,12 +552,16 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
     );
 
     await _repository.salvarPlanoTreino(plano);
+    bool publicado = true;
+    if (widget.alunoId != null) {
+      publicado = await PersonalGestaoOfflineRepository().publicarTreino(widget.alunoId!,plano);
+    }
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           backgroundColor: GridColors.success,
-          content: Text('Ficha de treino salva e prescrita com sucesso!'),
+          content: Text(publicado ? 'Ficha de treino salva com sucesso!' : 'Ficha salva no dispositivo. Publicação pendente de sincronização.'),
         ),
       );
       Navigator.pop(context, plano);

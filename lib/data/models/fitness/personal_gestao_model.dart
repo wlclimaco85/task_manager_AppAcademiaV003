@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 /// Modelo de Feedback / Comentário deixado pelo aluno em um treino
 class PersonalAlunoFeedbackModel {
@@ -75,6 +74,11 @@ class PersonalAlunoGestaoModel {
   final List<PersonalAlunoFeedbackModel> feedbacks;
 
   // Controle Financeiro Simples
+  final String tipoCobranca; // plano, mensal ou aula_avulsa
+  final String? planoId;
+  final String? planoNome;
+  final int frequenciaContratada;
+  final String? loginId;
   final double valorMensalidade;
   final int diaVencimento; // ex: dia 10
   final StatusMensalidadeAluno statusMensalidade;
@@ -87,23 +91,28 @@ class PersonalAlunoGestaoModel {
     required this.email,
     required this.telefone,
     this.fotoUrl = '',
-    this.objetivo = 'Hipertrofia & Definição',
-    this.nivel = 'Intermediário',
+    this.objetivo = '',
+    this.nivel = '',
     this.ativo = true,
     this.treinoAtualNome,
     this.dataInicioTreino,
     this.validadeTreinoDias = 45,
     this.dataVencimentoTreino,
     this.diasSemTreinar = 0,
-    this.frequenciaSemanalMedia = 4,
+    this.frequenciaSemanalMedia = 0,
     this.volumeTotalKg = 0.0,
     this.totalTreinosConcluidos = 0,
     this.feedbacks = const [],
-    this.valorMensalidade = 250.0,
+    this.tipoCobranca = 'mensal',
+    this.planoId,
+    this.planoNome,
+    this.loginId,
+    this.frequenciaContratada = 0,
+    this.valorMensalidade = 0.0,
     this.diaVencimento = 10,
-    this.statusMensalidade = StatusMensalidadeAluno.pago,
+    this.statusMensalidade = StatusMensalidadeAluno.pendente,
     this.dataUltimoPagamento,
-    this.mesReferencia = '10/2026',
+    this.mesReferencia = '',
   });
 
   /// Retorna quantos dias faltam para a ficha de treino vencer (negativo se já venceu)
@@ -146,8 +155,13 @@ class PersonalAlunoGestaoModel {
     double? volumeTotalKg,
     int? totalTreinosConcluidos,
     List<PersonalAlunoFeedbackModel>? feedbacks,
+    String? tipoCobranca,
+    String? planoId,
+    String? planoNome,
+    String? loginId,
+    int? frequenciaContratada,
     double? valorMensalidade,
-    int diaVencimento = 10,
+    int? diaVencimento,
     StatusMensalidadeAluno? statusMensalidade,
     String? dataUltimoPagamento,
     String? mesReferencia,
@@ -172,8 +186,13 @@ class PersonalAlunoGestaoModel {
       totalTreinosConcluidos:
           totalTreinosConcluidos ?? this.totalTreinosConcluidos,
       feedbacks: feedbacks ?? this.feedbacks,
+      tipoCobranca: tipoCobranca ?? this.tipoCobranca,
+      planoId: planoId ?? this.planoId,
+      planoNome: planoNome ?? this.planoNome,
+      loginId: loginId ?? this.loginId,
+      frequenciaContratada: frequenciaContratada ?? this.frequenciaContratada,
       valorMensalidade: valorMensalidade ?? this.valorMensalidade,
-      diaVencimento: diaVencimento,
+      diaVencimento: diaVencimento ?? this.diaVencimento,
       statusMensalidade: statusMensalidade ?? this.statusMensalidade,
       dataUltimoPagamento: dataUltimoPagamento ?? this.dataUltimoPagamento,
       mesReferencia: mesReferencia ?? this.mesReferencia,
@@ -199,6 +218,11 @@ class PersonalAlunoGestaoModel {
       'volumeTotalKg': volumeTotalKg,
       'totalTreinosConcluidos': totalTreinosConcluidos,
       'feedbacks': feedbacks.map((f) => f.toMap()).toList(),
+      'tipoCobranca': tipoCobranca,
+      'planoId': planoId,
+      'planoNome': planoNome,
+      'loginId': loginId,
+      'frequenciaContratada': frequenciaContratada,
       'valorMensalidade': valorMensalidade,
       'diaVencimento': diaVencimento,
       'statusMensalidade': statusMensalidade.name,
@@ -214,8 +238,8 @@ class PersonalAlunoGestaoModel {
       email: map['email']?.toString() ?? '',
       telefone: map['telefone']?.toString() ?? '',
       fotoUrl: map['fotoUrl']?.toString() ?? '',
-      objetivo: map['objetivo']?.toString() ?? 'Hipertrofia',
-      nivel: map['nivel']?.toString() ?? 'Intermediário',
+      objetivo: map['objetivo']?.toString() ?? '',
+      nivel: map['nivel']?.toString() ?? '',
       ativo: map['ativo'] != false,
       treinoAtualNome: map['treinoAtualNome']?.toString(),
       dataInicioTreino: map['dataInicioTreino']?.toString(),
@@ -223,7 +247,7 @@ class PersonalAlunoGestaoModel {
       dataVencimentoTreino: map['dataVencimentoTreino']?.toString(),
       diasSemTreinar: (map['diasSemTreinar'] as num?)?.toInt() ?? 0,
       frequenciaSemanalMedia:
-          (map['frequenciaSemanalMedia'] as num?)?.toInt() ?? 4,
+          (map['frequenciaSemanalMedia'] as num?)?.toInt() ?? 0,
       volumeTotalKg: (map['volumeTotalKg'] as num?)?.toDouble() ?? 0.0,
       totalTreinosConcluidos:
           (map['totalTreinosConcluidos'] as num?)?.toInt() ?? 0,
@@ -232,14 +256,19 @@ class PersonalAlunoGestaoModel {
                   PersonalAlunoFeedbackModel.fromMap(f as Map<String, dynamic>))
               .toList() ??
           [],
-      valorMensalidade: (map['valorMensalidade'] as num?)?.toDouble() ?? 250.0,
+      tipoCobranca: map['tipoCobranca']?.toString() ?? 'mensal',
+      planoId: map['planoId']?.toString(),
+      planoNome: map['planoNome']?.toString(),
+      loginId: map['loginId']?.toString(),
+      frequenciaContratada: (map['frequenciaContratada'] as num?)?.toInt() ?? 0,
+      valorMensalidade: (map['valorMensalidade'] as num?)?.toDouble() ?? 0,
       diaVencimento: (map['diaVencimento'] as num?)?.toInt() ?? 10,
       statusMensalidade: StatusMensalidadeAluno.values.firstWhere(
         (s) => s.name == map['statusMensalidade'],
-        orElse: () => StatusMensalidadeAluno.pago,
+        orElse: () => StatusMensalidadeAluno.pendente,
       ),
       dataUltimoPagamento: map['dataUltimoPagamento']?.toString(),
-      mesReferencia: map['mesReferencia']?.toString() ?? '10/2026',
+      mesReferencia: map['mesReferencia']?.toString() ?? '',
     );
   }
 }

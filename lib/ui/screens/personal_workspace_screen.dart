@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/ui/widgets/personal_aluno_sheet.dart';
+import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
 import 'package:task_manager_flutter/data/utils/fitness_access.dart';
 import 'package:task_manager_flutter/ui/screens/sem_acesso_screen.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
@@ -229,7 +231,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${aluno.objetivo} • ${aluno.nivel}',
+                      [aluno.objetivo, aluno.nivel].where((v)=>v.isNotEmpty).join(' • '),
                       style: const TextStyle(
                         color: Color(0xFF8E9BAE),
                         fontSize: 13,
@@ -247,11 +249,9 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                   } else if (val == 'alterar_validade') {
                     _modalDefinirValidadeTreino(context, aluno);
                   } else if (val == 'montar_treino') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const MontadorTreinoScreen()),
-                    );
+                    _montarTreino(aluno);
+                  } else if (val == 'editar_aluno') {
+                    _modalNovoAluno(context, aluno:aluno);
                   } else if (val == 'avaliacao') {
                     Navigator.push(
                       context,
@@ -261,6 +261,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                   }
                 },
                 itemBuilder: (ctx) => [
+                  const PopupMenuItem(value:'editar_aluno',child:Text('Editar frequência e cobrança',style:TextStyle(color:Colors.white))),
                   const PopupMenuItem(
                     value: 'historico_treinos',
                     child: Row(
@@ -328,7 +329,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                         ),
                       ),
                       Text(
-                        treinoVenceu
+                        aluno.treinoAtualNome == null ? 'Monte a primeira ficha para este aluno.' : treinoVenceu
                             ? 'Ficha VENCIDA há ${aluno.diasParaVencerTreino.abs()} dias (Trocar treino!)'
                             : 'Vence em ${aluno.diasParaVencerTreino} dias (${aluno.validadeTreinoDias} dias de ciclo)',
                         style: TextStyle(
@@ -359,8 +360,9 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
           // Métricas de Desempenho (Frequência, Tonelagem, Treinos)
           Row(
             children: [
-              _buildMiniMetrica('Frequência',
-                  '${aluno.frequenciaSemanalMedia}x/sem', Icons.bolt, Colors.amber),
+              Expanded(child:InkWell(onTap:()=>_modalNovoAluno(context,aluno:aluno),
+                child:Column(children:[Text('${aluno.frequenciaContratada}x/sem',style:const TextStyle(color:Colors.amber,fontWeight:FontWeight.bold)),
+                  const Text('Contratada • editar',style:TextStyle(color:Color(0xFF8E9BAE),fontSize:11))]))),
               const SizedBox(width: 8),
               _buildMiniMetrica(
                   'Tonelagem',
@@ -467,6 +469,10 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
             ),
           ],
           const SizedBox(height: 10),
+          Align(alignment:Alignment.centerRight, child:Wrap(spacing:8,children:[
+            OutlinedButton.icon(onPressed:()=>_modalNovoAluno(context,aluno:aluno),icon:const Icon(Icons.edit_outlined),label:const Text('Frequência e cobrança')),
+            FilledButton.icon(onPressed:()=>_montarTreino(aluno),icon:const Icon(Icons.fitness_center),label:const Text('Montar treino')),
+          ])),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton.icon(
@@ -755,7 +761,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
         ),
         const SizedBox(height: 20),
         const Text(
-          'Mensalidades dos Alunos (Mês 10/2026)',
+          'Cobranças dos alunos',
           style: TextStyle(
             color: Colors.white,
             fontSize: 16,
@@ -895,7 +901,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                 : () async {
                     await _repo.registrarRecebimentoMensalidade(
                       alunoId: aluno.id,
-                      mesReferencia: '10/2026',
+                      mesReferencia: '${DateTime.now().month.toString().padLeft(2,'0')}/${DateTime.now().year}',
                     );
                     _carregarDados();
                     if (mounted) {
@@ -978,7 +984,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                 onAcao: () async {
                   await _repo.registrarRecebimentoMensalidade(
                     alunoId: a.id,
-                    mesReferencia: '10/2026',
+                    mesReferencia: '${DateTime.now().month.toString().padLeft(2,'0')}/${DateTime.now().year}',
                   );
                   _carregarDados();
                 },
@@ -1214,13 +1220,9 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
 
   void _modalHistoricoTreinosAluno(
       BuildContext context, PersonalAlunoGestaoModel aluno) async {
-    final repoFitness = FitnessOfflineRepository();
     List<SessaoTreinoRegistroModel> sessoes =
-        await repoFitness.getSessoesConcluidas(alunoId: aluno.id);
+        await _repo.getHistoricoAluno(aluno.id);
 
-    if (sessoes.isEmpty) {
-      sessoes = _gerarSessoesExemploAluno(aluno);
-    }
 
     if (!context.mounted) return;
 
@@ -1288,7 +1290,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                 ),
                 const Divider(color: Color(0xFF223140), height: 24),
                 Expanded(
-                  child: ListView.separated(
+                  child: sessoes.isEmpty ? const Center(child:Text('Nenhum treino concluído por este aluno.',style:TextStyle(color:Colors.white70))) : ListView.separated(
                     itemCount: sessoes.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, idx) {
@@ -1565,165 +1567,6 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
     );
   }
 
-  List<SessaoTreinoRegistroModel> _gerarSessoesExemploAluno(
-      PersonalAlunoGestaoModel aluno) {
-    final hoje = DateTime.now();
-
-    return [
-      SessaoTreinoRegistroModel(
-        id: 'sessao-1',
-        treinoId: 'treino-a',
-        divisaoLetra: 'A',
-        divisaoNome: 'Treino A - Peito, Ombros e Tríceps',
-        alunoId: aluno.id,
-        dataHoraInicio:
-            '${hoje.subtract(const Duration(days: 1)).day.toString().padLeft(2, '0')}/${hoje.month.toString().padLeft(2, '0')}/${hoje.year} - 18:30',
-        dataHoraFim: '19:18',
-        duracaoSegundos: 2880,
-        rpe: 9,
-        feedbackAluno:
-            'Supino Reto com 100kg foi até a falha na 4ª série! Ombro sem dores.',
-        exerciciosExecutados: [
-          const ExercicioExecutadoRegistroModel(
-            exercicioId: 'ex-1',
-            exercicioNome: 'Supino Reto com Barra',
-            grupoMuscular: 'Peitoral',
-            series: [
-              SerieRegistroModel(numero: 1, cargaRealKg: 80, repeticoesRealizadas: 12),
-              SerieRegistroModel(numero: 2, cargaRealKg: 90, repeticoesRealizadas: 10),
-              SerieRegistroModel(numero: 3, cargaRealKg: 100, repeticoesRealizadas: 8),
-              SerieRegistroModel(numero: 4, cargaRealKg: 105, repeticoesRealizadas: 6),
-            ],
-            observacaoAluno: 'Carga recorde na 4ª série',
-          ),
-          const ExercicioExecutadoRegistroModel(
-            exercicioId: 'ex-2',
-            exercicioNome: 'Supino Inclinado com Halteres',
-            grupoMuscular: 'Peitoral Superior',
-            series: [
-              SerieRegistroModel(numero: 1, cargaRealKg: 28, repeticoesRealizadas: 12),
-              SerieRegistroModel(numero: 2, cargaRealKg: 30, repeticoesRealizadas: 10),
-              SerieRegistroModel(numero: 3, cargaRealKg: 32, repeticoesRealizadas: 8),
-            ],
-          ),
-          const ExercicioExecutadoRegistroModel(
-            exercicioId: 'ex-3',
-            exercicioNome: 'Desenvolvimento Militar com Halteres',
-            grupoMuscular: 'Ombros',
-            series: [
-              SerieRegistroModel(numero: 1, cargaRealKg: 22, repeticoesRealizadas: 10),
-              SerieRegistroModel(numero: 2, cargaRealKg: 24, repeticoesRealizadas: 10),
-              SerieRegistroModel(numero: 3, cargaRealKg: 26, repeticoesRealizadas: 8),
-            ],
-          ),
-          const ExercicioExecutadoRegistroModel(
-            exercicioId: 'ex-4',
-            exercicioNome: 'Tríceps Corda no Pulley',
-            grupoMuscular: 'Tríceps',
-            series: [
-              SerieRegistroModel(numero: 1, cargaRealKg: 30, repeticoesRealizadas: 15),
-              SerieRegistroModel(numero: 2, cargaRealKg: 35, repeticoesRealizadas: 12),
-              SerieRegistroModel(numero: 3, cargaRealKg: 40, repeticoesRealizadas: 10),
-            ],
-          ),
-        ],
-      ),
-      SessaoTreinoRegistroModel(
-        id: 'sessao-2',
-        treinoId: 'treino-c',
-        divisaoLetra: 'C',
-        divisaoNome: 'Treino C - Pernas Completo',
-        alunoId: aluno.id,
-        dataHoraInicio:
-            '${hoje.subtract(const Duration(days: 3)).day.toString().padLeft(2, '0')}/${hoje.month.toString().padLeft(2, '0')}/${hoje.year} - 19:15',
-        dataHoraFim: '20:10',
-        duracaoSegundos: 3300,
-        rpe: 10,
-        feedbackAluno:
-            'Agachamento livre muito pesado, precisei de 2min de descanso.',
-        exerciciosExecutados: [
-          const ExercicioExecutadoRegistroModel(
-            exercicioId: 'ex-5',
-            exercicioNome: 'Agachamento Livre com Barra',
-            grupoMuscular: 'Quadríceps',
-            series: [
-              SerieRegistroModel(numero: 1, cargaRealKg: 90, repeticoesRealizadas: 12),
-              SerieRegistroModel(numero: 2, cargaRealKg: 110, repeticoesRealizadas: 10),
-              SerieRegistroModel(numero: 3, cargaRealKg: 120, repeticoesRealizadas: 8),
-              SerieRegistroModel(numero: 4, cargaRealKg: 130, repeticoesRealizadas: 6),
-            ],
-          ),
-          const ExercicioExecutadoRegistroModel(
-            exercicioId: 'ex-6',
-            exercicioNome: 'Leg Press 45°',
-            grupoMuscular: 'Pernas',
-            series: [
-              SerieRegistroModel(numero: 1, cargaRealKg: 240, repeticoesRealizadas: 12),
-              SerieRegistroModel(numero: 2, cargaRealKg: 280, repeticoesRealizadas: 10),
-              SerieRegistroModel(numero: 3, cargaRealKg: 320, repeticoesRealizadas: 8),
-            ],
-          ),
-          const ExercicioExecutadoRegistroModel(
-            exercicioId: 'ex-7',
-            exercicioNome: 'Cadeira Extensora',
-            grupoMuscular: 'Quadríceps',
-            series: [
-              SerieRegistroModel(numero: 1, cargaRealKg: 65, repeticoesRealizadas: 15),
-              SerieRegistroModel(numero: 2, cargaRealKg: 75, repeticoesRealizadas: 12),
-              SerieRegistroModel(numero: 3, cargaRealKg: 85, repeticoesRealizadas: 10),
-            ],
-          ),
-        ],
-      ),
-      SessaoTreinoRegistroModel(
-        id: 'sessao-3',
-        treinoId: 'treino-b',
-        divisaoLetra: 'B',
-        divisaoNome: 'Treino B - Costas e Bíceps',
-        alunoId: aluno.id,
-        dataHoraInicio:
-            '${hoje.subtract(const Duration(days: 5)).day.toString().padLeft(2, '0')}/${hoje.month.toString().padLeft(2, '0')}/${hoje.year} - 18:00',
-        dataHoraFim: '18:50',
-        duracaoSegundos: 3000,
-        rpe: 8,
-        feedbackAluno:
-            'Puxada com boa ativação dorsal. Mantive cargas altas.',
-        exerciciosExecutados: [
-          const ExercicioExecutadoRegistroModel(
-            exercicioId: 'ex-8',
-            exercicioNome: 'Puxada Alta na Frente',
-            grupoMuscular: 'Dorsal',
-            series: [
-              SerieRegistroModel(numero: 1, cargaRealKg: 60, repeticoesRealizadas: 12),
-              SerieRegistroModel(numero: 2, cargaRealKg: 70, repeticoesRealizadas: 10),
-              SerieRegistroModel(numero: 3, cargaRealKg: 75, repeticoesRealizadas: 8),
-            ],
-          ),
-          const ExercicioExecutadoRegistroModel(
-            exercicioId: 'ex-9',
-            exercicioNome: 'Remada Curvada com Barra',
-            grupoMuscular: 'Costas',
-            series: [
-              SerieRegistroModel(numero: 1, cargaRealKg: 60, repeticoesRealizadas: 10),
-              SerieRegistroModel(numero: 2, cargaRealKg: 70, repeticoesRealizadas: 8),
-              SerieRegistroModel(numero: 3, cargaRealKg: 80, repeticoesRealizadas: 6),
-            ],
-          ),
-          const ExercicioExecutadoRegistroModel(
-            exercicioId: 'ex-10',
-            exercicioNome: 'Rosca Direta Barra W',
-            grupoMuscular: 'Bíceps',
-            series: [
-              SerieRegistroModel(numero: 1, cargaRealKg: 26, repeticoesRealizadas: 12),
-              SerieRegistroModel(numero: 2, cargaRealKg: 30, repeticoesRealizadas: 10),
-              SerieRegistroModel(numero: 3, cargaRealKg: 34, repeticoesRealizadas: 8),
-            ],
-          ),
-        ],
-      ),
-    ];
-  }
-
   void _modalRemarcarAula(
       BuildContext context, PersonalAgendamentoAulaModel agenda) {
     final horarioController =
@@ -1936,102 +1779,27 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
     );
   }
 
-  void _modalNovoAluno(BuildContext context) {
-    final nomeController = TextEditingController();
-    final telController = TextEditingController();
-    final valorController = TextEditingController(text: '250');
+  Future<void> _modalNovoAluno(BuildContext context, {PersonalAlunoGestaoModel? aluno}) async {
+    final salvo = await showModalBottomSheet<PersonalAlunoGestaoModel>(
+      context: context, backgroundColor: const Color(0xFF16202A), isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => PersonalAlunoSheet(aluno: aluno));
+    if (salvo != null && context.mounted) {
+      await _carregarDados();
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        backgroundColor:CustomColors.primaryGreen,content:Text('Aluno salvo. Alterações offline ficam pendentes para sincronizar.',style:TextStyle(color:Colors.white))));
+    }
+  }
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF16202A),
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Cadastrar Novo Aluno',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: nomeController,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                labelText: 'Nome Completo',
-                labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
-                filled: true,
-                fillColor: Color(0xFF0D131A),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: telController,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                labelText: 'WhatsApp / Telefone',
-                labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
-                filled: true,
-                fillColor: Color(0xFF0D131A),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: valorController,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                labelText: 'Valor da Mensalidade (R\$)',
-                labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
-                filled: true,
-                fillColor: Color(0xFF0D131A),
-              ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  final novo = PersonalAlunoGestaoModel(
-                    id: 'aluno-${DateTime.now().millisecondsSinceEpoch}',
-                    nome: nomeController.text.isNotEmpty
-                        ? nomeController.text
-                        : 'Novo Aluno',
-                    email: 'aluno@email.com',
-                    telefone: telController.text,
-                    valorMensalidade:
-                        double.tryParse(valorController.text) ?? 250.0,
-                  );
-                  await _repo.salvarAluno(novo);
-                  Navigator.pop(ctx);
-                  _carregarDados();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: CustomColors.primaryGreen,
-                  foregroundColor: const Color(0xFF0D131A),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: const Text('Cadastrar Aluno',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  Future<void> _montarTreino(PersonalAlunoGestaoModel aluno) async {
+    final planos = await FitnessOfflineRepository().getPlanosTreino(alunoId:aluno.id);
+    if (!mounted) return;
+    final retorno = await Navigator.push<PlanoTreinoModel>(context,MaterialPageRoute(
+      builder:(_) => MontadorTreinoScreen(alunoId:aluno.id,alunoNome:aluno.nome,
+        planoParaEditar:planos.where((p)=>!p.isTemplate && p.ativo).firstOrNull)));
+    if (retorno!=null) {
+      await _repo.salvarAluno(aluno.copyWith(treinoAtualNome:retorno.titulo,dataInicioTreino:retorno.dataInicio));
+      if (mounted) await _carregarDados();
+    }
   }
 }

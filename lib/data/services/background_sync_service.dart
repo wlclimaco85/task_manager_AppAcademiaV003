@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
+import 'package:task_manager_flutter/data/services/personal_gestao_offline_repository.dart';
+import 'package:task_manager_flutter/data/utils/fitness_access.dart';
 import 'package:task_manager_flutter/data/services/network_caller.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,6 +42,9 @@ class BackgroundSyncService {
     try {
       debugPrint('🔄 [BackgroundSyncService] Verificando dados offline pendentes...');
       await _syncSessoesTreino();
+      if (podeGerenciarAlunos()) {
+        await PersonalGestaoOfflineRepository().sincronizarPendencias();
+      }
       await _syncGenericQueue();
     } catch (e) {
       debugPrint('⚠️ [BackgroundSyncService] Erro ao sincronizar: $e');
