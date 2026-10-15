@@ -1,4 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:task_manager_flutter/data/services/fitness_conta_sync.dart';
+import 'package:task_manager_flutter/data/models/fitness/execucao_alternativas_treino.dart';
 import 'package:task_manager_flutter/ui/widgets/compartilhar_treino_sheet.dart';
 import 'package:task_manager_flutter/data/utils/exercicio_video_link.dart';
 import 'package:task_manager_flutter/data/utils/app_logger.dart';
@@ -33,7 +37,14 @@ class PlayerTreinoAoVivoScreen extends StatefulWidget {
 class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
   final _repository = FitnessOfflineRepository();
   final _pushService = FitnessPushNotificationService();
-  final DateTime _inicioSessao = DateTime.now();
+  DateTime _inicioSessao = DateTime.now();
+  late final ExecucaoAlternativasTreino _execucao =
+      ExecucaoAlternativasTreino(widget.divisao.exercicios);
+  late final String _chaveRascunho = FitnessContaSync.chave(
+      'fitness_player_${widget.alunoId}_${widget.planoId}_${widget.divisao.id}');
+  bool _restaurando = true;
+  bool _concluido = false;
+  Future<void> _filaRascunho = Future.value();
 
   int _exercicioIndexAtual = 0;
   final Map<int, List<SerieRegistroModel>> _seriesPorExercicio = {};
@@ -52,7 +63,147 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
   void initState() {
     super.initState();
     _inicializarSeries();
+    _restaurarRascunho();
+  }
+
+  Future<void> _restaurarRascunho() async {
+    bool prescricaoAlterada = false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_chaveRascunho);
+      if (raw != null && widget.divisao.exercicios.isNotEmpty) {
+        final map = Map<String, dynamic>.from(jsonDecode(raw));
+        if (_execucao.restaurar(Map<String, dynamic>.from(map['execucao']))) {
+          final salvas = Map<String, dynamic>.from(map['series']);
+          for (final e in salvas.entries) {
+            _seriesPorExercicio[int.parse(e.key)] = (e.value as List)
+                .map((v) => SerieRegistroModel.fromMap(
+                    Map<String, dynamic>.from(v))).toList();
+          }
+          _exercicioIndexAtual = (map['indice'] as int).clamp(
+              0, widget.divisao.exercicios.length - 1);
+          _inicioSessao = DateTime.parse(map['inicio']);
+        } else {
+          // Preserva o progresso antigo quando a ficha muda durante uma sessão.
+          await prefs.setString(
+              '${_chaveRascunho}_prescricao_anterior_${DateTime.now().millisecondsSinceEpoch}',
+              raw);
+          prescricaoAlterada = true;
+        }
+      }
+    } catch (e, st) {
+      AppLogger.i.error('Falha ao restaurar treino em andamento: $e', st);
+    }
+    if (!mounted) return;
+    setState(() => _restaurando = false);
+    if (prescricaoAlterada) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('A ficha mudou. O progresso anterior foi preservado no aparelho; esta sessão usa a ficha atual.')));
+    }
     _carregarSugestaoParaExercicioAtual();
+  }
+
+  void _salvarRascunho() {
+    if (_restaurando || _concluido) return;
+    final json = jsonEncode({
+      'execucao': _execucao.toMap(),
+      'series': {for (final e in _seriesPorExercicio.entries)
+        e.key.toString(): e.value.map((s) => s.toMap()).toList()},
+      'indice': _exercicioIndexAtual,
+      'inicio': _inicioSessao.toIso8601String(),
+    });
+    _filaRascunho = _filaRascunho.then((_) async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        if (!await prefs.setString(_chaveRascunho, json)) {
+          throw StateError('Armazenamento local recusou o treino.');
+        }
+      } catch (e, st) {
+        AppLogger.i.error('Falha ao salvar treino em andamento: $e', st);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Não foi possível salvar o progresso neste aparelho.')));
+        }
+      }
+    });
+  }
+
+  Future<void> _escolherAlternativa() async {
+    final indice = _exercicioIndexAtual;
+    final original = widget.divisao.exercicios[indice];
+    try {
+      final catalogo = await _repository.getExercicios();
+      if (!mounted) return;
+      final alternativas = catalogo.where((ex) =>
+          original.exerciciosAlternativos.contains(ex.nome) &&
+          ex.id != original.exercicioId).toList();
+      final escolha = await showModalBottomSheet<String>(
+        context: context, isScrollControlled: true,
+        backgroundColor: const Color(0xFF1E293B),
+        builder: (context) => SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('Máquina ocupada? Troque o exercício',
+                  style: TextStyle(color: Colors.white, fontSize: 18,
+                    fontWeight: FontWeight.w700)),
+                const SizedBox(height: 8),
+                const Text('A troca vale para as séries restantes. As séries já feitas continuam no exercício realizado.',
+                  style: TextStyle(color: Color(0xFFCBD5E1))),
+                const SizedBox(height: 12),
+                for (final opcao in [
+                  task_manager_flutter_models.ExercicioModel(
+                    id: original.exercicioId, nome: original.exercicioNome,
+                    grupoMuscular: original.grupoMuscular),
+                  ...alternativas,
+                ])
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(opcao.nome,
+                      style: const TextStyle(color: Colors.white)),
+                    subtitle: Text(opcao.id == original.exercicioId
+                      ? 'Exercício original' : 'Alternativa cadastrada',
+                      style: const TextStyle(color: Color(0xFF94A3B8))),
+                    trailing: _execucao.atual(indice).exercicioId == opcao.id
+                      ? const Icon(Icons.check_circle, color: Color(0xFF10B981))
+                      : const Icon(Icons.swap_horiz, color: Color(0xFF10B981)),
+                    onTap: () => Navigator.pop(context, opcao.id),
+                  ),
+                if (alternativas.isEmpty)
+                  const Text('Nenhuma alternativa disponível no catálogo deste aparelho.',
+                    style: TextStyle(color: Color(0xFFCBD5E1))),
+              ]),
+          ),
+        ),
+      );
+      if (escolha == null || !mounted ||
+          escolha == _execucao.atual(indice).exercicioId) {
+        return;
+      }
+      final alternativa = escolha == original.exercicioId ? null
+          : alternativas.firstWhere((e) => e.id == escolha);
+      setState(() {
+        _execucao.selecionar(indice, alternativa);
+        // Máquinas diferentes não recebem automaticamente a mesma carga.
+        _seriesPorExercicio[indice] = _seriesPorExercicio[indice]!.map((s) =>
+          s.concluida ? s : SerieRegistroModel(numero: s.numero,
+            cargaRealKg: 0, repeticoesRealizadas: s.repeticoesRealizadas,
+            concluida: false)).toList();
+        _sugestaoSobrecargaAtual = null;
+      });
+      _salvarRascunho();
+      _carregarSugestaoParaExercicioAtual();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Selecionado: ${_execucao.atual(indice).exercicioNome}. Ajuste a carga.'),
+        backgroundColor: const Color(0xFF059669)));
+    } catch (e, st) {
+      AppLogger.i.error('Falha ao carregar alternativas do exercício: $e', st);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Não foi possível abrir as alternativas. Tente novamente.')));
+      }
+    }
   }
 
   void _inicializarSeries() {
@@ -73,7 +224,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
 
   Future<void> _carregarSugestaoParaExercicioAtual() async {
     if (widget.divisao.exercicios.isEmpty) return;
-    final exAtual = widget.divisao.exercicios[_exercicioIndexAtual];
+    final exAtual = _execucao.atual(_exercicioIndexAtual);
     final repsPrescritas =
         int.tryParse(exAtual.repeticoes.split(RegExp(r'\D+')).first) ?? 10;
 
@@ -85,7 +236,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
         repsPrescritas: repsPrescritas,
         alunoId: widget.alunoId,
       );
-      if (mounted) {
+      if (mounted && exAtual.exercicioId == _execucao.atual(_exercicioIndexAtual).exercicioId) {
         setState(() {
           _sugestaoSobrecargaAtual = sugestao;
           _carregandoSugestao = false;
@@ -107,7 +258,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     setState(() {
       final series = _seriesPorExercicio[_exercicioIndexAtual] ?? [];
       _seriesPorExercicio[_exercicioIndexAtual] = series
-          .map((s) => SerieRegistroModel(
+          .map((s) => s.concluida ? s : SerieRegistroModel(
                 numero: s.numero,
                 cargaRealKg: novaCarga,
                 repeticoesRealizadas: s.repeticoesRealizadas,
@@ -116,6 +267,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
           .toList();
     });
 
+    _salvarRascunho();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -194,7 +346,11 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
       );
     }
 
-    final exAtual = widget.divisao.exercicios[_exercicioIndexAtual];
+    if (_restaurando) {
+      return const Scaffold(backgroundColor: Color(0xFF0B1120),
+        body: Center(child: CircularProgressIndicator(color: Color(0xFF10B981))));
+    }
+    final exAtual = _execucao.atual(_exercicioIndexAtual);
     final seriesAtuais = _seriesPorExercicio[_exercicioIndexAtual] ?? [];
 
     return Scaffold(
@@ -286,9 +442,18 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                           if (exAtual.observacoes?.isNotEmpty ?? false)
                             Text('Observação: ${exAtual.observacoes}',
                               style: const TextStyle(color: Colors.white)),
-                          if (exAtual.exerciciosAlternativos.isNotEmpty)
-                            Text('Máquina ocupada? Alternativas: ${exAtual.exerciciosAlternativos.join(' ou ')}',
-                              style: const TextStyle(color: Color(0xFF94A3B8))),
+                          if (widget.divisao.exercicios[_exercicioIndexAtual].exerciciosAlternativos.isNotEmpty)
+                            OutlinedButton.icon(
+                              onPressed: _escolherAlternativa,
+                              icon: const Icon(Icons.swap_horiz, size: 18),
+                              label: const Text('Máquina ocupada? Trocar exercício'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFF6EE7B7),
+                                side: const BorderSide(color: Color(0xFF10B981))),
+                            ),
+                          if (exAtual.exercicioId != widget.divisao.exercicios[_exercicioIndexAtual].exercicioId)
+                            Text('Alternativa de ${widget.divisao.exercicios[_exercicioIndexAtual].exercicioNome}',
+                              style: const TextStyle(fontSize: 12, color: Color(0xFF6EE7B7))),
                           InkWell(
                             onTap: () => _mostrarDemonstracao(exAtual.exercicioId),
                             borderRadius: BorderRadius.circular(8),
@@ -299,14 +464,14 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                                 children: [
                                   Icon(Icons.play_circle_fill, color: Color(0xFF3B82F6), size: 18),
                                   SizedBox(width: 6),
-                                  Text(
+                                  Flexible(child: Text(
                                     'Ver Demonstração e Instruções',
                                     style: TextStyle(
                                       color: Color(0xFF3B82F6),
                                       fontSize: 13,
                                       fontWeight: FontWeight.w700,
                                     ),
-                                  ),
+                                  )),
                                 ],
                               ),
                             ),
@@ -319,7 +484,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
               ),
 
               // 3. Banner de Sobrecarga Inteligente (MyFitCoach Overload Engine)
-              if (_sugestaoSobrecargaAtual != null)
+              if (!_carregandoSugestao && _sugestaoSobrecargaAtual != null)
                 _buildBannerSobrecargaInteligente(),
 
               // 4. Tabela de Séries com Checkbox e Ajustes Rápidos
@@ -358,6 +523,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                           ),
                           onPressed: () {
                             setState(() => _exercicioIndexAtual--);
+                            _salvarRascunho();
                             _carregarSugestaoParaExercicioAtual();
                           },
                           child: const Text('Anterior'),
@@ -376,6 +542,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                           if (_exercicioIndexAtual <
                               widget.divisao.exercicios.length - 1) {
                             setState(() => _exercicioIndexAtual++);
+                            _salvarRascunho();
                             _carregarSugestaoParaExercicioAtual();
                           } else {
                             _confirmarFinalizarTreino();
@@ -631,9 +798,15 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (concluida)
+                  Text((_execucao.realizados[_exercicioIndexAtual]?[serieIdx]
+                      ?? widget.divisao.exercicios[_exercicioIndexAtual]).exercicioNome,
+                    maxLines: 2, overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Color(0xFF6EE7B7), fontSize: 10)),
                 const Text('Carga (kg)',
                     style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11)),
-                Row(
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
                       '${serie.cargaRealKg.toStringAsFixed(1)} kg',
@@ -668,7 +841,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
               children: [
                 const Text('Reps',
                     style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11)),
-                Row(
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
                       '${serie.repeticoesRealizadas}',
@@ -711,6 +885,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                 );
               });
 
+              _execucao.marcarSerie(_exercicioIndexAtual, serieIdx, novoEstado);
+              _salvarRascunho();
               if (novoEstado) {
                 _iniciarCronometroDescanso(descansoPadrao);
               }
@@ -819,6 +995,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
         concluida: serie.concluida,
       );
     });
+    _salvarRascunho();
   }
 
   void _ajustarRepsSerie(int serieIdx, int delta) {
@@ -833,6 +1010,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
         concluida: serie.concluida,
       );
     });
+    _salvarRascunho();
   }
 
   Future<void> _confirmarFinalizarTreino() async {
@@ -1000,7 +1178,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                     try {
                     // 1. Gravar sessão no repositório offline
                     final sessao = SessaoTreinoRegistroModel(
-                      id: 'sessao_${DateTime.now().millisecondsSinceEpoch}',
+                      id: 'sessao_${_inicioSessao.microsecondsSinceEpoch}_${widget.divisao.id}',
                       treinoId: widget.planoId,
                       divisaoLetra: widget.divisao.letra,
                       divisaoNome: widget.divisao.nome,
@@ -1015,23 +1193,26 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                           : null,
                       sincronizado: false,
                       videoUrl: videoCtrl.text.trim().isEmpty ? null : videoCtrl.text.trim(),
-                      exerciciosExecutados: [
-                        for (int i = 0;
-                            i < widget.divisao.exercicios.length;
-                            i++)
-                          ExercicioExecutadoRegistroModel(
-                            exercicioId:
-                                widget.divisao.exercicios[i].exercicioId,
-                            exercicioNome:
-                                widget.divisao.exercicios[i].exercicioNome,
-                            grupoMuscular:
-                                widget.divisao.exercicios[i].grupoMuscular,
-                            series: _seriesPorExercicio[i] ?? [],
-                          ),
-                      ],
+                      exerciciosExecutados: _execucao.historico(_seriesPorExercicio),
                     );
 
-                    await _repository.registrarSessaoConcluida(sessao);
+                    final salvas = await _repository.getSessoesConcluidas(
+                        alunoId: widget.alunoId);
+                    // Uma tentativa após falha de limpeza não duplica a sessão.
+                    if (!salvas.any((s) => s.id == sessao.id)) {
+                      await _repository.registrarSessaoConcluida(sessao);
+                    }
+                    _concluido = true;
+                    await _filaRascunho;
+                    try {
+                      final prefs = await SharedPreferences.getInstance();
+                      if (!await prefs.remove(_chaveRascunho)) {
+                        throw StateError('Rascunho não removido.');
+                      }
+                    } catch (e, st) {
+                      // A sessão já está salva; não apresentar falha de conclusão.
+                      AppLogger.i.error('Treino salvo, mas falhou a limpeza do rascunho: $e', st);
+                    }
                     final streak =
                         await _repository.calcularStreakDias(alunoId: widget.alunoId);
 
