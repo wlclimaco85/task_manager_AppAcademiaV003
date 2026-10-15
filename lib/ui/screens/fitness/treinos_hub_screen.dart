@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/ui/widgets/detalhes_sessao_treino.dart';
-import 'package:task_manager_flutter/ui/widgets/exercicio_midia.dart';
+import 'package:task_manager_flutter/ui/widgets/midias_sessao_treino.dart';
 import 'package:task_manager_flutter/ui/widgets/imprimir_pdf.dart';
 import 'package:task_manager_flutter/data/services/pdf/ficha_dieta_pdf.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
@@ -402,22 +402,24 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                 TextButton.icon(
                   icon: const Icon(Icons.visibility_outlined),
                   label: const Text('Ver detalhes'),
-                  onPressed: () => showDialog(context: context,
-                    builder: (_) => DetalhesSessaoTreino(sessao: sessao)),
+                  onPressed: () async {
+                    await showDialog(context: context,
+                      builder: (_) => DetalhesSessaoTreino(sessao: sessao));
+                    if (mounted) await _carregarDados();
+                  },
                 ),
-                if (sessao.videoUrl?.isNotEmpty ?? false)
-                  TextButton.icon(
-                    icon: const Icon(Icons.play_circle_outline),
-                    label: const Text('Ver vídeo do meu treino'),
-                    onPressed: () => showDialog(context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Vídeo do treino'),
-                        content: SizedBox(width: 600,
-                          child: ExercicioMidia(url: sessao.videoUrl!, abrirAoExibir: true)),
-                        actions: [TextButton(onPressed: () => Navigator.pop(context),
-                          child: const Text('Fechar'))],
-                      )),
-                  ),
+                Text('${sessao.fotosDoTreino.length} fotos • ${sessao.videosDoTreino.length} vídeos'),
+                if (sessao.fotosDoTreino.isNotEmpty)
+                  MidiasSessaoTreinoGaleria(fotosBase64: sessao.fotosDoTreino,
+                    videosUrls: const [], compacta: true),
+                TextButton.icon(
+                  icon: const Icon(Icons.photo_library_outlined),
+                  label: const Text('Fotos e vídeos'),
+                  onPressed: () async {
+                    final atualizada = await editarMidiasSessaoTreino(context, sessao);
+                    if (atualizada != null && mounted) await _carregarDados();
+                  },
+                ),
                 if (sessao.feedbackAluno != null)
                   Text(
                     '"${sessao.feedbackAluno}"',

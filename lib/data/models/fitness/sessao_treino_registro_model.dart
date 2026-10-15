@@ -94,7 +94,18 @@ class SessaoTreinoRegistroModel {
   final int rpe; // Esforço percebido (1 a 10)
   final String? feedbackAluno;
   final String? videoUrl;
+  final List<String> fotosBase64;
+  final List<String> videosUrls;
   final bool sincronizado;
+
+  List<String> get fotosDoTreino =>
+      fotosBase64.where((f) => f.trim().isNotEmpty).take(3).toList();
+
+  List<String> get videosDoTreino {
+    final links = videosUrls.where((v) => v.trim().isNotEmpty).take(3).toList();
+    if (links.isNotEmpty) return links;
+    return videoUrl?.trim().isNotEmpty == true ? [videoUrl!.trim()] : const [];
+  }
 
   const SessaoTreinoRegistroModel({
     required this.id,
@@ -109,6 +120,8 @@ class SessaoTreinoRegistroModel {
     this.rpe = 7,
     this.feedbackAluno,
     this.videoUrl,
+    this.fotosBase64 = const [],
+    this.videosUrls = const [],
     this.sincronizado = false,
   });
 
@@ -126,6 +139,8 @@ class SessaoTreinoRegistroModel {
       'rpe': rpe,
       'feedbackAluno': feedbackAluno,
       'videoUrl': videoUrl,
+      'fotosBase64': fotosBase64,
+      'videosUrls': videosUrls,
       'sincronizado': sincronizado,
     };
   }
@@ -148,6 +163,8 @@ class SessaoTreinoRegistroModel {
       rpe: (map['rpe'] as num?)?.toInt() ?? 7,
       feedbackAluno: map['feedbackAluno']?.toString(),
       videoUrl: map['videoUrl']?.toString(),
+      fotosBase64: (map['fotosBase64'] as List?)?.whereType<String>().toList() ?? const [],
+      videosUrls: (map['videosUrls'] as List?)?.whereType<String>().toList() ?? const [],
       sincronizado: map['sincronizado'] == true,
     );
   }

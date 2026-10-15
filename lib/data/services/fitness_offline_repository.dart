@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/utils/app_logger.dart';
+import 'package:task_manager_flutter/data/utils/midias_treino.dart';
 import 'package:task_manager_flutter/data/models/fitness/exercicio_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
@@ -180,6 +181,59 @@ class FitnessOfflineRepository {
     final jsonStr = json.encode(sessoes.map((s) => s.toMap()).toList());
     await prefs.setString(FitnessContaSync.chave(_kSessoesKey), jsonStr);
     await FitnessContaSync.salvar('sessoes', sessao.toMap());
+  }
+
+  /// Atualiza somente mídias de uma sessão real, sem duplicar o histórico.
+  /// Grava primeiro no aparelho e usa a fila existente para sincronizar.
+  Future<SessaoTreinoRegistroModel> atualizarSessaoMidias(String id, {
+    required List<String> fotosBase64,
+    required List<String> videosUrls,
+  }) async {
+    // A conta proprietária é capturada antes do primeiro await.
+    final key = FitnessContaSync.chave(_kSessoesKey);
+    final chaveFila = FitnessContaSync.chave('fitness_pendentes_sessoes');
+    final autenticado = FitnessContaSync.autenticado;
+    final fotos = List<String>.of(fotosBase64);
+    final videos = videosUrls.map((v) => v.trim()).where((v) => v.isNotEmpty).toList();
+    final erro = validarMidiasSessaoTreino(fotos, videos);
+    if (erro != null) throw ArgumentError(erro);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lista = (jsonDecode(prefs.getString(key) ?? '[]') as List)
+          .map((e) => Map<String, dynamic>.from(e)).toList();
+      final index = lista.indexWhere((e) => e['id'] == id);
+      if (index < 0) {
+        throw StateError('Treino não encontrado no histórico deste aparelho.');
+      }
+      final atualizada = SessaoTreinoRegistroModel.fromMap({
+        ...lista[index],
+        'fotosBase64': fotos,
+        'videosUrls': videos,
+        'videoUrl': null,
+        'sincronizado': false,
+      });
+      lista[index] = atualizada.toMap();
+      if (!await prefs.setString(key, jsonEncode(lista))) {
+        throw StateError('Não foi possível salvar as mídias neste aparelho.');
+      }
+      if (autenticado) {
+        final fila = Map<String, dynamic>.from(
+            jsonDecode(prefs.getString(chaveFila) ?? '{}'));
+        fila[id] = atualizada.toMap();
+        if (!await prefs.setString(chaveFila, jsonEncode(fila))) {
+          throw StateError('Não foi possível guardar a sincronização pendente.');
+        }
+        // Logout/troca de conta não pode enviar os anexos pela outra conta.
+        if (FitnessContaSync.autenticado &&
+            FitnessContaSync.chave(_kSessoesKey) == key) {
+          await FitnessContaSync.carregar('sessoes');
+        }
+      }
+      return atualizada;
+    } catch (e, st) {
+      AppLogger.i.error('Falha ao atualizar mídias do treino $id: $e', st);
+      rethrow;
+    }
   }
 
   Future<void> atualizarSessaoTreino(SessaoTreinoRegistroModel sessaoAtualizada) async {
