@@ -1,10 +1,10 @@
+import 'package:task_manager_flutter/ui/widgets/midias_sessao_treino.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/services/fitness_conta_sync.dart';
 import 'package:task_manager_flutter/data/models/fitness/execucao_alternativas_treino.dart';
 import 'package:task_manager_flutter/ui/widgets/compartilhar_treino_sheet.dart';
-import 'package:task_manager_flutter/data/utils/exercicio_video_link.dart';
 import 'package:task_manager_flutter/data/utils/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1016,7 +1016,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
   Future<void> _confirmarFinalizarTreino() async {
     int rpeSelecionado = 7;
     final feedbackCtrl = TextEditingController();
-    final videoCtrl = TextEditingController();
+    var fotos = <String>[];
+    var videos = <String>[];
     final formKey = GlobalKey<FormState>();
     bool salvando = false;
     bool compartilhar = false;
@@ -1051,9 +1052,9 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                   Icon(Icons.emoji_events,
                       color: Color(0xFFF59E0B), size: 28),
                   SizedBox(width: 10),
-                  Text('Treino Finalizado!',
+                  Expanded(child: Text('Treino Finalizado!',
                       style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.w800)),
+                          color: Colors.white, fontWeight: FontWeight.w800))),
                 ],
               ),
               content: SingleChildScrollView(
@@ -1134,16 +1135,16 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    TextFormField(
-                      controller: videoCtrl,
-                      validator: validarLinkVideoExercicio,
-                      keyboardType: TextInputType.url,
-                      style: const TextStyle(color: Color(0xFF0F172A)),
-                      decoration: const InputDecoration(
-                        labelText: 'Vídeo do meu treino (opcional)',
-                        hintText: 'Link do YouTube ou Google Drive',
-                        helperText: 'No Drive, permita acesso pelo link.',
-                        helperStyle: TextStyle(color: Color(0xFF94A3B8)),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(color: Colors.white,
+                        borderRadius: BorderRadius.circular(12)),
+                      child: MidiasSessaoTreinoEditor(
+                        fotosBase64: fotos, videosUrls: videos,
+                        onChanged: (novasFotos, novosVideos) {
+                          fotos = novasFotos;
+                          videos = novosVideos;
+                        },
                       ),
                     ),
                     CheckboxListTile(
@@ -1174,6 +1175,12 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                   label: Text(salvando ? 'Salvando...' : 'Salvar treino'),
                   onPressed: salvando ? null : () async {
                     if (!formKey.currentState!.validate()) return;
+                    final erroMidias = validarMidiasSessaoTreino(fotos, videos);
+                    if (erroMidias != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(erroMidias)));
+                      return;
+                    }
                     setDialogState(() => salvando = true);
                     try {
                     // 1. Gravar sessão no repositório offline
@@ -1192,7 +1199,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                           ? feedbackCtrl.text.trim()
                           : null,
                       sincronizado: false,
-                      videoUrl: videoCtrl.text.trim().isEmpty ? null : videoCtrl.text.trim(),
+                      fotosBase64: fotos, videosUrls: videos,
                       exerciciosExecutados: _execucao.historico(_seriesPorExercicio),
                     );
 
@@ -1235,6 +1242,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
 
                     // 3. Exibir Card Visual Stories / Strava para compartilhamento
                     _exibirModalStoriesCompartilhamento(
+                      sessao: sessao,
                       duracaoMinutos: duracaoMinutos,
                       tonelagemKg: tonelagemKg,
                       totalSeries: totalSeriesConcluidas,
@@ -1260,7 +1268,6 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     await Navigator.of(context).push(route);
     await route.completed;
     feedbackCtrl.dispose();
-    videoCtrl.dispose();
   }
 
   Widget _buildMiniStat(String label, String value, IconData icon) {
@@ -1281,6 +1288,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
 
   /// Exibe Modal Estilo Stories / Strava com Layout Premium 9:16
   void _exibirModalStoriesCompartilhamento({
+    required SessaoTreinoRegistroModel sessao,
     required int duracaoMinutos,
     required double tonelagemKg,
     required int totalSeries,
@@ -1296,6 +1304,11 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
           treino: 'Treino ${widget.divisao.letra} - ${widget.divisao.nome}',
           minutos: duracaoMinutos, tonelagemKg: tonelagemKg,
           series: totalSeries, rpe: rpe,
+          fotosIniciais: sessao.fotosBase64,
+          onFotosAlteradas: (fotos) async {
+            await _repository.atualizarSessaoMidias(sessao.id,
+              fotosBase64: fotos, videosUrls: sessao.videosDoTreino);
+          },
           onFechar: () {
             Navigator.pop(sheetContext);
             Navigator.of(context).pop(true);
