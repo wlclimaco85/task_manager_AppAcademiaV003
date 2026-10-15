@@ -57,9 +57,9 @@ class _ContratarProfissionalScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D131A),
+      backgroundColor: GridColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF141C24),
+        backgroundColor: GridColors.card,
         elevation: 0,
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,7 +69,7 @@ class _ContratarProfissionalScreenState
                 Text(
                   'Personais & Nutris em Uberaba',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: GridColors.textPrimary,
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
                   ),
@@ -80,7 +80,7 @@ class _ContratarProfissionalScreenState
             ),
             Text(
               'Encontre os melhores profissionais na sua academia',
-              style: TextStyle(color: Color(0xFF8E9BAE), fontSize: 11),
+              style: TextStyle(color: GridColors.textSecondary, fontSize: 11),
             ),
           ],
         ),
@@ -98,9 +98,9 @@ class _ContratarProfissionalScreenState
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             decoration: const BoxDecoration(
-              color: Color(0xFF141C24),
+              color: GridColors.card,
               border: Border(
-                bottom: BorderSide(color: Color(0xFF223140), width: 1),
+                bottom: BorderSide(color: GridColors.divider, width: 1),
               ),
             ),
             child: Column(
@@ -109,17 +109,17 @@ class _ContratarProfissionalScreenState
                 TextField(
                   controller: _buscaController,
                   onChanged: (_) => _carregar(),
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  style: const TextStyle(color: GridColors.textPrimary, fontSize: 14),
                   decoration: InputDecoration(
                     hintText: 'Buscar por nome, especialidade ou academia em Uberaba...',
                     hintStyle:
-                        const TextStyle(color: Color(0xFF8E9BAE), fontSize: 12),
+                        const TextStyle(color: GridColors.textSecondary, fontSize: 12),
                     prefixIcon:
                         const Icon(Icons.search, color: CustomColors.primaryGreen),
                     suffixIcon: _buscaController.text.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.clear,
-                                color: Color(0xFF8E9BAE), size: 18),
+                                color: GridColors.textSecondary, size: 18),
                             onPressed: () {
                               _buscaController.clear();
                               _carregar();
@@ -127,15 +127,15 @@ class _ContratarProfissionalScreenState
                           )
                         : null,
                     filled: true,
-                    fillColor: const Color(0xFF0D131A),
+                    fillColor: GridColors.inputBackground,
                     contentPadding: const EdgeInsets.symmetric(vertical: 10),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF223140)),
+                      borderSide: const BorderSide(color: GridColors.divider),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF223140)),
+                      borderSide: const BorderSide(color: GridColors.divider),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -186,16 +186,16 @@ class _ContratarProfissionalScreenState
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0D131A),
+                          color: GridColors.background,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFF223140)),
+                          border: Border.all(color: GridColors.divider),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             value: _academiaFiltro,
-                            dropdownColor: const Color(0xFF16202A),
+                            dropdownColor: GridColors.card,
                             style: const TextStyle(
-                                color: Colors.white, fontSize: 12),
+                                color: GridColors.textPrimary, fontSize: 12),
                             icon: const Icon(Icons.arrow_drop_down,
                                 color: CustomColors.primaryGreen, size: 20),
                             items: [
@@ -240,12 +240,12 @@ class _ContratarProfissionalScreenState
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Icon(Icons.person_search,
-                                size: 56, color: Color(0xFF8E9BAE)),
+                                size: 56, color: GridColors.textSecondary),
                             const SizedBox(height: 12),
                             const Text(
                               'Nenhum profissional encontrado',
                               style: TextStyle(
-                                  color: Colors.white,
+                                  color: GridColors.textPrimary,
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold),
                             ),
@@ -253,7 +253,7 @@ class _ContratarProfissionalScreenState
                             const Text(
                               'Tente alterar os filtros de academia de Uberaba.',
                               style: TextStyle(
-                                  color: Color(0xFF8E9BAE), fontSize: 13),
+                                  color: GridColors.textSecondary, fontSize: 13),
                             ),
                           ],
                         ),
@@ -284,18 +284,18 @@ class _ContratarProfissionalScreenState
         decoration: BoxDecoration(
           color: selecionado
               ? CustomColors.primaryGreen
-              : const Color(0xFF0D131A),
+              : GridColors.background,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: selecionado
                 ? CustomColors.primaryGreen
-                : const Color(0xFF223140),
+                : GridColors.divider,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selecionado ? const Color(0xFF0D131A) : Colors.white,
+            color: selecionado ? GridColors.textOnPrimary : GridColors.textPrimary,
             fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
@@ -310,9 +310,9 @@ class _ContratarProfissionalScreenState
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF16202A),
+        color: GridColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF223140)),
+        border: Border.all(color: GridColors.divider),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,14 +330,14 @@ class _ContratarProfissionalScreenState
                       radius: 28,
                       backgroundColor: isPersonal
                           ? CustomColors.primaryGreen.withOpacity(0.2)
-                          : Colors.cyanAccent.withOpacity(0.2),
+                          : GridColors.info.withOpacity(0.2),
                       child: Icon(
                         isPersonal
                             ? Icons.fitness_center
                             : Icons.restaurant_menu,
                         color: isPersonal
                             ? CustomColors.primaryGreen
-                            : Colors.cyanAccent,
+                            : GridColors.info,
                         size: 26,
                       ),
                     ),
@@ -352,7 +352,7 @@ class _ContratarProfissionalScreenState
                                 child: Text(
                                   prof.nome,
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: GridColors.textPrimary,
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -365,7 +365,7 @@ class _ContratarProfissionalScreenState
                                 decoration: BoxDecoration(
                                   color: (isPersonal
                                           ? CustomColors.primaryGreen
-                                          : Colors.cyanAccent)
+                                          : GridColors.info)
                                       .withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
@@ -374,7 +374,7 @@ class _ContratarProfissionalScreenState
                                   style: TextStyle(
                                     color: isPersonal
                                         ? CustomColors.primaryGreen
-                                        : Colors.cyanAccent,
+                                        : GridColors.info,
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -386,18 +386,18 @@ class _ContratarProfissionalScreenState
                           Text(
                             '${prof.registroProfissional} • ${prof.anosExperiencia} anos exp. em Uberaba',
                             style: const TextStyle(
-                                color: Color(0xFF8E9BAE), fontSize: 11),
+                                color: GridColors.textSecondary, fontSize: 11),
                           ),
                           const SizedBox(height: 4),
                           Row(
                             children: [
                               const Icon(Icons.star,
-                                  color: Colors.amber, size: 16),
+                                  color: GridColors.secondaryDark, size: 16),
                               const SizedBox(width: 4),
                               Text(
                                 '${prof.avaliacaoMedia} (${prof.totalAvaliacoes} avaliações)',
                                 style: const TextStyle(
-                                  color: Colors.amber,
+                                  color: GridColors.secondaryDark,
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -413,7 +413,7 @@ class _ContratarProfissionalScreenState
                         const Text(
                           'a partir de',
                           style: TextStyle(
-                              color: Color(0xFF8E9BAE), fontSize: 10),
+                              color: GridColors.textSecondary, fontSize: 10),
                         ),
                         Text(
                           'R\$ ${prof.precoMinimoMensal.toStringAsFixed(0)}',
@@ -426,7 +426,7 @@ class _ContratarProfissionalScreenState
                         const Text(
                           '/mês',
                           style: TextStyle(
-                              color: Color(0xFF8E9BAE), fontSize: 10),
+                              color: GridColors.textSecondary, fontSize: 10),
                         ),
                       ],
                     ),
@@ -438,7 +438,7 @@ class _ContratarProfissionalScreenState
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0D131A),
+                    color: GridColors.background,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Column(
@@ -447,7 +447,7 @@ class _ContratarProfissionalScreenState
                       Text(
                         'Especialidade: ${prof.especialidade}',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: GridColors.textPrimary,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
@@ -458,7 +458,7 @@ class _ContratarProfissionalScreenState
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                            color: Color(0xFF8E9BAE), fontSize: 12),
+                            color: GridColors.textSecondary, fontSize: 12),
                       ),
                     ],
                   ),
@@ -469,7 +469,7 @@ class _ContratarProfissionalScreenState
                 const Text(
                   'Academias que Atende em Uberaba:',
                   style: TextStyle(
-                    color: Color(0xFF8E9BAE),
+                    color: GridColors.textSecondary,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
@@ -483,10 +483,10 @@ class _ContratarProfissionalScreenState
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1E2B38),
+                              color: GridColors.card,
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                  color: const Color(0xFF2A3B4D)),
+                                  color: GridColors.divider),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -498,7 +498,7 @@ class _ContratarProfissionalScreenState
                                 Text(
                                   acad.nome,
                                   style: const TextStyle(
-                                    color: Colors.white70,
+                                    color: GridColors.textSecondary,
                                     fontSize: 11,
                                   ),
                                 ),
@@ -522,12 +522,12 @@ class _ContratarProfissionalScreenState
                       child: Row(
                         children: [
                           const Icon(Icons.schedule,
-                              size: 14, color: Colors.greenAccent),
+                              size: 14, color: GridColors.primaryDark),
                           const SizedBox(width: 4),
                           Text(
                             '${prof.totalHorariosLivres} horários livres disponíveis esta semana',
                             style: const TextStyle(
-                              color: Colors.greenAccent,
+                              color: GridColors.primaryDark,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                             ),
@@ -545,10 +545,10 @@ class _ContratarProfissionalScreenState
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: const BoxDecoration(
-              color: Color(0xFF121B24),
+              color: GridColors.inputBackground,
               borderRadius:
                   BorderRadius.vertical(bottom: Radius.circular(16)),
-              border: Border(top: BorderSide(color: Color(0xFF223140))),
+              border: Border(top: BorderSide(color: GridColors.divider)),
             ),
             child: Row(
               children: [
@@ -556,8 +556,8 @@ class _ContratarProfissionalScreenState
                   child: OutlinedButton.icon(
                     onPressed: () => _modalDetalhesHorarios(context, prof),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: Color(0xFF2A3B4D)),
+                      foregroundColor: GridColors.textPrimary,
+                      side: const BorderSide(color: GridColors.divider),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -574,7 +574,7 @@ class _ContratarProfissionalScreenState
                     onPressed: () => _modalContratarPacotes(context, prof),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: CustomColors.primaryGreen,
-                      foregroundColor: const Color(0xFF0D131A),
+                      foregroundColor: GridColors.textOnPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -602,7 +602,7 @@ class _ContratarProfissionalScreenState
       BuildContext context, ProfissionalVitrineModel prof) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF16202A),
+      backgroundColor: GridColors.card,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -626,7 +626,7 @@ class _ContratarProfissionalScreenState
                       Text(
                         'Disponibilidade: ${prof.nome}',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: GridColors.textPrimary,
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
                         ),
@@ -635,12 +635,12 @@ class _ContratarProfissionalScreenState
                       const Text(
                         'Consulte os horários vagos para agendamento presencial',
                         style: TextStyle(
-                            color: Color(0xFF8E9BAE), fontSize: 12),
+                            color: GridColors.textSecondary, fontSize: 12),
                       ),
                     ],
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Color(0xFF8E9BAE)),
+                    icon: const Icon(Icons.close, color: GridColors.textSecondary),
                     onPressed: () => Navigator.pop(ctx),
                   ),
                 ],
@@ -650,9 +650,9 @@ class _ContratarProfissionalScreenState
                     margin: const EdgeInsets.only(bottom: 14),
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0D131A),
+                      color: GridColors.background,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFF223140)),
+                      border: Border.all(color: GridColors.divider),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -671,7 +671,7 @@ class _ContratarProfissionalScreenState
                             Text(
                               'Expediente: ${grade.horarioInicio} - ${grade.horarioFim}',
                               style: const TextStyle(
-                                  color: Color(0xFF8E9BAE), fontSize: 11),
+                                  color: GridColors.textSecondary, fontSize: 11),
                             ),
                           ],
                         ),
@@ -679,7 +679,7 @@ class _ContratarProfissionalScreenState
                         const Text(
                           'Horários Livres (Disponíveis):',
                           style: TextStyle(
-                              color: Colors.white70,
+                              color: GridColors.textSecondary,
                               fontSize: 11,
                               fontWeight: FontWeight.bold),
                         ),
@@ -691,7 +691,7 @@ class _ContratarProfissionalScreenState
                               ? [
                                   const Text('Sem horários livres neste dia',
                                       style: TextStyle(
-                                          color: Color(0xFF8E9BAE),
+                                          color: GridColors.textSecondary,
                                           fontSize: 11))
                                 ]
                               : grade.horariosDisponiveis
@@ -723,7 +723,7 @@ class _ContratarProfissionalScreenState
                           const Text(
                             'Horários Ocupados (Já Reservados):',
                             style: TextStyle(
-                                color: Color(0xFF8E9BAE), fontSize: 11),
+                                color: GridColors.textSecondary, fontSize: 11),
                           ),
                           const SizedBox(height: 6),
                           Wrap(
@@ -734,14 +734,14 @@ class _ContratarProfissionalScreenState
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF1E2B38),
+                                        color: GridColors.card,
                                         borderRadius:
                                             BorderRadius.circular(6),
                                       ),
                                       child: Text(
                                         h,
                                         style: const TextStyle(
-                                          color: Color(0xFF8E9BAE),
+                                          color: GridColors.textSecondary,
                                           fontSize: 11,
                                           decoration:
                                               TextDecoration.lineThrough,
@@ -769,7 +769,7 @@ class _ContratarProfissionalScreenState
       BuildContext context, ProfissionalVitrineModel prof) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF16202A),
+      backgroundColor: GridColors.card,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -789,7 +789,7 @@ class _ContratarProfissionalScreenState
                     Text(
                       'Planos & Valores: ${prof.nome}',
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: GridColors.textPrimary,
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
                       ),
@@ -805,7 +805,7 @@ class _ContratarProfissionalScreenState
                   ],
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: Color(0xFF8E9BAE)),
+                  icon: const Icon(Icons.close, color: GridColors.textSecondary),
                   onPressed: () => Navigator.pop(ctx),
                 ),
               ],
@@ -815,12 +815,12 @@ class _ContratarProfissionalScreenState
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0D131A),
+                    color: GridColors.background,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: pacote.destaque
                           ? CustomColors.primaryGreen
-                          : const Color(0xFF223140),
+                          : GridColors.divider,
                       width: pacote.destaque ? 1.5 : 1,
                     ),
                   ),
@@ -834,7 +834,7 @@ class _ContratarProfissionalScreenState
                             child: Text(
                               pacote.titulo,
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: GridColors.textPrimary,
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -854,7 +854,7 @@ class _ContratarProfissionalScreenState
                       Text(
                         pacote.descricao,
                         style: const TextStyle(
-                            color: Color(0xFF8E9BAE), fontSize: 12),
+                            color: GridColors.textSecondary, fontSize: 12),
                       ),
                       const SizedBox(height: 10),
                       Row(
@@ -875,7 +875,7 @@ class _ContratarProfissionalScreenState
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: CustomColors.primaryGreen,
-                                foregroundColor: const Color(0xFF0D131A),
+                                foregroundColor: GridColors.textOnPrimary,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -901,7 +901,7 @@ class _ContratarProfissionalScreenState
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF25D366),
-                                foregroundColor: Colors.white,
+                                foregroundColor: GridColors.textOnPrimary,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -935,7 +935,7 @@ class _ContratarProfissionalScreenState
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF16202A),
+      backgroundColor: GridColors.card,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -954,7 +954,7 @@ class _ContratarProfissionalScreenState
             const Text(
               'Cadastrar Nova Academia em Uberaba',
               style: TextStyle(
-                color: Colors.white,
+                color: GridColors.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -962,34 +962,34 @@ class _ContratarProfissionalScreenState
             const SizedBox(height: 16),
             TextField(
               controller: nomeController,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: GridColors.textPrimary),
               decoration: const InputDecoration(
                 labelText: 'Nome da Academia',
-                labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
+                labelStyle: TextStyle(color: GridColors.textSecondary),
                 filled: true,
-                fillColor: Color(0xFF0D131A),
+                fillColor: GridColors.inputBackground,
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: enderecoController,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: GridColors.textPrimary),
               decoration: const InputDecoration(
                 labelText: 'Endereço (Rua, Número)',
-                labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
+                labelStyle: TextStyle(color: GridColors.textSecondary),
                 filled: true,
-                fillColor: Color(0xFF0D131A),
+                fillColor: GridColors.inputBackground,
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: bairroController,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: GridColors.textPrimary),
               decoration: const InputDecoration(
                 labelText: 'Bairro e Cidade',
-                labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
+                labelStyle: TextStyle(color: GridColors.textSecondary),
                 filled: true,
-                fillColor: Color(0xFF0D131A),
+                fillColor: GridColors.inputBackground,
               ),
             ),
             const SizedBox(height: 20),
@@ -1019,7 +1019,7 @@ class _ContratarProfissionalScreenState
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: CustomColors.primaryGreen,
-                  foregroundColor: const Color(0xFF0D131A),
+                  foregroundColor: GridColors.textOnPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 child: const Text('Cadastrar Academia',

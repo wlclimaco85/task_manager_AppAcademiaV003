@@ -34,12 +34,12 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
   }
   String get _playUrl => _linkLoja(_play, 'play.google.com');
   String get _appleUrl => _linkLoja(_apple, 'apps.apple.com');
-  String get _legenda => 'Treino concluído no AppAcademia Pro!\n'
+  String get _legenda => 'Treino concluído no Meu Treino!\n'
       '${widget.treino}\n${widget.minutos} min • ${widget.series} séries\n'
       '${widget.tonelagemKg.toStringAsFixed(0)} kg de volume total\n'
       '${_playUrl.isEmpty ? '' : '${_playUrl == 'https://play.google.com/store/apps' ? 'Android (link de teste)' : 'Baixe para Android'}: $_playUrl\n'}'
       '${_appleUrl.isEmpty ? '' : '${_appleUrl == 'https://apps.apple.com/br/' ? 'iPhone (link de teste)' : 'Baixe para iPhone'}: $_appleUrl\n'}'
-      '#AppAcademia #MeuTreino';
+      '#MeuTreino';
 
   Future<void> _escolherFoto(ImageSource source) async {
     try {
@@ -87,7 +87,7 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
           decoration: BoxDecoration(color: const Color(0xFF064E3B),
             borderRadius: BorderRadius.circular(20)),
           child: Column(children: [
-            const Text('APPACADEMIA PRO', style: TextStyle(color: Colors.white,
+            const Text('MEU TREINO', style: TextStyle(color: Colors.white,
               fontWeight: FontWeight.w800, fontSize: 20)),
             const SizedBox(height: 12),
             if (_foto != null) ClipRRect(borderRadius: BorderRadius.circular(12),
@@ -101,7 +101,7 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
             Text('${widget.tonelagemKg.toStringAsFixed(0)} kg de volume total',
               style: const TextStyle(color: Colors.white)),
             const SizedBox(height: 12),
-            const Text('#AppAcademia #MeuTreino', style: TextStyle(color: Colors.white)),
+            const Text('#MeuTreino', style: TextStyle(color: Colors.white)),
             if (_playUrl.isNotEmpty) Text('Android: $_playUrl',
               textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 11)),
             if (_appleUrl.isNotEmpty) Text('iPhone: $_appleUrl',

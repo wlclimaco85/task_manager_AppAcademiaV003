@@ -210,7 +210,7 @@ class _LoginScreenState extends State<LoginScreen>
               const SizedBox(height: 16),
               // App Name
               const Text(
-                "AppAcademia Pro",
+                "Meu Treino",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 28,

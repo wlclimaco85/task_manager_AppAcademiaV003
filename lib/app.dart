@@ -40,7 +40,7 @@ class TaskManagerApp extends StatelessWidget {
         },
       ),
       debugShowCheckedModeBanner: false,
-      title: "AppAcademia Pro",
+      title: "Meu Treino",
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,

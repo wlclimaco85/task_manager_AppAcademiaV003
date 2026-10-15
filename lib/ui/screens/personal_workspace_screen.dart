@@ -65,9 +65,9 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
   Widget build(BuildContext context) {
     if (!podeGerenciarAlunos()) return const SemAcessoScreen();
     return Scaffold(
-      backgroundColor: const Color(0xFF0D131A),
+      backgroundColor: GridColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF141C24),
+        backgroundColor: GridColors.card,
         elevation: 0,
         title: Row(
           children: [
@@ -87,7 +87,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                 Text(
                   'Workspace Personal Pro',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: GridColors.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -95,7 +95,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                 Text(
                   'Gestão de Alunos, Agenda e Financeiro',
                   style: TextStyle(
-                    color: Color(0xFF8E9BAE),
+                    color: GridColors.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -105,7 +105,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Color(0xFF8E9BAE)),
+            icon: const Icon(Icons.refresh, color: GridColors.textSecondary),
             onPressed: _carregarDados,
             tooltip: 'Atualizar Dados',
           ),
@@ -114,7 +114,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
           controller: _tabController,
           indicatorColor: CustomColors.primaryGreen,
           labelColor: CustomColors.primaryGreen,
-          unselectedLabelColor: const Color(0xFF8E9BAE),
+          unselectedLabelColor: GridColors.textSecondary,
           tabs: const [
             Tab(icon: Icon(Icons.people_alt_outlined), text: 'Alunos'),
             Tab(icon: Icon(Icons.calendar_month_outlined), text: 'Agenda'),
@@ -154,7 +154,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
             Text(
               'Total de Alunos (${_alunos.length})',
               style: const TextStyle(
-                color: Colors.white,
+                color: GridColors.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -163,7 +163,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
               onPressed: () => _modalNovoAluno(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: CustomColors.primaryGreen,
-                foregroundColor: const Color(0xFF0D131A),
+                foregroundColor: GridColors.textOnPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -188,14 +188,14 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF16202A),
+        color: GridColors.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: treinoVenceu
-              ? Colors.redAccent.withOpacity(0.6)
+              ? GridColors.error.withOpacity(0.6)
               : alertaVencendo
-                  ? Colors.amber.withOpacity(0.6)
-                  : const Color(0xFF223140),
+                  ? GridColors.secondaryDark.withOpacity(0.6)
+                  : GridColors.divider,
           width: 1.5,
         ),
       ),
@@ -224,7 +224,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                     Text(
                       aluno.nome,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: GridColors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -233,7 +233,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                     Text(
                       [aluno.objetivo, aluno.nivel].where((v)=>v.isNotEmpty).join(' • '),
                       style: const TextStyle(
-                        color: Color(0xFF8E9BAE),
+                        color: GridColors.textSecondary,
                         fontSize: 13,
                       ),
                     ),
@@ -241,8 +241,8 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                 ),
               ),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, color: Color(0xFF8E9BAE)),
-                color: const Color(0xFF1E2B38),
+                icon: const Icon(Icons.more_vert, color: GridColors.textSecondary),
+                color: GridColors.card,
                 onSelected: (val) {
                   if (val == 'historico_treinos') {
                     _modalHistoricoTreinosAluno(context, aluno);
@@ -261,7 +261,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                   }
                 },
                 itemBuilder: (ctx) => [
-                  const PopupMenuItem(value:'editar_aluno',child:Text('Editar frequência e cobrança',style:TextStyle(color:Colors.white))),
+                  const PopupMenuItem(value:'editar_aluno',child:Text('Editar frequência e cobrança',style:TextStyle(color:GridColors.textPrimary))),
                   const PopupMenuItem(
                     value: 'historico_treinos',
                     child: Row(
@@ -269,24 +269,24 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                         Icon(Icons.history, color: CustomColors.primaryGreen, size: 18),
                         SizedBox(width: 8),
                         Text('Histórico de Treinos e Cargas',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                            style: TextStyle(color: GridColors.textPrimary, fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ),
                   const PopupMenuItem(
                     value: 'montar_treino',
                     child: Text('Montar / Atualizar Treino',
-                        style: TextStyle(color: Colors.white)),
+                        style: TextStyle(color: GridColors.textPrimary)),
                   ),
                   const PopupMenuItem(
                     value: 'alterar_validade',
                     child: Text('Definir Validade da Ficha',
-                        style: TextStyle(color: Colors.white)),
+                        style: TextStyle(color: GridColors.textPrimary)),
                   ),
                   const PopupMenuItem(
                     value: 'avaliacao',
                     child: Text('Nova Avaliação Física',
-                        style: TextStyle(color: Colors.white)),
+                        style: TextStyle(color: GridColors.textPrimary)),
                   ),
                 ],
               ),
@@ -297,7 +297,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF0D131A),
+              color: GridColors.background,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
@@ -309,9 +309,9 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                           ? Icons.warning_amber_rounded
                           : Icons.fitness_center,
                   color: treinoVenceu
-                      ? Colors.redAccent
+                      ? GridColors.error
                       : alertaVencendo
-                          ? Colors.amber
+                          ? GridColors.secondaryDark
                           : CustomColors.primaryGreen,
                   size: 20,
                 ),
@@ -323,7 +323,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                       Text(
                         aluno.treinoAtualNome ?? 'Sem ficha ativa',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: GridColors.textPrimary,
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                         ),
@@ -334,10 +334,10 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                             : 'Vence em ${aluno.diasParaVencerTreino} dias (${aluno.validadeTreinoDias} dias de ciclo)',
                         style: TextStyle(
                           color: treinoVenceu
-                              ? Colors.redAccent
+                              ? GridColors.error
                               : alertaVencendo
-                                  ? Colors.amber
-                                  : const Color(0xFF8E9BAE),
+                                  ? GridColors.secondaryDark
+                                  : GridColors.textSecondary,
                           fontSize: 11,
                           fontWeight: alertaVencendo
                               ? FontWeight.bold
@@ -361,8 +361,8 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
           Row(
             children: [
               Expanded(child:InkWell(onTap:()=>_modalNovoAluno(context,aluno:aluno),
-                child:Column(children:[Text('${aluno.frequenciaContratada}x/sem',style:const TextStyle(color:Colors.amber,fontWeight:FontWeight.bold)),
-                  const Text('Contratada • editar',style:TextStyle(color:Color(0xFF8E9BAE),fontSize:11))]))),
+                child:Column(children:[Text('${aluno.frequenciaContratada}x/sem',style:const TextStyle(color:GridColors.secondaryDark,fontWeight:FontWeight.bold)),
+                  const Text('Contratada • editar',style:TextStyle(color:GridColors.textSecondary,fontSize:11))]))),
               const SizedBox(width: 8),
               _buildMiniMetrica(
                   'Tonelagem',
@@ -377,21 +377,21 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0D131A),
+                      color: GridColors.background,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.cyanAccent.withOpacity(0.3)),
+                      border: Border.all(color: GridColors.info.withOpacity(0.3)),
                     ),
                     child: Column(
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.check_circle_outline, size: 14, color: Colors.cyanAccent),
+                            const Icon(Icons.check_circle_outline, size: 14, color: GridColors.info),
                             const SizedBox(width: 4),
                             Text(
                               '${aluno.totalTreinosConcluidos}',
                               style: const TextStyle(
-                                color: Colors.cyanAccent,
+                                color: GridColors.info,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
@@ -402,7 +402,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                         const Text(
                           'Concluídos (Ver)',
                           style: TextStyle(
-                            color: Colors.cyanAccent,
+                            color: GridColors.info,
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
                           ),
@@ -419,7 +419,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
             const Text(
               'Último Feedback do Aluno no Treino:',
               style: TextStyle(
-                color: Color(0xFF8E9BAE),
+                color: GridColors.textSecondary,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
@@ -428,9 +428,9 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFF1C2733),
+                color: GridColors.filterBackground,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFF2A3B4D)),
+                border: Border.all(color: GridColors.divider),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -449,7 +449,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                       Text(
                         'RPE ${aluno.feedbacks.first.rpe}/10 • ${aluno.feedbacks.first.data}',
                         style: const TextStyle(
-                          color: Color(0xFF8E9BAE),
+                          color: GridColors.textSecondary,
                           fontSize: 11,
                         ),
                       ),
@@ -459,7 +459,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                   Text(
                     '"${aluno.feedbacks.first.comentario}"',
                     style: const TextStyle(
-                      color: Colors.white70,
+                      color: GridColors.textSecondary,
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
                     ),
@@ -493,7 +493,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFF0D131A),
+          color: GridColors.background,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
@@ -517,7 +517,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
             Text(
               label,
               style: const TextStyle(
-                color: Color(0xFF8E9BAE),
+                color: GridColors.textSecondary,
                 fontSize: 10,
               ),
             ),
@@ -541,7 +541,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
             const Text(
               'Aulas e Consultorias',
               style: TextStyle(
-                color: Colors.white,
+                color: GridColors.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -550,7 +550,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
               onPressed: () => _modalAgendarAula(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: CustomColors.primaryGreen,
-                foregroundColor: const Color(0xFF0D131A),
+                foregroundColor: GridColors.textOnPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -575,12 +575,12 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF16202A),
+        color: GridColors.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isRemarcada
-              ? Colors.amber.withOpacity(0.5)
-              : const Color(0xFF223140),
+              ? GridColors.secondaryDark.withOpacity(0.5)
+              : GridColors.divider,
           width: 1.2,
         ),
       ),
@@ -610,7 +610,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                 child: Text(
                   agenda.alunoNome,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: GridColors.textPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                   ),
@@ -621,13 +621,13 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withOpacity(0.2),
+                    color: GridColors.secondaryDark.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Text(
                     'REMARCADA',
                     style: TextStyle(
-                      color: Colors.amber,
+                      color: GridColors.secondaryDark,
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                     ),
@@ -639,13 +639,13 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
           Row(
             children: [
               const Icon(Icons.location_on_outlined,
-                  size: 16, color: Color(0xFF8E9BAE)),
+                  size: 16, color: GridColors.textSecondary),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   'Academia: ${agenda.academiaNome}',
                   style: const TextStyle(
-                    color: Color(0xFFB0BEC5),
+                    color: GridColors.textSecondary,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
@@ -657,13 +657,13 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
           Row(
             children: [
               const Icon(Icons.fitness_center_outlined,
-                  size: 16, color: Color(0xFF8E9BAE)),
+                  size: 16, color: GridColors.textSecondary),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   'Tipo: ${agenda.tipoAula}',
                   style: const TextStyle(
-                    color: Color(0xFF8E9BAE),
+                    color: GridColors.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -676,13 +676,13 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.amber.withOpacity(0.1),
+                color: GridColors.secondaryDark.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 'Motivo Remarcação: ${agenda.motivoRemarcacao}',
                 style: const TextStyle(
-                  color: Colors.amber,
+                  color: GridColors.secondaryDark,
                   fontSize: 11,
                 ),
               ),
@@ -695,8 +695,8 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
               OutlinedButton.icon(
                 onPressed: () => _modalRemarcarAula(context, agenda),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.amber,
-                  side: const BorderSide(color: Colors.amber),
+                  foregroundColor: GridColors.secondaryDark,
+                  side: const BorderSide(color: GridColors.secondaryDark),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -748,14 +748,14 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
               'A Vencer',
               'R\$ ${totalPendente.toStringAsFixed(0)}',
               Icons.schedule,
-              Colors.cyanAccent,
+              GridColors.info,
             ),
             const SizedBox(width: 8),
             _buildCardMetricaFinanceira(
               'Em Atraso',
               'R\$ ${totalAtrasado.toStringAsFixed(0)}',
               Icons.warning_amber_rounded,
-              Colors.redAccent,
+              GridColors.error,
             ),
           ],
         ),
@@ -763,7 +763,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
         const Text(
           'Cobranças dos alunos',
           style: TextStyle(
-            color: Colors.white,
+            color: GridColors.textPrimary,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -780,7 +780,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFF16202A),
+          color: GridColors.card,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: cor.withOpacity(0.3)),
         ),
@@ -800,7 +800,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
             Text(
               label,
               style: const TextStyle(
-                color: Color(0xFF8E9BAE),
+                color: GridColors.textSecondary,
                 fontSize: 11,
               ),
             ),
@@ -819,12 +819,12 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF16202A),
+        color: GridColors.card,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isAtrasado
-              ? Colors.redAccent.withOpacity(0.5)
-              : const Color(0xFF223140),
+              ? GridColors.error.withOpacity(0.5)
+              : GridColors.divider,
         ),
       ),
       child: Row(
@@ -836,7 +836,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                 Text(
                   aluno.nome,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: GridColors.textPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                   ),
@@ -845,7 +845,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                 Text(
                   'Vencimento: Dia ${aluno.diaVencimento} • Valor: R\$ ${aluno.valorMensalidade.toStringAsFixed(2)}',
                   style: const TextStyle(
-                    color: Color(0xFF8E9BAE),
+                    color: GridColors.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -859,8 +859,8 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                         color: isPago
                             ? CustomColors.primaryGreen.withOpacity(0.2)
                             : isAtrasado
-                                ? Colors.redAccent.withOpacity(0.2)
-                                : Colors.amber.withOpacity(0.2),
+                                ? GridColors.error.withOpacity(0.2)
+                                : GridColors.secondaryDark.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -873,8 +873,8 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                           color: isPago
                               ? CustomColors.primaryGreen
                               : isAtrasado
-                                  ? Colors.redAccent
-                                  : Colors.amber,
+                                  ? GridColors.error
+                                  : GridColors.secondaryDark,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                         ),
@@ -885,7 +885,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                       Text(
                         'Pago em: ${aluno.dataUltimoPagamento}',
                         style: const TextStyle(
-                          color: Color(0xFF8E9BAE),
+                          color: GridColors.textSecondary,
                           fontSize: 11,
                         ),
                       ),
@@ -916,11 +916,11 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                   },
             style: ElevatedButton.styleFrom(
               backgroundColor: isPago
-                  ? const Color(0xFF223140)
+                  ? GridColors.divider
                   : CustomColors.primaryGreen,
               foregroundColor: isPago
-                  ? const Color(0xFF8E9BAE)
-                  : const Color(0xFF0D131A),
+                  ? GridColors.textSecondary
+                  : GridColors.textOnPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -952,7 +952,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
       children: [
         // Seção: Fichas de Treino Vencendo ou Vencidas
         _buildTituloSecaoAlerta('Fichas de Treino a Vencer / Vencidas',
-            Icons.fitness_center, Colors.amber),
+            Icons.fitness_center, GridColors.secondaryDark),
         if (alunosComTreinoVencendo.isEmpty)
           _buildCardVazioAlerta('Nenhuma ficha com prazo a vencer.')
         else
@@ -963,14 +963,14 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                     : 'Ficha "${a.treinoAtualNome}" vence em ${a.diasParaVencerTreino} dias.',
                 botaoTexto: 'Atualizar Treino',
                 icone: Icons.warning_amber_rounded,
-                cor: a.treinoVencido ? Colors.redAccent : Colors.amber,
+                cor: a.treinoVencido ? GridColors.error : GridColors.secondaryDark,
                 onAcao: () => _modalDefinirValidadeTreino(context, a),
               )),
         const SizedBox(height: 20),
 
         // Seção: Cobranças & Alunos Devendo
         _buildTituloSecaoAlerta('Alunos em Débito (Inadimplentes)',
-            Icons.money_off, Colors.redAccent),
+            Icons.money_off, GridColors.error),
         if (alunosEmDebito.isEmpty)
           _buildCardVazioAlerta('Nenhum aluno em débito este mês.')
         else
@@ -980,7 +980,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                     'Mensalidade de R\$ ${a.valorMensalidade.toStringAsFixed(2)} vencida no dia ${a.diaVencimento}.',
                 botaoTexto: 'Dar Baixa',
                 icone: Icons.error_outline,
-                cor: Colors.redAccent,
+                cor: GridColors.error,
                 onAcao: () async {
                   await _repo.registrarRecebimentoMensalidade(
                     alunoId: a.id,
@@ -993,7 +993,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
 
         // Seção: Alunos Ausentes (Sem Treinar há 3+ dias)
         _buildTituloSecaoAlerta('Assiduidade & Alunos Ausentes',
-            Icons.person_off, Colors.orangeAccent),
+            Icons.person_off, GridColors.secondaryDark),
         if (alunosAusentes.isEmpty)
           _buildCardVazioAlerta('Todos os alunos estão frequentes!')
         else
@@ -1003,7 +1003,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                     'Não registra treinos há ${a.diasSemTreinar} dias. Envie uma mensagem de incentivo!',
                 botaoTexto: 'Notificar Aluno',
                 icone: Icons.message,
-                cor: Colors.orangeAccent,
+                cor: GridColors.secondaryDark,
                 onAcao: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -1041,12 +1041,12 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF16202A),
+        color: GridColors.card,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
         msg,
-        style: const TextStyle(color: Color(0xFF8E9BAE), fontSize: 13),
+        style: const TextStyle(color: GridColors.textSecondary, fontSize: 13),
       ),
     );
   }
@@ -1063,7 +1063,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF16202A),
+        color: GridColors.card,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: cor.withOpacity(0.4)),
       ),
@@ -1078,7 +1078,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                 Text(
                   titulo,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: GridColors.textPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1087,7 +1087,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                 Text(
                   subtitulo,
                   style: const TextStyle(
-                    color: Color(0xFF8E9BAE),
+                    color: GridColors.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -1124,7 +1124,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF16202A),
+      backgroundColor: GridColors.card,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -1144,7 +1144,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
               Text(
                 'Definir Vigência do Treino: ${aluno.nome}',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: GridColors.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1152,19 +1152,19 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
               const SizedBox(height: 16),
               TextField(
                 controller: treinoController,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: GridColors.textPrimary),
                 decoration: const InputDecoration(
                   labelText: 'Nome da Ficha / Treino',
-                  labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
+                  labelStyle: TextStyle(color: GridColors.textSecondary),
                   filled: true,
-                  fillColor: Color(0xFF0D131A),
+                  fillColor: GridColors.inputBackground,
                 ),
               ),
               const SizedBox(height: 16),
               const Text(
                 'Tempo para Alerta de Mudança de Treino:',
                 style: TextStyle(
-                  color: Color(0xFF8E9BAE),
+                  color: GridColors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1178,9 +1178,9 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                     label: Text('$dias dias'),
                     selected: isSelected,
                     selectedColor: CustomColors.primaryGreen,
-                    backgroundColor: const Color(0xFF0D131A),
+                    backgroundColor: GridColors.background,
                     labelStyle: TextStyle(
-                      color: isSelected ? const Color(0xFF0D131A) : Colors.white,
+                      color: isSelected ? GridColors.textOnPrimary : GridColors.textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                     onSelected: (val) {
@@ -1204,7 +1204,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: CustomColors.primaryGreen,
-                    foregroundColor: const Color(0xFF0D131A),
+                    foregroundColor: GridColors.textOnPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: const Text('Salvar Vigência & Ativar Alerta',
@@ -1228,7 +1228,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF16202A),
+      backgroundColor: GridColors.card,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -1246,7 +1246,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.white24,
+                      color: GridColors.divider,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -1267,7 +1267,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                           Text(
                             'Histórico de Treinos: ${aluno.nome}',
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: GridColors.textPrimary,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
@@ -1275,7 +1275,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                           Text(
                             '${sessoes.length} sessões • Toque no treino para ver os exercícios e cargas',
                             style: const TextStyle(
-                              color: Color(0xFF8E9BAE),
+                              color: GridColors.textSecondary,
                               fontSize: 12,
                             ),
                           ),
@@ -1283,14 +1283,14 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white70),
+                      icon: const Icon(Icons.close, color: GridColors.textSecondary),
                       onPressed: () => Navigator.pop(ctx),
                     ),
                   ],
                 ),
-                const Divider(color: Color(0xFF223140), height: 24),
+                const Divider(color: GridColors.divider, height: 24),
                 Expanded(
-                  child: sessoes.isEmpty ? const Center(child:Text('Nenhum treino concluído por este aluno.',style:TextStyle(color:Colors.white70))) : ListView.separated(
+                  child: sessoes.isEmpty ? const Center(child:Text('Nenhum treino concluído por este aluno.',style:TextStyle(color:GridColors.textSecondary))) : ListView.separated(
                     itemCount: sessoes.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, idx) {
@@ -1299,12 +1299,12 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
 
                       return Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0D131A),
+                          color: GridColors.background,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: idx == 0
                                 ? CustomColors.primaryGreen.withOpacity(0.5)
-                                : const Color(0xFF223140),
+                                : GridColors.divider,
                           ),
                         ),
                         child: Theme(
@@ -1314,7 +1314,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                           child: ExpansionTile(
                             initiallyExpanded: idx == 0,
                             iconColor: CustomColors.primaryGreen,
-                            collapsedIconColor: Colors.white70,
+                            collapsedIconColor: GridColors.textSecondary,
                             tilePadding: const EdgeInsets.symmetric(
                                 horizontal: 14, vertical: 4),
                             title: Row(
@@ -1322,7 +1322,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                                 CircleAvatar(
                                   radius: 12,
                                   backgroundColor: CustomColors.primaryGreen,
-                                  foregroundColor: const Color(0xFF0D131A),
+                                  foregroundColor: GridColors.textOnPrimary,
                                   child: Text(
                                     sessao.divisaoLetra,
                                     style: const TextStyle(
@@ -1335,7 +1335,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                                   child: Text(
                                     sessao.divisaoNome,
                                     style: const TextStyle(
-                                      color: Colors.white,
+                                      color: GridColors.textPrimary,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
                                     ),
@@ -1345,13 +1345,13 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: Colors.amber.withOpacity(0.15),
+                                    color: GridColors.secondaryDark.withOpacity(0.15),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
                                     'RPE ${sessao.rpe}/10',
                                     style: const TextStyle(
-                                      color: Colors.amber,
+                                      color: GridColors.secondaryDark,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 11,
                                     ),
@@ -1364,23 +1364,23 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                               child: Row(
                                 children: [
                                   const Icon(Icons.calendar_today,
-                                      size: 12, color: Color(0xFF8E9BAE)),
+                                      size: 12, color: GridColors.textSecondary),
                                   const SizedBox(width: 4),
                                   Text(
                                     sessao.dataHoraInicio,
                                     style: const TextStyle(
-                                      color: Color(0xFF8E9BAE),
+                                      color: GridColors.textSecondary,
                                       fontSize: 11,
                                     ),
                                   ),
                                   const SizedBox(width: 10),
                                   const Icon(Icons.timer_outlined,
-                                      size: 12, color: Color(0xFF8E9BAE)),
+                                      size: 12, color: GridColors.textSecondary),
                                   const SizedBox(width: 4),
                                   Text(
                                     '$minutos min',
                                     style: const TextStyle(
-                                      color: Color(0xFF8E9BAE),
+                                      color: GridColors.textSecondary,
                                       fontSize: 11,
                                     ),
                                   ),
@@ -1404,23 +1404,23 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                                       horizontal: 14, vertical: 6),
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF16202A),
+                                    color: GridColors.card,
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                        color: const Color(0xFF2A3B4D)),
+                                        color: GridColors.divider),
                                   ),
                                   child: Row(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
                                       const Icon(Icons.chat_bubble_outline,
-                                          size: 14, color: Colors.cyanAccent),
+                                          size: 14, color: GridColors.info),
                                       const SizedBox(width: 6),
                                       Expanded(
                                         child: Text(
                                           '"${sessao.feedbackAluno}"',
                                           style: const TextStyle(
-                                            color: Colors.white70,
+                                            color: GridColors.textSecondary,
                                             fontSize: 12,
                                             fontStyle: FontStyle.italic,
                                           ),
@@ -1439,7 +1439,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                                     const Text(
                                       'Exercícios Realizados e Cargas:',
                                       style: TextStyle(
-                                        color: Colors.white,
+                                        color: GridColors.textPrimary,
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -1470,9 +1470,9 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: const Color(0xFF16202A),
+        color: GridColors.card,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFF223140)),
+        border: Border.all(color: GridColors.divider),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1483,7 +1483,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                 child: Text(
                   ex.exercicioNome,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: GridColors.textPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
                   ),
@@ -1515,7 +1515,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0D131A),
+                  color: GridColors.background,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
                       color: CustomColors.primaryGreen.withOpacity(0.3)),
@@ -1526,14 +1526,14 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                     Text(
                       'S${s.numero}: ',
                       style: const TextStyle(
-                          color: Color(0xFF8E9BAE),
+                          color: GridColors.textSecondary,
                           fontSize: 11,
                           fontWeight: FontWeight.w600),
                     ),
                     Text(
                       '${s.repeticoesRealizadas} reps',
                       style: const TextStyle(
-                          color: Colors.white,
+                          color: GridColors.textPrimary,
                           fontSize: 11,
                           fontWeight: FontWeight.bold),
                     ),
@@ -1556,7 +1556,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
             Text(
               'Obs: ${ex.observacaoAluno}',
               style: const TextStyle(
-                color: Color(0xFF8E9BAE),
+                color: GridColors.textSecondary,
                 fontSize: 11,
                 fontStyle: FontStyle.italic,
               ),
@@ -1577,7 +1577,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF16202A),
+      backgroundColor: GridColors.card,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -1596,7 +1596,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
             Text(
               'Remarcar Aula: ${agenda.alunoNome}',
               style: const TextStyle(
-                color: Colors.white,
+                color: GridColors.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -1604,34 +1604,34 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
             const SizedBox(height: 16),
             TextField(
               controller: horarioController,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: GridColors.textPrimary),
               decoration: const InputDecoration(
                 labelText: 'Novo Horário (HH:MM)',
-                labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
+                labelStyle: TextStyle(color: GridColors.textSecondary),
                 filled: true,
-                fillColor: Color(0xFF0D131A),
+                fillColor: GridColors.inputBackground,
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: academiaController,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: GridColors.textPrimary),
               decoration: const InputDecoration(
                 labelText: 'Academia / Local',
-                labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
+                labelStyle: TextStyle(color: GridColors.textSecondary),
                 filled: true,
-                fillColor: Color(0xFF0D131A),
+                fillColor: GridColors.inputBackground,
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: motivoController,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: GridColors.textPrimary),
               decoration: const InputDecoration(
                 labelText: 'Motivo da Remarcação',
-                labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
+                labelStyle: TextStyle(color: GridColors.textSecondary),
                 filled: true,
-                fillColor: Color(0xFF0D131A),
+                fillColor: GridColors.inputBackground,
               ),
             ),
             const SizedBox(height: 20),
@@ -1651,8 +1651,8 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                   _carregarDados();
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
-                  foregroundColor: const Color(0xFF0D131A),
+                  backgroundColor: GridColors.secondaryDark,
+                  foregroundColor: GridColors.textOnPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 child: const Text('Confirmar Remarcação',
@@ -1675,7 +1675,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF16202A),
+      backgroundColor: GridColors.card,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -1695,7 +1695,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
               const Text(
                 'Agendar Nova Aula / Consultoria',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: GridColors.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1703,13 +1703,13 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: alunoSelecionado,
-                dropdownColor: const Color(0xFF16202A),
-                style: const TextStyle(color: Colors.white),
+                dropdownColor: GridColors.card,
+                style: const TextStyle(color: GridColors.textPrimary),
                 decoration: const InputDecoration(
                   labelText: 'Aluno',
-                  labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
+                  labelStyle: TextStyle(color: GridColors.textSecondary),
                   filled: true,
-                  fillColor: Color(0xFF0D131A),
+                  fillColor: GridColors.inputBackground,
                 ),
                 items: _alunos
                     .map((a) =>
@@ -1722,23 +1722,23 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
               const SizedBox(height: 12),
               TextField(
                 controller: academiaController,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: GridColors.textPrimary),
                 decoration: const InputDecoration(
                   labelText: 'Academia / Local',
-                  labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
+                  labelStyle: TextStyle(color: GridColors.textSecondary),
                   filled: true,
-                  fillColor: Color(0xFF0D131A),
+                  fillColor: GridColors.inputBackground,
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: horarioController,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: GridColors.textPrimary),
                 decoration: const InputDecoration(
                   labelText: 'Horário de Início (HH:MM)',
-                  labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
+                  labelStyle: TextStyle(color: GridColors.textSecondary),
                   filled: true,
-                  fillColor: Color(0xFF0D131A),
+                  fillColor: GridColors.inputBackground,
                 ),
               ),
               const SizedBox(height: 20),
@@ -1765,7 +1765,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: CustomColors.primaryGreen,
-                    foregroundColor: const Color(0xFF0D131A),
+                    foregroundColor: GridColors.textOnPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: const Text('Salvar Agendamento',
@@ -1781,13 +1781,13 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
 
   Future<void> _modalNovoAluno(BuildContext context, {PersonalAlunoGestaoModel? aluno}) async {
     final salvo = await showModalBottomSheet<PersonalAlunoGestaoModel>(
-      context: context, backgroundColor: const Color(0xFF16202A), isScrollControlled: true,
+      context: context, backgroundColor: GridColors.card, isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => PersonalAlunoSheet(aluno: aluno));
     if (salvo != null && context.mounted) {
       await _carregarDados();
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        backgroundColor:CustomColors.primaryGreen,content:Text('Aluno salvo. Alterações offline ficam pendentes para sincronizar.',style:TextStyle(color:Colors.white))));
+        backgroundColor:CustomColors.primaryGreen,content:Text('Aluno salvo. Alterações offline ficam pendentes para sincronizar.',style:TextStyle(color:GridColors.textOnPrimary))));
     }
   }
 

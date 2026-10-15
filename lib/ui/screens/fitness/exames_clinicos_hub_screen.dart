@@ -55,9 +55,9 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
         : _exames.where((e) => e.categoria == _categoriaFiltro).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D131A),
+      backgroundColor: GridColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF141C24),
+        backgroundColor: GridColors.card,
         elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,20 +67,20 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                   ? 'Exames: ${widget.alunoNomeFiltro}'
                   : 'Central de Exames & Laudos PDF',
               style: const TextStyle(
-                color: Colors.white,
+                color: GridColors.textPrimary,
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const Text(
               'Histórico clínico, laudos laboratoriais e hormonais',
-              style: TextStyle(color: Color(0xFF8E9BAE), fontSize: 11),
+              style: TextStyle(color: GridColors.textSecondary, fontSize: 11),
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Color(0xFF8E9BAE)),
+            icon: const Icon(Icons.refresh, color: GridColors.textSecondary),
             onPressed: _carregarExames,
           ),
         ],
@@ -91,9 +91,9 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             decoration: const BoxDecoration(
-              color: Color(0xFF141C24),
+              color: GridColors.card,
               border: Border(
-                bottom: BorderSide(color: Color(0xFF223140), width: 1),
+                bottom: BorderSide(color: GridColors.divider, width: 1),
               ),
             ),
             child: SingleChildScrollView(
@@ -147,12 +147,12 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Icon(Icons.biotech_outlined,
-                                size: 56, color: Color(0xFF8E9BAE)),
+                                size: 56, color: GridColors.textSecondary),
                             const SizedBox(height: 12),
                             const Text(
                               'Nenhum exame cadastrado',
                               style: TextStyle(
-                                  color: Colors.white,
+                                  color: GridColors.textPrimary,
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold),
                             ),
@@ -160,7 +160,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                             const Text(
                               'Clique no botão abaixo para adicionar um laudo PDF.',
                               style: TextStyle(
-                                  color: Color(0xFF8E9BAE), fontSize: 13),
+                                  color: GridColors.textSecondary, fontSize: 13),
                             ),
                           ],
                         ),
@@ -179,7 +179,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _modalNovoExame(context),
         backgroundColor: CustomColors.primaryGreen,
-        foregroundColor: const Color(0xFF0D131A),
+        foregroundColor: GridColors.textOnPrimary,
         icon: const Icon(Icons.add),
         label: const Text('Novo Exame PDF',
             style: TextStyle(fontWeight: FontWeight.bold)),
@@ -199,18 +199,18 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
         decoration: BoxDecoration(
           color: selecionado
               ? CustomColors.primaryGreen
-              : const Color(0xFF0D131A),
+              : GridColors.background,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: selecionado
                 ? CustomColors.primaryGreen
-                : const Color(0xFF223140),
+                : GridColors.divider,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selecionado ? const Color(0xFF0D131A) : Colors.white,
+            color: selecionado ? GridColors.textOnPrimary : GridColors.textPrimary,
             fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
@@ -224,9 +224,9 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF16202A),
+        color: GridColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF223140)),
+        border: Border.all(color: GridColors.divider),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -251,7 +251,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                     Text(
                       exame.titulo,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: GridColors.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                       ),
@@ -260,7 +260,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                     Text(
                       'Data do Exame: ${exame.dataExame} • ${exame.laboratorio}',
                       style: const TextStyle(
-                        color: Color(0xFF8E9BAE),
+                        color: GridColors.textSecondary,
                         fontSize: 12,
                       ),
                     ),
@@ -269,7 +269,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                       Text(
                         'Solicitante: ${exame.medicoSolicitante}',
                         style: const TextStyle(
-                          color: Colors.cyanAccent,
+                          color: GridColors.info,
                           fontSize: 11,
                         ),
                       ),
@@ -278,8 +278,8 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                 ),
               ),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, color: Color(0xFF8E9BAE)),
-                color: const Color(0xFF1E2B38),
+                icon: const Icon(Icons.more_vert, color: GridColors.textSecondary),
+                color: GridColors.card,
                 onSelected: (val) async {
                   if (val == 'excluir') {
                     await _repo.excluirExame(exame.id);
@@ -290,7 +290,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                   PopupMenuItem(
                     value: 'excluir',
                     child: Text('Excluir Exame',
-                        style: TextStyle(color: Colors.redAccent)),
+                        style: TextStyle(color: GridColors.error)),
                   ),
                 ],
               ),
@@ -303,7 +303,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFF0D131A),
+                color: GridColors.background,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -312,7 +312,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                   const Text(
                     'Resultados / Marcadores Principais:',
                     style: TextStyle(
-                      color: Color(0xFF8E9BAE),
+                      color: GridColors.textSecondary,
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                     ),
@@ -321,7 +321,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                   Text(
                     exame.observacoesResultados!,
                     style: const TextStyle(
-                      color: Colors.white70,
+                      color: GridColors.textSecondary,
                       fontSize: 12,
                     ),
                   ),
@@ -337,7 +337,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
               Text(
                 exame.nomeArquivoPdf ?? 'laudo_exame.pdf',
                 style: const TextStyle(
-                  color: Color(0xFF8E9BAE),
+                  color: GridColors.textSecondary,
                   fontSize: 11,
                   fontStyle: FontStyle.italic,
                 ),
@@ -348,7 +348,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: CustomColors.primaryGreen,
-                  foregroundColor: const Color(0xFF0D131A),
+                  foregroundColor: GridColors.textOnPrimary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -371,16 +371,16 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF16202A),
+        backgroundColor: GridColors.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            const Icon(Icons.picture_as_pdf, color: Colors.redAccent, size: 24),
+            const Icon(Icons.picture_as_pdf, color: GridColors.error, size: 24),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 exame.titulo,
-                style: const TextStyle(color: Colors.white, fontSize: 16),
+                style: const TextStyle(color: GridColors.textPrimary, fontSize: 16),
               ),
             ),
           ],
@@ -390,20 +390,20 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Data: ${exame.dataExame}',
-                style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                style: const TextStyle(color: GridColors.textSecondary, fontSize: 13)),
             Text('Laboratório: ${exame.laboratorio}',
-                style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                style: const TextStyle(color: GridColors.textSecondary, fontSize: 13)),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF0D131A),
+                color: GridColors.background,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 exame.observacoesResultados ??
                     'Laudo médico arquivado e validado digitalmente.',
-                style: const TextStyle(color: Colors.white, fontSize: 12),
+                style: const TextStyle(color: GridColors.textPrimary, fontSize: 12),
               ),
             ),
           ],
@@ -412,7 +412,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Fechar',
-                style: TextStyle(color: Color(0xFF8E9BAE))),
+                style: TextStyle(color: GridColors.textSecondary)),
           ),
           ElevatedButton.icon(
             onPressed: () {
@@ -427,7 +427,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: CustomColors.primaryGreen,
-              foregroundColor: const Color(0xFF0D131A),
+              foregroundColor: GridColors.textOnPrimary,
             ),
             icon: const Icon(Icons.download, size: 16),
             label: const Text('Baixar PDF'),
@@ -450,7 +450,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF16202A),
+      backgroundColor: GridColors.card,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -471,7 +471,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                 const Text(
                   'Cadastrar Novo Exame / Laudo PDF',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: GridColors.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -479,24 +479,24 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                 const SizedBox(height: 14),
                 TextField(
                   controller: tituloController,
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: GridColors.textPrimary),
                   decoration: const InputDecoration(
                     labelText: 'Título do Exame (ex: Painel Hormonal Total)',
-                    labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
+                    labelStyle: TextStyle(color: GridColors.textSecondary),
                     filled: true,
-                    fillColor: Color(0xFF0D131A),
+                    fillColor: GridColors.inputBackground,
                   ),
                 ),
                 const SizedBox(height: 10),
                 DropdownButtonFormField<CategoriaExame>(
                   value: categoriaSelecionada,
-                  dropdownColor: const Color(0xFF16202A),
-                  style: const TextStyle(color: Colors.white),
+                  dropdownColor: GridColors.card,
+                  style: const TextStyle(color: GridColors.textPrimary),
                   decoration: const InputDecoration(
                     labelText: 'Categoria',
-                    labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
+                    labelStyle: TextStyle(color: GridColors.textSecondary),
                     filled: true,
-                    fillColor: Color(0xFF0D131A),
+                    fillColor: GridColors.inputBackground,
                   ),
                   items: const [
                     DropdownMenuItem(
@@ -524,46 +524,46 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                 const SizedBox(height: 10),
                 TextField(
                   controller: dataController,
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: GridColors.textPrimary),
                   decoration: const InputDecoration(
                     labelText: 'Data do Exame (YYYY-MM-DD)',
-                    labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
+                    labelStyle: TextStyle(color: GridColors.textSecondary),
                     filled: true,
-                    fillColor: Color(0xFF0D131A),
+                    fillColor: GridColors.inputBackground,
                   ),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: labController,
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: GridColors.textPrimary),
                   decoration: const InputDecoration(
                     labelText: 'Laboratório / Hospital',
-                    labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
+                    labelStyle: TextStyle(color: GridColors.textSecondary),
                     filled: true,
-                    fillColor: Color(0xFF0D131A),
+                    fillColor: GridColors.inputBackground,
                   ),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: medicoController,
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: GridColors.textPrimary),
                   decoration: const InputDecoration(
                     labelText: 'Médico Solicitante / Prescritor',
-                    labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
+                    labelStyle: TextStyle(color: GridColors.textSecondary),
                     filled: true,
-                    fillColor: Color(0xFF0D131A),
+                    fillColor: GridColors.inputBackground,
                   ),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: resultadosController,
                   maxLines: 2,
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: GridColors.textPrimary),
                   decoration: const InputDecoration(
                     labelText: 'Valores / Marcadores Chave (Opcional)',
-                    labelStyle: TextStyle(color: Color(0xFF8E9BAE)),
+                    labelStyle: TextStyle(color: GridColors.textSecondary),
                     filled: true,
-                    fillColor: Color(0xFF0D131A),
+                    fillColor: GridColors.inputBackground,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -571,9 +571,9 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0D131A),
+                    color: GridColors.background,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFF223140)),
+                    border: Border.all(color: GridColors.divider),
                   ),
                   child: Row(
                     children: [
@@ -584,7 +584,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                         child: Text(
                           'Anexo: laudo_laboratorial.pdf (1.2 MB)',
                           style: TextStyle(
-                            color: Colors.white70,
+                            color: GridColors.textSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -624,7 +624,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: CustomColors.primaryGreen,
-                      foregroundColor: const Color(0xFF0D131A),
+                      foregroundColor: GridColors.textOnPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     child: const Text('Salvar Exame',

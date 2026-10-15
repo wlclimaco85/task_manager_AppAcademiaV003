@@ -137,7 +137,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                     ),
                     const SizedBox(height: 6),
                     const Text(
-                      'AppAcademia',
+                      'Meu Treino',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
