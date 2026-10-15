@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/data/utils/redes_sociais_cadastro.dart';
+import 'package:task_manager_flutter/ui/widgets/campos_redes_sociais_cadastro.dart';
 import 'package:task_manager_flutter/data/repository/cadastro_repository.dart';
 import 'package:task_manager_flutter/data/utils/grid_colors.dart';
 
@@ -103,6 +105,8 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
   final _confirmarSenhaController = TextEditingController();
   final _cpfController = TextEditingController();
   final _telefoneController = TextEditingController();
+  final _instagramController = TextEditingController();
+  final _linkBioController = TextEditingController();
   final _cepController = TextEditingController();
   final _logradouroController = TextEditingController();
   final _numeroController = TextEditingController();
@@ -183,6 +187,8 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
     _confirmarSenhaController.dispose();
     _cpfController.dispose();
     _telefoneController.dispose();
+    _instagramController.dispose();
+    _linkBioController.dispose();
     _cepController.dispose();
     _logradouroController.dispose();
     _numeroController.dispose();
@@ -328,6 +334,8 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
       'senha': _senhaController.text,
       'cpf': _cpfController.text.trim(),
       'telefone1': _telefoneController.text.trim(),
+      'instagram': normalizarInstagramCadastro(_instagramController.text),
+      'linkBio': _linkBioController.text.trim(),
       'dtNascimento':
           _dataNascimento != null ? _formatarData(_dataNascimento!) : null,
       'sexo': _sexo,
@@ -486,6 +494,7 @@ class _WizardAlunoScreenState extends State<WizardAlunoScreen> {
             keyboardType: TextInputType.phone,
           ),
           const SizedBox(height: 12),
+          CamposRedesSociaisCadastro(instagram:_instagramController,linkBio:_linkBioController),
           _campoData(),
           const SizedBox(height: 12),
           _campoSexo(),

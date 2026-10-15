@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/data/utils/redes_sociais_cadastro.dart';
+import 'package:task_manager_flutter/ui/widgets/campos_redes_sociais_cadastro.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -77,6 +79,8 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
   final _confirmarSenha = TextEditingController();
   final _cpf = TextEditingController();
   final _telefone = TextEditingController();
+  final _instagram = TextEditingController();
+  final _linkBio = TextEditingController();
   final _cep = TextEditingController();
   final _cepFocus = FocusNode();
   String? _erroCep;
@@ -166,6 +170,8 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
         'email': _email.text,
         'cpf': _cpf.text,
         'telefone': _telefone.text,
+        'instagram': _instagram.text,
+        'linkBio': _linkBio.text,
         'dataNascimento': _dataNascimento?.toIso8601String(),
         'sexo': _sexo,
         'cep': _cep.text,
@@ -190,7 +196,7 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
       });
 
   bool get _temDados =>
-      _nome.text.isNotEmpty || _email.text.isNotEmpty || _faixas.isNotEmpty || _planos.isNotEmpty;
+      _nome.text.isNotEmpty || _email.text.isNotEmpty || _instagram.text.isNotEmpty || _linkBio.text.isNotEmpty || _faixas.isNotEmpty || _planos.isNotEmpty;
 
   Future<void> _salvarRascunho() async {
     if (!_temDados) return;
@@ -224,6 +230,8 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
         _cpf.text = s('cpf');
         _whatsappIgualTelefone = m['whatsappIgualTelefone'] != false;
         _telefone.text = s('telefone');
+        _instagram.text = s('instagram');
+        _linkBio.text = s('linkBio');
         _dataNascimento = DateTime.tryParse(s('dataNascimento'));
         _sexo = m['sexo'] as String?;
         _cep.text = s('cep');
@@ -296,6 +304,8 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
       _confirmarSenha,
       _cpf,
       _telefone,
+      _instagram,
+      _linkBio,
       _cep,
       _logradouro,
       _numero,
@@ -401,6 +411,8 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
       'senha': _senha.text,
       'cpf': _cpf.text.trim(),
       'telefone1': _telefone.text.trim(),
+      'instagram': normalizarInstagramCadastro(_instagram.text),
+      'linkBio': _linkBio.text.trim(),
       'dtNascimento': _dataNascimento?.toIso8601String().substring(0, 10),
       'sexo': _sexo,
       'cep': _cep.text.trim(),
@@ -650,6 +662,7 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
               teclado: TextInputType.phone,
               formatadores: [_MascaraCelular()],
               validator: (v) => somenteDigitos(v ?? '').length < 10 ? 'Informe o telefone com DDD' : null),
+          CamposRedesSociaisCadastro(instagram:_instagram,linkBio:_linkBio),
           InkWell(
             onTap: () async {
               final hoje = DateTime.now();
@@ -1197,7 +1210,15 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
         ),
       ),
       const SizedBox(height: 12),
-      secao('Conta', 0, [nome, _email.text.trim(), _telefone.text]),
+      secao('Conta', 0, [
+        nome,
+        _email.text.trim(),
+        _telefone.text,
+        if (_instagram.text.trim().isNotEmpty)
+          'Instagram: @${normalizarInstagramCadastro(_instagram.text) ?? _instagram.text.trim()}',
+        if (_linkBio.text.trim().isNotEmpty)
+          'Link da bio: ${_linkBio.text.trim()}',
+      ]),
       secao('Registro e contato', 1, [
         'CREF $cref',
         'WhatsApp +55 ${_whatsapp.text}',

@@ -85,6 +85,8 @@ void main() {
       await preencher(t, 'Confirmar senha *', 'segredo1');
       await preencher(t, 'CPF *', '52998224725');
       await preencher(t, 'Telefone *', '34999990000');
+      await preencher(t, 'Instagram (opcional)', '@carlos.personal');
+      await preencher(t, 'Link da bio (opcional)', 'https://example.invalid/carlos');
       await continuar(t);
       expect(find.text('Passo 2 de 5 · Registro e contato'), findsOneWidget);
 
@@ -137,6 +139,8 @@ void main() {
       final rascunho = prefs.getString('rascunho_cadastro_personal_v1')!;
       expect(rascunho, isNot(contains('segredo1')));
       expect(rascunho, contains('Carlos Personal'));
+      expect(rascunho, contains('carlos.personal'));
+      expect(rascunho, contains('https://example.invalid/carlos'));
 
       await t.tap(find.byKey(const Key('chk_declaracao')));
       await t.pump();
@@ -147,6 +151,8 @@ void main() {
     }, () => cliente);
 
     expect(enviado, isNotNull);
+    expect(enviado!['instagram'], 'carlos.personal');
+    expect(enviado!['linkBio'], 'https://example.invalid/carlos');
     expect(enviado!['cref'], '012345-G/MG');
     expect(enviado!['whatsapp'], '5534999990000');
     expect(enviado!['vlrAula'], 70.0);
