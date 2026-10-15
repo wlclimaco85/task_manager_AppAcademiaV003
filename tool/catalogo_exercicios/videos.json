@@ -68,5 +68,95 @@
     "url": "https://youtu.be/ZjIKUMtW37c",
     "canal": "https://www.youtube.com/@treinomestre",
     "validacao": "YouTube oEmbed: author_url @treinomestre, HTTP 200, titulo compativel com exercicio"
+  },
+  "ex_rosca_21": {
+    "url": "https://youtu.be/XBDs11MpYLc",
+    "canal": "Leandro Twin",
+    "validacao": "YouTube oEmbed: author_name Leandro Twin, titulo \"Rosca 21 é um bom exercício para bíceps?\" (explicativo)"
+  },
+  "ex_rosca_direta_barra_reta": {
+    "url": "https://youtu.be/Q8TqfD8E7BU",
+    "canal": "Leandro Twin",
+    "validacao": "YouTube oEmbed: author_name Leandro Twin, HTTP 200"
+  },
+  "ex_rosca_inversa_halteres": {
+    "url": "https://youtu.be/jbSr9CzJPmA",
+    "canal": "Leandro Twin",
+    "validacao": "YouTube oEmbed: author_name Leandro Twin, titulo \"Como fazer rosca inversa\""
+  },
+  "ex_triceps_testa_halteres": {
+    "url": "https://youtu.be/SbAykzCE-xk",
+    "canal": "Leandro Twin",
+    "validacao": "YouTube oEmbed: author_name Leandro Twin, HTTP 200"
+  },
+  "ex_triceps_banco": {
+    "url": "https://youtu.be/TCVj8cliLNo",
+    "canal": "Leandro Twin",
+    "validacao": "YouTube oEmbed: author_name Leandro Twin, HTTP 200"
+  },
+  "ex_triceps_unilateral_polia": {
+    "url": "https://youtu.be/nTTTjbA0TSU",
+    "canal": "Leandro Twin",
+    "validacao": "YouTube oEmbed: author_name Leandro Twin, HTTP 200"
+  },
+  "ex_triceps_testa_declinado_ez": {
+    "url": "https://youtu.be/zznCYBVZOVA",
+    "canal": "Leandro Twin",
+    "validacao": "YouTube oEmbed: author_name Leandro Twin, HTTP 200"
+  },
+  "ex_supino_halteres_pegada_neutra": {
+    "url": "https://youtu.be/EZMYCLKuGow",
+    "canal": "Leandro Twin",
+    "validacao": "YouTube oEmbed: author_name Leandro Twin, HTTP 200"
+  },
+  "ex_crucifixo_declinado_halteres": {
+    "url": "https://youtu.be/zdkX5_Gcdq8",
+    "canal": "Leandro Twin",
+    "validacao": "YouTube oEmbed: author_name Leandro Twin, HTTP 200"
+  },
+  "ex_crossover_polia_baixa": {
+    "url": "https://youtu.be/jqTlJt3JXzQ",
+    "canal": "Leandro Twin",
+    "validacao": "YouTube oEmbed: author_name Leandro Twin, HTTP 200"
+  },
+  "ex_pullover_halter": {
+    "url": "https://youtu.be/-KaMXMMIVrU",
+    "canal": "Leandro Twin",
+    "validacao": "YouTube oEmbed: author_name Leandro Twin, HTTP 200"
+  },
+  "ex_remada_curvada_halteres": {
+    "url": "https://youtu.be/Vk6c7CjtM14",
+    "canal": "Leandro Twin",
+    "validacao": "YouTube oEmbed: author_name Leandro Twin, HTTP 200"
+  },
+  "ex_puxada_pegada_fechada": {
+    "url": "https://youtu.be/pJM_rHhluK8",
+    "canal": "Leandro Twin",
+    "validacao": "YouTube oEmbed: author_name Leandro Twin, HTTP 200"
+  },
+  "ex_desenvolvimento_maquina": {
+    "url": "https://youtu.be/EuQAfhXBEvs",
+    "canal": "Leandro Twin",
+    "validacao": "YouTube oEmbed: author_name Leandro Twin, HTTP 200"
+  },
+  "ex_encolhimento_halteres": {
+    "url": "https://youtu.be/RhGjwIUe16E",
+    "canal": "Leandro Twin",
+    "validacao": "YouTube oEmbed: author_name Leandro Twin, HTTP 200"
+  },
+  "ex_elevacao_frontal_polia": {
+    "url": "https://youtu.be/S7B5LwWrLA0",
+    "canal": "Leandro Twin",
+    "validacao": "YouTube oEmbed: author_name Leandro Twin, HTTP 200"
+  },
+  "ex_avanco_reverso_halteres": {
+    "url": "https://youtu.be/XBJtM2phDDM",
+    "canal": "Leandro Twin",
+    "validacao": "YouTube oEmbed: author_name Leandro Twin, HTTP 200"
+  },
+  "ex_abdominal_obliquo_declinado": {
+    "url": "https://youtu.be/Smr8ipkN5A0",
+    "canal": "Leandro Twin",
+    "validacao": "YouTube oEmbed: author_name Leandro Twin, HTTP 200"
   }
 }

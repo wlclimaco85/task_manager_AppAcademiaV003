@@ -6,10 +6,10 @@
   "equipamento": "Barra",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Bench_Press_-_Medium_Grip/0.jpg",
+  "videoUrl": "https://youtu.be/pCPyqW60Wuk",
   "instrucoes": "Deite-se no banco com os olhos alinhados à barra. Pegada ligeiramente mais larga que os ombros. Desça até tocar suavemente a linha dos mamilos e empurre com controle.",
   "errosComuns": "Descolar a lombar do banco ou projetar os cotovelos a 90 graus.",
-  "descricao": "1. Deite no banco com os olhos logo abaixo da barra e os pés firmes no chão.\n2. Segure a barra com pegada um pouco mais larga que os ombros.\n3. Feche as escápulas (junte e abaixe os ombros) e mantenha o peito aberto.\n4. Retire a barra do suporte com os braços estendidos sobre o peito.\n5. Desça a barra de forma controlada até a linha dos mamilos, cotovelos a cerca de 45° do tronco.\n6. Empurre a barra para cima até estender os braços, sem tirar o quadril do banco, e expire na subida.",
-  "videoUrl": "https://youtu.be/pCPyqW60Wuk"
+  "descricao": "1. Deite no banco com os olhos logo abaixo da barra e os pés firmes no chão.\n2. Segure a barra com pegada um pouco mais larga que os ombros.\n3. Feche as escápulas (junte e abaixe os ombros) e mantenha o peito aberto.\n4. Retire a barra do suporte com os braços estendidos sobre o peito.\n5. Desça a barra de forma controlada até a linha dos mamilos, cotovelos a cerca de 45° do tronco.\n6. Empurre a barra para cima até estender os braços, sem tirar o quadril do banco, e expire na subida."
  },
  {
   "id": "ex_supino_inclinado",
@@ -18,10 +18,10 @@
   "equipamento": "Halteres",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Dumbbell_Press/0.jpg",
+  "videoUrl": "https://youtu.be/rCPwrZkrVVQ",
   "instrucoes": "Banco regulado a 30-45 graus. Mantenha as escápulas aduzidas e desça os halteres alongando a porção clavicular do peitoral.",
   "errosComuns": "Inclinar o banco em excesso (acima de 45 graus) sobrecarregando o ombro.",
-  "descricao": "1. Regule o banco entre 30° e 45° e sente com um halter apoiado em cada coxa.\n2. Deite levando os halteres à altura do peito, palmas voltadas para os pés.\n3. Feche as escápulas e apoie bem as costas e os pés.\n4. Empurre os halteres para cima até quase se tocarem sobre o peito.\n5. Desça devagar até sentir o alongamento do peitoral, cotovelos levemente abaixo do banco.\n6. Suba novamente controlando o movimento.",
-  "videoUrl": "https://youtu.be/rCPwrZkrVVQ"
+  "descricao": "1. Regule o banco entre 30° e 45° e sente com um halter apoiado em cada coxa.\n2. Deite levando os halteres à altura do peito, palmas voltadas para os pés.\n3. Feche as escápulas e apoie bem as costas e os pés.\n4. Empurre os halteres para cima até quase se tocarem sobre o peito.\n5. Desça devagar até sentir o alongamento do peitoral, cotovelos levemente abaixo do banco.\n6. Suba novamente controlando o movimento."
  },
  {
   "id": "ex_supino_declinado",
@@ -30,6 +30,7 @@
   "equipamento": "Barra",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Decline_Barbell_Bench_Press/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Ênfase na porção inferior do peitoral. Prenda bem as pernas no apoio do banco.",
   "errosComuns": "Deixar a barra descer na direção do pescoço ou soltar as pernas do apoio.",
   "descricao": "1. Prenda os pés no apoio do banco declinado e deite com a cabeça na parte mais baixa.\n2. Segure a barra com pegada um pouco mais larga que os ombros.\n3. Retire a barra do suporte e posicione-a sobre a parte baixa do peito.\n4. Desça a barra controlando até tocar levemente a parte inferior do peitoral.\n5. Empurre de volta até estender os braços, mantendo as escápulas fechadas."
@@ -41,10 +42,10 @@
   "equipamento": "Halteres",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Bench_Press/0.jpg",
+  "videoUrl": "https://youtu.be/tDxKGeY-hjQ",
   "instrucoes": "Permite maior amplitude que a barra e corrige diferenças de força entre os lados.",
   "errosComuns": "Bater os halteres no topo ou abrir demais os cotovelos.",
-  "descricao": "1. Sente no banco reto com os halteres apoiados nas coxas.\n2. Deite e leve os halteres ao lado do peito, palmas para frente.\n3. Feche as escápulas e mantenha os pés firmes no chão.\n4. Empurre os halteres para cima em linha reta até quase estender os cotovelos.\n5. Desça de forma lenta até os halteres ficarem na altura do peito.\n6. Repita mantendo o controle em toda a amplitude.",
-  "videoUrl": "https://youtu.be/tDxKGeY-hjQ"
+  "descricao": "1. Sente no banco reto com os halteres apoiados nas coxas.\n2. Deite e leve os halteres ao lado do peito, palmas para frente.\n3. Feche as escápulas e mantenha os pés firmes no chão.\n4. Empurre os halteres para cima em linha reta até quase estender os cotovelos.\n5. Desça de forma lenta até os halteres ficarem na altura do peito.\n6. Repita mantendo o controle em toda a amplitude."
  },
  {
   "id": "ex_crucifixo_halteres",
@@ -53,10 +54,10 @@
   "equipamento": "Halteres",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Flyes/0.jpg",
+  "videoUrl": "https://youtu.be/ZjIKUMtW37c",
   "instrucoes": "Movimento de abraço com cotovelos levemente flexionados durante toda a série.",
   "errosComuns": "Estender totalmente os cotovelos ou descer além da linha dos ombros.",
-  "descricao": "1. Deite no banco reto segurando os halteres acima do peito, palmas uma de frente para a outra.\n2. Flexione levemente os cotovelos e mantenha esse ângulo até o fim da série.\n3. Abra os braços em arco, descendo os halteres para os lados até a altura do peito.\n4. Sinta o alongamento do peitoral sem passar da linha dos ombros.\n5. Feche os braços no mesmo arco, como num abraço, contraindo o peito no topo.",
-  "videoUrl": "https://youtu.be/ZjIKUMtW37c"
+  "descricao": "1. Deite no banco reto segurando os halteres acima do peito, palmas uma de frente para a outra.\n2. Flexione levemente os cotovelos e mantenha esse ângulo até o fim da série.\n3. Abra os braços em arco, descendo os halteres para os lados até a altura do peito.\n4. Sinta o alongamento do peitoral sem passar da linha dos ombros.\n5. Feche os braços no mesmo arco, como num abraço, contraindo o peito no topo."
  },
  {
   "id": "ex_crucifixo_polia",
@@ -65,6 +66,7 @@
   "equipamento": "Polia",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Crossover/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Braços semi-flexionados. Junte as mãos à frente do peito esmagando a musculatura na contração de pico.",
   "errosComuns": null,
   "descricao": "1. Ajuste as polias na posição alta e segure uma pegada em cada mão.\n2. Dê um passo à frente, incline levemente o tronco e mantenha um joelho à frente para equilíbrio.\n3. Com os cotovelos levemente flexionados, puxe as mãos para baixo e para frente em arco.\n4. Junte as mãos à frente do quadril/peito e contraia o peitoral por 1 segundo.\n5. Volte devagar abrindo os braços até sentir o alongamento do peito."
@@ -76,6 +78,7 @@
   "equipamento": "Máquina",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Butterfly/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Mantenha as costas apoiadas e os ombros baixos durante todo o movimento.",
   "errosComuns": "Deixar os ombros subirem ou soltar o peso de uma vez na volta.",
   "descricao": "1. Regule o banco para que as pegadas fiquem na altura do peito.\n2. Sente com as costas totalmente apoiadas e segure as pegadas.\n3. Com os cotovelos levemente flexionados, feche os braços à frente do peito.\n4. Contraia o peitoral no ponto de encontro das mãos.\n5. Abra os braços devagar até a linha do corpo, sem deixar o peso bater."
@@ -87,6 +90,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Pushups/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Corpo em linha reta da cabeça aos calcanhares, abdômen firme.",
   "errosComuns": "Deixar o quadril cair ou subir demais.",
   "descricao": "1. Apoie as mãos no chão um pouco mais abertas que os ombros.\n2. Estenda as pernas e apoie as pontas dos pés, formando uma linha reta com o corpo.\n3. Contraia abdômen e glúteos.\n4. Flexione os cotovelos e desça o peito até quase encostar no chão.\n5. Empurre o chão e volte à posição inicial estendendo os braços.\n6. Iniciantes podem apoiar os joelhos no chão."
@@ -98,6 +102,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 3,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dips_-_Chest_Version/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Incline o tronco à frente para enfatizar o peitoral.",
   "errosComuns": "Descer demais forçando os ombros ou balançar o corpo.",
   "descricao": "1. Segure as barras paralelas e sustente o corpo com os braços estendidos.\n2. Incline o tronco levemente à frente e cruze as pernas atrás.\n3. Flexione os cotovelos e desça até os ombros ficarem um pouco abaixo dos cotovelos.\n4. Sinta o alongamento do peito sem forçar os ombros.\n5. Empurre o corpo para cima até estender os braços."
@@ -109,6 +114,7 @@
   "equipamento": "Halteres",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Dumbbell_Flyes/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Ênfase na parte superior do peitoral, banco a 30°.",
   "errosComuns": "Transformar o movimento em supino dobrando demais os cotovelos.",
   "descricao": "1. Regule o banco a cerca de 30° e deite com os halteres acima do peito.\n2. Mantenha os cotovelos levemente flexionados e as palmas uma de frente para a outra.\n3. Abra os braços em arco até os halteres chegarem à altura do peito.\n4. Feche os braços no mesmo arco contraindo a parte superior do peito."
@@ -120,6 +126,7 @@
   "equipamento": "Máquina",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Machine_Bench_Press/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Boa opção para iniciantes: trajetória guiada e segura.",
   "errosComuns": "Afastar as costas do encosto ao empurrar.",
   "descricao": "1. Regule o banco para que as pegadas fiquem na altura do meio do peito.\n2. Sente com as costas apoiadas e os pés firmes no chão.\n3. Segure as pegadas e empurre à frente até quase estender os cotovelos.\n4. Volte devagar até sentir o alongamento do peito, sem deixar o peso bater."
@@ -131,6 +138,7 @@
   "equipamento": "Polia",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Wide-Grip_Lat_Pulldown/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Puxe a barra em direção ao queixo/esterno projetando o peito. Desça as escápulas antes de flexionar os cotovelos.",
   "errosComuns": "Puxar a barra atrás da nuca ou balançar o tronco excessivamente.",
   "descricao": "1. Ajuste o apoio das coxas e segure a barra com pegada aberta, palmas para frente.\n2. Sente com o tronco levemente inclinado para trás e o peito aberto.\n3. Abaixe as escápulas antes de dobrar os cotovelos.\n4. Puxe a barra até a parte alta do peito, levando os cotovelos para baixo e para trás.\n5. Contraia as costas por 1 segundo.\n6. Volte devagar estendendo os braços até sentir o alongamento das costas."
@@ -142,18 +150,19 @@
   "equipamento": "Barra",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bent_Over_Barbell_Row/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Tronco inclinado a 45 graus, coluna neutra. Puxe a barra em direção ao umbigo.",
   "errosComuns": "Arredondar a lombar ou usar o impulso do quadril.",
   "descricao": "1. Segure a barra com pegada na largura dos ombros, palmas para baixo.\n2. Flexione levemente os joelhos e incline o tronco à frente com a coluna reta.\n3. Deixe a barra pendurada à frente das coxas com os braços estendidos.\n4. Puxe a barra em direção ao umbigo levando os cotovelos para trás.\n5. Aperte as escápulas no topo do movimento.\n6. Desça a barra devagar mantendo a coluna neutra."
  },
  {
   "id": "ex_remada_baixa",
-  "videoUrl": "https://youtu.be/2YebbYuuBJQ",
   "nome": "Remada Baixa no Triângulo",
   "grupoMuscular": "Costas",
   "equipamento": "Polia",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Cable_Rows/0.jpg",
+  "videoUrl": "https://youtu.be/2YebbYuuBJQ",
   "instrucoes": "Mantenha a postura ereta. Puxe o triângulo em direção ao abdômen retraindo as escápulas.",
   "errosComuns": null,
   "descricao": "1. Sente no aparelho com os pés apoiados e os joelhos levemente flexionados.\n2. Segure o triângulo com os braços estendidos e a coluna reta.\n3. Puxe o triângulo em direção ao abdômen levando os cotovelos rente ao corpo.\n4. Feche as escápulas e mantenha o peito aberto no final do movimento.\n5. Volte estendendo os braços devagar, sem curvar a coluna."
@@ -165,6 +174,7 @@
   "equipamento": "Halteres",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Dumbbell_Row/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Apoie joelho e mão no banco; puxe o halter em direção ao quadril.",
   "errosComuns": "Girar o tronco para levantar o peso.",
   "descricao": "1. Apoie um joelho e a mão do mesmo lado no banco, com a coluna reta.\n2. Segure o halter com a outra mão, braço estendido em direção ao chão.\n3. Puxe o halter em direção ao quadril mantendo o cotovelo rente ao corpo.\n4. Contraia as costas no topo sem girar o tronco.\n5. Desça devagar até estender o braço e repita. Depois troque de lado."
@@ -176,6 +186,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 3,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Pullups/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Inicie descendo as escápulas e leve o peito em direção à barra.",
   "errosComuns": "Balançar o corpo (kipping) ou não completar a amplitude.",
   "descricao": "1. Segure a barra com pegada pronada um pouco mais larga que os ombros.\n2. Fique pendurado com os braços estendidos e o abdômen firme.\n3. Abaixe as escápulas e puxe o corpo para cima.\n4. Suba até o queixo passar a barra.\n5. Desça controlando até estender totalmente os braços."
@@ -187,6 +198,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Chin-Up/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Pegada supinada envolve mais o bíceps; boa progressão para a barra fixa.",
   "errosComuns": "Encolher os ombros em direção às orelhas.",
   "descricao": "1. Segure a barra com as palmas voltadas para você, na largura dos ombros.\n2. Fique pendurado com braços estendidos e pernas juntas.\n3. Puxe o corpo levando o peito em direção à barra.\n4. Suba até o queixo passar a barra e contraia as costas.\n5. Desça devagar até estender os braços."
@@ -198,6 +210,7 @@
   "equipamento": "Barra",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/T-Bar_Row_with_Handle/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Peito aberto e coluna neutra; puxe com os cotovelos.",
   "errosComuns": "Arredondar as costas ou erguer o tronco a cada repetição.",
   "descricao": "1. Posicione-se sobre a barra com os pés afastados e joelhos levemente flexionados.\n2. Incline o tronco à frente mantendo a coluna reta e segure a pegada.\n3. Puxe a carga em direção ao peito levando os cotovelos para trás.\n4. Aperte as escápulas no topo.\n5. Desça devagar até estender os braços."
@@ -209,6 +222,7 @@
   "equipamento": "Polia",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Straight-Arm_Pulldown/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Isola o grande dorsal; braços quase retos o tempo todo.",
   "errosComuns": "Dobrar os cotovelos e transformar em tríceps.",
   "descricao": "1. Fique de frente para a polia alta segurando a barra com os braços estendidos.\n2. Incline levemente o tronco à frente com a coluna reta.\n3. Mantendo os cotovelos quase retos, puxe a barra em arco até as coxas.\n4. Contraia o dorsal no final.\n5. Volte devagar até a altura dos olhos."
@@ -220,6 +234,7 @@
   "equipamento": "Barra",
   "nivel": 3,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Deadlift/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Barra colada às pernas o tempo todo; empurre o chão com os pés.",
   "errosComuns": "Arredondar a lombar ou afastar a barra do corpo.",
   "descricao": "1. Fique com os pés na largura do quadril e a barra sobre o meio dos pés.\n2. Agache e segure a barra com pegada um pouco mais larga que as pernas.\n3. Endireite a coluna, abra o peito e contraia o abdômen.\n4. Empurre o chão com os pés e suba estendendo joelhos e quadril juntos, barra rente às pernas.\n5. No topo, fique ereto contraindo os glúteos, sem inclinar para trás.\n6. Desça levando o quadril para trás e depois flexionando os joelhos, mantendo a coluna reta."
@@ -231,6 +246,7 @@
   "equipamento": "Polia",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Close-Grip_Front_Lat_Pulldown/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Pegada fechada aumenta a amplitude e o trabalho da parte baixa do dorsal.",
   "errosComuns": "Jogar o tronco para trás para usar impulso.",
   "descricao": "1. Encaixe o triângulo na polia alta e sente com as coxas presas no apoio.\n2. Segure o triângulo com os braços estendidos.\n3. Puxe até a parte alta do peito levando os cotovelos para baixo.\n4. Contraia as costas e volte devagar estendendo os braços."
@@ -242,6 +258,7 @@
   "equipamento": "Barra",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Shrug/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Trabalha o trapézio; suba os ombros em direção às orelhas.",
   "errosComuns": "Girar os ombros ou dobrar os cotovelos.",
   "descricao": "1. Segure a barra à frente das coxas com pegada na largura dos ombros.\n2. Fique ereto com os braços estendidos.\n3. Eleve os ombros em direção às orelhas o máximo possível.\n4. Segure 1 segundo no topo.\n5. Desça os ombros devagar."
@@ -253,6 +270,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hyperextensions_Back_Extensions/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Fortalece eretores da coluna e glúteos. Suba só até alinhar o corpo.",
   "errosComuns": "Hiperestender a coluna no topo ou fazer o movimento rápido.",
   "descricao": "1. Ajuste o banco para que o quadril fique logo acima do apoio.\n2. Prenda os calcanhares e cruze os braços no peito.\n3. Desça o tronco à frente com a coluna reta.\n4. Suba contraindo glúteos e lombar até o corpo ficar em linha reta.\n5. Desça devagar e repita."
@@ -264,6 +282,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Superman/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Exercício simples para a musculatura das costas, ótimo para iniciantes.",
   "errosComuns": "Levantar a cabeça demais forçando o pescoço.",
   "descricao": "1. Deite de barriga para baixo com braços estendidos à frente.\n2. Mantenha o olhar para o chão.\n3. Eleve ao mesmo tempo braços, peito e pernas alguns centímetros.\n4. Segure 2 segundos contraindo lombar e glúteos.\n5. Desça devagar e repita."
@@ -275,6 +294,7 @@
   "equipamento": "Barra",
   "nivel": 3,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Good_Morning/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Movimento de dobradiça de quadril; use pouca carga e muito controle.",
   "errosComuns": "Arredondar a coluna ou dobrar demais os joelhos.",
   "descricao": "1. Apoie a barra nos trapézios, como no agachamento.\n2. Afaste os pés na largura do quadril e flexione levemente os joelhos.\n3. Leve o quadril para trás inclinando o tronco à frente com a coluna reta.\n4. Desça até sentir o alongamento dos posteriores, sem arredondar as costas.\n5. Volte à posição ereta contraindo glúteos e posteriores."
@@ -286,6 +306,7 @@
   "equipamento": "Halteres",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Shoulder_Press/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Sentado com apoio para as costas. Empurre os halteres acima da cabeça sem hiperestender a lombar.",
   "errosComuns": null,
   "descricao": "1. Sente no banco com encosto vertical e os halteres apoiados nas coxas.\n2. Leve os halteres à altura dos ombros, palmas para frente.\n3. Mantenha as costas apoiadas e o abdômen firme.\n4. Empurre os halteres para cima até quase estender os braços.\n5. Desça devagar até a altura das orelhas/ombros."
@@ -297,6 +318,7 @@
   "equipamento": "Barra",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Military_Press/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Em pé, glúteos e abdômen contraídos para proteger a lombar.",
   "errosComuns": "Arquear a lombar para empurrar a barra.",
   "descricao": "1. Segure a barra na altura da clavícula, pegada um pouco mais larga que os ombros.\n2. Fique em pé com os pés na largura do quadril e contraia abdômen e glúteos.\n3. Empurre a barra para cima, afastando a cabeça levemente para a barra passar.\n4. Estenda os braços acima da cabeça com a barra alinhada ao meio dos pés.\n5. Desça devagar até a clavícula."
@@ -308,6 +330,7 @@
   "equipamento": "Halteres",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Side_Lateral_Raise/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Eleve os braços lateralmente até a linha dos ombros com cotovelos ligeiramente flexionados.",
   "errosComuns": null,
   "descricao": "1. Fique em pé com um halter em cada mão ao lado do corpo.\n2. Flexione levemente os cotovelos e incline um pouco o tronco à frente.\n3. Eleve os braços para os lados até a altura dos ombros.\n4. Mantenha os punhos na linha dos cotovelos, sem subir acima deles.\n5. Desça devagar controlando o peso."
@@ -319,6 +342,7 @@
   "equipamento": "Halteres",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Front_Dumbbell_Raise/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Trabalha a porção anterior do deltoide; evite balançar o corpo.",
   "errosComuns": "Usar impulso do tronco ou subir acima da linha dos olhos.",
   "descricao": "1. Fique em pé com os halteres à frente das coxas, palmas para o corpo.\n2. Mantenha o abdômen firme e os cotovelos levemente flexionados.\n3. Eleve um ou os dois braços à frente até a altura dos ombros.\n4. Desça devagar e repita."
@@ -330,6 +354,7 @@
   "equipamento": "Halteres",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Reverse_Flyes/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Trabalha o deltoide posterior; tronco inclinado à frente.",
   "errosComuns": "Puxar com os braços dobrados como uma remada.",
   "descricao": "1. Sente na ponta do banco ou fique em pé com o tronco inclinado à frente.\n2. Segure os halteres embaixo do peito, palmas uma de frente para a outra.\n3. Com os cotovelos levemente flexionados, abra os braços para os lados.\n4. Suba até a linha dos ombros apertando a parte de trás dos ombros.\n5. Desça devagar."
@@ -341,6 +366,7 @@
   "equipamento": "Halteres",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Arnold_Dumbbell_Press/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Combina rotação e empurrar, recrutando as três porções do deltoide.",
   "errosComuns": "Fazer a rotação rápida sem controle.",
   "descricao": "1. Sente com as costas apoiadas e os halteres à frente do rosto, palmas para você.\n2. Ao empurrar para cima, gire as palmas para frente.\n3. Estenda os braços acima da cabeça.\n4. Desça fazendo a rotação inversa até voltar à posição inicial."
@@ -352,6 +378,7 @@
   "equipamento": "Barra",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Upright_Barbell_Row/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Puxe a barra até a linha do peito, cotovelos acima dos punhos.",
   "errosComuns": "Subir a barra até o queixo com pegada muito fechada, irritando o ombro.",
   "descricao": "1. Segure a barra à frente das coxas com pegada na largura dos ombros.\n2. Puxe a barra para cima rente ao corpo, levando os cotovelos para os lados e para cima.\n3. Pare quando a barra chegar à altura do peito.\n4. Desça devagar até estender os braços."
@@ -363,6 +390,7 @@
   "equipamento": "Polia",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Face_Pull/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Excelente para deltoide posterior e saúde dos ombros.",
   "errosComuns": "Puxar com o tronco jogado para trás.",
   "descricao": "1. Ajuste a polia na altura do rosto e encaixe a corda.\n2. Segure as pontas da corda com as palmas para baixo e dê um passo atrás.\n3. Puxe a corda em direção ao rosto abrindo os cotovelos para os lados.\n4. Separe as mãos ao lado das orelhas e aperte as escápulas.\n5. Volte devagar estendendo os braços."
@@ -374,6 +402,7 @@
   "equipamento": "Polia",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Seated_Lateral_Raise/0.jpg",
+  "videoUrl": null,
   "instrucoes": "A polia mantém tensão constante durante todo o arco.",
   "errosComuns": "Inclinar o tronco para o lado para ajudar.",
   "descricao": "1. Fique de lado para a polia baixa e segure a pegada com a mão mais distante.\n2. Mantenha o cotovelo levemente flexionado e o tronco firme.\n3. Eleve o braço para o lado até a altura do ombro.\n4. Desça devagar e complete as repetições antes de trocar de lado."
@@ -385,6 +414,7 @@
   "equipamento": "Barra",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Curl/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Cotovelos fixos ao lado do tronco. Evite balanço do corpo.",
   "errosComuns": null,
   "descricao": "1. Fique em pé segurando a barra com as palmas para frente, na largura dos ombros.\n2. Mantenha os cotovelos colados ao lado do corpo.\n3. Flexione os cotovelos levando a barra até a altura do peito.\n4. Contraia o bíceps no topo por 1 segundo.\n5. Desça devagar até estender os braços, sem balançar o tronco."
@@ -396,6 +426,7 @@
   "equipamento": "Halteres",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Alternate_Bicep_Curl/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Gire a palma para cima durante a subida (supinação).",
   "errosComuns": "Mover o cotovelo para frente ou balançar o corpo.",
   "descricao": "1. Fique em pé com um halter em cada mão, palmas voltadas para o corpo.\n2. Flexione um cotovelo girando a palma para cima durante a subida.\n3. Leve o halter até a altura do ombro e contraia o bíceps.\n4. Desça devagar e repita com o outro braço."
@@ -407,6 +438,7 @@
   "equipamento": "Halteres",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hammer_Curls/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Pegada neutra trabalha bíceps e braquiorradial (antebraço).",
   "errosComuns": "Balançar os halteres com impulso.",
   "descricao": "1. Fique em pé com os halteres ao lado do corpo, palmas uma de frente para a outra.\n2. Mantenha os cotovelos fixos.\n3. Flexione os cotovelos subindo os halteres sem girar os punhos.\n4. Desça devagar até estender os braços."
@@ -418,6 +450,7 @@
   "equipamento": "Barra",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Preacher_Curl/0.jpg",
+  "videoUrl": null,
   "instrucoes": "O apoio elimina o balanço e isola o bíceps.",
   "errosComuns": "Estender totalmente o cotovelo de forma brusca no final.",
   "descricao": "1. Sente no banco Scott com a parte de trás dos braços apoiada.\n2. Segure a barra com as palmas para cima.\n3. Flexione os cotovelos levando a barra em direção aos ombros.\n4. Desça devagar até quase estender os braços, sem soltar o peso."
@@ -429,6 +462,7 @@
   "equipamento": "Halteres",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Concentration_Curls/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Cotovelo apoiado na parte interna da coxa.",
   "errosComuns": "Ajudar com o tronco ou com a outra mão.",
   "descricao": "1. Sente no banco com as pernas afastadas e segure um halter.\n2. Apoie o cotovelo na parte interna da coxa.\n3. Flexione o cotovelo levando o halter ao ombro.\n4. Contraia o bíceps no topo e desça devagar.\n5. Complete as repetições e troque de braço."
@@ -440,6 +474,7 @@
   "equipamento": "Polia",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Hammer_Curls_-_Rope_Attachment/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Tensão contínua da polia com pegada neutra.",
   "errosComuns": "Afastar os cotovelos do corpo.",
   "descricao": "1. Encaixe a corda na polia baixa e segure as pontas com as palmas para dentro.\n2. Fique em pé com os cotovelos colados ao corpo.\n3. Flexione os cotovelos trazendo a corda até a altura do peito.\n4. Desça devagar até estender os braços."
@@ -451,6 +486,7 @@
   "equipamento": "Halteres",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Dumbbell_Curl/0.jpg",
+  "videoUrl": null,
   "instrucoes": "O banco inclinado alonga o bíceps e aumenta a amplitude.",
   "errosComuns": "Tirar os ombros do encosto ao subir.",
   "descricao": "1. Regule o banco a cerca de 45° e deite com os halteres pendurados ao lado do corpo.\n2. Mantenha os braços perpendiculares ao chão e as palmas para frente.\n3. Flexione os cotovelos subindo os halteres.\n4. Desça devagar até estender totalmente os braços."
@@ -462,6 +498,7 @@
   "equipamento": "Polia",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Triceps_Pushdown_-_Rope_Attachment/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Cotovelos colados ao tronco. Estenda totalmente separando a corda na contração de pico.",
   "errosComuns": null,
   "descricao": "1. Encaixe a corda na polia alta e segure as pontas com as palmas para dentro.\n2. Fique em pé com o tronco levemente inclinado e os cotovelos colados ao corpo.\n3. Estenda os cotovelos levando a corda para baixo.\n4. No final, afaste as pontas da corda e contraia o tríceps.\n5. Volte devagar até os antebraços passarem da linha horizontal."
@@ -473,6 +510,7 @@
   "equipamento": "Polia",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Triceps_Pushdown/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Movimento só nos cotovelos; ombros parados.",
   "errosComuns": "Deixar os cotovelos abrirem ou o tronco ajudar.",
   "descricao": "1. Segure a barra da polia alta com as palmas para baixo.\n2. Mantenha os cotovelos colados ao corpo.\n3. Empurre a barra para baixo até estender os braços.\n4. Volte devagar até os antebraços ficarem paralelos ao chão."
@@ -484,6 +522,7 @@
   "equipamento": "Barra",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/EZ-Bar_Skullcrusher/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Cotovelos apontados para o teto; só o antebraço se move.",
   "errosComuns": "Abrir os cotovelos ou mover os ombros.",
   "descricao": "1. Deite no banco segurando a barra W acima do peito com os braços estendidos.\n2. Mantenha os cotovelos apontados para o teto.\n3. Flexione os cotovelos descendo a barra em direção à testa.\n4. Estenda os cotovelos voltando à posição inicial."
@@ -495,6 +534,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bench_Dips/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Mantenha as costas próximas ao banco.",
   "errosComuns": "Descer demais e forçar a parte da frente do ombro.",
   "descricao": "1. Sente na beira de um banco e apoie as mãos ao lado do quadril.\n2. Deslize o quadril para fora do banco com as pernas à frente.\n3. Flexione os cotovelos descendo o quadril até os braços formarem cerca de 90°.\n4. Empurre o banco estendendo os cotovelos para subir."
@@ -506,6 +546,7 @@
   "equipamento": "Halteres",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Dumbbell_Triceps_Extension/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Alonga a cabeça longa do tríceps. Cotovelos apontando para cima.",
   "errosComuns": "Abrir os cotovelos para os lados.",
   "descricao": "1. Segure um halter com as duas mãos acima da cabeça, braços estendidos.\n2. Mantenha os cotovelos próximos à cabeça.\n3. Flexione os cotovelos descendo o halter atrás da cabeça.\n4. Estenda os cotovelos voltando à posição inicial."
@@ -517,6 +558,7 @@
   "equipamento": "Barra",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Close-Grip_Barbell_Bench_Press/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Pegada na largura dos ombros e cotovelos próximos ao corpo.",
   "errosComuns": "Pegada fechada demais, forçando os punhos.",
   "descricao": "1. Deite no banco e segure a barra com as mãos na largura dos ombros.\n2. Retire a barra do suporte com os braços estendidos.\n3. Desça a barra até a parte baixa do peito com os cotovelos rentes ao corpo.\n4. Empurre a barra para cima estendendo os braços."
@@ -528,6 +570,7 @@
   "equipamento": "Halteres",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Tricep_Dumbbell_Kickback/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Braço paralelo ao chão; mova só o antebraço.",
   "errosComuns": "Balançar o braço inteiro.",
   "descricao": "1. Apoie um joelho e uma mão no banco, tronco paralelo ao chão.\n2. Segure o halter com o braço colado ao corpo e o cotovelo dobrado a 90°.\n3. Estenda o cotovelo levando o halter para trás.\n4. Volte devagar até 90° e repita. Depois troque de lado."
@@ -539,6 +582,7 @@
   "equipamento": "Polia",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Rope_Overhead_Triceps_Extension/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Excelente alongamento da cabeça longa do tríceps.",
   "errosComuns": "Arquear a lombar.",
   "descricao": "1. Encaixe a corda na polia e fique de costas para o aparelho.\n2. Segure a corda atrás da cabeça com os cotovelos apontados para frente.\n3. Dê um passo à frente e incline levemente o tronco.\n4. Estenda os cotovelos levando a corda à frente e acima da cabeça.\n5. Volte devagar flexionando os cotovelos."
@@ -550,6 +594,7 @@
   "equipamento": "Barra",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Palms-Up_Barbell_Wrist_Curl_Over_A_Bench/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Trabalha os flexores do antebraço; amplitude curta e controlada.",
   "errosComuns": "Mover os cotovelos ou usar carga alta.",
   "descricao": "1. Ajoelhe atrás de um banco e apoie os antebraços nele, palmas para cima.\n2. Deixe os punhos para fora do banco segurando a barra.\n3. Desça a barra flexionando os punhos para baixo.\n4. Suba a barra flexionando os punhos o máximo possível.\n5. Desça devagar e repita."
@@ -561,6 +606,7 @@
   "equipamento": "Barra",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Palms-Down_Wrist_Curl_Over_A_Bench/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Trabalha os extensores do antebraço.",
   "errosComuns": "Usar o braço todo no movimento.",
   "descricao": "1. Apoie os antebraços no banco com as palmas para baixo.\n2. Deixe os punhos para fora do banco segurando a barra.\n3. Eleve o dorso das mãos estendendo os punhos.\n4. Desça devagar e repita."
@@ -572,6 +618,7 @@
   "equipamento": "Barra",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Reverse_Barbell_Curl/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Pegada pronada fortalece antebraço e braquial.",
   "errosComuns": "Balançar o tronco.",
   "descricao": "1. Segure a barra com as palmas para baixo, na largura dos ombros.\n2. Mantenha os cotovelos colados ao corpo.\n3. Flexione os cotovelos levando a barra até o peito.\n4. Desça devagar até estender os braços."
@@ -583,6 +630,7 @@
   "equipamento": "Halteres",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Farmers_Walk/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Fortalece pegada, trapézio e core.",
   "errosComuns": "Curvar o tronco ou deixar os ombros caírem para frente.",
   "descricao": "1. Segure um halter pesado em cada mão ao lado do corpo.\n2. Fique ereto com os ombros para trás e o abdômen firme.\n3. Caminhe com passos curtos e firmes pela distância ou tempo definido.\n4. Coloque os halteres no chão agachando com a coluna reta."
@@ -594,10 +642,10 @@
   "equipamento": "Barra",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Full_Squat/0.jpg",
+  "videoUrl": "https://youtu.be/rM6SDUdl9fs",
   "instrucoes": "Pés na largura dos ombros. Desça o quadril para trás e para baixo mantendo o tronco firme e joelhos alinhados com os pés.",
   "errosComuns": "Deixar os joelhos \"fecharem\" (valgo dinâmico) ou arredondar a lombar.",
-  "descricao": "1. Posicione a barra no suporte um pouco abaixo da altura dos ombros.\n2. Entre embaixo da barra e apoie-a sobre os trapézios, segurando-a com as mãos além da largura dos ombros.\n3. Feche as escápulas, retire a barra do suporte e dê dois passos para trás.\n4. Afaste os pés na largura dos ombros, pontas levemente para fora, e contraia o abdômen.\n5. Desça levando o quadril para trás e para baixo, joelhos na direção dos pés, até as coxas ficarem pelo menos paralelas ao chão.\n6. Suba empurrando o chão com os pés inteiros, mantendo o peito aberto e a coluna neutra.",
-  "videoUrl": "https://youtu.be/rM6SDUdl9fs"
+  "descricao": "1. Posicione a barra no suporte um pouco abaixo da altura dos ombros.\n2. Entre embaixo da barra e apoie-a sobre os trapézios, segurando-a com as mãos além da largura dos ombros.\n3. Feche as escápulas, retire a barra do suporte e dê dois passos para trás.\n4. Afaste os pés na largura dos ombros, pontas levemente para fora, e contraia o abdômen.\n5. Desça levando o quadril para trás e para baixo, joelhos na direção dos pés, até as coxas ficarem pelo menos paralelas ao chão.\n6. Suba empurrando o chão com os pés inteiros, mantendo o peito aberto e a coluna neutra."
  },
  {
   "id": "ex_leg_press",
@@ -606,10 +654,10 @@
   "equipamento": "Máquina",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Press/0.jpg",
+  "videoUrl": "https://youtu.be/waAxlYvtCcI",
   "instrucoes": "Lombar sempre colada no encosto. Não estenda totalmente os joelhos no topo.",
   "errosComuns": null,
-  "descricao": "1. Sente no aparelho com as costas e o quadril bem apoiados.\n2. Coloque os pés na plataforma na largura dos ombros.\n3. Destrave a plataforma e desça flexionando os joelhos até cerca de 90°.\n4. Não deixe o quadril descolar do banco no fundo.\n5. Empurre a plataforma sem travar totalmente os joelhos no topo.",
-  "videoUrl": "https://youtu.be/waAxlYvtCcI"
+  "descricao": "1. Sente no aparelho com as costas e o quadril bem apoiados.\n2. Coloque os pés na plataforma na largura dos ombros.\n3. Destrave a plataforma e desça flexionando os joelhos até cerca de 90°.\n4. Não deixe o quadril descolar do banco no fundo.\n5. Empurre a plataforma sem travar totalmente os joelhos no topo."
  },
  {
   "id": "ex_cadeira_extensora",
@@ -618,6 +666,7 @@
   "equipamento": "Máquina",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Extensions/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Mantenha o quadril apoiado no banco. Pause 1 segundo na contração máxima do quadríceps.",
   "errosComuns": null,
   "descricao": "1. Regule o encosto para que o joelho fique alinhado ao eixo da máquina.\n2. Apoie o rolo na parte baixa da canela e segure as pegadas.\n3. Estenda os joelhos até as pernas ficarem retas.\n4. Segure 1 segundo contraindo o quadríceps.\n5. Desça devagar sem deixar o peso bater."
@@ -629,6 +678,7 @@
   "equipamento": "Halteres",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Goblet_Squat/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Ótimo para aprender o padrão do agachamento.",
   "errosComuns": "Inclinar o tronco à frente e perder a postura.",
   "descricao": "1. Segure um halter ou kettlebell na frente do peito com as duas mãos.\n2. Afaste os pés um pouco além da largura dos ombros.\n3. Desça o quadril entre as pernas mantendo o tronco ereto.\n4. Vá até onde conseguir sem arredondar a coluna.\n5. Suba empurrando o chão com os pés."
@@ -640,6 +690,7 @@
   "equipamento": "Halteres",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Lunges/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Passo longo o suficiente para os dois joelhos formarem 90°.",
   "errosComuns": "Deixar o joelho da frente passar muito da ponta do pé ou cair para dentro.",
   "descricao": "1. Fique em pé com um halter em cada mão ao lado do corpo.\n2. Dê um passo largo à frente.\n3. Desça o quadril até o joelho de trás quase tocar o chão.\n4. Mantenha o tronco ereto e o joelho da frente alinhado ao pé.\n5. Empurre com a perna da frente para voltar e alterne as pernas."
@@ -651,10 +702,10 @@
   "equipamento": "Barra",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Walking_Lunge/0.jpg",
+  "videoUrl": "https://youtu.be/ntYn2HDw32I",
   "instrucoes": "Exige equilíbrio; comece com pouca carga.",
   "errosComuns": "Passos curtos demais ou tronco inclinado.",
-  "descricao": "1. Apoie a barra nos trapézios e fique em pé com os pés juntos.\n2. Dê um passo largo à frente e desça até os joelhos formarem 90°.\n3. Empurre com a perna da frente e traga a de trás à frente no próximo passo.\n4. Continue caminhando alternando as pernas.",
-  "videoUrl": "https://youtu.be/ntYn2HDw32I"
+  "descricao": "1. Apoie a barra nos trapézios e fique em pé com os pés juntos.\n2. Dê um passo largo à frente e desça até os joelhos formarem 90°.\n3. Empurre com a perna da frente e traga a de trás à frente no próximo passo.\n4. Continue caminhando alternando as pernas."
  },
  {
   "id": "ex_agachamento_frontal",
@@ -663,6 +714,7 @@
   "equipamento": "Barra",
   "nivel": 3,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Front_Barbell_Squat/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Barra apoiada na frente dos ombros; tronco mais vertical.",
   "errosComuns": "Deixar os cotovelos caírem e a barra escorregar.",
   "descricao": "1. Apoie a barra na frente dos ombros com os cotovelos altos.\n2. Afaste os pés na largura dos ombros.\n3. Desça o quadril mantendo o tronco bem ereto e os cotovelos para cima.\n4. Desça até as coxas ficarem paralelas ao chão ou abaixo.\n5. Suba empurrando o chão com os pés."
@@ -674,10 +726,10 @@
   "equipamento": "Máquina",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Smith_Machine_Squat/0.jpg",
+  "videoUrl": "https://youtu.be/uCT5wfQIQpk",
   "instrucoes": "Trajetória guiada, boa opção para iniciantes.",
   "errosComuns": "Pés muito para trás, sobrecarregando os joelhos.",
-  "descricao": "1. Ajuste a barra do Smith na altura dos ombros e apoie-a nos trapézios.\n2. Posicione os pés um pouco à frente da linha da barra.\n3. Destrave a barra girando os punhos.\n4. Desça até as coxas ficarem paralelas ao chão.\n5. Suba empurrando o chão e trave a barra ao final.",
-  "videoUrl": "https://youtu.be/uCT5wfQIQpk"
+  "descricao": "1. Ajuste a barra do Smith na altura dos ombros e apoie-a nos trapézios.\n2. Posicione os pés um pouco à frente da linha da barra.\n3. Destrave a barra girando os punhos.\n4. Desça até as coxas ficarem paralelas ao chão.\n5. Suba empurrando o chão e trave a barra ao final."
  },
  {
   "id": "ex_hack_squat",
@@ -686,10 +738,10 @@
   "equipamento": "Máquina",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hack_Squat/0.jpg",
+  "videoUrl": "https://youtu.be/Whp712OHPl8",
   "instrucoes": "Costas apoiadas; ótimo foco no quadríceps.",
   "errosComuns": "Tirar os calcanhares da plataforma.",
-  "descricao": "1. Encoste as costas no apoio e posicione os ombros sob as almofadas.\n2. Coloque os pés na plataforma na largura dos ombros.\n3. Destrave e desça flexionando os joelhos até cerca de 90°.\n4. Empurre a plataforma voltando à posição inicial.",
-  "videoUrl": "https://youtu.be/Whp712OHPl8"
+  "descricao": "1. Encoste as costas no apoio e posicione os ombros sob as almofadas.\n2. Coloque os pés na plataforma na largura dos ombros.\n3. Destrave e desça flexionando os joelhos até cerca de 90°.\n4. Empurre a plataforma voltando à posição inicial."
  },
  {
   "id": "ex_agachamento_bulgaro",
@@ -698,6 +750,7 @@
   "equipamento": "Halteres",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Split_Squat_with_Dumbbells/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Pé de trás apoiado num banco; foco na perna da frente.",
   "errosComuns": "Deixar o joelho da frente cair para dentro.",
   "descricao": "1. Fique de costas para um banco e apoie o peito de um pé sobre ele.\n2. Segure um halter em cada mão.\n3. Desça o quadril até a coxa da frente ficar paralela ao chão.\n4. Suba empurrando com a perna da frente.\n5. Complete as repetições e troque de perna."
@@ -709,6 +762,7 @@
   "equipamento": "Halteres",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Step_Ups/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Use um banco firme na altura do joelho.",
   "errosComuns": "Impulsionar com a perna de baixo.",
   "descricao": "1. Fique de frente para um banco segurando um halter em cada mão.\n2. Apoie um pé inteiro sobre o banco.\n3. Suba empurrando com a perna de cima até ficar em pé no banco.\n4. Desça devagar com a mesma perna e repita. Depois troque."
@@ -720,10 +774,10 @@
   "equipamento": "Máquina",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Lying_Leg_Curls/0.jpg",
+  "videoUrl": "https://youtu.be/8Nat6GRiEoc",
   "instrucoes": "Quadril pressionado contra o banco. Flexione até o calcanhar aproximar-se dos glúteos.",
   "errosComuns": null,
-  "descricao": "1. Deite de barriga para baixo com o joelho alinhado ao eixo da máquina.\n2. Apoie o rolo logo acima dos calcanhares e segure as pegadas.\n3. Flexione os joelhos levando os calcanhares em direção aos glúteos.\n4. Mantenha o quadril colado ao banco.\n5. Desça devagar até quase estender as pernas.",
-  "videoUrl": "https://youtu.be/8Nat6GRiEoc"
+  "descricao": "1. Deite de barriga para baixo com o joelho alinhado ao eixo da máquina.\n2. Apoie o rolo logo acima dos calcanhares e segure as pegadas.\n3. Flexione os joelhos levando os calcanhares em direção aos glúteos.\n4. Mantenha o quadril colado ao banco.\n5. Desça devagar até quase estender as pernas."
  },
  {
   "id": "ex_cadeira_flexora",
@@ -732,6 +786,7 @@
   "equipamento": "Máquina",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Leg_Curl/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Versão sentada da flexora, com posteriores mais alongados.",
   "errosComuns": "Tirar o quadril do banco.",
   "descricao": "1. Sente com o joelho alinhado ao eixo da máquina e prenda as coxas no apoio.\n2. Apoie o rolo atrás dos tornozelos.\n3. Flexione os joelhos puxando o rolo para baixo.\n4. Volte devagar até quase estender as pernas."
@@ -743,10 +798,10 @@
   "equipamento": "Halteres",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Stiff-Legged_Barbell_Deadlift/0.jpg",
+  "videoUrl": "https://youtu.be/BHfY5-jGNDA",
   "instrucoes": "Joelhos levemente destravados. Desça o tronco mantendo a coluna neutra até sentir o alongamento máximo dos isquiotibiais.",
   "errosComuns": null,
-  "descricao": "1. Segure a barra ou os halteres à frente das coxas.\n2. Afaste os pés na largura do quadril e destrave levemente os joelhos.\n3. Leve o quadril para trás inclinando o tronco com a coluna reta.\n4. Desça o peso rente às pernas até sentir o alongamento dos posteriores.\n5. Volte contraindo glúteos e posteriores.",
-  "videoUrl": "https://youtu.be/BHfY5-jGNDA"
+  "descricao": "1. Segure a barra ou os halteres à frente das coxas.\n2. Afaste os pés na largura do quadril e destrave levemente os joelhos.\n3. Leve o quadril para trás inclinando o tronco com a coluna reta.\n4. Desça o peso rente às pernas até sentir o alongamento dos posteriores.\n5. Volte contraindo glúteos e posteriores."
  },
  {
   "id": "ex_levantamento_romeno",
@@ -755,6 +810,7 @@
   "equipamento": "Barra",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Romanian_Deadlift/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Movimento de dobradiça do quadril com barra rente às pernas.",
   "errosComuns": "Transformar em agachamento dobrando demais os joelhos.",
   "descricao": "1. Segure a barra em pé, pegada na largura dos ombros.\n2. Destrave levemente os joelhos e mantenha a coluna neutra.\n3. Empurre o quadril para trás deslizando a barra pelas coxas.\n4. Desça até um pouco abaixo dos joelhos ou até o limite sem arredondar as costas.\n5. Volte estendendo o quadril e contraindo os glúteos."
@@ -766,6 +822,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 3,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Glute_Ham_Raise/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Exercício avançado de força excêntrica dos posteriores.",
   "errosComuns": "Dobrar o quadril em vez de manter o corpo reto.",
   "descricao": "1. Prenda os tornozelos no aparelho ou peça ajuda a alguém.\n2. Ajoelhe com o corpo reto do joelho à cabeça.\n3. Desça o tronco à frente devagar resistindo com os posteriores.\n4. Use as mãos para amortecer no chão se necessário.\n5. Volte puxando com os posteriores."
@@ -777,6 +834,7 @@
   "equipamento": "Barra",
   "nivel": 3,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Sumo_Deadlift/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Base larga com pontas dos pés para fora; mais adutores e glúteos.",
   "errosComuns": "Deixar os joelhos caírem para dentro.",
   "descricao": "1. Afaste bem os pés com as pontas viradas para fora.\n2. Segure a barra por dentro das pernas com os braços estendidos.\n3. Abaixe o quadril, endireite a coluna e abra o peito.\n4. Suba empurrando o chão e afastando os joelhos.\n5. Desça controlando com a coluna reta."
@@ -788,6 +846,7 @@
   "equipamento": "Barra",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Hip_Thrust/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Apoie a escápula no banco. Suba o quadril até alinhar com joelhos contraindo fortemente os glúteos.",
   "errosComuns": null,
   "descricao": "1. Sente no chão com as costas apoiadas na borda de um banco.\n2. Coloque a barra (com proteção) sobre o quadril.\n3. Apoie os pés no chão na largura do quadril, joelhos dobrados.\n4. Eleve o quadril até o tronco ficar alinhado com as coxas.\n5. Contraia os glúteos no topo e desça devagar."
@@ -799,6 +858,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Glute_Bridge/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Versão no solo da elevação pélvica, ótima para iniciantes.",
   "errosComuns": "Arquear a lombar no topo em vez de usar os glúteos.",
   "descricao": "1. Deite de costas com os joelhos dobrados e os pés no chão.\n2. Apoie os braços ao lado do corpo.\n3. Eleve o quadril contraindo os glúteos.\n4. Segure 1 segundo no topo e desça devagar.\n5. Para progredir, apoie uma barra ou anilha no quadril."
@@ -810,6 +870,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Glute_Kickback/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Movimento só do quadril; mantenha a coluna parada.",
   "errosComuns": "Arquear a lombar ao subir a perna.",
   "descricao": "1. Fique em quatro apoios com mãos sob os ombros e joelhos sob o quadril.\n2. Mantenha o abdômen firme.\n3. Eleve uma perna para trás e para cima, joelho dobrado.\n4. Contraia o glúteo no topo e desça devagar.\n5. Complete as repetições e troque de perna."
@@ -821,6 +882,7 @@
   "equipamento": "Polia",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Legged_Cable_Kickback/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Tensão constante da polia no glúteo.",
   "errosComuns": "Girar o quadril ou usar o impulso.",
   "descricao": "1. Prenda a tornozeleira na polia baixa e no tornozelo.\n2. Fique de frente para a máquina segurando o apoio.\n3. Leve a perna para trás estendendo o quadril.\n4. Contraia o glúteo no final e volte devagar."
@@ -832,10 +894,10 @@
   "equipamento": "Máquina",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Thigh_Abductor/0.jpg",
+  "videoUrl": "https://youtu.be/50qHGus1TZk",
   "instrucoes": "Trabalha glúteo médio e abdutores do quadril.",
   "errosComuns": "Usar impulso e soltar o peso na volta.",
-  "descricao": "1. Sente no aparelho com as costas apoiadas e as pernas por dentro das almofadas.\n2. Afaste as pernas para fora o máximo possível.\n3. Segure 1 segundo na abertura máxima.\n4. Volte devagar sem deixar o peso bater.",
-  "videoUrl": "https://youtu.be/50qHGus1TZk"
+  "descricao": "1. Sente no aparelho com as costas apoiadas e as pernas por dentro das almofadas.\n2. Afaste as pernas para fora o máximo possível.\n3. Segure 1 segundo na abertura máxima.\n4. Volte devagar sem deixar o peso bater."
  },
  {
   "id": "ex_cadeira_adutora",
@@ -844,10 +906,10 @@
   "equipamento": "Máquina",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Thigh_Adductor/0.jpg",
+  "videoUrl": "https://youtu.be/goQVyEGMYMM",
   "instrucoes": "Trabalha a parte interna das coxas.",
   "errosComuns": "Abrir além da amplitude confortável.",
-  "descricao": "1. Sente no aparelho com as pernas por fora das almofadas.\n2. Feche as pernas aproximando as almofadas.\n3. Segure 1 segundo contraindo a parte interna da coxa.\n4. Abra devagar até a posição inicial.",
-  "videoUrl": "https://youtu.be/goQVyEGMYMM"
+  "descricao": "1. Sente no aparelho com as pernas por fora das almofadas.\n2. Feche as pernas aproximando as almofadas.\n3. Segure 1 segundo contraindo a parte interna da coxa.\n4. Abra devagar até a posição inicial."
  },
  {
   "id": "ex_panturrilha_em_pe",
@@ -856,6 +918,7 @@
   "equipamento": "Máquina",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Calf_Raises/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Amplitude completa: desça o calcanhar e suba na ponta dos pés.",
   "errosComuns": "Fazer movimento curto e rápido.",
   "descricao": "1. Posicione os ombros sob as almofadas e a ponta dos pés na plataforma.\n2. Deixe os calcanhares descerem até sentir o alongamento.\n3. Suba na ponta dos pés o máximo possível.\n4. Segure 1 segundo no topo e desça devagar."
@@ -867,6 +930,7 @@
   "equipamento": "Máquina",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Calf_Raise/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Com os joelhos dobrados trabalha mais o sóleo.",
   "errosComuns": "Tirar os joelhos do apoio para ajudar.",
   "descricao": "1. Sente e apoie as coxas sob a almofada, ponta dos pés na plataforma.\n2. Destrave o apoio e desça os calcanhares.\n3. Eleve os calcanhares o máximo possível.\n4. Desça devagar e repita."
@@ -878,6 +942,7 @@
   "equipamento": "Máquina",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Calf_Press_On_The_Leg_Press_Machine/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Mantenha os joelhos estendidos (sem travar).",
   "errosComuns": "Deixar os pés escorregarem da plataforma.",
   "descricao": "1. Sente no leg press e apoie só a ponta dos pés na parte baixa da plataforma.\n2. Estenda as pernas mantendo os joelhos levemente destravados.\n3. Empurre a plataforma com a ponta dos pés estendendo os tornozelos.\n4. Volte devagar até sentir o alongamento da panturrilha."
@@ -889,6 +954,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Donkey_Calf_Raises/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Tronco inclinado aumenta o alongamento da panturrilha.",
   "errosComuns": "Dobrar os joelhos durante o movimento.",
   "descricao": "1. Apoie as mãos num banco com o tronco inclinado à frente.\n2. Coloque a ponta dos pés num degrau.\n3. Desça os calcanhares e depois suba na ponta dos pés.\n4. Segure no topo e desça devagar."
@@ -900,6 +966,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plank/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Corpo alinhado da cabeça aos calcanhares. Contraia glúteos e abdômen.",
   "errosComuns": "Elevar demais ou deixar o quadril cair (hiperlordose).",
   "descricao": "1. Apoie os antebraços no chão com os cotovelos sob os ombros.\n2. Estenda as pernas apoiando as pontas dos pés.\n3. Alinhe cabeça, tronco e pernas em linha reta.\n4. Contraia abdômen e glúteos e mantenha a posição respirando normalmente.\n5. Segure pelo tempo definido sem deixar o quadril cair."
@@ -911,6 +978,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Crunches/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Suba apenas as escápulas do chão; o movimento é curto.",
   "errosComuns": "Puxar a cabeça com as mãos.",
   "descricao": "1. Deite de costas com os joelhos dobrados e os pés no chão.\n2. Cruze os braços no peito ou apoie as mãos atrás da cabeça sem puxar.\n3. Contraia o abdômen e eleve as escápulas do chão.\n4. Expire na subida e segure 1 segundo.\n5. Desça devagar."
@@ -922,6 +990,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 3,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hanging_Leg_Raise/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Trabalha a parte inferior do abdômen; evite balançar.",
   "errosComuns": "Usar impulso do corpo.",
   "descricao": "1. Pendure-se na barra fixa com os braços estendidos.\n2. Contraia o abdômen.\n3. Eleve as pernas (estendidas ou dobradas) até a altura do quadril ou acima.\n4. Desça devagar sem balançar."
@@ -933,6 +1002,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Russian_Twist/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Trabalha os oblíquos; gire o tronco, não só os braços.",
   "errosComuns": "Arredondar a coluna.",
   "descricao": "1. Sente no chão com os joelhos dobrados e incline o tronco para trás.\n2. Segure uma anilha ou as mãos juntas à frente do peito.\n3. Gire o tronco para um lado e depois para o outro.\n4. Mantenha o abdômen firme durante toda a série."
@@ -944,6 +1014,7 @@
   "equipamento": "Polia",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Crunch/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Flexione a coluna; o quadril fica parado.",
   "errosComuns": "Sentar sobre os calcanhares usando o peso do corpo.",
   "descricao": "1. Ajoelhe de frente para a polia alta segurando a corda ao lado da cabeça.\n2. Mantenha o quadril parado.\n3. Flexione o tronco levando os cotovelos em direção às coxas.\n4. Contraia o abdômen e volte devagar."
@@ -955,6 +1026,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 3,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Ab_Roller/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Exercício avançado; mantenha a lombar protegida.",
   "errosComuns": "Deixar a lombar afundar na extensão.",
   "descricao": "1. Ajoelhe segurando a roda à frente dos joelhos.\n2. Contraia o abdômen e role a roda à frente estendendo o corpo.\n3. Vá até onde conseguir sem arquear a lombar.\n4. Volte puxando com o abdômen."
@@ -966,6 +1038,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Side_Bridge/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Trabalha oblíquos e estabilizadores do quadril.",
   "errosComuns": "Deixar o quadril cair.",
   "descricao": "1. Deite de lado apoiado no antebraço, cotovelo sob o ombro.\n2. Estenda as pernas e empilhe os pés.\n3. Eleve o quadril formando uma linha reta.\n4. Segure pelo tempo definido e troque de lado."
@@ -977,6 +1050,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Flat_Bench_Lying_Leg_Raise/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Lombar sempre colada ao apoio.",
   "errosComuns": "Deixar a lombar descolar ao descer as pernas.",
   "descricao": "1. Deite de costas num banco ou no chão segurando o apoio atrás da cabeça.\n2. Estenda as pernas juntas.\n3. Eleve as pernas até formarem 90° com o tronco.\n4. Desça devagar sem encostar os pés no chão."
@@ -988,6 +1062,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Air_Bike/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Leve o cotovelo em direção ao joelho oposto.",
   "errosComuns": "Puxar o pescoço com as mãos.",
   "descricao": "1. Deite de costas com as mãos atrás da cabeça.\n2. Eleve as pernas com os joelhos dobrados a 90°.\n3. Leve o cotovelo direito em direção ao joelho esquerdo estendendo a perna direita.\n4. Alterne os lados como se pedalasse."
@@ -999,6 +1074,7 @@
   "equipamento": "Máquina",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Jogging_Treadmill/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Alterne tiros de alta intensidade com intervalos de caminhada ativa.",
   "errosComuns": null,
   "descricao": "1. Comece com 5 minutos de caminhada para aquecer.\n2. Aumente a velocidade para um tiro forte de 30 segundos.\n3. Reduza para caminhada leve por 60 a 90 segundos.\n4. Repita os ciclos pelo tempo planejado.\n5. Termine com 5 minutos de caminhada leve."
@@ -1010,6 +1086,7 @@
   "equipamento": "Máquina",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bicycling_Stationary/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Regule o banco na altura do quadril; joelho levemente dobrado no ponto mais baixo.",
   "errosComuns": "Banco baixo demais, sobrecarregando os joelhos.",
   "descricao": "1. Ajuste o banco para que o joelho fique levemente dobrado com o pedal embaixo.\n2. Comece pedalando em ritmo leve por 5 minutos.\n3. Aumente a resistência ou a cadência conforme o treino.\n4. Mantenha o tronco firme sem balançar.\n5. Diminua o ritmo nos minutos finais."
@@ -1021,6 +1098,7 @@
   "equipamento": "Máquina",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Rowing_Stationary/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Sequência: pernas, tronco, braços. Na volta: braços, tronco, pernas.",
   "errosComuns": "Puxar só com os braços.",
   "descricao": "1. Sente no remo e prenda os pés nos apoios.\n2. Segure a pegada com os braços estendidos e os joelhos dobrados.\n3. Empurre com as pernas, depois incline levemente o tronco para trás e puxe a pegada até o abdômen.\n4. Volte estendendo os braços, inclinando o tronco à frente e dobrando os joelhos.\n5. Mantenha um ritmo constante."
@@ -1032,6 +1110,7 @@
   "equipamento": "Corda",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Rope_Jumping/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Saltos baixos na ponta dos pés; giro feito pelos punhos.",
   "errosComuns": "Saltar alto demais ou girar a corda com os braços inteiros.",
   "descricao": "1. Segure as pontas da corda com os cotovelos próximos ao corpo.\n2. Gire a corda com os punhos.\n3. Salte baixo na ponta dos pés a cada passagem da corda.\n4. Mantenha um ritmo constante e respire normalmente."
@@ -1043,6 +1122,7 @@
   "equipamento": "Máquina",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Elliptical_Trainer/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Baixo impacto nas articulações.",
   "errosComuns": "Apoiar o peso do corpo nas pegadas.",
   "descricao": "1. Suba nos pedais e segure as pegadas.\n2. Comece em ritmo leve.\n3. Empurre e puxe as pegadas acompanhando o movimento das pernas.\n4. Ajuste a resistência conforme o treino."
@@ -1054,6 +1134,7 @@
   "equipamento": "Máquina",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Stairmaster/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Tronco ereto; não se apoie nas laterais.",
   "errosComuns": "Inclinar o corpo sobre o painel.",
   "descricao": "1. Suba no aparelho e segure levemente as laterais.\n2. Comece em velocidade baixa.\n3. Suba os degraus apoiando o pé inteiro.\n4. Aumente a velocidade conforme o condicionamento."
@@ -1065,6 +1146,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Mountain_Climbers/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Mantenha o quadril baixo e o ritmo forte.",
   "errosComuns": "Elevar demais o quadril.",
   "descricao": "1. Fique em posição de prancha alta com as mãos sob os ombros.\n2. Leve um joelho em direção ao peito.\n3. Troque as pernas rapidamente, como se corresse no lugar.\n4. Mantenha o abdômen firme durante todo o tempo."
@@ -1076,6 +1158,7 @@
   "equipamento": "Kettlebell",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Kettlebell_Swings/0.jpg",
+  "videoUrl": null,
   "instrucoes": "O movimento vem do quadril, não dos braços.",
   "errosComuns": "Agachar em vez de dobrar o quadril ou levantar com os ombros.",
   "descricao": "1. Fique com os pés um pouco mais afastados que os ombros e o kettlebell à frente.\n2. Leve o quadril para trás e segure o kettlebell com a coluna reta.\n3. Balance o kettlebell entre as pernas.\n4. Estenda o quadril com força projetando o kettlebell até a altura do peito.\n5. Deixe-o descer e repita o movimento contínuo."
@@ -1087,6 +1170,7 @@
   "equipamento": "Caixa",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Front_Box_Jump/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Aterrisse suave com os joelhos levemente dobrados.",
   "errosComuns": "Usar caixa alta demais ou descer saltando.",
   "descricao": "1. Fique em frente a uma caixa firme.\n2. Agache levemente e balance os braços para trás.\n3. Salte e aterrisse com os dois pés sobre a caixa.\n4. Fique em pé no topo e desça caminhando."
@@ -1098,6 +1182,7 @@
   "equipamento": "Medicine Ball",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Medicine_Ball_Chest_Pass/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Trabalha potência de membros superiores.",
   "errosComuns": "Arremessar só com os braços sem usar as pernas.",
   "descricao": "1. Fique de frente para uma parede ou parceiro segurando a bola no peito.\n2. Dê um passo à frente e empurre a bola com força estendendo os braços.\n3. Receba a bola amortecendo com os braços.\n4. Repita mantendo o ritmo."
@@ -1109,6 +1194,7 @@
   "equipamento": "Kettlebell",
   "nivel": 2,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_Sumo_High_Pull/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Combina extensão do quadril e puxada para o queixo.",
   "errosComuns": "Puxar só com os braços.",
   "descricao": "1. Fique com base larga e o kettlebell no chão entre os pés.\n2. Agache e segure a alça com as duas mãos.\n3. Estenda pernas e quadril com força e puxe o kettlebell até o peito, cotovelos altos.\n4. Desça controlando e repita."
@@ -1120,6 +1206,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Step-up_with_Knee_Raise/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Trabalha equilíbrio, glúteos e quadríceps.",
   "errosComuns": "Apoiar só a ponta do pé no banco.",
   "descricao": "1. Apoie um pé inteiro sobre um banco.\n2. Suba empurrando com essa perna.\n3. Eleve o joelho da outra perna até a altura do quadril.\n4. Desça devagar e alterne as pernas."
@@ -1131,6 +1218,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Childs_Pose/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Alongamento relaxante para coluna e quadril.",
   "errosComuns": "Prender a respiração.",
   "descricao": "1. Ajoelhe e sente sobre os calcanhares.\n2. Incline o tronco à frente e estenda os braços no chão.\n3. Apoie a testa no chão e relaxe os ombros.\n4. Respire fundo e mantenha por 30 a 60 segundos."
@@ -1142,6 +1230,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cat_Stretch/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Movimente a coluna vértebra por vértebra, sincronizando com a respiração.",
   "errosComuns": "Fazer o movimento rápido.",
   "descricao": "1. Fique em quatro apoios com mãos sob os ombros e joelhos sob o quadril.\n2. Ao inspirar, afunde a barriga e olhe levemente para cima.\n3. Ao expirar, arredonde a coluna levando o queixo ao peito.\n4. Alterne devagar entre as duas posições."
@@ -1153,6 +1242,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hamstring_Stretch/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Mantenha a coluna reta; incline a partir do quadril.",
   "errosComuns": "Fazer balanço (alongamento balístico).",
   "descricao": "1. Deite de costas e eleve uma perna estendida.\n2. Segure atrás da coxa ou use uma toalha no pé.\n3. Puxe a perna em sua direção até sentir o alongamento.\n4. Mantenha por 30 segundos e troque de lado."
@@ -1164,6 +1254,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Quad_Stretch/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Joelhos alinhados e quadril encaixado.",
   "errosComuns": "Afastar o joelho para o lado.",
   "descricao": "1. Fique em pé apoiado em uma parede.\n2. Dobre um joelho e segure o pé atrás do corpo.\n3. Leve o calcanhar em direção ao glúteo mantendo os joelhos juntos.\n4. Mantenha por 30 segundos e troque de perna."
@@ -1175,6 +1266,7 @@
   "equipamento": "Peso Corporal",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Chest_Stretch_on_Stability_Ball/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Abre o peito e melhora a postura dos ombros.",
   "errosComuns": "Forçar além do confortável.",
   "descricao": "1. Apoie o antebraço numa parede com o cotovelo na altura do ombro.\n2. Gire o tronco devagar para o lado oposto.\n3. Sinta o alongamento na frente do peito e do ombro.\n4. Mantenha por 30 segundos e troque de lado."
@@ -1186,8 +1278,321 @@
   "equipamento": "Peso Corporal",
   "nivel": 1,
   "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Glute/0.jpg",
+  "videoUrl": null,
   "instrucoes": "Alivia tensão no quadril e na lombar.",
   "errosComuns": "Arredondar a coluna para alcançar mais.",
   "descricao": "1. Sente com as pernas estendidas.\n2. Cruze uma perna sobre a outra apoiando o pé ao lado do joelho.\n3. Abrace o joelho cruzado puxando-o em direção ao peito.\n4. Mantenha por 30 segundos e troque de lado."
+ },
+ {
+  "id": "ex_rosca_21",
+  "nome": "Rosca 21",
+  "grupoMuscular": "Bíceps",
+  "equipamento": "Barra EZ",
+  "nivel": 2,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/EZ-Bar_Curl/0.jpg",
+  "videoUrl": "https://youtu.be/XBDs11MpYLc",
+  "instrucoes": "Faça 7 repetições na metade inferior, 7 na metade superior e 7 completas, sem pausa.",
+  "errosComuns": "Balançar o tronco para ajudar a subida nas primeiras repetições.",
+  "descricao": "1. Fique em pé segurando a barra EZ com pegada supinada, na largura dos ombros.\n2. Mantenha os cotovelos colados ao lado do corpo.\n3. Faça 7 repetições subindo a barra só até a metade (antebraço na horizontal).\n4. Faça 7 repetições apenas na metade superior, do meio até o topo.\n5. Finalize com 7 repetições completas, da extensão total até a contração máxima."
+ },
+ {
+  "id": "ex_rosca_direta_barra_reta",
+  "nome": "Rosca Direta com Barra Reta",
+  "grupoMuscular": "Bíceps",
+  "equipamento": "Barra",
+  "nivel": 1,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Curl/0.jpg",
+  "videoUrl": "https://youtu.be/Q8TqfD8E7BU",
+  "instrucoes": "Pegada na largura dos ombros: mais aberta enfatiza a cabeça curta, mais fechada a cabeça longa.",
+  "errosComuns": "Pegada muito aberta causa desconforto nos punhos. Balanço do corpo para terminar a repetição.",
+  "descricao": "1. Fique em pé com a barra reta na pegada supinada, na largura dos ombros.\n2. Mantenha as costas retas e os cotovelos próximos ao tronco.\n3. Suba a barra contraindo o bíceps até a altura dos ombros.\n4. Pause 1 segundo no topo sem jogar o tronco para trás.\n5. Desça devagar até estender os cotovelos sem trancá-los."
+ },
+ {
+  "id": "ex_rosca_zottman",
+  "nome": "Rosca Zottman",
+  "grupoMuscular": "Bíceps",
+  "equipamento": "Halteres",
+  "nivel": 2,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Zottman_Curl/0.jpg",
+  "videoUrl": null,
+  "instrucoes": "Na subida gire a palma para cima; na descida gire para baixo e trabalhe antebraço.",
+  "errosComuns": "Girar o punho cedo demais. Mover os cotovelos para frente.",
+  "descricao": "1. Fique em pé com um halter em cada mão, palmas voltadas para cima.\n2. Suba fazendo a rosca com a palma para cima até contrair o bíceps.\n3. No topo, gire o punho para baixo (palma para o chão).\n4. Desça devagar com a palma para baixo, trabalhando o antebraço.\n5. Gire de volta para a palma para cima antes de começar a próxima repetição."
+ },
+ {
+  "id": "ex_rosca_inversa_halteres",
+  "nome": "Rosca Inversa com Halteres",
+  "grupoMuscular": "Bíceps",
+  "equipamento": "Halteres",
+  "nivel": 1,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Dumbbell_Reverse_Curl/0.jpg",
+  "videoUrl": "https://youtu.be/jbSr9CzJPmA",
+  "instrucoes": "Pegada pronada (palma para baixo) trabalha braquial e antebraço.",
+  "errosComuns": "Balanço do corpo. Cotovelos abrindo para os lados.",
+  "descricao": "1. Fique em pé com um halter em cada mão, palmas voltadas para baixo.\n2. Mantenha os cotovelos fixos ao lado do tronco.\n3. Suba os halteres até a altura dos ombros, controlando o movimento.\n4. Desça devagar até estender os braços por completo."
+ },
+ {
+  "id": "ex_rosca_spider",
+  "nome": "Rosca Spider",
+  "grupoMuscular": "Bíceps",
+  "equipamento": "Barra EZ",
+  "nivel": 2,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Spider_Curl/0.jpg",
+  "videoUrl": null,
+  "instrucoes": "Apoie o peito no banco inclinado para tirar a inércia do corpo.",
+  "errosComuns": "Levantar o tronco do banco. Cotovelos se afastando do corpo.",
+  "descricao": "1. Deite o peito num banco inclinado apoiado sobre o banco, segurando a barra EZ.\n2. Deixe os braços pendendo verticalmente, sem apoiar os cotovelos no corpo.\n3. Flexione os cotovelos subindo a barra até contrair o bíceps.\n4. Desça devagar até quase estender os braços, sem perder a tensão."
+ },
+ {
+  "id": "ex_rosca_polia_alta",
+  "nome": "Rosca na Polia Alta",
+  "grupoMuscular": "Bíceps",
+  "equipamento": "Polia",
+  "nivel": 1,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/High_Cable_Curls/0.jpg",
+  "videoUrl": null,
+  "instrucoes": "Mantém tensão constante no bíceps durante todo o movimento.",
+  "errosComuns": "Inclinar o tronco para trás. Cotovelos se movendo para frente.",
+  "descricao": "1. Fique de frente para a polia alta, segurando a barra com as duas mãos.\n2. Dê um passo à frente, mantendo o tronco firme e os cotovelos ao lado do corpo.\n3. Flexione os cotovelos trazendo a barra até a altura dos ombros.\n4. Contraia o bíceps no topo e volte devagar até estender os braços."
+ },
+ {
+  "id": "ex_triceps_testa_halteres",
+  "nome": "Tríceps Testa com Halteres",
+  "grupoMuscular": "Tríceps",
+  "equipamento": "Halteres",
+  "nivel": 1,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Lying_Dumbbell_Tricep_Extension/0.jpg",
+  "videoUrl": "https://youtu.be/SbAykzCE-xk",
+  "instrucoes": "Cotovelos apontando para o teto durante todo o movimento.",
+  "errosComuns": "Abrir os cotovelos para os lados. Descer o halter perto da cabeça com a carga muito alta.",
+  "descricao": "1. Deite no banco com um halter em cada mão, braços estendidos acima do peito.\n2. Mantenha os cotovelos apontando para o teto.\n3. Flexione só os cotovelos, levando os halteres em direção à testa.\n4. Estenda os braços de volta sem mover os ombros."
+ },
+ {
+  "id": "ex_triceps_corda_overhead",
+  "nome": "Tríceps Corda Acima da Cabeça",
+  "grupoMuscular": "Tríceps",
+  "equipamento": "Polia",
+  "nivel": 1,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Rope_Overhead_Triceps_Extension/0.jpg",
+  "videoUrl": null,
+  "instrucoes": "Mantenha os cotovelos próximos à cabeça e alinhados.",
+  "errosComuns": "Cotovelos abrindo para os lados. Usar o tronco para empurrar a carga.",
+  "descricao": "1. Fique de costas para a polia alta, segurando a corda com as duas mãos sobre a cabeça.\n2. Mantenha os cotovelos próximos às orelhas e o tronco firme.\n3. Estenda os cotovelos empurrando a corda para cima e para trás, sem mover os ombros.\n4. Volte devagar até sentir o alongamento do tríceps."
+ },
+ {
+  "id": "ex_triceps_banco",
+  "nome": "Mergulho no Banco com Peso Corporal",
+  "grupoMuscular": "Tríceps",
+  "equipamento": "Peso corporal",
+  "nivel": 1,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bench_Dips/0.jpg",
+  "videoUrl": "https://youtu.be/TCVj8cliLNo",
+  "instrucoes": "Mantenha os cotovelos apontando para trás, sem abrir para os lados.",
+  "errosComuns": "Descer demais e forçar os ombros. Quadril distante do banco.",
+  "descricao": "1. Apoie as mãos na borda do banco com os dedos para frente e o quadril próximo a ele.\n2. Estenda as pernas à frente e deixe o corpo sustentado pelos braços.\n3. Flexione os cotovelos descendo o quadril até cerca de 90 graus.\n4. Empurre de volta até estender os braços sem travar os cotovelos."
+ },
+ {
+  "id": "ex_triceps_unilateral_polia",
+  "nome": "Tríceps Unilateral na Polia",
+  "grupoMuscular": "Tríceps",
+  "equipamento": "Polia",
+  "nivel": 1,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_One_Arm_Tricep_Extension/0.jpg",
+  "videoUrl": "https://youtu.be/nTTTjbA0TSU",
+  "instrucoes": "Trabalhe um braço por vez para corrigir diferenças de força.",
+  "errosComuns": "Girar o tronco para acompanhar o movimento. Cotovelo se afastando do corpo.",
+  "descricao": "1. Fique de lado para a polia, segurando a pegada com uma mão.\n2. Mantenha o cotovelo colado ao lado do corpo e o tronco firme.\n3. Estenda o braço para baixo até contrair o tríceps.\n4. Volte devagar e repita; depois troque de lado."
+ },
+ {
+  "id": "ex_triceps_testa_declinado_ez",
+  "nome": "Tríceps Testa Declinado com Barra EZ",
+  "grupoMuscular": "Tríceps",
+  "equipamento": "Barra EZ",
+  "nivel": 2,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Decline_EZ_Bar_Triceps_Extension/0.jpg",
+  "videoUrl": "https://youtu.be/zznCYBVZOVA",
+  "instrucoes": "No banco declinado a cabeça fica abaixo do quadril, aumentando o alongamento.",
+  "errosComuns": "Abrir os cotovelos. Descer a barra até a testa com carga excessiva.",
+  "descricao": "1. Deite no banco declinado segurando a barra EZ com pegada fechada.\n2. Mantenha os cotovelos apontando para o teto.\n3. Flexione os cotovelos levando a barra em direção à testa.\n4. Estenda os braços de volta sem mover os ombros."
+ },
+ {
+  "id": "ex_supino_halteres_pegada_neutra",
+  "nome": "Supino Reto com Halteres (Pegada Neutra)",
+  "grupoMuscular": "Peitoral",
+  "equipamento": "Halteres",
+  "nivel": 1,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Bench_Press_with_Neutral_Grip/0.jpg",
+  "videoUrl": "https://youtu.be/EZMYCLKuGow",
+  "instrucoes": "Palmas uma de frente para a outra. Mais confortável para ombros sensíveis.",
+  "errosComuns": "Deixar os cotovelos abrirem a 90 graus. Arquear demais a lombar.",
+  "descricao": "1. Deite no banco com um halter em cada mão, palmas uma de frente para a outra.\n2. Empurre os halteres para cima até os braços quase estendidos.\n3. Desça devagar até os halteres ficarem na altura do peito.\n4. Mantenha os cotovelos a uns 45 graus do corpo durante toda a série."
+ },
+ {
+  "id": "ex_crucifixo_declinado_halteres",
+  "nome": "Crucifixo Declinado com Halteres",
+  "grupoMuscular": "Peitoral",
+  "equipamento": "Halteres",
+  "nivel": 2,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Decline_Dumbbell_Flyes/0.jpg",
+  "videoUrl": "https://youtu.be/zdkX5_Gcdq8",
+  "instrucoes": "Mantenha leve flexão nos cotovelos durante todo o movimento.",
+  "errosComuns": "Descer os halteres além da linha do peito. Usar carga excessiva.",
+  "descricao": "1. Deite no banco declinado com um halter em cada mão, braços estendidos acima do peito.\n2. Mantenha uma leve flexão nos cotovelos fixa.\n3. Abra os braços em arco até sentir alongamento no peitoral.\n4. Feche o arco contraindo o peitoral, como um abraço."
+ },
+ {
+  "id": "ex_crossover_polia_baixa",
+  "nome": "Crossover na Polia Baixa",
+  "grupoMuscular": "Peitoral",
+  "equipamento": "Polia",
+  "nivel": 2,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Low_Cable_Crossover/0.jpg",
+  "videoUrl": "https://youtu.be/jqTlJt3JXzQ",
+  "instrucoes": "Cruze as mãos na frente do corpo no final do movimento para contrair o peitoral.",
+  "errosComuns": "Balançar o tronco. Cotovelos muito dobrados.",
+  "descricao": "1. Segure as alças das polias baixas, de pé e com um passo à frente.\n2. Mantenha o tronco levemente inclinado e os cotovelos ligeiramente flexionados.\n3. Leve as mãos para cima e para dentro, cruzando-as à altura do peito.\n4. Volte devagar até sentir o alongamento no peitoral."
+ },
+ {
+  "id": "ex_pullover_halter",
+  "nome": "Pullover com Halter",
+  "grupoMuscular": "Costas",
+  "equipamento": "Halteres",
+  "nivel": 1,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bent-Arm_Dumbbell_Pullover/0.jpg",
+  "videoUrl": "https://youtu.be/-KaMXMMIVrU",
+  "instrucoes": "Foque em sentir o alongamento do dorsal na descida.",
+  "errosComuns": "Dobrar demais os cotovelos e transformar em tríceps. Quadril caindo.",
+  "descricao": "1. Deite transversalmente no banco, segurando um halter com as duas mãos sobre o peito.\n2. Mantenha uma leve flexão nos cotovelos fixa.\n3. Leve o halter para trás da cabeça até sentir alongamento no dorsal.\n4. Traga o halter de volta sobre o peito contraindo as costas."
+ },
+ {
+  "id": "ex_remada_curvada_halteres",
+  "nome": "Remada Curvada com Halteres",
+  "grupoMuscular": "Costas",
+  "equipamento": "Halteres",
+  "nivel": 1,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bent_Over_Two-Dumbbell_Row/0.jpg",
+  "videoUrl": "https://youtu.be/Vk6c7CjtM14",
+  "instrucoes": "Puxe o cotovelo em direção ao quadril, não em direção ao teto.",
+  "errosComuns": "Balançar o tronco. Lombar arredondada.",
+  "descricao": "1. Incline o tronco à frente com as costas retas e um halter em cada mão.\n2. Deixe os braços estendidos abaixo dos ombros.\n3. Puxe os halteres em direção ao quadril contraindo as escápulas.\n4. Desça devagar, sem deixar as costas arredondarem."
+ },
+ {
+  "id": "ex_puxada_pegada_fechada",
+  "nome": "Puxada Frontal com Pegada Fechada",
+  "grupoMuscular": "Costas",
+  "equipamento": "Polia",
+  "nivel": 1,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Close-Grip_Front_Lat_Pulldown/0.jpg",
+  "videoUrl": "https://youtu.be/pJM_rHhluK8",
+  "instrucoes": "Puxe a barra até o peito, mantendo o tronco levemente inclinado para trás.",
+  "errosComuns": "Puxar a barra atrás da nuca. Balançar o corpo.",
+  "descricao": "1. Sente-se na máquina e segure a barra com pegada fechada, palmas viradas para você.\n2. Mantenha o peito erguido e o tronco levemente inclinado para trás.\n3. Puxe a barra em direção ao peito, aproximando os cotovelos do corpo.\n4. Volte devagar até estender os braços sem soltar a carga."
+ },
+ {
+  "id": "ex_remada_invertida",
+  "nome": "Remada Invertida (Peso Corporal)",
+  "grupoMuscular": "Costas",
+  "equipamento": "Peso corporal",
+  "nivel": 2,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Inverted_Row/0.jpg",
+  "videoUrl": null,
+  "instrucoes": "Mantenha o corpo em linha reta, do calcanhar à cabeça.",
+  "errosComuns": "Quadril caindo ou subindo. Puxar sem contrair as escápulas.",
+  "descricao": "1. Deite embaixo de uma barra fixada numa altura que permita pegar com os braços estendidos.\n2. Segure a barra e mantenha o corpo reto, apoiando só os calcanhares.\n3. Puxe o peito em direção à barra contraindo as escápulas.\n4. Desça devagar até estender os braços por completo."
+ },
+ {
+  "id": "ex_desenvolvimento_maquina",
+  "nome": "Desenvolvimento na Máquina",
+  "grupoMuscular": "Ombros",
+  "equipamento": "Máquina",
+  "nivel": 1,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leverage_Shoulder_Press/0.jpg",
+  "videoUrl": "https://youtu.be/EuQAfhXBEvs",
+  "instrucoes": "Ajuste o assento para que as alças fiquem na altura dos ombros.",
+  "errosComuns": "Arquear a lombar. Empurrar sem controle na descida.",
+  "descricao": "1. Sente-se na máquina com as costas apoiadas e as alças na altura dos ombros.\n2. Segure as alças com as palmas para frente.\n3. Empurre as alças para cima até quase estender os braços.\n4. Desça devagar até a altura dos ombros."
+ },
+ {
+  "id": "ex_encolhimento_halteres",
+  "nome": "Encolhimento com Halteres",
+  "grupoMuscular": "Costas",
+  "equipamento": "Halteres",
+  "nivel": 1,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Shrug/0.jpg",
+  "videoUrl": "https://youtu.be/RhGjwIUe16E",
+  "instrucoes": "Suba os ombros em linha reta, sem girá-los para trás.",
+  "errosComuns": "Girar os ombros em círculo. Usar carga que obrigue a balançar o corpo.",
+  "descricao": "1. Fique em pé com um halter em cada mão, braços estendidos ao lado do corpo.\n2. Suba os ombros em direção às orelhas, sem dobrar os cotovelos.\n3. Pause 1 segundo no topo contraindo o trapézio.\n4. Desça devagar até sentir o alongamento."
+ },
+ {
+  "id": "ex_elevacao_frontal_polia",
+  "nome": "Elevação Frontal na Polia",
+  "grupoMuscular": "Ombros",
+  "equipamento": "Polia",
+  "nivel": 1,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Front_Cable_Raise/0.jpg",
+  "videoUrl": "https://youtu.be/S7B5LwWrLA0",
+  "instrucoes": "Mantenha tensão constante no deltoide anterior.",
+  "errosComuns": "Balançar o tronco. Levantar o braço acima da altura dos ombros.",
+  "descricao": "1. Fique de costas para a polia baixa, segurando a alça com uma mão.\n2. Mantenha o braço estendido e o tronco firme.\n3. Eleve o braço para frente até a altura dos ombros.\n4. Desça devagar e troque de lado."
+ },
+ {
+  "id": "ex_avanco_reverso_halteres",
+  "nome": "Avanço Reverso com Halteres",
+  "grupoMuscular": "Quadríceps",
+  "equipamento": "Halteres",
+  "nivel": 2,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Rear_Lunge/0.jpg",
+  "videoUrl": "https://youtu.be/XBJtM2phDDM",
+  "instrucoes": "Dê o passo para trás de forma controlada e mantenha o tronco ereto.",
+  "errosComuns": "Joelho da frente passando muito da ponta do pé. Tronco inclinado.",
+  "descricao": "1. Fique em pé com um halter em cada mão, pés na largura do quadril.\n2. Dê um passo amplo para trás com uma perna.\n3. Desça o joelho de trás até quase tocar o chão, mantendo o tronco ereto.\n4. Empurre com o pé da frente para voltar à posição inicial e troque de perna."
+ },
+ {
+  "id": "ex_agachamento_caixa",
+  "nome": "Agachamento na Caixa (Box Squat)",
+  "grupoMuscular": "Quadríceps",
+  "equipamento": "Barra",
+  "nivel": 2,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Box_Squat/0.jpg",
+  "videoUrl": null,
+  "instrucoes": "Sente na caixa sem relaxar, mantendo o tronco firme.",
+  "errosComuns": "Sentar com impulso e sem controle. Joelhos caindo para dentro.",
+  "descricao": "1. Posicione a barra apoiada nos trapézios e pés na largura dos ombros.\n2. Desça controlando o movimento até sentar levemente na caixa.\n3. Sem relaxar, empurre o chão para subir até estender o quadril e os joelhos.\n4. Mantenha o peito erguido e os joelhos alinhados com os pés."
+ },
+ {
+  "id": "ex_dead_bug",
+  "nome": "Dead Bug",
+  "grupoMuscular": "Abdômen",
+  "equipamento": "Peso corporal",
+  "nivel": 1,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dead_Bug/0.jpg",
+  "videoUrl": null,
+  "instrucoes": "Mantenha a lombar colada no chão durante todo o movimento.",
+  "errosComuns": "Lombar arqueando. Movimentos muito rápidos.",
+  "descricao": "1. Deite de costas com braços estendidos para o teto e joelhos a 90 graus.\n2. Mantenha a lombar colada no chão.\n3. Estenda um braço para trás e a perna oposta para frente, sem encostar no chão.\n4. Volte à posição inicial e troque de lado."
+ },
+ {
+  "id": "ex_abdominal_declinado",
+  "nome": "Abdominal Declinado",
+  "grupoMuscular": "Abdômen",
+  "equipamento": "Banco declinado",
+  "nivel": 2,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Decline_Crunch/0.jpg",
+  "videoUrl": null,
+  "instrucoes": "Suba o tronco contraindo o abdômen, não puxando a cabeça.",
+  "errosComuns": "Puxar o pescoço com as mãos. Subir com impulso.",
+  "descricao": "1. Deite no banco declinado, prendendo os pés na trava.\n2. Cruze os braços sobre o peito ou apoie as mãos atrás da cabeça.\n3. Suba o tronco contraindo o abdômen.\n4. Desça devagar até sentir o alongamento abdominal."
+ },
+ {
+  "id": "ex_abdominal_obliquo_declinado",
+  "nome": "Abdominal Oblíquo Declinado",
+  "grupoMuscular": "Abdômen",
+  "equipamento": "Banco declinado",
+  "nivel": 2,
+  "thumbnailUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Decline_Oblique_Crunch/0.jpg",
+  "videoUrl": "https://youtu.be/Smr8ipkN5A0",
+  "instrucoes": "Leve o ombro em direção ao joelho oposto, girando o tronco.",
+  "errosComuns": "Puxar o pescoço. Movimento só com as pernas.",
+  "descricao": "1. Deite no banco declinado, prendendo os pés na trava.\n2. Apoie as mãos atrás da cabeça com os cotovelos abertos.\n3. Suba o tronco levando o ombro em direção ao joelho oposto.\n4. Desça devagar e alterne o lado."
  }
 ]
