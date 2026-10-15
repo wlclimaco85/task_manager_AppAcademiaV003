@@ -213,9 +213,6 @@ class FitnessOfflineRepository {
         'sincronizado': false,
       });
       lista[index] = atualizada.toMap();
-      if (!await prefs.setString(key, jsonEncode(lista))) {
-        throw StateError('Não foi possível salvar as mídias neste aparelho.');
-      }
       if (autenticado) {
         final fila = Map<String, dynamic>.from(
             jsonDecode(prefs.getString(chaveFila) ?? '{}'));
@@ -223,6 +220,13 @@ class FitnessOfflineRepository {
         if (!await prefs.setString(chaveFila, jsonEncode(fila))) {
           throw StateError('Não foi possível guardar a sincronização pendente.');
         }
+      }
+      // A fila é a fonte recuperável: se o cache falhar por falta de espaço,
+      // a próxima leitura ainda encontra a edição pendente de envio.
+      if (!await prefs.setString(key, jsonEncode(lista))) {
+        throw StateError('Não foi possível salvar as mídias neste aparelho.');
+      }
+      if (autenticado) {
         // Logout/troca de conta não pode enviar os anexos pela outra conta.
         if (FitnessContaSync.autenticado &&
             FitnessContaSync.chave(_kSessoesKey) == key) {
