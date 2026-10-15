@@ -311,6 +311,17 @@ class _ApresentacaoEuAtletaState extends State<ApresentacaoEuAtleta> {
         ]);
   }
 
+  void _ampliarCaptura(String asset, String titulo) {
+    showDialog<void>(context: context, builder: (dialogContext) => AlertDialog(
+      title: Text('$titulo • demonstração'),
+      content: SizedBox(width: 1000, child: SingleChildScrollView(
+        child: Image.asset(asset, fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => const Text('Prévia indisponível.')))),
+      actions: [TextButton(onPressed: () => Navigator.pop(dialogContext),
+        child: const Text('Fechar'))],
+    ));
+  }
+
   Widget _captura(String asset, String titulo, String descricao) => Container(
         padding: const EdgeInsets.fromLTRB(18, 22, 18, 22),
         decoration: BoxDecoration(
@@ -343,6 +354,9 @@ class _ApresentacaoEuAtletaState extends State<ApresentacaoEuAtleta> {
           const SizedBox(height: 12),
           const Text('Demonstração — dados de exemplo',
               style: TextStyle(fontSize: 10, color: _verde)),
+          TextButton.icon(onPressed: () => _ampliarCaptura(asset, titulo),
+            icon: const Icon(Icons.zoom_in, color: _verde),
+            label: const Text('Ampliar tela', style: TextStyle(color: _verde))),
         ]),
       );
 
@@ -461,6 +475,10 @@ class _ApresentacaoEuAtletaState extends State<ApresentacaoEuAtleta> {
           (
             'O treino funciona sem internet?',
             'Você pode registrar seus treinos no aparelho offline. A sincronização precisa de conexão; vídeos do YouTube e Google Drive também precisam de internet para reproduzir.'
+          ),
+          (
+            'E os serviços de personal?',
+            'O uso do app é gratuito. A contratação de serviços de profissionais é independente e pode ter valores combinados com cada profissional.'
           ),
           (
             'Esses gráficos já aparecem na minha conta?',

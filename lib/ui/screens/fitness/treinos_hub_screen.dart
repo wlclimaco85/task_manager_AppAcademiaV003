@@ -250,10 +250,10 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(div.nome, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                            Row(
+                            Wrap(
+                              spacing: 6, runSpacing: 2,
                               children: [
                                 Text('${div.exercicios.length} exercícios', style: const TextStyle(fontSize: 11, color: GridColors.textSecondary)),
-                                const SizedBox(width: 6),
                                 const Text('• Toque p/ ver ficha', style: TextStyle(fontSize: 11, color: GridColors.primary, fontWeight: FontWeight.bold)),
                               ],
                             ),
