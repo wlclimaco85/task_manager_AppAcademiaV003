@@ -17,8 +17,9 @@ como acesso a uma conta real. As capturas são assets estáticos na apresentaç�
 ## Doações
 
 O Pix público foi fornecido pelo responsável pelo projeto em 15/10/2026.
-Está em `lib/data/constants/doacao_config.dart`, com validação de CRC e QR Code
-gerado localmente. Não usamos QR Code de exemplo nem serviço externo gerador.
+Está em `lib/data/constants/doacao_config.dart`, com validação de CRC. A imagem original do Inter enviada pelo responsável
+é exibida em assets/images/doacao_pix_inter.png; seu conteúdo foi decodificado
+e conferido contra o Pix Copia e Cola. Overrides válidos geram QR localmente. Não usamos QR Code de exemplo nem serviço externo gerador.
 É possível substituir o código no build com `DONATION_PIX_CODE`.
 
 No Inter: **Pix → Receber → selecionar chave → Compartilhar**. Para permitir

@@ -1,3 +1,4 @@
+import 'package:task_manager_flutter/data/constants/doacao_config.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:qr/qr.dart' as qr;
@@ -26,6 +27,11 @@ class DoacaoPixQr extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!codigoPixValido(codigo)) return const SizedBox.shrink();
+    if (codigo == pixOriginalInter) {
+      return Image.asset('assets/images/doacao_pix_inter.png',
+        width: 360, fit: BoxFit.contain,
+        semanticLabel: 'QR Code Pix do Inter para doação voluntária a Washington Luis Climaco Martins da Costa');
+    }
     final imagem = qr.QrImage(qr.QrCode.fromData(
         data: codigo, errorCorrectLevel: qr.QrErrorCorrectLevel.M));
     return Semantics(label: 'QR Code Pix para doação voluntária', image: true,
