@@ -11,16 +11,22 @@ class LogoEuAtleta {
   /// [raio] é a fração do lado usada nos cantos (0 = quadrado, iOS/maskable).
   /// [escala] reduz o desenho central (maskable precisa de margem de segurança).
   static void desenhar(Canvas canvas, double lado,
-      {double raio = 0.22, double escala = 1.0}) {
-    final fundo = Rect.fromLTWH(0, 0, lado, lado);
+      {double raio = 0.22,
+      double escala = 1.0,
+      bool fundo = true,
+      bool simbolo = true}) {
+    final area = Rect.fromLTWH(0, 0, lado, lado);
     final paintFundo = Paint()
       ..shader = const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [verdeClaro, verdeEscuro],
-      ).createShader(fundo);
-    canvas.drawRRect(
-        RRect.fromRectAndRadius(fundo, Radius.circular(lado * raio)), paintFundo);
+      ).createShader(area);
+    if (fundo) {
+      canvas.drawRRect(
+          RRect.fromRectAndRadius(area, Radius.circular(lado * raio)), paintFundo);
+    }
+    if (!simbolo) return;
 
     canvas.save();
     canvas.translate(lado / 2, lado / 2);

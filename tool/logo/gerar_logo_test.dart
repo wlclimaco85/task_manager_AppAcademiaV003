@@ -9,10 +9,13 @@ import 'logo_eu_atleta.dart';
 ///   flutter test tool/logo/gerar_logo_test.dart
 void main() {
   Future<void> salvar(WidgetTester t, String caminho, int lado,
-      {double raio = 0.22, double escala = 1.0}) async {
+      {double raio = 0.22,
+      double escala = 1.0,
+      bool fundo = true,
+      bool simbolo = true}) async {
     await t.runAsync(() async {
       final rec = ui.PictureRecorder();
-      LogoEuAtleta.desenhar(ui.Canvas(rec), lado.toDouble(), raio: raio, escala: escala);
+      LogoEuAtleta.desenhar(ui.Canvas(rec), lado.toDouble(), raio: raio, escala: escala, fundo: fundo, simbolo: simbolo);
       final img = await rec.endRecording().toImage(lado, lado);
       final bytes = await img.toByteData(format: ui.ImageByteFormat.png);
       final arq = File(caminho);
@@ -27,6 +30,14 @@ void main() {
     const android = {'mdpi': 48, 'hdpi': 72, 'xhdpi': 96, 'xxhdpi': 144, 'xxxhdpi': 192};
     for (final e in android.entries) {
       await salvar(t, 'android/app/src/main/res/mipmap-${e.key}/ic_launcher.png', e.value);
+    }
+
+    // Android 8+: icone adaptativo (108dp; simbolo dentro da zona segura de 66dp).
+    const adaptivo = {'mdpi': 108, 'hdpi': 162, 'xhdpi': 216, 'xxhdpi': 324, 'xxxhdpi': 432};
+    for (final e in adaptivo.entries) {
+      final base = 'android/app/src/main/res/mipmap-${e.key}';
+      await salvar(t, '$base/ic_launcher_background.png', e.value, raio: 0, simbolo: false);
+      await salvar(t, '$base/ic_launcher_foreground.png', e.value, escala: 0.78, fundo: false);
     }
 
     // iOS: icone quadrado e opaco (o sistema aplica o arredondamento).
