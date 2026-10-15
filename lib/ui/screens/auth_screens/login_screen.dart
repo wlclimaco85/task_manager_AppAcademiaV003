@@ -1,3 +1,6 @@
+import 'package:task_manager_flutter/data/constants/doacao_config.dart';
+import 'package:task_manager_flutter/ui/widgets/apresentacao_eu_atleta.dart';
+import 'package:task_manager_flutter/ui/widgets/doacao_pix_qr.dart';
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/ui/widgets/home_screen.dart';
 import 'package:task_manager_flutter/data/models/auth_utility.dart';
@@ -80,6 +83,8 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -191,20 +196,29 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   Widget build(BuildContext context) {
+    const configurado = pixDoacaoEuAtleta;
+    final pix = codigoPixValido(configurado.trim()) ? configurado.trim() : '';
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: GridColors.background,
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
-          child: Column(
+      body: ApresentacaoEuAtleta(
+        login: _buildLoginForm(),
+        onCriarConta: _showCriarContaBottomSheet,
+        pixCopiaCola: pix,
+        pixQr: pix.isEmpty ? null : DoacaoPixQr(codigo: pix),
+      ),
+    );
+  }
+
+  Widget _buildLoginForm() {
+    return Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Logo
               Image.asset(
                 "assets/images/logo_eu_atleta.png",
-                height: 140,
+                height: 72,
                 fit: BoxFit.contain,
               ),
               const SizedBox(height: 16),
@@ -228,7 +242,7 @@ class _LoginScreenState extends State<LoginScreen>
                   color: GridColors.textSecondary,
                 ),
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 24),
               Form(
                 key: _formKey,
                 child: Column(
@@ -360,11 +374,9 @@ class _LoginScreenState extends State<LoginScreen>
                 ),
               ),
             ],
-          ),
-        ),
-      ),
     );
   }
+
 }
 
 class _OpcaoCadastroTile extends StatelessWidget {
@@ -421,7 +433,8 @@ class _OpcaoCadastroTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  Wrap(
+                    spacing: 8, runSpacing: 4,
                     children: [
                       Text(
                         titulo,
@@ -432,7 +445,6 @@ class _OpcaoCadastroTile extends StatelessWidget {
                         ),
                       ),
                       if (!habilitado) ...[
-                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),

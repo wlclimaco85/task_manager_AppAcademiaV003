@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:task_manager_flutter/ui/widgets/midias_sessao_treino.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -11,16 +13,28 @@ class CompartilharTreinoSheet extends StatefulWidget {
   final int minutos, series, rpe;
   final double tonelagemKg;
   final VoidCallback onFechar;
+  final List<String> fotosIniciais;
+  final Future<void> Function(List<String>)? onFotosAlteradas;
   const CompartilharTreinoSheet({super.key, required this.treino,
     required this.minutos, required this.series, required this.rpe,
-    required this.tonelagemKg, required this.onFechar});
+    required this.tonelagemKg, required this.onFechar,
+    this.fotosIniciais = const [], this.onFotosAlteradas});
   @override
   State<CompartilharTreinoSheet> createState() => _CompartilharTreinoSheetState();
 }
 
 class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
   final _cardKey = GlobalKey();
-  Uint8List? _foto;
+  late final List<String> _fotos = List.of(widget.fotosIniciais.take(3));
+  int _fotoSelecionada = 0;
+  Uint8List? get _foto {
+    if (_fotos.isEmpty) return null;
+    try {
+      return base64Decode(_fotos[_fotoSelecionada]);
+    } on FormatException {
+      return null;
+    }
+  }
   bool _ocupado = false;
   // TODO: substituir os links de teste pelos links publicados do AppAcademia.
   // Pode configurar sem alterar o fonte por --dart-define APP_PLAYSTORE_URL e APP_APPSTORE_URL.
@@ -41,17 +55,46 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
       '${_appleUrl.isEmpty ? '' : '${_appleUrl == 'https://apps.apple.com/br/' ? 'iPhone (link de teste)' : 'Baixe para iPhone'}: $_appleUrl\n'}'
       '#EuAtleta';
 
+  Future<void> _alterarFotos(List<String> fotos) async {
+    await widget.onFotosAlteradas?.call(fotos);
+    if (!mounted) return;
+    setState(() {
+      _fotos..clear()..addAll(fotos);
+      _fotoSelecionada = _fotos.isEmpty ? 0 : _fotos.length - 1;
+    });
+  }
+  Future<void> _removerFoto() async {
+    setState(() => _ocupado = true);
+    try {
+      final fotos = List<String>.of(_fotos)..removeAt(_fotoSelecionada);
+      await _alterarFotos(fotos);
+    } catch (error, stack) {
+      AppLogger.i.error('Falha ao remover foto do histórico.', stack);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível salvar a alteração. Tente novamente.')));
+      }
+    } finally {
+      if (mounted) setState(() => _ocupado = false);
+    }
+  }
   Future<void> _escolherFoto(ImageSource source) async {
+    if (_fotos.length >= 3) return;
+    setState(() => _ocupado = true);
     try {
       final arquivo = await ImagePicker().pickImage(source: source,
-        maxWidth: 1600, imageQuality: 90);
+        maxWidth: 1200, imageQuality: 80);
       if (arquivo == null) return;
-      final bytes = await arquivo.readAsBytes();
-      if (mounted) setState(() => _foto = bytes);
+      final foto = await prepararFotoTreino(await arquivo.readAsBytes());
+      await _alterarFotos([..._fotos, foto]);
     } catch (error, stack) {
-      AppLogger.i.error('Falha ao selecionar foto do treino.', stack);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Não foi possível abrir a foto. Tente novamente.')));
+      AppLogger.i.error('Falha ao selecionar ou salvar foto do treino.', stack);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível salvar a foto. Tente novamente.')));
+      }
+    } finally {
+      if (mounted) setState(() => _ocupado = false);
     }
   }
   Future<void> _compartilhar() async {
@@ -69,8 +112,10 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
         text: _legenda, sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);
     } catch (error, stack) {
       AppLogger.i.error('Falha ao compartilhar foto do treino.', stack);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Não foi possível compartilhar. Tente novamente.')));
+      }
     } finally {
       if (mounted) setState(() => _ocupado = false);
     }
@@ -91,7 +136,7 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
               fontWeight: FontWeight.w800, fontSize: 20)),
             const SizedBox(height: 12),
             if (_foto != null) ClipRRect(borderRadius: BorderRadius.circular(12),
-              child: Image.memory(_foto!, height: 220, width: double.infinity, fit: BoxFit.cover)),
+              child: Image.memory(_foto!, height: 220, width: double.infinity, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.broken_image_outlined, color: Colors.white))),
             const SizedBox(height: 12),
             Text(widget.treino, textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.white, fontSize: 18)),
@@ -111,12 +156,19 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
                 textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 10)),
           ]),
         )),
+        if (_fotos.isNotEmpty) Wrap(spacing: 8, children: [
+          for (var i = 0; i < _fotos.length; i++)
+            ChoiceChip(
+              label: Text('Foto ${i + 1}'), selected: _fotoSelecionada == i,
+              onSelected: _ocupado ? null : (_) => setState(() => _fotoSelecionada = i)),
+        ]),
+        Text('Fotos do treino: ${_fotos.length}/3'),
         Wrap(spacing: 8, children: [
-          TextButton.icon(onPressed: _ocupado ? null : () => _escolherFoto(ImageSource.gallery),
+          TextButton.icon(onPressed: _ocupado || _fotos.length >= 3 ? null : () => _escolherFoto(ImageSource.gallery),
             icon: const Icon(Icons.photo_library_outlined), label: const Text('Adicionar foto')),
-          TextButton.icon(onPressed: _ocupado ? null : () => _escolherFoto(ImageSource.camera),
+          TextButton.icon(onPressed: _ocupado || _fotos.length >= 3 ? null : () => _escolherFoto(ImageSource.camera),
             icon: const Icon(Icons.camera_alt_outlined), label: const Text('Tirar foto')),
-          if (_foto != null) TextButton(onPressed: _ocupado ? null : () => setState(() => _foto = null),
+          if (_foto != null) TextButton(onPressed: _ocupado ? null : _removerFoto,
             child: const Text('Remover foto')),
         ]),
         const Text('Escolha Instagram ou Facebook no compartilhamento do celular.'),
@@ -125,8 +177,10 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
           icon: const Icon(Icons.share), label: const Text('Compartilhar foto do treino')),
         TextButton(onPressed: () async {
           await Clipboard.setData(ClipboardData(text: _legenda));
-          if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Legenda copiada. Cole na sua publicação.')));
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Legenda copiada. Cole na sua publicação.')));
+          }
         }, child: const Text('Copiar legenda')),
         TextButton(onPressed: _ocupado ? null : widget.onFechar, child: const Text('Agora não / Fechar')),
       ],
