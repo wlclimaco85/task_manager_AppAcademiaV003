@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 /// Modelo de Alimento (com valores nutricionais para porção de 100g)
 class AlimentoModel {
@@ -335,6 +334,9 @@ class SuplementoProtocoloModel {
   final String id;
   final String alunoId;
   final String nome; // ex: "Creatina Monohidratada", "Whey Protein Isolado", "Ômega 3", "Beta Alanina"
+  final String marca;
+  final double? quantidadePote;
+  final String unidadePote;
   final String dosagem; // ex: "5g", "30g (1 scoop)", "2 cápsulas"
   final String horario; // 'Pós-Treino', 'Jejum', 'Antes de Dormir', 'Pré-Treino'
   final String dataInicio; // 'YYYY-MM-DD'
@@ -346,6 +348,9 @@ class SuplementoProtocoloModel {
     required this.id,
     required this.alunoId,
     required this.nome,
+    this.marca = '',
+    this.quantidadePote,
+    this.unidadePote = 'g',
     required this.dosagem,
     required this.horario,
     required this.dataInicio,
@@ -358,6 +363,9 @@ class SuplementoProtocoloModel {
         'id': id,
         'alunoId': alunoId,
         'nome': nome,
+        'marca': marca,
+        'quantidadePote': quantidadePote,
+        'unidadePote': unidadePote,
         'dosagem': dosagem,
         'horario': horario,
         'dataInicio': dataInicio,
@@ -371,8 +379,11 @@ class SuplementoProtocoloModel {
         id: map['id']?.toString() ?? '',
         alunoId: map['alunoId']?.toString() ?? '',
         nome: map['nome']?.toString() ?? '',
+        marca: map['marca']?.toString() ?? '',
+        quantidadePote: (map['quantidadePote'] as num?)?.toDouble(),
+        unidadePote: map['unidadePote']?.toString() ?? 'g',
         dosagem: map['dosagem']?.toString() ?? '',
-        horario: map['horario']?.toString() ?? 'Pós-Treino',
+        horario: map['horario']?.toString() ?? '',
         dataInicio: map['dataInicio']?.toString() ??
             DateTime.now().toIso8601String().substring(0, 10),
         dataFim: map['dataFim']?.toString(),

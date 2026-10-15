@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/ui/widgets/nutricao_editores.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/auth_utility.dart';
 import 'package:task_manager_flutter/data/services/pdf/ficha_dieta_pdf.dart';
@@ -26,7 +27,6 @@ class _NutricaoProtocolosHubScreenState
   List<MedicamentoProtocoloModel> _medicamentos = [];
   List<SuplementoProtocoloModel> _suplementos = [];
   List<TimelineFitnessEventModel> _timelineEventos = [];
-  List<AlimentoModel> _alimentos = [];
   bool _loading = true;
 
   @override
@@ -42,7 +42,6 @@ class _NutricaoProtocolosHubScreenState
     final medicamentos = await _repository.getMedicamentos();
     final suplementos = await _repository.getSuplementos();
     final timeline = await _repository.getTimelineEventos();
-    final alimentos = await _repository.getAlimentos();
 
     if (mounted) {
       setState(() {
@@ -50,7 +49,6 @@ class _NutricaoProtocolosHubScreenState
         _medicamentos = medicamentos;
         _suplementos = suplementos;
         _timelineEventos = timeline;
-        _alimentos = alimentos;
         _loading = false;
       });
     }
@@ -222,6 +220,9 @@ class _NutricaoProtocolosHubScreenState
               ),
             ],
           ),
+          Align(alignment:Alignment.centerRight,child:TextButton.icon(
+            onPressed:()=>_abrirDialogCriarDieta(dieta),icon:const Icon(Icons.edit_outlined,size:16),
+            label:const Text('Editar refeições e alimentos'))),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton.icon(
@@ -246,19 +247,22 @@ class _NutricaoProtocolosHubScreenState
 
           // Painel de Metas de Macronutrientes
           Container(
+            width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+            child: Wrap(
+              alignment: WrapAlignment.spaceAround,
+              spacing: 16,
+              runSpacing: 12,
               children: [
-                _buildMacroItem('Calorias', '${dieta.totalCaloriasReal.toStringAsFixed(0)} / ${dieta.caloriasMeta.toStringAsFixed(0)} kcal', const Color(0xFFEA580C)),
-                _buildMacroItem('Proteínas', '${dieta.totalProteinasReal.toStringAsFixed(0)} / ${dieta.proteinasMeta.toStringAsFixed(0)}g', const Color(0xFF059669)),
-                _buildMacroItem('Carbos', '${dieta.totalCarboidratosReal.toStringAsFixed(0)} / ${dieta.carboidratosMeta.toStringAsFixed(0)}g', const Color(0xFF2563EB)),
-                _buildMacroItem('Gorduras', '${dieta.totalGordurasReal.toStringAsFixed(0)} / ${dieta.gordurasMeta.toStringAsFixed(0)}g', const Color(0xFFD97706)),
+                _buildMacroItem('Calorias', _valorMacro(dieta.totalCaloriasReal, dieta.caloriasMeta, 'kcal'), const Color(0xFFEA580C)),
+                _buildMacroItem('Proteínas', _valorMacro(dieta.totalProteinasReal, dieta.proteinasMeta, 'g'), const Color(0xFF059669)),
+                _buildMacroItem('Carbos', _valorMacro(dieta.totalCarboidratosReal, dieta.carboidratosMeta, 'g'), const Color(0xFF2563EB)),
+                _buildMacroItem('Gorduras', _valorMacro(dieta.totalGordurasReal, dieta.gordurasMeta, 'g'), const Color(0xFFD97706)),
               ],
             ),
           ),
@@ -322,6 +326,10 @@ class _NutricaoProtocolosHubScreenState
       ),
     );
   }
+
+  String _valorMacro(double valor, double meta, String unidade) =>
+      meta > 0 ? valor.toStringAsFixed(0)+' / '+meta.toStringAsFixed(0)+' '+unidade
+          : valor.toStringAsFixed(0)+' '+unidade+' (sem meta)';
 
   Widget _buildMacroItem(String label, String valor, Color color) {
     return Column(
@@ -573,6 +581,8 @@ class _NutricaoProtocolosHubScreenState
                   sup.nome,
                   style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: GridColors.textPrimary),
                 ),
+                if(sup.marca.isNotEmpty)Text(sup.marca,style:const TextStyle(color:GridColors.textSecondary)),
+                if(sup.quantidadePote!=null)Text('Pote: '+sup.quantidadePote!.toString()+' '+sup.unidadePote,style:const TextStyle(color:GridColors.textSecondary)),
                 const SizedBox(height: 2),
                 Text(
                   '${sup.dosagem} • Horário: ${sup.horario}',
@@ -583,6 +593,7 @@ class _NutricaoProtocolosHubScreenState
               ],
             ),
           ),
+          IconButton(tooltip: 'Editar suplemento', onPressed:()=>_abrirDialogCriarSuplemento(sup),icon:const Icon(Icons.edit_outlined,color:GridColors.primary)),
         ],
       ),
     );
@@ -834,110 +845,11 @@ class _NutricaoProtocolosHubScreenState
   // DIÁLOGOS DE CADASTRO
   // ─────────────────────────────────────────────────────────────────────────────
 
-  void _abrirDialogCriarDieta() {
-    final tituloCtrl = TextEditingController(text: 'Dieta Nova Fase');
-    final caloriasCtrl = TextEditingController(text: '2400');
-    final proteinasCtrl = TextEditingController(text: '180');
-    final carbosCtrl = TextEditingController(text: '250');
-    final gordurasCtrl = TextEditingController(text: '70');
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('Nova Dieta', style: TextStyle(fontWeight: FontWeight.w800)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: tituloCtrl,
-                  decoration: const InputDecoration(labelText: 'Título da Dieta'),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: caloriasCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Calorias (kcal)'),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: proteinasCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Proteínas (g)'),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: carbosCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Carbos (g)'),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: gordurasCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Gorduras (g)'),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: GridColors.primary, foregroundColor: Colors.white),
-              onPressed: () async {
-                final nova = DietaProtocoloModel(
-                  id: 'dieta_${DateTime.now().millisecondsSinceEpoch}',
-                  alunoId: 'aluno_1',
-                  titulo: tituloCtrl.text.trim(),
-                  objetivo: 'hipertrofia',
-                  caloriasMeta: double.tryParse(caloriasCtrl.text) ?? 2400,
-                  proteinasMeta: double.tryParse(proteinasCtrl.text) ?? 180,
-                  carboidratosMeta: double.tryParse(carbosCtrl.text) ?? 250,
-                  gordurasMeta: double.tryParse(gordurasCtrl.text) ?? 70,
-                  dataInicio: DateTime.now().toIso8601String().substring(0, 10),
-                  refeicoes: const [
-                    RefeicaoModel(
-                      id: 'ref_1',
-                      nome: 'Café da Manhã',
-                      horario: '08:00',
-                      itens: [
-                        ItemRefeicaoModel(alimentoId: 'alim_12', alimentoNome: 'Ovo Cozido', quantidadeGramas: 100, calorias: 144, proteinas: 12.6, carboidratos: 1.2, gorduras: 9.6),
-                        ItemRefeicaoModel(alimentoId: 'alim_7', alimentoNome: 'Aveia em Flocos', quantidadeGramas: 60, calorias: 236, proteinas: 8.3, carboidratos: 40.0, gorduras: 5.1),
-                      ],
-                    ),
-                  ],
-                );
-                await _repository.salvarDieta(nova);
-                Navigator.pop(context);
-                _carregarDados();
-              },
-              child: const Text('Criar Dieta'),
-            ),
-          ],
-        );
-      },
-    );
+  Future<void> _abrirDialogCriarDieta([DietaProtocoloModel? dieta]) async {
+    final salvo=await showDialog<bool>(context:context,builder:(_)=>DietaEditor(dieta:dieta));
+    if(salvo==true && mounted) {
+      await _carregarDados();
+    }
   }
 
   void _abrirDialogCriarMedicamento() {
@@ -1033,62 +945,10 @@ class _NutricaoProtocolosHubScreenState
     );
   }
 
-  void _abrirDialogCriarSuplemento() {
-    final nomeCtrl = TextEditingController();
-    final dosagemCtrl = TextEditingController(text: '5g');
-    final horarioCtrl = TextEditingController(text: 'Pós-Treino');
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('Cadastrar Suplemento', style: TextStyle(fontWeight: FontWeight.w800)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nomeCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Nome do Suplemento',
-                  hintText: 'Ex: Creatina Monohidratada, Whey Protein',
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: dosagemCtrl,
-                decoration: const InputDecoration(labelText: 'Dosagem (ex: 5g, 30g)'),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: horarioCtrl,
-                decoration: const InputDecoration(labelText: 'Horário / Modo de Uso'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB), foregroundColor: Colors.white),
-              onPressed: () async {
-                if (nomeCtrl.text.trim().isEmpty) return;
-                final novo = SuplementoProtocoloModel(
-                  id: 'sup_${DateTime.now().millisecondsSinceEpoch}',
-                  alunoId: 'aluno_1',
-                  nome: nomeCtrl.text.trim(),
-                  dosagem: dosagemCtrl.text.trim(),
-                  horario: horarioCtrl.text.trim(),
-                  dataInicio: DateTime.now().toIso8601String().substring(0, 10),
-                );
-                await _repository.salvarSuplemento(novo);
-                Navigator.pop(context);
-                _carregarDados();
-              },
-              child: const Text('Salvar'),
-            ),
-          ],
-        );
-      },
-    );
+  Future<void> _abrirDialogCriarSuplemento([SuplementoProtocoloModel? suplemento]) async {
+    final salvo=await showDialog<bool>(context:context,builder:(_)=>SuplementoEditor(suplemento:suplemento));
+    if(salvo==true && mounted) {
+      await _carregarDados();
+    }
   }
 }
