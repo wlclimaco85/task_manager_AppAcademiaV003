@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/ui/widgets/fechamento_modal_seguro.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/auth_utility.dart';
 import 'package:task_manager_flutter/data/models/fitness/nutricao_farmaco_model.dart';
@@ -111,7 +112,10 @@ class _SuplementoEditorState extends State<SuplementoEditor> {
   }
 
   @override
-  Widget build(BuildContext context) => AlertDialog(
+  Widget build(BuildContext context) =>
+      FechamentoModalSeguro(child: _dialogo(context));
+
+  Widget _dialogo(BuildContext context) => AlertDialog(
           title: Text(widget.suplemento == null
               ? 'Cadastrar suplemento'
               : 'Editar suplemento'),
@@ -289,7 +293,10 @@ class _DietaEditorState extends State<DietaEditor> {
   }
 
   @override
-  Widget build(BuildContext context) => AlertDialog(
+  Widget build(BuildContext context) =>
+      FechamentoModalSeguro(child: _dialogo(context));
+
+  Widget _dialogo(BuildContext context) => AlertDialog(
           title: Text(widget.dieta == null ? 'Nova dieta' : 'Editar dieta'),
           content: SizedBox(
               width: 600,
@@ -422,7 +429,10 @@ class _RefeicaoEditorState extends State<_RefeicaoEditor> {
   }
 
   @override
-  Widget build(BuildContext context) => AlertDialog(
+  Widget build(BuildContext context) =>
+      FechamentoModalSeguro(child: _dialogo(context));
+
+  Widget _dialogo(BuildContext context) => AlertDialog(
           title: const Text('Refeição'),
           content: SizedBox(
               width: 520,
@@ -522,7 +532,10 @@ class _AlimentoEditorState extends State<_AlimentoEditor> {
   }
 
   @override
-  Widget build(BuildContext context) => AlertDialog(
+  Widget build(BuildContext context) =>
+      FechamentoModalSeguro(child: _dialogo(context));
+
+  Widget _dialogo(BuildContext context) => AlertDialog(
           title: const Text('Alimento e quantidade'),
           content: SizedBox(
               width: 520,

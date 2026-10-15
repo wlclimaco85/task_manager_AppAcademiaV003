@@ -1767,10 +1767,11 @@ Future<bool?> _showBottomSheet({
   required String title,
   required Widget child,
   required Future<bool> Function() onSave,
-}) {
-  return showModalBottomSheet<bool>(
-    context: context,
+}) async {
+  final route = ModalBottomSheetRoute<bool>(
     isScrollControlled: true,
+    capturedThemes: InheritedTheme.capture(from:context,to:Navigator.of(context).context),
+    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
     backgroundColor: Colors.transparent,
     builder: (context) {
       var salvando = false;
@@ -1842,6 +1843,9 @@ Future<bool?> _showBottomSheet({
       );
     },
   );
+  final saved = await Navigator.of(context).push(route);
+  await route.completed;
+  return saved;
 }
 
 /// Evento generico da linha do tempo do CorpoScreen (peso/medida/exame).
