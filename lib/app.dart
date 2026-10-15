@@ -40,7 +40,7 @@ class TaskManagerApp extends StatelessWidget {
         },
       ),
       debugShowCheckedModeBanner: false,
-      title: "Meu Treino",
+      title: "Eu Atleta",
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,

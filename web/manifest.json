@@ -1,6 +1,6 @@
 {
-    "name": "Meu Treino",
-    "short_name": "Meu Treino",
+    "name": "Eu Atleta",
+    "short_name": "Eu Atleta",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#5A2D82",

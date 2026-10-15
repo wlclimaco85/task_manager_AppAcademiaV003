@@ -122,22 +122,17 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 child: Column(
                   children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: GridColors.primary,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.fitness_center,
-                        color: Colors.white,
-                        size: 26,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        'assets/images/logo_eu_atleta.png',
+                        width: 44,
+                        height: 44,
                       ),
                     ),
                     const SizedBox(height: 6),
                     const Text(
-                      'Meu Treino',
+                      'Eu Atleta',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,

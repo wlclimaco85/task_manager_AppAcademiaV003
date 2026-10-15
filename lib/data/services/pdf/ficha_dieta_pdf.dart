@@ -109,7 +109,7 @@ class FichaDietaPdf {
         decoration: const pw.BoxDecoration(
             border: pw.Border(bottom: pw.BorderSide(color: _verde, width: 0.8))),
         child: pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
-          pw.Text('MEU TREINO',
+          pw.Text('EU ATLETA',
               style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: _verde)),
           pw.Text(direita, style: const pw.TextStyle(fontSize: 9, color: _cinza)),
         ]),
@@ -173,7 +173,7 @@ class FichaDietaPdf {
   }) async {
     final tema = await _tema();
     final quando = emissao ?? DateTime.now();
-    final doc = pw.Document(title: plano.titulo, author: 'Meu Treino');
+    final doc = pw.Document(title: plano.titulo, author: 'Eu Atleta');
     final direita = '${plano.alunoNome} · ${plano.titulo}';
 
     pw.MultiPage pagina(List<pw.Widget> Function(pw.Context) build) => pw.MultiPage(
@@ -402,7 +402,7 @@ class FichaDietaPdf {
   }) async {
     final tema = await _tema();
     final quando = emissao ?? DateTime.now();
-    final doc = pw.Document(title: dieta.titulo, author: 'Meu Treino');
+    final doc = pw.Document(title: dieta.titulo, author: 'Eu Atleta');
     final direita = [if (alunoNome.isNotEmpty) alunoNome, dieta.titulo].join(' · ');
 
     double soma(double Function(RefeicaoModel) f) =>

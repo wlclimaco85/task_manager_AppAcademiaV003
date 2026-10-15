@@ -203,14 +203,14 @@ class _LoginScreenState extends State<LoginScreen>
             children: [
               // Logo
               Image.asset(
-                "assets/images/logoforafitn1.png",
+                "assets/images/logo_eu_atleta.png",
                 height: 140,
                 fit: BoxFit.contain,
               ),
               const SizedBox(height: 16),
               // App Name
               const Text(
-                "Meu Treino",
+                "Eu Atleta",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 28,

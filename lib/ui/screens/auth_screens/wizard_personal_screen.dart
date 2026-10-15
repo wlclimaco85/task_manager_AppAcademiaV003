@@ -793,7 +793,7 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
                   ? null
                   : () async {
                       final uri = Uri.parse('https://wa.me/${whatsappComDdi(_whatsapp.text)}'
-                          '?text=${Uri.encodeComponent('Teste do meu perfil no Meu Treino')}');
+                          '?text=${Uri.encodeComponent('Teste do meu perfil no Eu Atleta')}');
                       try {
                         await launchUrl(uri, mode: LaunchMode.externalApplication);
                       } catch (e, st) {
