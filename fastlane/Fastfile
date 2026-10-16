@@ -1,5 +1,8 @@
 fastlane_version "2.0.0"
 
+# ID da faixa "Teste fechado - TESTE" no Google Play Console (Testar e lançar > Teste fechado).
+PLAY_TRILHA_TESTE_FECHADO = "4697815559366390824"
+
 def flutter_version
   pubspec = File.read("../pubspec.yaml")
   version_line = pubspec.match(/^version:\s*(.+)/)
@@ -168,6 +171,22 @@ platform :android do
       skip_upload_screenshots: false
     )
     slack(message: "🚀 Android #{ver[:name]} publicado no Google Play!", slack_url: ENV["SLACK_URL"]) if ENV["SLACK_URL"]
+  end
+
+  desc "Build e publicação na faixa Teste fechado - TESTE (testadores)"
+  lane :teste_fechado do
+    ver = flutter_version
+    flutter("build appbundle --release --build-name=#{ver[:name]} --build-number=#{ver[:build]}")
+    upload_to_play_store(
+      track:                   PLAY_TRILHA_TESTE_FECHADO,
+      release_status:          "completed",
+      package_name:            ENV["PLAY_APPLICATION_ID"] || "task.manager.flutter.AppAcademia",
+      aab:                     "build/app/outputs/bundle/release/app-release.aab",
+      skip_upload_metadata:    true,
+      skip_upload_images:      true,
+      skip_upload_screenshots: true
+    )
+    slack(message: "✅ Android #{ver[:name]}+#{ver[:build]} enviado para Teste fechado - TESTE!", slack_url: ENV["SLACK_URL"]) if ENV["SLACK_URL"]
   end
 
   desc "Promove internal para production sem novo build"
