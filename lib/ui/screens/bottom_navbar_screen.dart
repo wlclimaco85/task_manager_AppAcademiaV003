@@ -1,3 +1,4 @@
+import 'package:task_manager_flutter/ui/screens/fitness/meu_perfil_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/ui/widgets/fitness_graficos_hub.dart';
 import 'package:task_manager_flutter/ui/widgets/fitness_menu_page.dart';
@@ -208,6 +209,9 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
 
   void _openFitnessAction(_FitnessAction action, SecurityMatrix sec) {
     switch (action.title) {
+      case 'Meu perfil':
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const FitnessMenuPage(child: MeuPerfilScreen())));
+        break;
       case 'Academias':
         _openDynamicGrid('academia', sec, AppScreen.academias);
         break;
@@ -411,6 +415,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
       const _FitnessMenuSection(
         title: 'Conta',
         actions: [
+          _FitnessAction(Icons.manage_accounts_outlined, 'Meu perfil'),
           _FitnessAction(Icons.logout, 'Sair', danger: true),
         ],
       ),
@@ -482,6 +487,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
 
   List<_FitnessAction> _allFitnessActions(SecurityMatrix sec) {
     return [
+      const _FitnessAction(Icons.manage_accounts_outlined, 'Meu perfil'),
       if (podeGerenciarAlunos() && sec.canView(AppScreen.treinos))
         const _FitnessAction(Icons.groups, 'Alunos do personal'),
       if (sec.canView(AppScreen.exercicios))
