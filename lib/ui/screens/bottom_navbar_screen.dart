@@ -1284,12 +1284,16 @@ class _CommunityParticipationBanner extends StatelessWidget {
             style: const TextStyle(color: Color(0xFF6D647A)),
           ),
           const SizedBox(height: 12),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            value: enabled,
-            title: const Text('Permitir participacao local'),
-            subtitle: const Text('Controle de privacidade por aluno.'),
-            onChanged: onChanged,
+          // Material proprio: o cartao usa BoxDecoration, e o ListTile precisa de Material por perto.
+          Material(
+            color: Colors.transparent,
+            child: SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              value: enabled,
+              title: const Text('Permitir participacao local'),
+              subtitle: const Text('Controle de privacidade por aluno.'),
+              onChanged: onChanged,
+            ),
           ),
           Align(
             alignment: Alignment.centerLeft,
