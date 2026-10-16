@@ -6,6 +6,7 @@ import 'package:task_manager_flutter/data/customization/generic_grid_card.dart';
 import 'package:task_manager_flutter/data/models/role_model.dart';
 
 class Login {
+  String? foto;
   int? id;
   String? email;
   String? senha;
@@ -21,6 +22,7 @@ class Login {
 
   Login({
     this.id,
+    this.foto,
     this.email,
     this.senha,
     this.nome,
@@ -38,6 +40,7 @@ class Login {
     return {
       'id': id,
       'email': email,
+      'foto': foto,
       'senha': senha,
       'nome': nome,
       'cpfCnpj': cpfCnpj,
@@ -54,6 +57,7 @@ class Login {
   Login.fromJson(Map<String, dynamic> json) {
     if (json.isNotEmpty) {
       id = json['id'];
+      foto = json['foto'];
       email = json['email'];
       senha = json['senha'];
       nome = json['nome'];
@@ -190,6 +194,7 @@ enum LoginEnum {
 }
 
 class LoginModel {
+  Map<String, dynamic>? perfilConta;
   String? status;
   String? token;
   Data? data;
@@ -200,6 +205,7 @@ class LoginModel {
   LoginModel({this.status, this.token, this.data, this.login, this.permissoes});
 
   LoginModel.fromJson(Map<String, dynamic> json) {
+    if (json['perfilConta'] is Map) perfilConta = Map<String, dynamic>.from(json['perfilConta']);
     status = json['status'];
     token = json['access_token'] ?? json['token'];
     data = json['data'] != null ? Data.fromJson(json['data']) : null;
@@ -214,6 +220,7 @@ class LoginModel {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
+    data['perfilConta'] = perfilConta;
     data['status'] = status;
     data['token'] = token;
 

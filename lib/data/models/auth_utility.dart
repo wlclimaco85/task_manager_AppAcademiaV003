@@ -11,12 +11,35 @@ class AuthUtility {
   static LoginModel get userInfo => session.value;
   static set userInfo(LoginModel model) => session.value = model;
 
-  static Future<void> setUserInfo(LoginModel model) async {
-    SharedPreferences _sharedPreferences =
-        await SharedPreferences.getInstance();
-    await _sharedPreferences.setString("user_data", jsonEncode(model.toJson()));
-    userInfo = model;
+  static Future<void> _gravacao = Future.value();
+  static Future<void> _serializar(Future<void> Function() operacao) {
+    final proxima = _gravacao.then((_) => operacao());
+    _gravacao =
+        proxima.then<void>((_) {}, onError: (Object _, StackTrace __) {});
+    return proxima;
   }
+
+  static Future<void> setUserInfo(LoginModel model,
+          {LoginModel? sessaoEsperada}) =>
+      _serializar(() async {
+        final prefs = await SharedPreferences.getInstance();
+        if (sessaoEsperada != null && !identical(userInfo, sessaoEsperada)) {
+          throw StateError('A conta mudou. Abra o perfil novamente.');
+        }
+        if (!await prefs.setString("user_data", jsonEncode(model.toJson()))) {
+          throw StateError('Não foi possível salvar a sessão neste aparelho.');
+        }
+        if (sessaoEsperada != null && !identical(userInfo, sessaoEsperada)) {
+          final atual = userInfo;
+          if (atual.token == null || atual.token!.isEmpty) {
+            await prefs.remove("user_data");
+          } else {
+            await prefs.setString("user_data", jsonEncode(atual.toJson()));
+          }
+          throw StateError('A conta mudou. Abra o perfil novamente.');
+        }
+        userInfo = model;
+      });
 
   static Future<LoginModel?> getUserInfo() async {
     try {
@@ -30,11 +53,12 @@ class AuthUtility {
     }
   }
 
-  static Future<void> clearUserInfo() async {
-    SharedPreferences _sharedPreferences =
-        await SharedPreferences.getInstance();
-    await _sharedPreferences.remove("user_data");
+  static Future<void> clearUserInfo() {
     userInfo = LoginModel();
+    return _serializar(() async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove("user_data");
+    });
   }
 
   static Future<bool> isUserLoggedIn() async {

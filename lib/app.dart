@@ -1,3 +1,4 @@
+import 'package:task_manager_flutter/ui/screens/fitness/meu_perfil_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/models/auth_utility.dart';
@@ -22,6 +23,7 @@ class TaskManagerApp extends StatelessWidget {
       navigatorKey: globalKey,
       builder: (context, child) => AuthenticatedHeaderShell(
         child: child ?? const SizedBox.shrink(),
+        onEditar: () => globalKey.currentState?.push(MaterialPageRoute(builder: (_) => const MeuPerfilScreen())),
         onSair: () async {
           try {
             await AuthService().clearToken();

@@ -33,6 +33,7 @@ class _LoginScreenState extends State<LoginScreen>
   bool _obscurePassword = true;
 
   Future<void> login() async {
+    if (_loginInProgress || !_formKey.currentState!.validate()) return;
     setState(() => _loginInProgress = true);
 
     Map<String, dynamic> requestBody = {
@@ -250,6 +251,7 @@ class _LoginScreenState extends State<LoginScreen>
                     // Email
                     TextFormField(
                       controller: _emailController,
+                      textInputAction: TextInputAction.next,
                       style: const TextStyle(color: GridColors.textPrimary),
                       keyboardType: TextInputType.emailAddress,
                       decoration: _buildInputDecoration(
@@ -267,6 +269,8 @@ class _LoginScreenState extends State<LoginScreen>
                     // Senha
                     TextFormField(
                       controller: _passwordController,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => login(),
                       obscureText: _obscurePassword,
                       style: const TextStyle(color: GridColors.textPrimary),
                       decoration: _buildInputDecoration(
