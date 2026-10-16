@@ -101,4 +101,36 @@ void main() {
     expect(find.text('Quantidade de treinos'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+  for (final largura in [390.0, 1920.0]) {
+    testWidgets('filtro de dias separado do rotulo em largura $largura',
+        (tester) async {
+      tester.view.physicalSize = Size(largura, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(MaterialApp(
+          home: Scaffold(
+              body: ListView(padding: const EdgeInsets.all(20), children: [
+        FitnessGraficosHub(
+            dados: Future.value(
+                const GraficosFitnessDados(sessoes: [], registros: [])))
+      ]))));
+      await tester.pumpAndSettle();
+      final chips = find.byType(ChoiceChip);
+      final label = find.text('Peso ou medida corporal');
+      final baixo = chips
+          .evaluate()
+          .map((e) => tester.getRect(find.byWidget(e.widget)).bottom)
+          .reduce((a, b) => a > b ? a : b);
+      expect(tester.getRect(label).top, greaterThan(baixo));
+      await tester.tap(find.text('7 dias'));
+      await tester.pumpAndSettle();
+      expect(
+          tester
+              .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, '7 dias'))
+              .selected,
+          isTrue);
+      expect(tester.takeException(), isNull);
+    });
+  }
 }

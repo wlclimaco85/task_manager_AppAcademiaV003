@@ -39,13 +39,15 @@ class _FitnessGraficosHubState extends State<FitnessGraficosHub> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
           const Text(
               'Registros da sua conta • disponíveis também pelo cache offline'),
-          Wrap(spacing: 8, children: [
+          const SizedBox(height: 8),
+          Wrap(spacing: 8, runSpacing: 8, children: [
             for (final dias in [7, 30, 90])
               ChoiceChip(
                   label: Text('$dias dias'),
                   selected: _dias == dias,
                   onSelected: (_) => setState(() => _dias = dias))
           ]),
+          const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             initialValue: _medida,
             isExpanded: true,
@@ -59,7 +61,7 @@ class _FitnessGraficosHubState extends State<FitnessGraficosHub> {
           ),
           if (dados.exercicios.isNotEmpty)
             Padding(
-                padding: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.only(top: 20),
                 child: DropdownButtonFormField<String>(
                     initialValue: exercicio,
                     isExpanded: true,
