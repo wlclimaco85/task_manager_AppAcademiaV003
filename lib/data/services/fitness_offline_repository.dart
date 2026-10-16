@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:task_manager_flutter/data/services/exercicio_conta_sync.dart';
 import 'package:task_manager_flutter/data/services/fitness_conta_sync.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -13,6 +14,7 @@ import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_
 /// Funciona 100% offline no dispositivo e sincroniza com a nuvem quando conectado.
 class FitnessOfflineRepository {
   static const String _kExerciciosKey = 'appacademia_exercicios_v1';
+  static const String _kPersonalizacoesKey = 'exercicios_personalizados_v1';
   static const String _kPlanosKey = 'appacademia_planos_treino_v1';
   static const String _kSessoesKey = 'appacademia_sessoes_treino_v1';
 
@@ -52,6 +54,8 @@ class FitnessOfflineRepository {
       }
     }
 
+    lista = await _aplicarPersonalizacoes(lista);
+
     if (grupoMuscular != null &&
         grupoMuscular.isNotEmpty &&
         grupoMuscular != 'Todos') {
@@ -63,19 +67,66 @@ class FitnessOfflineRepository {
     return lista;
   }
 
+  /// Cria um exercicio: fica so para esta conta (e para os alunos, se for personal).
   Future<void> addExercicio(ExercicioModel exercicio) async {
-    final atuais = await getExercicios();
-    atuais.insert(0, exercicio);
-    await _salvarExercicios(atuais);
+    final dados = exercicio.toMap()..['isCustom'] = true;
+    await _salvarPersonalizacao(exercicio.id, origem: 'CUSTOM', dados: dados);
   }
 
+  /// Altera o video de um exercicio so para esta conta. O catalogo geral nao muda.
   Future<void> atualizarVideoExercicio(String id, String? videoUrl) async {
     final atuais = await getExercicios();
     final index = atuais.indexWhere((ex) => ex.id == id);
     if (index < 0) throw StateError('Exercicio nao encontrado.');
     final dados = atuais[index].toMap()..['videoUrl'] = videoUrl;
-    atuais[index] = ExercicioModel.fromMap(dados);
-    await _salvarExercicios(atuais);
+    await _salvarPersonalizacao(id, origem: 'BASE', dados: dados);
+  }
+
+  Future<List<ExercicioModel>> _aplicarPersonalizacoes(List<ExercicioModel> catalogo) async {
+    final prefs = await SharedPreferences.getInstance();
+    final chaveLocal = FitnessContaSync.chave(_kPersonalizacoesKey);
+    final locais = _lerMapaLocal(prefs.getString(chaveLocal));
+    final remoto = await ExercicioContaSync.carregar();
+
+    // Edicoes locais valem sobre as do servidor (podem ainda nao ter sido enviadas).
+    final meus = <String, Map<String, dynamic>>{};
+    for (final item in remoto?['meus'] ?? const <Map<String, dynamic>>[]) {
+      meus[item['exercicioId'].toString()] = item;
+    }
+    meus.addAll(locais);
+    await prefs.setString(chaveLocal, jsonEncode(meus));
+
+    final personalizacoes = [
+      ...(remoto?['doPersonal'] ?? const <Map<String, dynamic>>[]),
+      ...meus.values,
+    ];
+    return ExercicioContaSync.aplicar(catalogo, personalizacoes);
+  }
+
+  Future<void> _salvarPersonalizacao(String id,
+      {required String origem, required Map<String, dynamic> dados}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final chaveLocal = FitnessContaSync.chave(_kPersonalizacoesKey);
+    final mapa = _lerMapaLocal(prefs.getString(chaveLocal));
+    final registro = {
+      'exercicioId': id,
+      'origem': origem,
+      'dados': {...dados, 'id': id, 'origem': origem},
+    };
+    mapa[id] = registro;
+    await prefs.setString(chaveLocal, jsonEncode(mapa));
+    await ExercicioContaSync.salvar(registro['dados'] as Map<String, dynamic>, origem);
+  }
+
+  Map<String, Map<String, dynamic>> _lerMapaLocal(String? bruto) {
+    if (bruto == null || bruto.isEmpty) return {};
+    try {
+      final decodificado = Map<String, dynamic>.from(jsonDecode(bruto) as Map);
+      return decodificado.map((k, v) => MapEntry(k, Map<String, dynamic>.from(v as Map)));
+    } catch (e) {
+      AppLogger.i.warn('Personalizações locais de exercícios ilegíveis; ignoradas: $e');
+      return {};
+    }
   }
 
   Future<void> _salvarExercicios(List<ExercicioModel> lista) async {
