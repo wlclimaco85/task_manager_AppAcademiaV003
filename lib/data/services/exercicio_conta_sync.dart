@@ -14,6 +14,9 @@ import 'package:task_manager_flutter/data/utils/tenant_context.dart';
 /// pelo personal aparecem para ele e para os alunos vinculados; exercícios criados
 /// por quem não tem personal aparecem só para essa conta.
 class ExercicioContaSync {
+  static bool _ehPersonalizado(Map<String, dynamic> item) =>
+      (item['dados'] as Map)['isCustom'] == true || item['origem'] == 'CUSTOM';
+
   static bool get autenticado =>
       AuthUtility.userInfo.login?.id != null &&
       (AuthUtility.userInfo.token?.isNotEmpty ?? false);
@@ -33,6 +36,22 @@ class ExercicioContaSync {
       AppLogger.i.warn('Exercício não sincronizado: HTTP ${resposta.statusCode}');
     } catch (e, stack) {
       AppLogger.i.error('Exercício salvo só neste aparelho: $e', stack);
+    }
+    return false;
+  }
+
+  /// Remove a personalizacao da conta no servidor (volta ao cadastro geral).
+  static Future<bool> excluir(String id) async {
+    if (!autenticado) return false;
+    try {
+      final headers = Map<String, String>.from(TenantContext.headers);
+      final resposta = await http
+          .delete(Uri.parse('${ApiLinks.exerciciosUsuario}/$id'), headers: headers)
+          .timeout(const Duration(seconds: 10));
+      if (resposta.statusCode == 200) return true;
+      AppLogger.i.warn('Exercício não restaurado no servidor: HTTP ${resposta.statusCode}');
+    } catch (e, stack) {
+      AppLogger.i.error('Restauração do exercício sem confirmação do servidor: $e', stack);
     }
     return false;
   }
@@ -72,7 +91,7 @@ class ExercicioContaSync {
       if (id.isEmpty || item['dados'] is! Map) continue;
       final dados = Map<String, dynamic>.from(item['dados'] as Map)
         ..['id'] = id
-        ..['isCustom'] = item['origem'] == 'CUSTOM';
+        ..['isCustom'] = _ehPersonalizado(item);
       final exercicio = ExercicioModel.fromMap(dados);
       final indice = lista.indexWhere((e) => e.id == id);
       if (indice >= 0) {

@@ -691,6 +691,15 @@ class _BibliotecaExerciciosScreenState
             helperMaxLines: 3),
         )),
         actions: [
+          if (!ex.isCustom)
+            TextButton(
+              onPressed: salvando ? null : () async {
+                await _repository.restaurarExercicio(ex.id);
+                if (dialogContext.mounted) Navigator.pop(dialogContext);
+                if (mounted) await _carregarExercicios();
+              },
+              child: const Text('Restaurar padrão'),
+            ),
           TextButton(onPressed: salvando ? null : () => Navigator.pop(dialogContext), child: const Text('Cancelar')),
           FilledButton(onPressed: salvando ? null : () async {
             if (!formKey.currentState!.validate()) return;

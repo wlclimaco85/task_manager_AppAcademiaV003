@@ -14,7 +14,9 @@ import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_
 /// Funciona 100% offline no dispositivo e sincroniza com a nuvem quando conectado.
 class FitnessOfflineRepository {
   static const String _kExerciciosKey = 'appacademia_exercicios_v1';
-  static const String _kPersonalizacoesKey = 'exercicios_personalizados_v1';
+  static const String _kPendentesKey = 'exercicios_pendentes_v1';
+  static const String _kCacheKey = 'exercicios_cache_v1';
+  static const String _kLegadoMigradoKey = 'exercicios_legado_migrado_v1';
   static const String _kPlanosKey = 'appacademia_planos_treino_v1';
   static const String _kSessoesKey = 'appacademia_sessoes_treino_v1';
 
@@ -28,33 +30,8 @@ class FitnessOfflineRepository {
   // ─────────────────────────────────────────────────────────────────────────────
 
   Future<List<ExercicioModel>> getExercicios({String? grupoMuscular}) async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_kExerciciosKey);
-
     final catalogo = await _seedExercicios();
-    List<ExercicioModel> lista = [];
-    if (raw == null || raw.isEmpty) {
-      lista = catalogo;
-      await _salvarExercicios(lista);
-    } else {
-      try {
-        final decoded = json.decode(raw) as List<dynamic>;
-        final salvos = decoded
-            .map((e) => ExercicioModel.fromMap(e as Map<String, dynamic>))
-            .toList();
-        // Aparelhos com o catálogo antigo recebem os exercícios novos e a
-        // descrição passo a passo sem perder vídeos ou exercícios próprios.
-        lista = mesclarCatalogo(salvos, catalogo);
-        if (json.encode(lista.map((e) => e.toMap()).toList()) != raw) {
-          await _salvarExercicios(lista);
-        }
-      } catch (e) {
-        AppLogger.i.warn('Erro ao ler exercícios salvos; usando o catálogo padrão: $e');
-        lista = catalogo;
-      }
-    }
-
-    lista = await _aplicarPersonalizacoes(lista);
+    final lista = await _aplicarPersonalizacoes(List<ExercicioModel>.from(catalogo));
 
     if (grupoMuscular != null &&
         grupoMuscular.isNotEmpty &&
@@ -82,41 +59,116 @@ class FitnessOfflineRepository {
     await _salvarPersonalizacao(id, origem: 'BASE', dados: dados);
   }
 
+  /// Volta a esta conta o cadastro geral (ou o do personal).
+  Future<void> restaurarExercicio(String id) async {
+    final prefs = await SharedPreferences.getInstance();
+    final chavePend = FitnessContaSync.chave(_kPendentesKey);
+    final pendentes = _lerMapaLocal(prefs.getString(chavePend));
+    pendentes.remove(id);
+    await prefs.setString(chavePend, jsonEncode(pendentes));
+
+    final chaveCache = FitnessContaSync.chave(_kCacheKey);
+    final snap = _lerSnapshot(prefs.getString(chaveCache));
+    if (snap != null) {
+      snap['meus'] = _listaDe(snap['meus']).where((m) => m['exercicioId'].toString() != id).toList();
+      await prefs.setString(chaveCache, jsonEncode(snap));
+    }
+    await ExercicioContaSync.excluir(id);
+  }
+
+  /// Catalogo geral + personalizacoes: as pendencias ainda nao confirmadas pelo
+  /// servidor valem por cima do que o servidor devolveu (ou do ultimo snapshot).
   Future<List<ExercicioModel>> _aplicarPersonalizacoes(List<ExercicioModel> catalogo) async {
     final prefs = await SharedPreferences.getInstance();
-    final chaveLocal = FitnessContaSync.chave(_kPersonalizacoesKey);
-    final locais = _lerMapaLocal(prefs.getString(chaveLocal));
+    await _migrarLegadoParaConta(prefs);
+    await _enviarPendentes(prefs);
+
+    final chaveCache = FitnessContaSync.chave(_kCacheKey);
     final remoto = await ExercicioContaSync.carregar();
-
-    // Edicoes locais valem sobre as do servidor (podem ainda nao ter sido enviadas).
-    final meus = <String, Map<String, dynamic>>{};
-    for (final item in remoto?['meus'] ?? const <Map<String, dynamic>>[]) {
-      meus[item['exercicioId'].toString()] = item;
+    Map<String, dynamic>? snap;
+    if (remoto != null) {
+      snap = {'meus': remoto['meus'], 'doPersonal': remoto['doPersonal']};
+      await prefs.setString(chaveCache, jsonEncode(snap));
+    } else {
+      snap = _lerSnapshot(prefs.getString(chaveCache));
     }
-    meus.addAll(locais);
-    await prefs.setString(chaveLocal, jsonEncode(meus));
 
-    final personalizacoes = [
-      ...(remoto?['doPersonal'] ?? const <Map<String, dynamic>>[]),
-      ...meus.values,
-    ];
-    return ExercicioContaSync.aplicar(catalogo, personalizacoes);
+    final porId = <String, Map<String, dynamic>>{};
+    for (final m in _listaDe(snap?['meus'])) {
+      porId[m['exercicioId'].toString()] = m;
+    }
+    porId.addAll(_lerMapaLocal(prefs.getString(FitnessContaSync.chave(_kPendentesKey))));
+    return ExercicioContaSync.aplicar(catalogo, [..._listaDe(snap?['doPersonal']), ...porId.values]);
   }
 
   Future<void> _salvarPersonalizacao(String id,
       {required String origem, required Map<String, dynamic> dados}) async {
     final prefs = await SharedPreferences.getInstance();
-    final chaveLocal = FitnessContaSync.chave(_kPersonalizacoesKey);
-    final mapa = _lerMapaLocal(prefs.getString(chaveLocal));
+    final chavePend = FitnessContaSync.chave(_kPendentesKey);
+    final pendentes = _lerMapaLocal(prefs.getString(chavePend));
     final registro = {
       'exercicioId': id,
       'origem': origem,
       'dados': {...dados, 'id': id, 'origem': origem},
     };
-    mapa[id] = registro;
-    await prefs.setString(chaveLocal, jsonEncode(mapa));
-    await ExercicioContaSync.salvar(registro['dados'] as Map<String, dynamic>, origem);
+    pendentes[id] = registro;
+    await prefs.setString(chavePend, jsonEncode(pendentes));
+
+    final enviado = await ExercicioContaSync.salvar(
+        Map<String, dynamic>.from(registro['dados'] as Map), origem);
+    if (enviado) {
+      pendentes.remove(id);
+      await prefs.setString(chavePend, jsonEncode(pendentes));
+    }
   }
+
+  /// Reenvia o que ficou pendente (rede caiu antes). Só sai da fila com 200.
+  Future<void> _enviarPendentes(SharedPreferences prefs) async {
+    final chavePend = FitnessContaSync.chave(_kPendentesKey);
+    final pendentes = _lerMapaLocal(prefs.getString(chavePend));
+    if (pendentes.isEmpty) return;
+    for (final entrada in pendentes.entries.toList()) {
+      final registro = entrada.value;
+      final enviado = await ExercicioContaSync.salvar(
+          Map<String, dynamic>.from(registro['dados'] as Map), registro['origem'].toString());
+      if (enviado) pendentes.remove(entrada.key);
+    }
+    await prefs.setString(chavePend, jsonEncode(pendentes));
+  }
+
+  /// Aparelhos que usavam a versão anterior: edições e criações antigas da lista
+  /// global passam a ser personalizações desta conta, uma única vez.
+  Future<void> _migrarLegadoParaConta(SharedPreferences prefs) async {
+    final chaveFlag = FitnessContaSync.chave(_kLegadoMigradoKey);
+    if (prefs.getBool(chaveFlag) == true) return;
+    final bruto = prefs.getString(_kExerciciosKey);
+    if (bruto != null && bruto.isNotEmpty) {
+      try {
+        final catalogoSeed = await _seedExercicios();
+        final porId = {for (final e in catalogoSeed) e.id: e};
+        for (final item in json.decode(bruto) as List<dynamic>) {
+          final ex = ExercicioModel.fromMap(item as Map<String, dynamic>);
+          final geral = porId[ex.id];
+          if (geral == null) {
+            await _salvarPersonalizacao(ex.id, origem: 'CUSTOM', dados: ex.toMap()..['isCustom'] = true);
+          } else if (_ehLinkDeVideo(ex.videoUrl) && ex.videoUrl != geral.videoUrl) {
+            // So o video e a edicao: o restante vem do cadastro atual, nao da copia antiga.
+            await _salvarPersonalizacao(ex.id, origem: 'BASE',
+                dados: geral.toMap()..['videoUrl'] = ex.videoUrl);
+          }
+        }
+      } catch (e) {
+        AppLogger.i.warn('Migração de exercícios antigos adiada: $e');
+        return;
+      }
+    }
+    await prefs.remove(_kExerciciosKey);
+    await prefs.setBool(chaveFlag, true);
+  }
+
+  /// Links de video reais; imagens antigas (GIF quebrado) nao sao edicoes do usuario.
+  bool _ehLinkDeVideo(String? url) =>
+      url != null && RegExp(r'youtu\.?be|youtube\.com|drive\.google\.com').hasMatch(url);
 
   Map<String, Map<String, dynamic>> _lerMapaLocal(String? bruto) {
     if (bruto == null || bruto.isEmpty) return {};
@@ -129,11 +181,18 @@ class FitnessOfflineRepository {
     }
   }
 
-  Future<void> _salvarExercicios(List<ExercicioModel> lista) async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonStr = json.encode(lista.map((e) => e.toMap()).toList());
-    await prefs.setString(_kExerciciosKey, jsonStr);
+  Map<String, dynamic>? _lerSnapshot(String? bruto) {
+    if (bruto == null || bruto.isEmpty) return null;
+    try {
+      return Map<String, dynamic>.from(jsonDecode(bruto) as Map);
+    } catch (_) {
+      return null;
+    }
   }
+
+  List<Map<String, dynamic>> _listaDe(dynamic valor) => (valor as List? ?? const [])
+      .map((e) => Map<String, dynamic>.from(e as Map))
+      .toList();
 
   // ─────────────────────────────────────────────────────────────────────────────
   // 2. Fichas e Planos de Treino

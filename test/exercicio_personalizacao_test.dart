@@ -61,6 +61,17 @@ void main() {
     expect(lista.firstWhere((e) => e.id == 'ex_supino').isCustom, isFalse);
   });
 
+  test('editar um exercicio criado pela conta mantem a marcacao de personalizado', () {
+    final lista = ExercicioContaSync.aplicar(catalogo, [
+      _item('ex_meu_1', 'CUSTOM', {'nome': 'Meu exercicio', 'isCustom': true}),
+      _item('ex_meu_1', 'BASE', {'nome': 'Meu exercicio', 'isCustom': true, 'videoUrl': 'https://youtu.be/x'}),
+    ]);
+
+    final editado = lista.firstWhere((e) => e.id == 'ex_meu_1');
+    expect(editado.isCustom, isTrue);
+    expect(editado.videoUrl, 'https://youtu.be/x');
+  });
+
   test('ignora itens sem id ou sem dados, sem derrubar a lista', () {
     final lista = ExercicioContaSync.aplicar(catalogo, [
       {'exercicioId': '', 'origem': 'BASE', 'dados': {'nome': 'x'}},
