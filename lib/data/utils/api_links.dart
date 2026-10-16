@@ -49,6 +49,8 @@ class ApiLinks {
   static const String allModalidade = '$_baseUrlNew/modalidade/findAll';
   static const String allTipoRefeicao = '$_baseUrlNew/dieta/findByRefeicao';
   static const String allUniMeds = '$_baseUrlNew/unidade/findAll';
+  // Cadastro de unidades de medida (GET /unidade, tabela unidade_medida)
+  static const String unidadesMedida = '$_baseUrlNew/unidade';
   static const String insertPersonal = '$_baseUrlNew/personal/inserir';
   static const String insertSuplemento = '$_baseUrlNew/suplemento/insert';
   static const String insertAcademia = '$_baseUrlNew/academia/inserir';

@@ -258,7 +258,9 @@ class MedicamentoProtocoloModel {
   final String id;
   final String alunoId;
   final String nomeComposto; // ex: "Enantato de Testosterona", "Oxandrolona", "Anastrozol", "Silimarina"
-  final String dosagem; // ex: "250mg", "20mg", "0.5mg"
+  final String dosagem; // texto exibido, ex: "2 ML", "250mg" (registros antigos)
+  final double? doseQuantidade; // quantidade por uso, ex: 2 (em ML, UI ou comprimido)
+  final String? doseUnidade; // simbolo da unidade cadastrada: ML, UI, COMP
   final String frequencia; // ex: "1x na semana", "DSDN", "12 em 12 horas", "TSD"
   final String viaAdministracao; // 'Intramuscular', 'Oral', 'Subcutânea', 'Tópica'
   final String categoria; // 'ergogenico_ciclo', 'tpc_protetor', 'manipulado_farmacia', 'geral'
@@ -283,6 +285,8 @@ class MedicamentoProtocoloModel {
     required this.alunoId,
     required this.nomeComposto,
     required this.dosagem,
+    this.doseQuantidade,
+    this.doseUnidade,
     required this.frequencia,
     this.viaAdministracao = 'Oral',
     required this.categoria,
@@ -294,12 +298,46 @@ class MedicamentoProtocoloModel {
     this.privado = false,
   });
 
+  /// Copia com alteracoes (edicao e finalizacao de uso). Nao exclui registros:
+  /// o historico fica preservado, so muda inicio, fim ou status.
+  MedicamentoProtocoloModel copyWith({
+    String? nomeComposto,
+    String? dosagem,
+    double? doseQuantidade,
+    String? doseUnidade,
+    String? frequencia,
+    String? categoria,
+    String? dataInicio,
+    String? dataFim,
+    bool? ativo,
+    bool? privado,
+  }) =>
+      MedicamentoProtocoloModel(
+        id: id,
+        alunoId: alunoId,
+        nomeComposto: nomeComposto ?? this.nomeComposto,
+        dosagem: dosagem ?? this.dosagem,
+        doseQuantidade: doseQuantidade ?? this.doseQuantidade,
+        doseUnidade: doseUnidade ?? this.doseUnidade,
+        frequencia: frequencia ?? this.frequencia,
+        viaAdministracao: viaAdministracao,
+        categoria: categoria ?? this.categoria,
+        dataInicio: dataInicio ?? this.dataInicio,
+        dataFim: dataFim ?? this.dataFim,
+        ativo: ativo ?? this.ativo,
+        horario: horario,
+        observacoes: observacoes,
+        privado: privado ?? this.privado,
+      );
+
   Map<String, dynamic> toMap() => {
         'id': id,
         'alunoId': alunoId,
         'nomeComposto': nomeComposto,
         'privado': privado,
         'dosagem': dosagem,
+        'doseQuantidade': doseQuantidade,
+        'doseUnidade': doseUnidade,
         'frequencia': frequencia,
         'viaAdministracao': viaAdministracao,
         'categoria': categoria,
@@ -316,6 +354,8 @@ class MedicamentoProtocoloModel {
         alunoId: map['alunoId']?.toString() ?? '',
         nomeComposto: map['nomeComposto']?.toString() ?? '',
         dosagem: map['dosagem']?.toString() ?? '',
+        doseQuantidade: (map['doseQuantidade'] as num?)?.toDouble(),
+        doseUnidade: map['doseUnidade']?.toString(),
         frequencia: map['frequencia']?.toString() ?? '1x ao dia',
         viaAdministracao: map['viaAdministracao']?.toString() ?? 'Oral',
         categoria: map['categoria']?.toString() ?? 'geral',

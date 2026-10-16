@@ -7,6 +7,7 @@ import 'package:task_manager_flutter/data/services/pdf/ficha_dieta_pdf.dart';
 import 'package:task_manager_flutter/ui/widgets/imprimir_pdf.dart';
 import 'package:task_manager_flutter/data/models/fitness/nutricao_farmaco_model.dart';
 import 'package:task_manager_flutter/data/services/nutricao_farmaco_offline_repository.dart';
+import 'package:task_manager_flutter/data/services/unidade_medida_catalogo.dart';
 
 /// Central de Nutrição, Farmacologia, Suplementação & Timeline Fitness 360
 class NutricaoProtocolosHubScreen extends StatefulWidget {
@@ -376,7 +377,7 @@ class _NutricaoProtocolosHubScreenState
               ),
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Novo Protocolo'),
-              onPressed: _abrirDialogCriarMedicamento,
+              onPressed: () => _abrirDialogMedicamento(),
             ),
           ],
         ),
@@ -490,6 +491,13 @@ class _NutricaoProtocolosHubScreenState
                 const SizedBox(width: 4),
                 Text(med.horario!, style: const TextStyle(color: GridColors.textSecondary, fontSize: 12)),
               ],
+              const Spacer(),
+              TextButton.icon(
+                key: Key('editar_medicamento_${med.id}'),
+                onPressed: () => _abrirDialogMedicamento(med),
+                icon: const Icon(Icons.edit_outlined, size: 16),
+                label: Text(med.ativo ? 'Editar / finalizar' : 'Editar / reabrir'),
+              ),
             ],
           ),
           if (med.observacoes != null && med.observacoes!.isNotEmpty) ...[
@@ -852,12 +860,22 @@ class _NutricaoProtocolosHubScreenState
     }
   }
 
-  void _abrirDialogCriarMedicamento() {
-    final nomeCtrl = TextEditingController();
-    final dosagemCtrl = TextEditingController(text: '250mg');
-    final freqCtrl = TextEditingController(text: '1x por semana');
-    String categoria = 'ergogenico_ciclo';
-    bool privado = false;
+  /// Cria ou edita um medicamento/ciclo. Edicao permite corrigir inicio
+  /// (lancamento retroativo) e finalizar/reabrir o uso. Nunca exclui: o
+  /// historico fica preservado.
+  Future<void> _abrirDialogMedicamento([MedicamentoProtocoloModel? med]) async {
+    final unidades = await UnidadeMedidaCatalogo.carregar();
+    if (!mounted) return;
+    final nomeCtrl = TextEditingController(text: med?.nomeComposto ?? '');
+    final quantidadeCtrl = TextEditingController(
+        text: med?.doseQuantidade != null ? _formatarQuantidade(med!.doseQuantidade!) : '');
+    final freqCtrl = TextEditingController(text: med?.frequencia ?? '1x por semana');
+    String categoria = med?.categoria ?? 'ergogenico_ciclo';
+    bool privado = med?.privado ?? false;
+    String? unidade = med?.doseUnidade ?? (med == null ? unidades.first : null);
+    String dataInicio = med?.dataInicio ?? _hojeIso();
+    String? dataFim = med?.dataFim;
+    final opcoesUnidade = {...unidades, if (unidade != null) unidade}.toList();
 
     showDialog(
       context: context,
@@ -866,7 +884,8 @@ class _NutricaoProtocolosHubScreenState
           builder: (context, setDialogState) {
             return AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              title: const Text('Cadastrar Medicamento / Ciclo', style: TextStyle(fontWeight: FontWeight.w800)),
+              title: Text(med == null ? 'Cadastrar Medicamento / Ciclo' : 'Editar Medicamento / Ciclo',
+                  style: const TextStyle(fontWeight: FontWeight.w800)),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -891,15 +910,65 @@ class _NutricaoProtocolosHubScreenState
                       onChanged: (val) => setDialogState(() => categoria = val ?? 'ergogenico_ciclo'),
                     ),
                     const SizedBox(height: 10),
-                    TextField(
-                      controller: dosagemCtrl,
-                      decoration: const InputDecoration(labelText: 'Dosagem (ex: 250mg, 10mg)'),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: quantidadeCtrl,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            decoration: const InputDecoration(labelText: 'Quantidade por uso (ex: 2)'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        SizedBox(
+                          width: 130,
+                          child: DropdownButtonFormField<String>(
+                            key: const Key('dropdown_unidade_medicamento'),
+                            initialValue: unidade,
+                            isExpanded: true,
+                            decoration: const InputDecoration(labelText: 'Unidade'),
+                            items: [
+                              for (final u in opcoesUnidade)
+                                DropdownMenuItem(value: u, child: Text(u)),
+                            ],
+                            onChanged: (val) => setDialogState(() => unidade = val),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 10),
                     TextField(
                       controller: freqCtrl,
                       decoration: const InputDecoration(labelText: 'Frequência (ex: 1x semana, DSDN)'),
                     ),
+                    ListTile(
+                      key: const Key('data_inicio_medicamento'),
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.event),
+                      title: const Text('Data de início'),
+                      subtitle: Text(_formatarDataBr(dataInicio)),
+                      onTap: () async {
+                        final escolhida = await _escolherData(context, dataInicio);
+                        if (escolhida != null) setDialogState(() => dataInicio = escolhida);
+                      },
+                    ),
+                    if (dataFim != null)
+                      ListTile(
+                        key: const Key('data_fim_medicamento'),
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.event_available),
+                        title: const Text('Data de fim'),
+                        subtitle: Text(_formatarDataBr(dataFim!)),
+                        onTap: () async {
+                          final escolhida = await _escolherData(context, dataFim!);
+                          if (escolhida != null) setDialogState(() => dataFim = escolhida);
+                        },
+                        trailing: IconButton(
+                          tooltip: 'Reabrir uso (remove a data de fim)',
+                          icon: const Icon(Icons.undo),
+                          onPressed: () => setDialogState(() => dataFim = null),
+                        ),
+                      ),
                     if (MedicamentoProtocoloModel.permitePrivado(categoria)) ...[
                       const SizedBox(height: 6),
                       SwitchListTile(
@@ -917,21 +986,50 @@ class _NutricaoProtocolosHubScreenState
               ),
               actions: [
                 TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+                if (med != null && dataFim == null)
+                  OutlinedButton(
+                    key: const Key('finalizar_uso_medicamento'),
+                    onPressed: () => setDialogState(() => dataFim = _hojeIso()),
+                    child: const Text('Finalizar uso'),
+                  ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444), foregroundColor: Colors.white),
                   onPressed: () async {
-                    if (nomeCtrl.text.trim().isEmpty) return;
-                    final novo = MedicamentoProtocoloModel(
-                      id: 'med_${DateTime.now().millisecondsSinceEpoch}',
-                      alunoId: 'aluno_1',
-                      nomeComposto: nomeCtrl.text.trim(),
-                      dosagem: dosagemCtrl.text.trim(),
+                    final nome = nomeCtrl.text.trim();
+                    final quantidade = double.tryParse(quantidadeCtrl.text.trim().replaceAll(',', '.'));
+                    String? erro;
+                    if (nome.isEmpty) {
+                      erro = 'Informe o nome do medicamento.';
+                    } else if (quantidade == null || quantidade <= 0) {
+                      erro = 'Informe a quantidade por uso.';
+                    } else if (unidade == null) {
+                      erro = 'Escolha a unidade de medida.';
+                    } else if (dataFim != null && dataFim!.compareTo(dataInicio) < 0) {
+                      erro = 'A data de fim não pode ser anterior ao início.';
+                    }
+                    if (erro != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(erro)));
+                      return;
+                    }
+                    final salvo = MedicamentoProtocoloModel(
+                      id: med?.id ?? 'med_${DateTime.now().millisecondsSinceEpoch}',
+                      alunoId: med?.alunoId ?? 'aluno_1',
+                      nomeComposto: nome,
+                      dosagem: '${_formatarQuantidade(quantidade!)} $unidade',
+                      doseQuantidade: quantidade,
+                      doseUnidade: unidade,
                       frequencia: freqCtrl.text.trim(),
+                      viaAdministracao: med?.viaAdministracao ?? 'Oral',
                       categoria: categoria,
-                      dataInicio: DateTime.now().toIso8601String().substring(0, 10),
+                      dataInicio: dataInicio,
+                      dataFim: dataFim,
+                      ativo: dataFim == null,
+                      horario: med?.horario,
+                      observacoes: med?.observacoes,
                       privado: privado && MedicamentoProtocoloModel.permitePrivado(categoria),
                     );
-                    await _repository.salvarMedicamento(novo);
+                    await _repository.salvarMedicamento(salvo);
+                    if (!context.mounted) return;
                     Navigator.pop(context);
                     _carregarDados();
                   },
@@ -943,6 +1041,31 @@ class _NutricaoProtocolosHubScreenState
         );
       },
     );
+  }
+
+  static String _hojeIso() => DateTime.now().toIso8601String().substring(0, 10);
+
+  /// 2 -> "2", 0.5 -> "0,5" (exibicao em pt-BR).
+  static String _formatarQuantidade(double valor) =>
+      valor == valor.truncateToDouble()
+          ? valor.toInt().toString()
+          : valor.toString().replaceAll('.', ',');
+
+  /// "2026-10-16" -> "16/10/2026".
+  static String _formatarDataBr(String iso) {
+    final partes = iso.split('-');
+    return partes.length == 3 ? '${partes[2]}/${partes[1]}/${partes[0]}' : iso;
+  }
+
+  Future<String?> _escolherData(BuildContext context, String isoAtual) async {
+    final hoje = DateTime.now();
+    final escolhida = await showDatePicker(
+      context: context,
+      initialDate: DateTime.tryParse(isoAtual) ?? hoje,
+      firstDate: DateTime(2000),
+      lastDate: hoje.add(const Duration(days: 365)),
+    );
+    return escolhida?.toIso8601String().substring(0, 10);
   }
 
   Future<void> _abrirDialogCriarSuplemento([SuplementoProtocoloModel? suplemento]) async {
