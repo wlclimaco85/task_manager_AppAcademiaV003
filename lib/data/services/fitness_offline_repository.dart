@@ -13,10 +13,8 @@ import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_
 /// Repositório Offline-First de Treinos e Exercícios (AppAcademia V003)
 /// Funciona 100% offline no dispositivo e sincroniza com a nuvem quando conectado.
 class FitnessOfflineRepository {
-  static const String _kExerciciosKey = 'appacademia_exercicios_v1';
   static const String _kPendentesKey = 'exercicios_pendentes_v1';
   static const String _kCacheKey = 'exercicios_cache_v1';
-  static const String _kLegadoMigradoKey = 'exercicios_legado_migrado_v1';
   static const String _kPlanosKey = 'appacademia_planos_treino_v1';
   static const String _kSessoesKey = 'appacademia_sessoes_treino_v1';
 
@@ -28,6 +26,16 @@ class FitnessOfflineRepository {
   // ─────────────────────────────────────────────────────────────────────────────
   // 1. Catálogo de Exercícios (com Seed Inicial Completo Padrão MFIT)
   // ─────────────────────────────────────────────────────────────────────────────
+
+  /// Cada operacao que mexe na fila de pendencias roda uma de cada vez, para uma
+  /// gravacao nao apagar a outra (ex.: duas edicoes quase simultaneas).
+  static Future<void> _cadeiaPendencias = Future.value();
+
+  Future<T> _emSequencia<T>(Future<T> Function() operacao) {
+    final resultado = _cadeiaPendencias.then((_) => operacao());
+    _cadeiaPendencias = resultado.then((_) {}, onError: (_) {});
+    return resultado;
+  }
 
   Future<List<ExercicioModel>> getExercicios({String? grupoMuscular}) async {
     final catalogo = await _seedExercicios();
@@ -59,28 +67,34 @@ class FitnessOfflineRepository {
     await _salvarPersonalizacao(id, origem: 'BASE', dados: dados);
   }
 
-  /// Volta a esta conta o cadastro geral (ou o do personal).
-  Future<void> restaurarExercicio(String id) async {
-    final prefs = await SharedPreferences.getInstance();
-    final chavePend = FitnessContaSync.chave(_kPendentesKey);
-    final pendentes = _lerMapaLocal(prefs.getString(chavePend));
-    pendentes.remove(id);
-    await prefs.setString(chavePend, jsonEncode(pendentes));
+  /// Volta a esta conta o cadastro geral (ou o do personal). A exclusao fica na
+  /// fila ate o servidor confirmar. Retorna false se ainda nao foi confirmada.
+  Future<bool> restaurarExercicio(String id) => _emSequencia(() async {
+        final prefs = await SharedPreferences.getInstance();
+        final chavePend = FitnessContaSync.chave(_kPendentesKey);
+        final pendentes = _lerMapaLocal(prefs.getString(chavePend));
+        pendentes[id] = {'exercicioId': id, 'origem': 'EXCLUIR', 'dados': <String, dynamic>{}};
+        await prefs.setString(chavePend, jsonEncode(pendentes));
 
-    final chaveCache = FitnessContaSync.chave(_kCacheKey);
-    final snap = _lerSnapshot(prefs.getString(chaveCache));
-    if (snap != null) {
-      snap['meus'] = _listaDe(snap['meus']).where((m) => m['exercicioId'].toString() != id).toList();
-      await prefs.setString(chaveCache, jsonEncode(snap));
-    }
-    await ExercicioContaSync.excluir(id);
-  }
+        final chaveCache = FitnessContaSync.chave(_kCacheKey);
+        final snap = _lerSnapshot(prefs.getString(chaveCache));
+        if (snap != null) {
+          snap['meus'] = _listaDe(snap['meus']).where((m) => m['exercicioId'].toString() != id).toList();
+          await prefs.setString(chaveCache, jsonEncode(snap));
+        }
 
-  /// Catalogo geral + personalizacoes: as pendencias ainda nao confirmadas pelo
-  /// servidor valem por cima do que o servidor devolveu (ou do ultimo snapshot).
+        final confirmado = await ExercicioContaSync.excluir(id);
+        if (confirmado) {
+          pendentes.remove(id);
+          await prefs.setString(chavePend, jsonEncode(pendentes));
+        }
+        return confirmado;
+      });
+
+  /// Catalogo geral + personalizacoes. Pendencias ainda nao confirmadas valem por
+  /// cima do servidor; exclusoes pendentes escondem a personalizacao.
   Future<List<ExercicioModel>> _aplicarPersonalizacoes(List<ExercicioModel> catalogo) async {
     final prefs = await SharedPreferences.getInstance();
-    await _migrarLegadoParaConta(prefs);
     await _enviarPendentes(prefs);
 
     final chaveCache = FitnessContaSync.chave(_kCacheKey);
@@ -97,78 +111,55 @@ class FitnessOfflineRepository {
     for (final m in _listaDe(snap?['meus'])) {
       porId[m['exercicioId'].toString()] = m;
     }
-    porId.addAll(_lerMapaLocal(prefs.getString(FitnessContaSync.chave(_kPendentesKey))));
+    final pendentes = _lerMapaLocal(prefs.getString(FitnessContaSync.chave(_kPendentesKey)));
+    for (final entrada in pendentes.entries) {
+      if (entrada.value['origem'] == 'EXCLUIR') {
+        porId.remove(entrada.key);
+      } else {
+        porId[entrada.key] = entrada.value;
+      }
+    }
     return ExercicioContaSync.aplicar(catalogo, [..._listaDe(snap?['doPersonal']), ...porId.values]);
   }
 
   Future<void> _salvarPersonalizacao(String id,
-      {required String origem, required Map<String, dynamic> dados}) async {
-    final prefs = await SharedPreferences.getInstance();
-    final chavePend = FitnessContaSync.chave(_kPendentesKey);
-    final pendentes = _lerMapaLocal(prefs.getString(chavePend));
-    final registro = {
-      'exercicioId': id,
-      'origem': origem,
-      'dados': {...dados, 'id': id, 'origem': origem},
-    };
-    pendentes[id] = registro;
-    await prefs.setString(chavePend, jsonEncode(pendentes));
+      {required String origem, required Map<String, dynamic> dados}) =>
+      _emSequencia(() async {
+        final prefs = await SharedPreferences.getInstance();
+        final chavePend = FitnessContaSync.chave(_kPendentesKey);
+        final pendentes = _lerMapaLocal(prefs.getString(chavePend));
+        final registro = {
+          'exercicioId': id,
+          'origem': origem,
+          'dados': {...dados, 'id': id, 'origem': origem},
+        };
+        pendentes[id] = registro;
+        await prefs.setString(chavePend, jsonEncode(pendentes));
 
-    final enviado = await ExercicioContaSync.salvar(
-        Map<String, dynamic>.from(registro['dados'] as Map), origem);
-    if (enviado) {
-      pendentes.remove(id);
-      await prefs.setString(chavePend, jsonEncode(pendentes));
-    }
-  }
-
-  /// Reenvia o que ficou pendente (rede caiu antes). Só sai da fila com 200.
-  Future<void> _enviarPendentes(SharedPreferences prefs) async {
-    final chavePend = FitnessContaSync.chave(_kPendentesKey);
-    final pendentes = _lerMapaLocal(prefs.getString(chavePend));
-    if (pendentes.isEmpty) return;
-    for (final entrada in pendentes.entries.toList()) {
-      final registro = entrada.value;
-      final enviado = await ExercicioContaSync.salvar(
-          Map<String, dynamic>.from(registro['dados'] as Map), registro['origem'].toString());
-      if (enviado) pendentes.remove(entrada.key);
-    }
-    await prefs.setString(chavePend, jsonEncode(pendentes));
-  }
-
-  /// Aparelhos que usavam a versão anterior: edições e criações antigas da lista
-  /// global passam a ser personalizações desta conta, uma única vez.
-  Future<void> _migrarLegadoParaConta(SharedPreferences prefs) async {
-    final chaveFlag = FitnessContaSync.chave(_kLegadoMigradoKey);
-    if (prefs.getBool(chaveFlag) == true) return;
-    final bruto = prefs.getString(_kExerciciosKey);
-    if (bruto != null && bruto.isNotEmpty) {
-      try {
-        final catalogoSeed = await _seedExercicios();
-        final porId = {for (final e in catalogoSeed) e.id: e};
-        for (final item in json.decode(bruto) as List<dynamic>) {
-          final ex = ExercicioModel.fromMap(item as Map<String, dynamic>);
-          final geral = porId[ex.id];
-          if (geral == null) {
-            await _salvarPersonalizacao(ex.id, origem: 'CUSTOM', dados: ex.toMap()..['isCustom'] = true);
-          } else if (_ehLinkDeVideo(ex.videoUrl) && ex.videoUrl != geral.videoUrl) {
-            // So o video e a edicao: o restante vem do cadastro atual, nao da copia antiga.
-            await _salvarPersonalizacao(ex.id, origem: 'BASE',
-                dados: geral.toMap()..['videoUrl'] = ex.videoUrl);
-          }
+        final enviado = await ExercicioContaSync.salvar(
+            Map<String, dynamic>.from(registro['dados'] as Map), origem);
+        if (enviado) {
+          pendentes.remove(id);
+          await prefs.setString(chavePend, jsonEncode(pendentes));
         }
-      } catch (e) {
-        AppLogger.i.warn('Migração de exercícios antigos adiada: $e');
-        return;
-      }
-    }
-    await prefs.remove(_kExerciciosKey);
-    await prefs.setBool(chaveFlag, true);
-  }
+      });
 
-  /// Links de video reais; imagens antigas (GIF quebrado) nao sao edicoes do usuario.
-  bool _ehLinkDeVideo(String? url) =>
-      url != null && RegExp(r'youtu\.?be|youtube\.com|drive\.google\.com').hasMatch(url);
+  /// Reenvia o que ficou pendente (edicoes e exclusoes). Cada item sai da fila
+  /// so depois da confirmacao do servidor.
+  Future<void> _enviarPendentes(SharedPreferences prefs) => _emSequencia(() async {
+        final chavePend = FitnessContaSync.chave(_kPendentesKey);
+        final pendentes = _lerMapaLocal(prefs.getString(chavePend));
+        if (pendentes.isEmpty) return;
+        for (final entrada in pendentes.entries.toList()) {
+          final registro = entrada.value;
+          final enviado = registro['origem'] == 'EXCLUIR'
+              ? await ExercicioContaSync.excluir(entrada.key)
+              : await ExercicioContaSync.salvar(
+                  Map<String, dynamic>.from(registro['dados'] as Map), registro['origem'].toString());
+          if (enviado) pendentes.remove(entrada.key);
+        }
+        await prefs.setString(chavePend, jsonEncode(pendentes));
+      });
 
   Map<String, Map<String, dynamic>> _lerMapaLocal(String? bruto) {
     if (bruto == null || bruto.isEmpty) return {};

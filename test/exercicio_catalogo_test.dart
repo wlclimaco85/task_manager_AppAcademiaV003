@@ -94,8 +94,9 @@ void main() {
     expect(porId('ex_supino_reto').descricao, startsWith('1. '));
     expect(porId('ex_supino_reto').videoUrl, 'https://youtu.be/pCPyqW60Wuk', reason: 'GIF 404 substituido pelo video real');
     expect(porId('ex_supino_reto').midiaUrl, porId('ex_supino_reto').videoUrl);
-    expect(porId('ex_leg_press').videoUrl, 'https://www.youtube.com/watch?v=abc123');
-    expect(porId('ex_custom_1').descricao, 'Texto do personal');
+    // Edicoes do aparelho antigo nao sao atribuidas a conta: o catalogo geral aparece.
+    expect(lista.where((e) => e.id == 'ex_leg_press').every((e) => e.videoUrl != 'https://www.youtube.com/watch?v=abc123'), isTrue);
+    expect(lista.any((e) => e.id == 'ex_custom_1'), isFalse);
     expect(lista.any((e) => e.id == 'ex_kettlebell_swing'), isTrue);
   });
 }

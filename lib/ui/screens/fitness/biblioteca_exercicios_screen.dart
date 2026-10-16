@@ -696,9 +696,12 @@ class _BibliotecaExerciciosScreenState
               onPressed: salvando ? null : () async {
                 setModalState(() => salvando = true);
                 try {
-                  await _repository.restaurarExercicio(ex.id);
+                  final confirmado = await _repository.restaurarExercicio(ex.id);
                   if (dialogContext.mounted) Navigator.pop(dialogContext);
                   if (mounted) await _carregarExercicios();
+                  if (!confirmado && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Padrão restaurado aqui. A alteração no servidor será concluída quando houver conexão.')));
+                  }
                 } catch (error, stack) {
                   AppLogger.i.error('Falha ao restaurar o padrao do exercicio.', stack);
                   if (dialogContext.mounted) {
