@@ -88,6 +88,9 @@ class _BibliotecaExerciciosScreenState
           _catalogo = catalogo;
           _loading = false;
         });
+        if (ExercicioContaSync.ultimaLeituraFalhou) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sem conexão com o servidor. Mostrando os últimos dados salvos.')));
+        }
       }
     } catch (error, stack) {
       AppLogger.i.error('Falha ao carregar exercícios da biblioteca.', stack);

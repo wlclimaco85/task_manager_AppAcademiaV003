@@ -37,6 +37,9 @@ class FitnessOfflineRepository {
     return resultado;
   }
 
+  /// Conta logada no momento (vazio sem login). Usada para descartar respostas de outra conta.
+  String get _conta => FitnessContaSync.chave('');
+
   Future<List<ExercicioModel>> getExercicios({String? grupoMuscular}) async {
     final catalogo = await _seedExercicios();
     final lista = await _aplicarPersonalizacoes(List<ExercicioModel>.from(catalogo));
@@ -63,8 +66,14 @@ class FitnessOfflineRepository {
     final atuais = await getExercicios();
     final index = atuais.indexWhere((ex) => ex.id == id);
     if (index < 0) throw StateError('Exercicio nao encontrado.');
-    final dados = atuais[index].toMap()..['videoUrl'] = videoUrl;
-    await _salvarPersonalizacao(id, origem: 'BASE', dados: dados);
+    final ex = atuais[index];
+    if (ex.isCustom) {
+      // Exercicio criado pela conta: grava o cadastro inteiro (nao existe no catalogo geral).
+      await _salvarPersonalizacao(id, origem: 'CUSTOM', dados: ex.toMap()..['videoUrl'] = videoUrl);
+    } else {
+      // Edicao de exercicio geral: so o video. Nome e instrucoes continuam os do cadastro.
+      await _salvarPersonalizacao(id, origem: 'BASE', dados: {'id': id, 'videoUrl': videoUrl});
+    }
   }
 
   /// Volta a esta conta o cadastro geral (ou o do personal). A exclusao fica na
@@ -98,6 +107,7 @@ class FitnessOfflineRepository {
   /// cima do servidor; exclusoes pendentes escondem a personalizacao.
   Future<List<ExercicioModel>> _aplicarPersonalizacoes(List<ExercicioModel> catalogo) async {
     if (!ExercicioContaSync.autenticado) return catalogo;
+    final contaInicial = _conta;
     final prefs = await SharedPreferences.getInstance();
     await _enviarPendentes(prefs);
 
@@ -105,6 +115,8 @@ class FitnessOfflineRepository {
     // confirmada no meio nao pode ser desfeita por uma resposta antiga.
     return _emSequencia(() async {
       final remoto = await ExercicioContaSync.carregar();
+      // Se a conta mudou durante a leitura, a resposta nao pertence a quem esta logado agora.
+      if (_conta != contaInicial) return catalogo;
       final chaveCache = FitnessContaSync.chave(_kCacheKey);
       Map<String, dynamic>? snap;
       if (remoto != null) {
@@ -159,10 +171,12 @@ class FitnessOfflineRepository {
   /// Reenvia o que ficou pendente (edicoes e exclusoes). Cada item sai da fila
   /// so depois da confirmacao do servidor.
   Future<void> _enviarPendentes(SharedPreferences prefs) => _emSequencia(() async {
+        final contaInicial = _conta;
         final chavePend = FitnessContaSync.chave(_kPendentesKey);
         final pendentes = _lerMapaLocal(prefs.getString(chavePend));
-        if (pendentes.isEmpty) return;
         for (final entrada in pendentes.entries.toList()) {
+          // Troca de conta no meio: para; o token atual nao pode enviar dados da conta anterior.
+          if (_conta != contaInicial) break;
           final registro = entrada.value;
           try {
             final enviado = registro['origem'] == 'EXCLUIR'
@@ -191,7 +205,8 @@ class FitnessOfflineRepository {
     if (decodificado is! Map) return {};
     final mapa = <String, Map<String, dynamic>>{};
     decodificado.forEach((k, v) {
-      final valida = v is Map && (v['origem'] == 'EXCLUIR' || v['dados'] is Map);
+      final origemValida = v is Map && const {'BASE', 'CUSTOM', 'EXCLUIR'}.contains(v['origem']);
+      final valida = origemValida && (v['origem'] == 'EXCLUIR' || v['dados'] is Map);
       if (valida) {
         mapa[k.toString()] = Map<String, dynamic>.from(v);
       } else {

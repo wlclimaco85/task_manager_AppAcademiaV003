@@ -24,6 +24,9 @@ class ExercicioContaSync {
   @visibleForTesting
   static bool? autenticadoForcado;
 
+  /// true quando a ultima leitura do servidor falhou (a tela mostra aviso).
+  static bool ultimaLeituraFalhou = false;
+
   static bool get autenticado =>
       autenticadoForcado ??
       (AuthUtility.userInfo.login?.id != null &&
@@ -67,15 +70,20 @@ class ExercicioContaSync {
   /// Personalizações do servidor: `meus` (da conta) e `doPersonal` (do personal
   /// vinculado). Retorna null quando o servidor não responde.
   static Future<Map<String, List<Map<String, dynamic>>>?> carregar() async {
-    if (!autenticado) return null;
+    if (!autenticado) {
+      ultimaLeituraFalhou = false;
+      return null;
+    }
     try {
       final resposta = await cliente
           .get(Uri.parse(ApiLinks.exerciciosUsuario), headers: TenantContext.headers)
           .timeout(const Duration(seconds: 10));
       if (resposta.statusCode != 200) {
         AppLogger.i.warn('Leitura de exercícios personalizados falhou: HTTP ${resposta.statusCode}');
+        ultimaLeituraFalhou = true;
         return null;
       }
+      ultimaLeituraFalhou = false;
       final corpo = jsonDecode(resposta.body) as Map<String, dynamic>;
       List<Map<String, dynamic>> lista(String chave) => (corpo[chave] as List? ?? const [])
           .map((e) => Map<String, dynamic>.from(e as Map))
@@ -83,6 +91,7 @@ class ExercicioContaSync {
       return {'meus': lista('meus'), 'doPersonal': lista('doPersonal')};
     } catch (e, stack) {
       AppLogger.i.error('Exercícios personalizados indisponíveis; usando cópia local.', stack);
+      ultimaLeituraFalhou = true;
       return null;
     }
   }
@@ -97,11 +106,19 @@ class ExercicioContaSync {
     for (final item in personalizacoes) {
       final id = item['exercicioId']?.toString() ?? '';
       if (id.isEmpty || item['dados'] is! Map) continue;
-      final dados = Map<String, dynamic>.from(item['dados'] as Map)
-        ..['id'] = id
-        ..['isCustom'] = _ehPersonalizado(item);
-      final exercicio = ExercicioModel.fromMap(dados);
       final indice = lista.indexWhere((e) => e.id == id);
+      final origem = item['origem']?.toString();
+      final Map<String, dynamic> dados;
+      if (origem == 'BASE' && indice >= 0) {
+        // Patch: so os campos enviados mudam; o resto segue o cadastro geral.
+        dados = {...lista[indice].toMap(), ...Map<String, dynamic>.from(item['dados'] as Map)};
+        dados['isCustom'] = lista[indice].isCustom;
+      } else {
+        dados = Map<String, dynamic>.from(item['dados'] as Map)
+          ..['isCustom'] = _ehPersonalizado(item);
+      }
+      dados['id'] = id;
+      final exercicio = ExercicioModel.fromMap(dados);
       if (indice >= 0) {
         lista[indice] = exercicio;
       } else {

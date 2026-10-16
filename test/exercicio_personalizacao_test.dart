@@ -72,6 +72,18 @@ void main() {
     expect(editado.videoUrl, 'https://youtu.be/x');
   });
 
+  test('patch de video do personal mantem nome e instrucoes do cadastro geral', () {
+    final lista = ExercicioContaSync.aplicar(catalogo, [
+      _item('ex_supino', 'BASE', {'videoUrl': 'https://youtu.be/patch'}),
+    ]);
+
+    final supino = lista.firstWhere((e) => e.id == 'ex_supino');
+    expect(supino.videoUrl, 'https://youtu.be/patch');
+    expect(supino.nome, 'Exercicio ex_supino');
+    expect(supino.instrucoes, 'Instrucao');
+    expect(supino.isCustom, isFalse);
+  });
+
   test('ignora itens sem id ou sem dados, sem derrubar a lista', () {
     final lista = ExercicioContaSync.aplicar(catalogo, [
       {'exercicioId': '', 'origem': 'BASE', 'dados': {'nome': 'x'}},

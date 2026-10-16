@@ -114,6 +114,30 @@ void main() {
         reason: 'pendencia valida enviada e removida');
   });
 
+  test('falha de leitura do servidor acende o aviso; leitura ok apaga', () async {
+    servidor(200, statusDaLeitura: 500);
+    expect(await ExercicioContaSync.carregar(), isNull);
+    expect(ExercicioContaSync.ultimaLeituraFalhou, isTrue);
+
+    servidor(200);
+    expect(await ExercicioContaSync.carregar(), isNotNull);
+    expect(ExercicioContaSync.ultimaLeituraFalhou, isFalse);
+  });
+
+  test('origem fora de BASE, CUSTOM e EXCLUIR e descartada da fila', () async {
+    SharedPreferences.setMockInitialValues({
+      'exercicios_pendentes_v1': jsonEncode({
+        'ex_x': {'exercicioId': 'ex_x', 'origem': 'ADMIN', 'dados': {'id': 'ex_x'}},
+      }),
+    });
+    servidor(200);
+    await FitnessOfflineRepository().getExercicios();
+
+    final prefs = await SharedPreferences.getInstance();
+    final restante = jsonDecode(prefs.getString('exercicios_pendentes_v1') ?? '{}') as Map;
+    expect(restante.containsKey('ex_x'), isFalse);
+  });
+
   test('carregar devolve null quando o servidor falha (usa o cache local)', () async {
     servidor(200, statusDaLeitura: 500);
 
