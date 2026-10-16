@@ -452,6 +452,8 @@ class ApiLinks {
 
   static String atualizarDadosPessoais(String id) =>
       '$_baseUrlNew/api/dadospessoais/$id';
+  static String dadosPessoaisPorId(String id) =>
+      '$_baseUrlNew/api/dadospessoais/$id';
 
   static String pontoRegistrar = "$baseUrl/api/pontos/registrar";
   static String pontoListar = "$baseUrl/api/pontos/listar";
