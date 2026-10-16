@@ -355,6 +355,11 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     }
     final exAtual = _execucao.atual(_exercicioIndexAtual);
     final seriesAtuais = _seriesPorExercicio[_exercicioIndexAtual] ?? [];
+    // Bi-set: o par aparece embaixo, com as proprias series, para executar em sequencia.
+    final parceiroIdx = _biset.parceiros[_exercicioIndexAtual];
+    final seriesParceiro = parceiroIdx == null
+        ? const <SerieRegistroModel>[]
+        : (_seriesPorExercicio[parceiroIdx] ?? const <SerieRegistroModel>[]);
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B1120), // Deep Slate Obsidian
@@ -498,16 +503,38 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
 
               // 4. Tabela de Séries com Checkbox e Ajustes Rápidos
               Expanded(
-                child: ListView.separated(
+                child: ListView(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  itemCount: seriesAtuais.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (context, idx) {
-                    final serie = seriesAtuais[idx];
-                    return _buildCardSerieAoVivo(
-                        serie, idx, exAtual.descansoSegundos);
-                  },
+                  children: [
+                    for (var idx = 0; idx < seriesAtuais.length; idx++) ...[
+                      if (idx > 0) const SizedBox(height: 10),
+                      _buildCardSerieAoVivo(
+                          seriesAtuais[idx], idx, exAtual.descansoSegundos),
+                    ],
+                    if (parceiroIdx != null) ...[
+                      const SizedBox(height: 18),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 4, bottom: 8),
+                        child: Text(
+                          'Par: ${_execucao.atual(parceiroIdx).exercicioNome}',
+                          style: const TextStyle(
+                              color: Color(0xFF6EE7B7),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      for (var j = 0; j < seriesParceiro.length; j++) ...[
+                        if (j > 0) const SizedBox(height: 10),
+                        _buildCardSerieAoVivo(
+                          seriesParceiro[j],
+                          j,
+                          _biset.exercicios[parceiroIdx].descansoSegundos,
+                          exIdx: parceiroIdx,
+                        ),
+                      ],
+                    ],
+                  ],
                 ),
               ),
 
@@ -769,8 +796,28 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     );
   }
 
+  /// Botao +/- de carga e repeticoes da serie. Area de toque de 44px (minimo
+  /// recomendado para mobile) com icone de 26px, mais facil de acertar em treino.
+  Widget _botaoAjusteSerie({
+    required IconData icone,
+    required Color cor,
+    required VoidCallback onTap,
+  }) {
+    return SizedBox(
+      width: 44,
+      height: 44,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Center(child: Icon(icone, color: cor, size: 26)),
+      ),
+    );
+  }
+
   Widget _buildCardSerieAoVivo(
-      SerieRegistroModel serie, int serieIdx, int descansoPadrao) {
+      SerieRegistroModel serie, int serieIdx, int descansoPadrao,
+      {int? exIdx}) {
+    final ex = exIdx ?? _exercicioIndexAtual;
     final concluida = serie.concluida;
 
     return Container(
@@ -814,8 +861,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (concluida)
-                  Text((_execucao.realizados[_exercicioIndexAtual]?[serieIdx]
-                      ?? _biset.exercicios[_exercicioIndexAtual]).exercicioNome,
+                  Text((_execucao.realizados[ex]?[serieIdx]
+                      ?? _biset.exercicios[ex]).exercicioNome,
                     maxLines: 2, overflow: TextOverflow.ellipsis,
                     style: const TextStyle(color: Color(0xFF6EE7B7), fontSize: 10)),
                 const Text('Carga (kg)',
@@ -832,16 +879,16 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    InkWell(
-                      onTap: () => _ajustarCargaSerie(serieIdx, -1.0),
-                      child: const Icon(Icons.remove_circle_outline,
-                          color: Color(0xFF94A3B8), size: 18),
+                    _botaoAjusteSerie(
+                      icone: Icons.remove_circle_outline,
+                      cor: const Color(0xFF94A3B8),
+                      onTap: () => _ajustarCargaSerie(serieIdx, -1.0, exIdx: ex),
                     ),
                     const SizedBox(width: 4),
-                    InkWell(
-                      onTap: () => _ajustarCargaSerie(serieIdx, 1.0),
-                      child: const Icon(Icons.add_circle_outline,
-                          color: Color(0xFF10B981), size: 18),
+                    _botaoAjusteSerie(
+                      icone: Icons.add_circle_outline,
+                      cor: const Color(0xFF10B981),
+                      onTap: () => _ajustarCargaSerie(serieIdx, 1.0, exIdx: ex),
                     ),
                   ],
                 ),
@@ -868,16 +915,16 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    InkWell(
-                      onTap: () => _ajustarRepsSerie(serieIdx, -1),
-                      child: const Icon(Icons.remove_circle_outline,
-                          color: Color(0xFF94A3B8), size: 18),
+                    _botaoAjusteSerie(
+                      icone: Icons.remove_circle_outline,
+                      cor: const Color(0xFF94A3B8),
+                      onTap: () => _ajustarRepsSerie(serieIdx, -1, exIdx: ex),
                     ),
                     const SizedBox(width: 4),
-                    InkWell(
-                      onTap: () => _ajustarRepsSerie(serieIdx, 1),
-                      child: const Icon(Icons.add_circle_outline,
-                          color: Color(0xFF10B981), size: 18),
+                    _botaoAjusteSerie(
+                      icone: Icons.add_circle_outline,
+                      cor: const Color(0xFF10B981),
+                      onTap: () => _ajustarRepsSerie(serieIdx, 1, exIdx: ex),
                     ),
                   ],
                 ),
@@ -888,10 +935,10 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
           // Botão de Check da Série
           InkWell(
             borderRadius: BorderRadius.circular(12),
-            onTap: !concluida && !_podeConcluirSerie(serieIdx) ? null : () {
+            onTap: !concluida && !_podeConcluirSerie(serieIdx, exIdx: ex) ? null : () {
               final novoEstado = !concluida;
               setState(() {
-                _seriesPorExercicio[_exercicioIndexAtual]![serieIdx] =
+                _seriesPorExercicio[ex]![serieIdx] =
                     SerieRegistroModel(
                   numero: serie.numero,
                   cargaRealKg: serie.cargaRealKg,
@@ -900,10 +947,10 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                 );
               });
 
-              _execucao.marcarSerie(_exercicioIndexAtual, serieIdx, novoEstado);
+              _execucao.marcarSerie(ex, serieIdx, novoEstado);
               _salvarRascunho();
               if (novoEstado) {
-                final indiceConcluido = _exercicioIndexAtual;
+                final indiceConcluido = ex;
                 if (_biset.parceiros.containsKey(indiceConcluido)) {
                   final proxima = _biset.proximaSerie(indiceConcluido, _seriesPorExercicio);
                   if (_biset.segundos.contains(indiceConcluido)) {
@@ -945,12 +992,6 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
         ],
       ),
     );
-  }
-
-  bool _podeConcluirSerie(int serieIdx) {
-    if (!_biset.parceiros.containsKey(_exercicioIndexAtual)) return true;
-    final proxima = _biset.proximaSerie(_exercicioIndexAtual, _seriesPorExercicio);
-    return proxima?.indice == _exercicioIndexAtual && proxima?.serie == serieIdx;
   }
 
   Widget _buildBarraDescanso() {
@@ -1020,11 +1061,12 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     );
   }
 
-  void _ajustarCargaSerie(int serieIdx, double delta) {
-    final serie = _seriesPorExercicio[_exercicioIndexAtual]![serieIdx];
+  void _ajustarCargaSerie(int serieIdx, double delta, {int? exIdx}) {
+    final ex = exIdx ?? _exercicioIndexAtual;
+    final serie = _seriesPorExercicio[ex]![serieIdx];
     final novaCarga = (serie.cargaRealKg + delta).clamp(0.0, 500.0);
     setState(() {
-      _seriesPorExercicio[_exercicioIndexAtual]![serieIdx] =
+      _seriesPorExercicio[ex]![serieIdx] =
           SerieRegistroModel(
         numero: serie.numero,
         cargaRealKg: novaCarga,
@@ -1035,11 +1077,12 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     _salvarRascunho();
   }
 
-  void _ajustarRepsSerie(int serieIdx, int delta) {
-    final serie = _seriesPorExercicio[_exercicioIndexAtual]![serieIdx];
+  void _ajustarRepsSerie(int serieIdx, int delta, {int? exIdx}) {
+    final ex = exIdx ?? _exercicioIndexAtual;
+    final serie = _seriesPorExercicio[ex]![serieIdx];
     final novasReps = (serie.repeticoesRealizadas + delta).clamp(1, 100);
     setState(() {
-      _seriesPorExercicio[_exercicioIndexAtual]![serieIdx] =
+      _seriesPorExercicio[ex]![serieIdx] =
           SerieRegistroModel(
         numero: serie.numero,
         cargaRealKg: serie.cargaRealKg,
@@ -1048,6 +1091,13 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
       );
     });
     _salvarRascunho();
+  }
+
+  bool _podeConcluirSerie(int serieIdx, {int? exIdx}) {
+    final ex = exIdx ?? _exercicioIndexAtual;
+    if (!_biset.parceiros.containsKey(_exercicioIndexAtual)) return true;
+    final proxima = _biset.proximaSerie(_exercicioIndexAtual, _seriesPorExercicio);
+    return proxima?.indice == ex && proxima?.serie == serieIdx;
   }
 
   Future<void> _confirmarFinalizarTreino() async {

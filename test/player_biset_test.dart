@@ -45,6 +45,9 @@ void main() {
     await t.pumpWidget(app());
     await aguardar();
     expect(titulo('Primeiro exercício'), findsOneWidget);
+    // O par aparece embaixo do exercicio atual, com as proprias series (2 + 2).
+    expect(find.text('Par: Segundo exercício'), findsOneWidget);
+    expect(find.byIcon(Icons.check), findsNWidgets(4));
     await t.tap(find.byIcon(Icons.check).first);
     await aguardar();
     expect(titulo('Segundo exercício'), findsOneWidget);
@@ -64,7 +67,8 @@ void main() {
     await t.pumpWidget(app());
     await aguardar();
     expect(titulo('Primeiro exercício'), findsOneWidget);
-    await t.tap(find.byIcon(Icons.check).last);
+    // Ordem na tela: A1, A2 (exercicio atual) e depois B1, B2 (par, embaixo).
+    await t.tap(find.byIcon(Icons.check).at(1));
     await aguardar();
     expect(titulo('Segundo exercício'), findsOneWidget);
     expect(t.takeException(), isNull);
