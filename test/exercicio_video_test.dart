@@ -83,7 +83,9 @@ void main() {
       (tester) async {
     await tester
         .pumpWidget(const MaterialApp(home: BibliotecaExerciciosScreen()));
-    await tester.pumpAndSettle();
+    // Carga real (assets e preferencias) precisa de tempo de verdade antes dos frames.
+    await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 300)));
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.tap(find.byTooltip('Novo Exercício'));
     await tester.pumpAndSettle();
     Finder campo(String label) => find.byWidgetPredicate((widget) =>
