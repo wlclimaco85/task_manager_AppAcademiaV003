@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:task_manager_flutter/data/models/auth_utility.dart';
 import 'package:task_manager_flutter/data/models/fitness/exercicio_model.dart';
@@ -17,9 +18,16 @@ class ExercicioContaSync {
   static bool _ehPersonalizado(Map<String, dynamic> item) =>
       (item['dados'] as Map)['isCustom'] == true || item['origem'] == 'CUSTOM';
 
+  /// Substituiveis em teste (cliente HTTP e estado de login).
+  @visibleForTesting
+  static http.Client cliente = http.Client();
+  @visibleForTesting
+  static bool? autenticadoForcado;
+
   static bool get autenticado =>
-      AuthUtility.userInfo.login?.id != null &&
-      (AuthUtility.userInfo.token?.isNotEmpty ?? false);
+      autenticadoForcado ??
+      (AuthUtility.userInfo.login?.id != null &&
+          (AuthUtility.userInfo.token?.isNotEmpty ?? false));
 
   /// Envia uma personalização ao servidor. A cópia local já foi gravada pelo
   /// repositório; falhas viram aviso no log e não interrompem a tela.
@@ -29,7 +37,7 @@ class ExercicioContaSync {
     final corpo = {...exercicio, 'id': id, 'origem': origem};
     try {
       final headers = {...TenantContext.headers, 'Content-Type': 'application/json'};
-      final resposta = await http
+      final resposta = await cliente
           .put(Uri.parse('${ApiLinks.exerciciosUsuario}/$id'), headers: headers, body: jsonEncode(corpo))
           .timeout(const Duration(seconds: 10));
       if (resposta.statusCode == 200) return true;
@@ -45,7 +53,7 @@ class ExercicioContaSync {
     if (!autenticado) return false;
     try {
       final headers = Map<String, String>.from(TenantContext.headers);
-      final resposta = await http
+      final resposta = await cliente
           .delete(Uri.parse('${ApiLinks.exerciciosUsuario}/$id'), headers: headers)
           .timeout(const Duration(seconds: 10));
       if (resposta.statusCode == 200) return true;
@@ -61,7 +69,7 @@ class ExercicioContaSync {
   static Future<Map<String, List<Map<String, dynamic>>>?> carregar() async {
     if (!autenticado) return null;
     try {
-      final resposta = await http
+      final resposta = await cliente
           .get(Uri.parse(ApiLinks.exerciciosUsuario), headers: TenantContext.headers)
           .timeout(const Duration(seconds: 10));
       if (resposta.statusCode != 200) {

@@ -69,7 +69,9 @@ class FitnessOfflineRepository {
 
   /// Volta a esta conta o cadastro geral (ou o do personal). A exclusao fica na
   /// fila ate o servidor confirmar. Retorna false se ainda nao foi confirmada.
-  Future<bool> restaurarExercicio(String id) => _emSequencia(() async {
+  Future<bool> restaurarExercicio(String id) {
+    if (!ExercicioContaSync.autenticado) return Future.value(false);
+    return _emSequencia(() async {
         final prefs = await SharedPreferences.getInstance();
         final chavePend = FitnessContaSync.chave(_kPendentesKey);
         final pendentes = _lerMapaLocal(prefs.getString(chavePend));
@@ -90,6 +92,7 @@ class FitnessOfflineRepository {
         }
         return confirmado;
       });
+  }
 
   /// Catalogo geral + personalizacoes. Pendencias ainda nao confirmadas valem por
   /// cima do servidor; exclusoes pendentes escondem a personalizacao.
@@ -97,34 +100,40 @@ class FitnessOfflineRepository {
     final prefs = await SharedPreferences.getInstance();
     await _enviarPendentes(prefs);
 
-    final chaveCache = FitnessContaSync.chave(_kCacheKey);
     final remoto = await ExercicioContaSync.carregar();
-    Map<String, dynamic>? snap;
-    if (remoto != null) {
-      snap = {'meus': remoto['meus'], 'doPersonal': remoto['doPersonal']};
-      await prefs.setString(chaveCache, jsonEncode(snap));
-    } else {
-      snap = _lerSnapshot(prefs.getString(chaveCache));
-    }
-
-    final porId = <String, Map<String, dynamic>>{};
-    for (final m in _listaDe(snap?['meus'])) {
-      porId[m['exercicioId'].toString()] = m;
-    }
-    final pendentes = _lerMapaLocal(prefs.getString(FitnessContaSync.chave(_kPendentesKey)));
-    for (final entrada in pendentes.entries) {
-      if (entrada.value['origem'] == 'EXCLUIR') {
-        porId.remove(entrada.key);
+    // Snapshot e leitura da fila no mesmo bloco serializado, para nao misturar com restauracoes.
+    return _emSequencia(() async {
+      final chaveCache = FitnessContaSync.chave(_kCacheKey);
+      Map<String, dynamic>? snap;
+      if (remoto != null) {
+        snap = {'meus': remoto['meus'], 'doPersonal': remoto['doPersonal']};
+        await prefs.setString(chaveCache, jsonEncode(snap));
       } else {
-        porId[entrada.key] = entrada.value;
+        snap = _lerSnapshot(prefs.getString(chaveCache));
       }
-    }
-    return ExercicioContaSync.aplicar(catalogo, [..._listaDe(snap?['doPersonal']), ...porId.values]);
+
+      final porId = <String, Map<String, dynamic>>{};
+      for (final m in _listaDe(snap?['meus'])) {
+        porId[m['exercicioId'].toString()] = m;
+      }
+      final pendentes = _lerMapaLocal(prefs.getString(FitnessContaSync.chave(_kPendentesKey)));
+      for (final entrada in pendentes.entries) {
+        if (entrada.value['origem'] == 'EXCLUIR') {
+          porId.remove(entrada.key);
+        } else {
+          porId[entrada.key] = entrada.value;
+        }
+      }
+      return ExercicioContaSync.aplicar(catalogo, [..._listaDe(snap?['doPersonal']), ...porId.values]);
+    });
   }
 
   Future<void> _salvarPersonalizacao(String id,
-      {required String origem, required Map<String, dynamic> dados}) =>
-      _emSequencia(() async {
+      {required String origem, required Map<String, dynamic> dados}) {
+    if (!ExercicioContaSync.autenticado) {
+      throw StateError('Entre na conta para personalizar exercícios.');
+    }
+    return _emSequencia(() async {
         final prefs = await SharedPreferences.getInstance();
         final chavePend = FitnessContaSync.chave(_kPendentesKey);
         final pendentes = _lerMapaLocal(prefs.getString(chavePend));
@@ -143,6 +152,7 @@ class FitnessOfflineRepository {
           await prefs.setString(chavePend, jsonEncode(pendentes));
         }
       });
+  }
 
   /// Reenvia o que ficou pendente (edicoes e exclusoes). Cada item sai da fila
   /// so depois da confirmacao do servidor.
