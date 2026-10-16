@@ -116,8 +116,22 @@ void main() {
       expect(alimentos.any((a) => a.nome.contains('Frango')), isTrue);
       expect(alimentos.any((a) => a.nome.contains('Arroz')), isTrue);
 
+      // Dieta de teste propria: a lista de dietas nao traz mais demonstracao.
+      await repo.salvarDieta(DietaProtocoloModel(
+        id: 'dieta_persistencia',
+        alunoId: 'aluno_1',
+        titulo: 'Manutencao teste',
+        objetivo: 'manutencao',
+        caloriasMeta: 2000.0,
+        proteinasMeta: 150.0,
+        carboidratosMeta: 200.0,
+        gordurasMeta: 60.0,
+        dataInicio: '2026-10-01',
+        refeicoes: const [],
+      ));
+
       final dietas = await repo.getDietas();
-      expect(dietas.isNotEmpty, isTrue);
+      expect(dietas.any((d) => d.id == 'dieta_persistencia'), isTrue);
     });
   });
 
