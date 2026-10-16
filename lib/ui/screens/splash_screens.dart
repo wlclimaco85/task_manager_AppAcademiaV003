@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/models/auth_utility.dart';
+import 'package:task_manager_flutter/data/services/sessao_build_local.dart';
 import 'package:task_manager_flutter/ui/screens/auth_screens/login_screen.dart';
 import 'package:task_manager_flutter/ui/screens/bottom_navbar_screen.dart';
 import 'package:task_manager_flutter/ui/widgets/screen_background.dart';
@@ -22,6 +23,8 @@ class _SplashScreenState extends State<SplashScreen> {
   void navigateToLogin() {
     Future.delayed(const Duration(seconds: 3)).then((_) async {
       if (mounted) {
+        await prepararSessaoBuildLocal();
+        if (!mounted) return;
         final bool loggedIn = await AuthUtility.isUserLoggedIn();
         if (!mounted) return;
         Navigator.pushAndRemoveUntil(
