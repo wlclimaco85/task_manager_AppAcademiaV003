@@ -303,6 +303,26 @@ class _ApresentacaoEuAtletaState extends State<ApresentacaoEuAtleta> {
                 'Também para personal',
                 'Vincule seus alunos, monte fichas e acompanhe o histórico de quem treina com você.'
               ),
+              (
+                Icons.monitor_heart_outlined,
+                'Avaliação física',
+                'Registre avaliações físicas e acompanhe a evolução do seu corpo ao longo do tempo.'
+              ),
+              (
+                Icons.person_search_outlined,
+                'Contrate um personal',
+                'Encontre personais disponíveis, veja onde atendem e contrate direto pelo app.'
+              ),
+              (
+                Icons.ondemand_video_outlined,
+                'Vídeos nos exercícios',
+                'O personal vincula vídeos do YouTube ou Google Drive às explicações de cada exercício.'
+              ),
+              (
+                Icons.medication_outlined,
+                'Cadastro de suplementos',
+                'Cadastre seus suplementos e acompanhe a sua rotina de uso.'
+              ),
             ])
               SizedBox(
                   width: itemLargura,
