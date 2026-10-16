@@ -14,6 +14,7 @@ class ItemTreinoModel {
   final String tecnica; // Normal, Bi-set, Drop-set, Rest-pause, Pirâmide
   final String? observacoes;
   final List<String> exerciciosAlternativos;
+  final ItemTreinoModel? exercicioBiset;
 
   const ItemTreinoModel({
     required this.id,
@@ -28,6 +29,7 @@ class ItemTreinoModel {
     this.tecnica = 'Normal',
     this.observacoes,
     this.exerciciosAlternativos = const [],
+    this.exercicioBiset,
   });
 
   Map<String, dynamic> toMap() {
@@ -44,6 +46,7 @@ class ItemTreinoModel {
       'tecnica': tecnica,
       'observacoes': observacoes,
       'exerciciosAlternativos': exerciciosAlternativos,
+      if (exercicioBiset != null) 'exercicioBiset': exercicioBiset!.toMap(),
     };
   }
 
@@ -62,6 +65,9 @@ class ItemTreinoModel {
       observacoes: map['observacoes']?.toString(),
       exerciciosAlternativos: (map['exerciciosAlternativos'] as List?)
           ?.whereType<String>().take(2).toList() ?? const [],
+      exercicioBiset: map['exercicioBiset'] is Map
+          ? ItemTreinoModel.fromMap(Map<String, dynamic>.from(map['exercicioBiset']))
+          : null,
     );
   }
 }

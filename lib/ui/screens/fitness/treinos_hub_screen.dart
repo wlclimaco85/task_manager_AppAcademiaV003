@@ -689,6 +689,12 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                                     ),
                                   ),
                                 ],
+                                if (ex.exercicioBiset != null)
+                                  Text('Biset com ${ex.exercicioBiset!.exercicioNome} • '
+                                    '${ex.exercicioBiset!.repeticoes} reps • '
+                                    '${ex.exercicioBiset!.cargaSugeridaKg} kg',
+                                    style: const TextStyle(color: GridColors.primaryDark,
+                                      fontWeight: FontWeight.w600)),
                                 if (ex.exerciciosAlternativos.isNotEmpty)
                                   Text('Máquina ocupada? ${ex.exerciciosAlternativos.join(' ou ')}',
                                     style: const TextStyle(color: GridColors.textSecondary)),

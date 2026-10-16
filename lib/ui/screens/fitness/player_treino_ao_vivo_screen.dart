@@ -1,5 +1,6 @@
 import 'package:task_manager_flutter/ui/widgets/midias_sessao_treino.dart';
 import 'dart:async';
+import 'package:task_manager_flutter/data/models/fitness/execucao_biset_treino.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/services/fitness_conta_sync.dart';
@@ -38,8 +39,10 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
   final _repository = FitnessOfflineRepository();
   final _pushService = FitnessPushNotificationService();
   DateTime _inicioSessao = DateTime.now();
+  late final ExecucaoBisetTreino _biset =
+      ExecucaoBisetTreino(widget.divisao.exercicios);
   late final ExecucaoAlternativasTreino _execucao =
-      ExecucaoAlternativasTreino(widget.divisao.exercicios);
+      ExecucaoAlternativasTreino(_biset.exercicios);
   late final String _chaveRascunho = FitnessContaSync.chave(
       'fitness_player_${widget.alunoId}_${widget.planoId}_${widget.divisao.id}');
   bool _restaurando = true;
@@ -71,7 +74,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString(_chaveRascunho);
-      if (raw != null && widget.divisao.exercicios.isNotEmpty) {
+      if (raw != null && _biset.exercicios.isNotEmpty) {
         final map = Map<String, dynamic>.from(jsonDecode(raw));
         if (_execucao.restaurar(Map<String, dynamic>.from(map['execucao']))) {
           final salvas = Map<String, dynamic>.from(map['series']);
@@ -81,7 +84,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                     Map<String, dynamic>.from(v))).toList();
           }
           _exercicioIndexAtual = (map['indice'] as int).clamp(
-              0, widget.divisao.exercicios.length - 1);
+              0, _biset.exercicios.length - 1);
           _inicioSessao = DateTime.parse(map['inicio']);
         } else {
           // Preserva o progresso antigo quando a ficha muda durante uma sessão.
@@ -130,7 +133,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
 
   Future<void> _escolherAlternativa() async {
     final indice = _exercicioIndexAtual;
-    final original = widget.divisao.exercicios[indice];
+    final original = _biset.exercicios[indice];
     try {
       final catalogo = await _repository.getExercicios();
       if (!mounted) return;
@@ -207,8 +210,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
   }
 
   void _inicializarSeries() {
-    for (int i = 0; i < widget.divisao.exercicios.length; i++) {
-      final ex = widget.divisao.exercicios[i];
+    for (int i = 0; i < _biset.exercicios.length; i++) {
+      final ex = _biset.exercicios[i];
       _seriesPorExercicio[i] = List.generate(
         ex.series,
         (serieIdx) => SerieRegistroModel(
@@ -223,7 +226,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
   }
 
   Future<void> _carregarSugestaoParaExercicioAtual() async {
-    if (widget.divisao.exercicios.isEmpty) return;
+    if (_biset.exercicios.isEmpty) return;
     final exAtual = _execucao.atual(_exercicioIndexAtual);
     final repsPrescritas =
         int.tryParse(exAtual.repeticoes.split(RegExp(r'\D+')).first) ?? 10;
@@ -329,7 +332,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     final width = MediaQuery.sizeOf(context).width;
     final isDesktopOrWeb = width >= 800;
 
-    if (widget.divisao.exercicios.isEmpty) {
+    if (_biset.exercicios.isEmpty) {
       return Scaffold(
         backgroundColor: const Color(0xFF0F172A),
         appBar: AppBar(
@@ -367,7 +370,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
             ),
             Text(
-              'Exercício ${_exercicioIndexAtual + 1} de ${widget.divisao.exercicios.length}',
+              'Exercício ${_exercicioIndexAtual + 1} de ${_biset.exercicios.length}',
               style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
             ),
           ],
@@ -392,7 +395,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
               // 1. Barra de Progresso Geral do Treino
               LinearProgressIndicator(
                 value: (_exercicioIndexAtual + 1) /
-                    widget.divisao.exercicios.length,
+                    _biset.exercicios.length,
                 backgroundColor: const Color(0xFF1E293B),
                 color: const Color(0xFF10B981),
                 minHeight: 4,
@@ -439,10 +442,16 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                                 color: Color(0xFF94A3B8), fontSize: 13),
                           ),
                           const SizedBox(height: 8),
+                          if (_biset.parceiros.containsKey(_exercicioIndexAtual))
+                            Text(
+                              'BI-SET • ${_biset.segundos.contains(_exercicioIndexAtual) ? "2/2" : "1/2"}\n'
+                              'Par: ${_execucao.atual(_biset.parceiros[_exercicioIndexAtual]!).exercicioNome}\n'
+                              'Faça os dois exercícios em sequência; descanse após o segundo.',
+                              style: const TextStyle(color: Color(0xFF6EE7B7), fontSize: 12)),
                           if (exAtual.observacoes?.isNotEmpty ?? false)
                             Text('Observação: ${exAtual.observacoes}',
                               style: const TextStyle(color: Colors.white)),
-                          if (widget.divisao.exercicios[_exercicioIndexAtual].exerciciosAlternativos.isNotEmpty)
+                          if (_biset.exercicios[_exercicioIndexAtual].exerciciosAlternativos.isNotEmpty)
                             OutlinedButton.icon(
                               onPressed: _escolherAlternativa,
                               icon: const Icon(Icons.swap_horiz, size: 18),
@@ -451,8 +460,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                                 foregroundColor: const Color(0xFF6EE7B7),
                                 side: const BorderSide(color: Color(0xFF10B981))),
                             ),
-                          if (exAtual.exercicioId != widget.divisao.exercicios[_exercicioIndexAtual].exercicioId)
-                            Text('Alternativa de ${widget.divisao.exercicios[_exercicioIndexAtual].exercicioNome}',
+                          if (exAtual.exercicioId != _biset.exercicios[_exercicioIndexAtual].exercicioId)
+                            Text('Alternativa de ${_biset.exercicios[_exercicioIndexAtual].exercicioNome}',
                               style: const TextStyle(fontSize: 12, color: Color(0xFF6EE7B7))),
                           InkWell(
                             onTap: () => _mostrarDemonstracao(exAtual.exercicioId),
@@ -539,8 +548,13 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
                         onPressed: () {
-                          if (_exercicioIndexAtual <
-                              widget.divisao.exercicios.length - 1) {
+                          final proxima = _biset.proximaSerie(_exercicioIndexAtual, _seriesPorExercicio);
+                          if (proxima != null) {
+                            setState(() => _exercicioIndexAtual = proxima.indice);
+                            _salvarRascunho();
+                            _carregarSugestaoParaExercicioAtual();
+                          } else if (_exercicioIndexAtual <
+                              _biset.exercicios.length - 1) {
                             setState(() => _exercicioIndexAtual++);
                             _salvarRascunho();
                             _carregarSugestaoParaExercicioAtual();
@@ -549,10 +563,11 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                           }
                         },
                         child: Text(
-                          _exercicioIndexAtual <
-                                  widget.divisao.exercicios.length - 1
-                              ? 'Próximo Exercício'
-                              : 'Concluir Treino',
+                          _biset.proximaSerie(_exercicioIndexAtual, _seriesPorExercicio) != null
+                              ? 'Continuar bi-set'
+                              : _exercicioIndexAtual < _biset.exercicios.length - 1
+                                  ? 'Próximo Exercício'
+                                  : 'Concluir Treino',
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ),
@@ -800,7 +815,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
               children: [
                 if (concluida)
                   Text((_execucao.realizados[_exercicioIndexAtual]?[serieIdx]
-                      ?? widget.divisao.exercicios[_exercicioIndexAtual]).exercicioNome,
+                      ?? _biset.exercicios[_exercicioIndexAtual]).exercicioNome,
                     maxLines: 2, overflow: TextOverflow.ellipsis,
                     style: const TextStyle(color: Color(0xFF6EE7B7), fontSize: 10)),
                 const Text('Carga (kg)',
@@ -873,7 +888,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
           // Botão de Check da Série
           InkWell(
             borderRadius: BorderRadius.circular(12),
-            onTap: () {
+            onTap: !concluida && !_podeConcluirSerie(serieIdx) ? null : () {
               final novoEstado = !concluida;
               setState(() {
                 _seriesPorExercicio[_exercicioIndexAtual]![serieIdx] =
@@ -888,7 +903,23 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
               _execucao.marcarSerie(_exercicioIndexAtual, serieIdx, novoEstado);
               _salvarRascunho();
               if (novoEstado) {
-                _iniciarCronometroDescanso(descansoPadrao);
+                final indiceConcluido = _exercicioIndexAtual;
+                if (_biset.parceiros.containsKey(indiceConcluido)) {
+                  final proxima = _biset.proximaSerie(indiceConcluido, _seriesPorExercicio);
+                  if (_biset.segundos.contains(indiceConcluido)) {
+                    final primeiro = _biset.parceiros[indiceConcluido]!;
+                    _iniciarCronometroDescanso(_biset.exercicios[primeiro].descansoSegundos);
+                  } else {
+                    _pularDescanso();
+                  }
+                  if (proxima != null) {
+                    setState(() => _exercicioIndexAtual = proxima.indice);
+                    _carregarSugestaoParaExercicioAtual();
+                  }
+                  _salvarRascunho();
+                } else {
+                  _iniciarCronometroDescanso(descansoPadrao);
+                }
               }
             },
             child: Container(
@@ -914,6 +945,12 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
         ],
       ),
     );
+  }
+
+  bool _podeConcluirSerie(int serieIdx) {
+    if (!_biset.parceiros.containsKey(_exercicioIndexAtual)) return true;
+    final proxima = _biset.proximaSerie(_exercicioIndexAtual, _seriesPorExercicio);
+    return proxima?.indice == _exercicioIndexAtual && proxima?.serie == serieIdx;
   }
 
   Widget _buildBarraDescanso() {

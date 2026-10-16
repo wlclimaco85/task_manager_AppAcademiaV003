@@ -34,6 +34,7 @@ class ExecucaoAlternativasTreino {
       tecnica: original.tecnica,
       observacoes: original.observacoes,
       exerciciosAlternativos: original.exerciciosAlternativos,
+      exercicioBiset: original.exercicioBiset,
     );
   }
 

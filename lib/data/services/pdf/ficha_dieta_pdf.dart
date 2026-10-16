@@ -263,6 +263,11 @@ class FichaDietaPdf {
                   style: const pw.TextStyle(fontSize: 8.5, color: _cinza)),
               if (e.exerciciosAlternativos.isNotEmpty)
                 pw.Text('Alt.: ${e.exerciciosAlternativos.join(', ')}', style: const pw.TextStyle(fontSize: 8.5)),
+              if (e.exercicioBiset != null)
+                pw.Text('Bi-set com ${e.exercicioBiset!.exercicioNome}: '
+                  '${e.exercicioBiset!.repeticoes} reps, '
+                  '${carga(e.exercicioBiset!.cargaSugeridaKg)}',
+                  style: pw.TextStyle(fontSize: 8.5, fontWeight: pw.FontWeight.bold)),
               if ((e.observacoes ?? '').isNotEmpty)
                 pw.Text(e.observacoes!, style: pw.TextStyle(fontSize: 8.5, fontStyle: pw.FontStyle.italic)),
               if (video != null)

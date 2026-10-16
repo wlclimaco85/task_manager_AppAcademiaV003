@@ -390,6 +390,13 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
             ),
             if (item.exerciciosAlternativos.isNotEmpty)
               Text('Alternativas: ${item.exerciciosAlternativos.join(' ou ')}'),
+            if (item.exercicioBiset != null)
+              Padding(padding: const EdgeInsets.only(top: 8),
+                child: Text('Biset com ${item.exercicioBiset!.exercicioNome}\n'
+                  '${item.exercicioBiset!.repeticoes} reps • '
+                  '${item.exercicioBiset!.cargaSugeridaKg} kg',
+                  style: const TextStyle(color: GridColors.primaryDark,
+                    fontWeight: FontWeight.w600))),
             const SizedBox(height: 10),
 
             // Controles rápidos: Séries, Repetições, Carga, Descanso
@@ -612,6 +619,11 @@ extension on ItemTreinoModel {
       tecnica: tecnica ?? this.tecnica,
       observacoes: observacoes ?? this.observacoes,
       exerciciosAlternativos: exerciciosAlternativos,
+      exercicioBiset: exercicioBiset == null ? null : ItemTreinoModel.fromMap({
+        ...exercicioBiset!.toMap(),
+        'series': series ?? this.series,
+        'descansoSegundos': descansoSegundos ?? this.descansoSegundos,
+      }),
     );
   }
 }

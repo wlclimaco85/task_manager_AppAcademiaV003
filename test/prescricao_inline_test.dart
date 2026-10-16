@@ -83,7 +83,10 @@ void main() {
     expect(find.text('Rosca Martelo').last, findsOneWidget);
     await tester.tap(find.text('Rosca Martelo').last);
     await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListView).first, const Offset(0, -350));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Adicionar ao treino'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Adicionar ao treino'));
     await tester.pumpAndSettle();
     expect(adicionados.single.exerciciosAlternativos, ['Rosca Martelo']);
