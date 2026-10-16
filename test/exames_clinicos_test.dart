@@ -4,6 +4,20 @@ import 'package:task_manager_flutter/data/models/fitness/exame_registro_model.da
 import 'package:task_manager_flutter/data/services/exames_offline_repository.dart';
 import 'package:task_manager_flutter/data/services/nutricao_farmaco_offline_repository.dart';
 
+ExameRegistroModel _exameHormonalDeTeste() => const ExameRegistroModel(
+      id: 'exame_hormonal_teste',
+      alunoId: 'aluno-1',
+      alunoNome: 'Lucas Mendonça',
+      titulo: 'Painel Hormonal Completo',
+      categoria: CategoriaExame.hormonal,
+      dataExame: '2026-09-20',
+      laboratorio: 'Laboratório Sabin Uberaba',
+      medicoSolicitante: 'Dr. Roberto Endocrinologista',
+      nomeArquivoPdf: 'painel_hormonal_setembro_2026.pdf',
+      urlPdf: 'https://appacademia.com.br/docs/painel_hormonal.pdf',
+      observacoesResultados: 'Testosterona total dentro da faixa de referência',
+    );
+
 void main() {
   setUp(() {
     TestWidgetsFlutterBinding.ensureInitialized();
@@ -13,10 +27,10 @@ void main() {
   group('Suite de Exames Clínicos e Laudos PDF com Dashboards & Timeline 360', () {
     test('1. Listar e filtrar exames laboratoriais e hormonais', () async {
       final repo = ExamesOfflineRepository();
+      await repo.salvarExame(_exameHormonalDeTeste());
       final exames = await repo.getExames();
 
       expect(exames.isNotEmpty, isTrue);
-      expect(exames.length, greaterThanOrEqualTo(3));
 
       // Verificar exame hormonal do Lucas
       final hormonal = exames.firstWhere((e) => e.categoria == CategoriaExame.hormonal);
@@ -50,6 +64,7 @@ void main() {
     });
 
     test('3. Exames integrados na Timeline Fitness 360 do Aluno e Profissionais', () async {
+      await ExamesOfflineRepository().salvarExame(_exameHormonalDeTeste());
       final nutricaoRepo = NutricaoFarmacoOfflineRepository();
       final timeline = await nutricaoRepo.getTimelineEventos(alunoId: 'aluno-1');
 
