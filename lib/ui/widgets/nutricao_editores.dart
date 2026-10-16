@@ -39,7 +39,9 @@ Widget _entrada(TextEditingController c, String label,
 
 class SuplementoEditor extends StatefulWidget {
   final SuplementoProtocoloModel? suplemento;
-  const SuplementoEditor({super.key, this.suplemento});
+  /// Aluno dono do registro quando o personal esta cadastrando para um aluno.
+  final String? alunoId;
+  const SuplementoEditor({super.key, this.suplemento, this.alunoId});
   @override
   State<SuplementoEditor> createState() => _SuplementoEditorState();
 }
@@ -97,6 +99,7 @@ class _SuplementoEditorState extends State<SuplementoEditor> {
           SuplementoProtocoloModel(
               id: s?.id ?? 'sup_${DateTime.now().microsecondsSinceEpoch}',
               alunoId: s?.alunoId ??
+                  widget.alunoId ??
                   AuthUtility.userInfo.login?.id?.toString() ??
                   '',
               nome: _nome.text.trim(),
@@ -209,7 +212,9 @@ class _SuplementoEditorState extends State<SuplementoEditor> {
 class DietaEditor extends StatefulWidget {
   final DietaProtocoloModel? dieta;
   final Future<PlatformFile?> Function()? selecionarArquivoImportacao;
-  const DietaEditor({super.key, this.dieta, this.selecionarArquivoImportacao});
+  /// Aluno dono do registro quando o personal esta cadastrando para um aluno.
+final String? alunoId;
+const DietaEditor({super.key, this.dieta, this.selecionarArquivoImportacao, this.alunoId});
   @override
   State<DietaEditor> createState() => _DietaEditorState();
 }
@@ -351,7 +356,7 @@ class _DietaEditorState extends State<DietaEditor> {
       final dietaASalvar = DietaProtocoloModel(
           id: d?.id ?? 'dieta_${DateTime.now().microsecondsSinceEpoch}',
           alunoId:
-              d?.alunoId ?? AuthUtility.userInfo.login?.id?.toString() ?? '',
+              d?.alunoId ?? widget.alunoId ?? AuthUtility.userInfo.login?.id?.toString() ?? '',
           titulo: _titulo.text.trim(),
           objetivo: d?.objetivo ?? '',
           caloriasMeta: _numero(_metas[0].text) ?? 0,

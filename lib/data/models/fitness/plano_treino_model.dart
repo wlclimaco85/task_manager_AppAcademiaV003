@@ -136,6 +136,30 @@ class PlanoTreinoModel {
     this.isTemplate = false,
   });
 
+  /// Copia este treino para outro aluno (clonar). As divisoes e exercicios sao
+  /// copiados, nao compartilhados: alterar o clone nao mexe no original.
+  PlanoTreinoModel clonarParaAluno({
+    required String novoId,
+    required String alunoId,
+    required String alunoNome,
+    required String dataInicio,
+  }) {
+    final copia = PlanoTreinoModel.fromMap(toMap());
+    return PlanoTreinoModel(
+      id: novoId,
+      alunoId: alunoId,
+      alunoNome: alunoNome,
+      personalId: copia.personalId,
+      titulo: copia.titulo,
+      objetivo: copia.objetivo,
+      dataInicio: dataInicio,
+      dataValidade: null,
+      divisoes: copia.divisoes,
+      ativo: true,
+      isTemplate: false,
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,

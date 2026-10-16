@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/data/models/auth_utility.dart';
+import 'package:task_manager_flutter/data/utils/fitness_access.dart';
 import 'package:task_manager_flutter/ui/widgets/detalhes_sessao_treino.dart';
 import 'package:task_manager_flutter/ui/widgets/midias_sessao_treino.dart';
 import 'package:task_manager_flutter/ui/widgets/imprimir_pdf.dart';
@@ -38,7 +40,11 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
 
   Future<void> _carregarDados() async {
     setState(() => _loading = true);
-    final planos = await _repository.getPlanosTreino();
+    // Personal ve so os treinos dele; os dos alunos ficam nos perfis deles.
+    final planos = await _repository.getPlanosTreino(
+        alunoId: podeGerenciarAlunos(AuthUtility.session.value)
+            ? AuthUtility.userInfo.login?.id?.toString()
+            : null);
     final sessoes = await _repository.getSessoesConcluidas();
     
     // Dispara verificações inteligentes de lembretes e inatividade em background

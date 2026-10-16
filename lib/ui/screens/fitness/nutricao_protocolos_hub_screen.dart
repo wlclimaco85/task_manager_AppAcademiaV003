@@ -8,10 +8,15 @@ import 'package:task_manager_flutter/ui/widgets/imprimir_pdf.dart';
 import 'package:task_manager_flutter/data/models/fitness/nutricao_farmaco_model.dart';
 import 'package:task_manager_flutter/data/services/nutricao_farmaco_offline_repository.dart';
 import 'package:task_manager_flutter/data/services/unidade_medida_catalogo.dart';
+import 'package:task_manager_flutter/data/utils/fitness_access.dart';
 
 /// Central de Nutrição, Farmacologia, Suplementação & Timeline Fitness 360
 class NutricaoProtocolosHubScreen extends StatefulWidget {
-  const NutricaoProtocolosHubScreen({super.key});
+  /// Aluno cujos protocolos o personal esta vendo. Sem valor, mostra os protocolos
+  /// do proprio usuario logado (personal) ou todos (aluno), como antes.
+  final String? alunoId;
+  final String? nomeAluno;
+  const NutricaoProtocolosHubScreen({super.key, this.alunoId, this.nomeAluno});
 
   @override
   State<NutricaoProtocolosHubScreen> createState() =>
@@ -37,11 +42,19 @@ class _NutricaoProtocolosHubScreenState
     _carregarDados();
   }
 
+  /// Dono dos protocolos exibidos: o aluno escolhido, ou o proprio personal.
+  /// Aluno logado nao filtra (ve o que foi lancado para ele).
+  String? get _alunoFiltro =>
+      widget.alunoId ??
+      (podeGerenciarAlunos(AuthUtility.session.value)
+          ? AuthUtility.userInfo.login?.id?.toString()
+          : null);
+
   Future<void> _carregarDados() async {
     setState(() => _loading = true);
-    final dietas = await _repository.getDietas();
-    final medicamentos = await _repository.getMedicamentos();
-    final suplementos = await _repository.getSuplementos();
+    final dietas = await _repository.getDietas(alunoId: _alunoFiltro);
+    final medicamentos = await _repository.getMedicamentos(alunoId: _alunoFiltro);
+    final suplementos = await _repository.getSuplementos(alunoId: _alunoFiltro);
     final timeline = await _repository.getTimelineEventos();
 
     if (mounted) {
@@ -854,7 +867,7 @@ class _NutricaoProtocolosHubScreenState
   // ─────────────────────────────────────────────────────────────────────────────
 
   Future<void> _abrirDialogCriarDieta([DietaProtocoloModel? dieta]) async {
-    final salvo=await showDialog<bool>(context:context,builder:(_)=>DietaEditor(dieta:dieta));
+    final salvo=await showDialog<bool>(context:context,builder:(_)=>DietaEditor(dieta:dieta,alunoId:_alunoFiltro));
     if(salvo==true && mounted) {
       await _carregarDados();
     }
@@ -1013,7 +1026,7 @@ class _NutricaoProtocolosHubScreenState
                     }
                     final salvo = MedicamentoProtocoloModel(
                       id: med?.id ?? 'med_${DateTime.now().millisecondsSinceEpoch}',
-                      alunoId: med?.alunoId ?? 'aluno_1',
+                      alunoId: med?.alunoId ?? _alunoFiltro ?? AuthUtility.userInfo.login?.id?.toString() ?? '',
                       nomeComposto: nome,
                       dosagem: '${_formatarQuantidade(quantidade!)} $unidade',
                       doseQuantidade: quantidade,
@@ -1069,7 +1082,7 @@ class _NutricaoProtocolosHubScreenState
   }
 
   Future<void> _abrirDialogCriarSuplemento([SuplementoProtocoloModel? suplemento]) async {
-    final salvo=await showDialog<bool>(context:context,builder:(_)=>SuplementoEditor(suplemento:suplemento));
+    final salvo=await showDialog<bool>(context:context,builder:(_)=>SuplementoEditor(suplemento:suplemento,alunoId:_alunoFiltro));
     if(salvo==true && mounted) {
       await _carregarDados();
     }

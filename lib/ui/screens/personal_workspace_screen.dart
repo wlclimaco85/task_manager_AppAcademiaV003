@@ -9,6 +9,8 @@ import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
 import 'package:task_manager_flutter/data/services/personal_gestao_offline_repository.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/montador_treino_screen.dart';
+import 'package:task_manager_flutter/data/services/avaliacao_agendada_service.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/nutricao_protocolos_hub_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/avaliacao_fisica_pro_screen.dart';
 
 /// Workspace Completo do Personal Trainer (MFIT Pro Standard)
@@ -33,6 +35,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
 
   bool _loading = true;
   List<PersonalAlunoGestaoModel> _alunos = [];
+Map<String, DateTime> _avaliacoesAgendadas = {};
   List<PersonalAgendamentoAulaModel> _agendamentos = [];
 
   @override
@@ -52,13 +55,45 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
     setState(() => _loading = true);
     final alunos = await _repo.getAlunos();
     final agendamentos = await _repo.getAgendamentos();
+    final avaliacoes = await AvaliacaoAgendadaService.listar();
     if (mounted) {
       setState(() {
         _alunos = alunos;
         _agendamentos = agendamentos;
+        _avaliacoesAgendadas = avaliacoes;
         _loading = false;
       });
     }
+  }
+
+  /// Agenda a proxima avaliacao fisica do aluno (com data e alerta no card).
+  Future<void> _agendarAvaliacao(PersonalAlunoGestaoModel aluno) async {
+    final hoje = DateTime.now();
+    final data = await showDatePicker(
+      context: context,
+      initialDate: _avaliacoesAgendadas[aluno.id] ?? hoje,
+      firstDate: DateTime(hoje.year, hoje.month, hoje.day),
+      lastDate: hoje.add(const Duration(days: 730)),
+      helpText: 'Data da nova avaliação de ${aluno.nome}',
+    );
+    if (data == null || !mounted) return;
+    await AvaliacaoAgendadaService.agendar(aluno.id, data);
+    if (!mounted) return;
+    _snack('Avaliação de ${aluno.nome} agendada para ${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}.');
+    await _carregarDados();
+  }
+
+  /// Texto e cor do alerta de avaliacao agendada (null = sem alerta).
+  ({String texto, Color cor})? _alertaAvaliacao(String alunoId) {
+    final data = _avaliacoesAgendadas[alunoId];
+    if (data == null) return null;
+    final situacao = AvaliacaoAgendadaService.situacao(data, DateTime.now());
+    final dataBr = '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}';
+    return switch (situacao) {
+      SituacaoAvaliacao.vencida => (texto: 'Avaliação vencida ($dataBr)', cor: GridColors.error),
+      SituacaoAvaliacao.proxima => (texto: 'Avaliação agendada: $dataBr', cor: GridColors.secondaryDark),
+      SituacaoAvaliacao.distante => (texto: 'Avaliação agendada: $dataBr', cor: GridColors.textSecondary),
+    };
   }
 
   @override
@@ -237,6 +272,17 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                         fontSize: 13,
                       ),
                     ),
+                    if (_alertaAvaliacao(aluno.id) case final alerta?)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Row(children: [
+                          Icon(Icons.event_available, size: 14, color: alerta.cor),
+                          const SizedBox(width: 4),
+                          Text(alerta.texto,
+                              style: TextStyle(
+                                  color: alerta.cor, fontSize: 12, fontWeight: FontWeight.w700)),
+                        ]),
+                      ),
                   ],
                 ),
               ),
@@ -250,6 +296,18 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                     _modalDefinirValidadeTreino(context, aluno);
                   } else if (val == 'montar_treino') {
                     _montarTreino(aluno);
+                  } else if (val == 'clonar_treino') {
+                    _clonarTreinoDeOutroAluno(aluno);
+                  } else if (val == 'agendar_avaliacao') {
+                    _agendarAvaliacao(aluno);
+                  } else if (val == 'dieta_suplementos') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => NutricaoProtocolosHubScreen(
+                            alunoId: aluno.id, nomeAluno: aluno.nome),
+                      ),
+                    );
                   } else if (val == 'editar_aluno') {
                     _modalNovoAluno(context, aluno:aluno);
                   } else if (val == 'avaliacao') {
@@ -279,13 +337,28 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                         style: TextStyle(color: GridColors.textPrimary)),
                   ),
                   const PopupMenuItem(
+                    value: 'dieta_suplementos',
+                    child: Text('Ver dieta e suplementação',
+                        style: TextStyle(color: GridColors.textPrimary)),
+                  ),
+                  const PopupMenuItem(
+                    value: 'clonar_treino',
+                    child: Text('Clonar treino de outro aluno',
+                        style: TextStyle(color: GridColors.textPrimary)),
+                  ),
+                  const PopupMenuItem(
                     value: 'alterar_validade',
                     child: Text('Definir Validade da Ficha',
                         style: TextStyle(color: GridColors.textPrimary)),
                   ),
                   const PopupMenuItem(
+                    value: 'agendar_avaliacao',
+                    child: Text('Agendar nova avaliação física',
+                        style: TextStyle(color: GridColors.textPrimary)),
+                  ),
+                  const PopupMenuItem(
                     value: 'avaliacao',
-                    child: Text('Nova Avaliação Física',
+                    child: Text('Abrir avaliação física',
                         style: TextStyle(color: GridColors.textPrimary)),
                   ),
                 ],
@@ -1789,6 +1862,60 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         backgroundColor:CustomColors.primaryGreen,content:Text('Aluno salvo. Alterações offline ficam pendentes para sincronizar.',style:TextStyle(color:GridColors.textOnPrimary))));
     }
+  }
+
+  /// Clona o treino ativo de outro aluno para [destino]. O original nao muda.
+  Future<void> _clonarTreinoDeOutroAluno(PersonalAlunoGestaoModel destino) async {
+    final outros = _alunos.where((a) => a.id != destino.id).toList();
+    if (outros.isEmpty) {
+      _snack('Não há outro aluno para copiar o treino.');
+      return;
+    }
+    final origem = await showDialog<PersonalAlunoGestaoModel>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        backgroundColor: GridColors.card,
+        title: const Text('Copiar treino de qual aluno?',
+            style: TextStyle(color: GridColors.textPrimary)),
+        children: [
+          for (final a in outros)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, a),
+              child: Text(a.nome, style: const TextStyle(color: GridColors.textPrimary)),
+            ),
+        ],
+      ),
+    );
+    if (origem == null || !mounted) return;
+
+    final planos = await FitnessOfflineRepository().getPlanosTreino(alunoId: origem.id);
+    final ativo = planos.where((p) => !p.isTemplate && p.ativo).firstOrNull;
+    if (ativo == null) {
+      _snack('${origem.nome} não tem treino ativo para copiar.');
+      return;
+    }
+
+    final hoje = DateTime.now().toIso8601String().split('T').first;
+    final clone = ativo.clonarParaAluno(
+      novoId: 'plano_${DateTime.now().millisecondsSinceEpoch}',
+      alunoId: destino.id,
+      alunoNome: destino.nome,
+      dataInicio: hoje,
+    );
+    final repo = FitnessOfflineRepository();
+    await repo.salvarPlanoTreino(clone);
+    await PersonalGestaoOfflineRepository().publicarTreino(destino.id, clone);
+    await _repo.salvarAluno(destino.copyWith(treinoAtualNome: clone.titulo, dataInicioTreino: hoje));
+    if (!mounted) return;
+    _snack('Treino de ${origem.nome} copiado para ${destino.nome}.');
+    await _carregarDados();
+  }
+
+  void _snack(String mensagem) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      backgroundColor: CustomColors.primaryGreen,
+      content: Text(mensagem, style: const TextStyle(color: GridColors.textOnPrimary)),
+    ));
   }
 
   Future<void> _montarTreino(PersonalAlunoGestaoModel aluno) async {
