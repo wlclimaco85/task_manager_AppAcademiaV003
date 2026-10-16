@@ -65,6 +65,36 @@ void main() {
     expect(find.textContaining('Retomamos seu cadastro'), findsOneWidget);
   });
 
+  testWidgets('plano retoma modalidade e permite academia opcional', (t) async {
+    t.view.physicalSize = const Size(900, 1600);
+    t.view.devicePixelRatio = 1;
+    addTearDown(t.view.reset);
+    SharedPreferences.setMockInitialValues({
+      'rascunho_cadastro_personal_v1': jsonEncode({
+        'passo': 3, 'nome': 'Ana', 'valorAvulso': 'R\$ 100,00',
+        'planos': [{'nome': 'Online', 'aulas': 10, 'valor': 'R\$ 500,00',
+          'modalidade': 'online', 'academiaId': null}],
+      }),
+    });
+    await http.runWithClient(() async {
+      await t.pumpWidget(const MaterialApp(home: WizardPersonalScreen()));
+      await t.pumpAndSettle();
+      expect(find.text('Modalidade do atendimento'), findsOneWidget);
+      expect(find.text('Academia do plano'), findsNothing);
+      await t.tap(find.widgetWithText(DropdownButtonFormField<String>, 'Modalidade do atendimento'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('Em academia').last);
+      await t.pumpAndSettle();
+      expect(find.text('Sem academia definida'), findsOneWidget);
+      await t.tap(find.widgetWithText(DropdownButtonFormField<int>, 'Academia do plano'));
+      await t.pumpAndSettle();
+      expect(find.text('SmartFit - Shopping Uberaba'), findsOneWidget);
+      await t.tap(find.text('SmartFit - Shopping Uberaba'));
+      await t.pumpAndSettle();
+      expect(t.takeException(), isNull);
+    }, () => cliente);
+  });
+
   testWidgets('cadastro completo envia CREF, WhatsApp, valor avulso, horarios e planos', (t) async {
     t.view.physicalSize = const Size(1080, 2400);
     t.view.devicePixelRatio = 2.5;
@@ -122,6 +152,7 @@ void main() {
       await t.enterText(find.byKey(const Key('campo_valor_avulso')), '7000');
       await t.tap(find.text('Mensal 2x/semana'));
       await t.pumpAndSettle();
+      await t.ensureVisible(find.widgetWithText(TextFormField, 'Valor do plano por mês *'));
       await preencher(t, 'Valor do plano por mês *', '25000');
       expect(find.text(r'≈ R$ 31,25 por aula'), findsOneWidget);
       await continuar(t);
@@ -166,7 +197,7 @@ void main() {
       }
     ]);
     expect(enviado!['planos'], [
-      {'nome': 'Mensal 2x/semana', 'descricao': '', 'valor': 250.0, 'qtdAula': 8}
+      {'nome': 'Mensal 2x/semana', 'descricao': '', 'valor': 250.0, 'qtdAula': 8, 'modalidade': 'academia', 'academiaId': null}
     ]);
   });
 }

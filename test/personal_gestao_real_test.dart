@@ -29,6 +29,53 @@ void main() {
     expect(aluno.statusMensalidade, StatusMensalidadeAluno.pendente);
     expect(aluno.feedbacks, isEmpty);
   });
+  test('plano conserva quantidade mensal sem converter para semana', () {
+    final a = PersonalAlunoGestaoModel.fromMap({
+      'id': 'a', 'nome': 'Ana', 'tipoCobranca': 'plano',
+      'aulasPlanoMes': 10, 'frequenciaContratada': 0,
+    });
+    expect(a.resumoAulasContratadas, '10 aulas/mês');
+    expect(a.copyWith(nome: 'Ana A').toMap()['aulasPlanoMes'], 10);
+    expect(a.frequenciaContratada, 0);
+  });
+  testWidgets('respostas de vínculo têm contraste e busca aceita e-mail', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: PersonalAlunoSheet())));
+    await tester.pumpAndSettle();
+    final chip = tester.widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Sim, buscar e vincular'));
+    expect(chip.labelStyle?.color, isNot(Colors.white));
+    await tester.tap(find.text('Sim, buscar e vincular'));
+    await tester.pumpAndSettle();
+    expect(find.text('Nome, CPF, telefone ou e-mail'), findsOneWidget);
+  });
+  testWidgets('plano selecionado usa quantidade mensal sem exigir frequência semanal', (tester) async {
+    tester.view.physicalSize = const Size(900, 1500);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    AuthUtility.userInfo = LoginModel(token: 'personal', login: Login(id: 901));
+    await http.runWithClient(() async {
+      await tester.pumpWidget(const MaterialApp(home: Scaffold(body: PersonalAlunoSheet())));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Não, cadastrar aluno'));
+      await tester.pumpAndSettle();
+      expect(find.text('E-mail (opcional)'), findsOneWidget);
+      await tester.tap(find.text('Valor mensal à parte'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Plano cadastrado').last);
+      await tester.pumpAndSettle();
+      final plano = find.widgetWithText(DropdownButtonFormField<String>, 'Plano');
+      await tester.tap(plano);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Pacote mensal').last);
+      await tester.pumpAndSettle();
+      expect(find.text('10 aulas por mês incluídas no plano.'), findsOneWidget);
+      expect(find.text('Frequência contratada (aulas por semana)'), findsNothing);
+      expect(tester.takeException(), isNull);
+    }, () => MockClient((r) async => http.Response(jsonEncode({
+      'data': r.url.path.endsWith('/planos') ? [
+        {'id': 1, 'nome': 'Pacote mensal', 'valor': 500, 'qtdAula': 10}
+      ] : [],
+    }), 200)));
+  });
   test('contrato offline persiste, sincroniza e nao mistura contas', () async {
     AuthUtility.userInfo =
         LoginModel(token: 'personal_a', login: Login(id: 901));

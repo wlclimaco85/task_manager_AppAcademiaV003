@@ -361,7 +361,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
           Row(
             children: [
               Expanded(child:InkWell(onTap:()=>_modalNovoAluno(context,aluno:aluno),
-                child:Column(children:[Text('${aluno.frequenciaContratada}x/sem',style:const TextStyle(color:GridColors.secondaryDark,fontWeight:FontWeight.bold)),
+                child:Column(children:[Text(aluno.resumoAulasContratadas,style:const TextStyle(color:GridColors.secondaryDark,fontWeight:FontWeight.bold)),
                   const Text('Contratada • editar',style:TextStyle(color:GridColors.textSecondary,fontSize:11))]))),
               const SizedBox(width: 8),
               _buildMiniMetrica(

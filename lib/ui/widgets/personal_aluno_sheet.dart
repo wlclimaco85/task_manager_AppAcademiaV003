@@ -30,6 +30,11 @@ class _PersonalAlunoSheetState extends State<PersonalAlunoSheet> {
   List<Map<String, dynamic>> _resultados = [];
   List<Map<String, dynamic>> _planos = [];
 
+  Map<String, dynamic>? get _planoSelecionado =>
+      _planos.where((p) => p['id'].toString() == _plano).firstOrNull;
+  int get _aulasPlanoMes =>
+      (_planoSelecionado?['qtdAula'] as num?)?.toInt() ?? 0;
+
   @override
   void initState() {
     super.initState();
@@ -134,7 +139,10 @@ class _PersonalAlunoSheetState extends State<PersonalAlunoSheet> {
         planoId: _tipo == 'plano' ? _plano : '',
         planoNome: _tipo == 'plano' ? (plano?['nome']?.toString()) : '',
         valorMensalidade: double.parse(_valor.text.trim().replaceAll(',', '.')),
-        frequenciaContratada: int.parse(_frequencia.text),
+        frequenciaContratada: _tipo == 'plano' && _aulasPlanoMes > 0
+            ? (widget.aluno?.frequenciaContratada ?? 0)
+            : int.parse(_frequencia.text),
+        aulasPlanoMes: _tipo == 'plano' ? _aulasPlanoMes : 0,
         diaVencimento: int.parse(_vencimento.text),
         mesReferencia: widget.aluno?.mesReferencia.isNotEmpty == true
             ? base.mesReferencia
@@ -179,8 +187,8 @@ class _PersonalAlunoSheetState extends State<PersonalAlunoSheet> {
     final edicao = widget.aluno != null;
     return Theme(
         data: Theme.of(context).copyWith(
-            brightness: Brightness.dark,
-            colorScheme: const ColorScheme.dark(
+            brightness: Brightness.light,
+            colorScheme: const ColorScheme.light(
                 primary: CustomColors.primaryGreen,
                 surface: GridColors.card)),
         child: SafeArea(
@@ -208,6 +216,10 @@ class _PersonalAlunoSheetState extends State<PersonalAlunoSheet> {
                             Wrap(spacing: 12, children: [
                               for (final tem in [true, false])
                                 ChoiceChip(
+                                    labelStyle: const TextStyle(color: GridColors.textPrimary),
+                                    backgroundColor: GridColors.inputBackground,
+                                    selectedColor: CustomColors.primaryGreen.withValues(alpha: 0.15),
+                                    checkmarkColor: CustomColors.primaryGreen,
                                     label: Text(tem
                                         ? 'Sim, buscar e vincular'
                                         : 'Não, cadastrar aluno'),
@@ -222,7 +234,7 @@ class _PersonalAlunoSheetState extends State<PersonalAlunoSheet> {
                             const SizedBox(height: 12),
                           ],
                           if (!edicao && _temConta == true) ...[
-                            _campo(_busca, 'Nome, CPF ou telefone',
+                            _campo(_busca, 'Nome, CPF, telefone ou e-mail',
                                 obrigatorio: false),
                             OutlinedButton.icon(
                                 onPressed: _ocupado ? null : _buscar,
@@ -234,7 +246,7 @@ class _PersonalAlunoSheetState extends State<PersonalAlunoSheet> {
                                       style:
                                           const TextStyle(color: GridColors.textPrimary)),
                                   subtitle: Text(
-                                      r['telefone']?.toString() ?? '',
+                                      [r['telefone'], r['email']].where((v) => v != null && v.toString().isNotEmpty).join(' • '),
                                       style: const TextStyle(
                                           color: GridColors.textSecondary)),
                                   trailing: Icon(
@@ -315,6 +327,13 @@ class _PersonalAlunoSheetState extends State<PersonalAlunoSheet> {
                                   ? 'Informe um valor válido.'
                                   : null;
                             }),
+                            if (_tipo == 'plano' && _aulasPlanoMes > 0)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: Text('$_aulasPlanoMes aulas por mês incluídas no plano.',
+                                    style: const TextStyle(color: GridColors.textPrimary)),
+                              )
+                            else
                             _campo(_frequencia,
                                 'Frequência contratada (aulas por semana)',
                                 numero: true, validar: (v) {
