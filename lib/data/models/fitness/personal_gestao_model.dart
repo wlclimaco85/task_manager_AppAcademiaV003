@@ -78,6 +78,7 @@ class PersonalAlunoGestaoModel {
   final String? planoId;
   final String? planoNome;
   final int frequenciaContratada;
+  final int aulasPlanoMes;
   final String? loginId;
   final double valorMensalidade;
   final int diaVencimento; // ex: dia 10
@@ -108,12 +109,17 @@ class PersonalAlunoGestaoModel {
     this.planoNome,
     this.loginId,
     this.frequenciaContratada = 0,
+    this.aulasPlanoMes = 0,
     this.valorMensalidade = 0.0,
     this.diaVencimento = 10,
     this.statusMensalidade = StatusMensalidadeAluno.pendente,
     this.dataUltimoPagamento,
     this.mesReferencia = '',
   });
+
+  String get resumoAulasContratadas => tipoCobranca == 'plano' && aulasPlanoMes > 0
+      ? '$aulasPlanoMes aulas/mês'
+      : '${frequenciaContratada}x/sem';
 
   /// Retorna quantos dias faltam para a ficha de treino vencer (negativo se já venceu)
   int get diasParaVencerTreino {
@@ -160,6 +166,7 @@ class PersonalAlunoGestaoModel {
     String? planoNome,
     String? loginId,
     int? frequenciaContratada,
+    int? aulasPlanoMes,
     double? valorMensalidade,
     int? diaVencimento,
     StatusMensalidadeAluno? statusMensalidade,
@@ -191,6 +198,7 @@ class PersonalAlunoGestaoModel {
       planoNome: planoNome ?? this.planoNome,
       loginId: loginId ?? this.loginId,
       frequenciaContratada: frequenciaContratada ?? this.frequenciaContratada,
+      aulasPlanoMes: aulasPlanoMes ?? this.aulasPlanoMes,
       valorMensalidade: valorMensalidade ?? this.valorMensalidade,
       diaVencimento: diaVencimento ?? this.diaVencimento,
       statusMensalidade: statusMensalidade ?? this.statusMensalidade,
@@ -223,6 +231,7 @@ class PersonalAlunoGestaoModel {
       'planoNome': planoNome,
       'loginId': loginId,
       'frequenciaContratada': frequenciaContratada,
+      'aulasPlanoMes': aulasPlanoMes,
       'valorMensalidade': valorMensalidade,
       'diaVencimento': diaVencimento,
       'statusMensalidade': statusMensalidade.name,
@@ -261,6 +270,7 @@ class PersonalAlunoGestaoModel {
       planoNome: map['planoNome']?.toString(),
       loginId: map['loginId']?.toString(),
       frequenciaContratada: (map['frequenciaContratada'] as num?)?.toInt() ?? 0,
+      aulasPlanoMes: (map['aulasPlanoMes'] as num?)?.toInt() ?? 0,
       valorMensalidade: (map['valorMensalidade'] as num?)?.toDouble() ?? 0,
       diaVencimento: (map['diaVencimento'] as num?)?.toInt() ?? 10,
       statusMensalidade: StatusMensalidadeAluno.values.firstWhere(

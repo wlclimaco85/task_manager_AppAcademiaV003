@@ -40,6 +40,8 @@ class _PlanoEdicao {
   final valor = TextEditingController();
   final descricao = TextEditingController();
   int aulas;
+  String modalidade = 'academia';
+  int? academiaId;
 
   void dispose() {
     nome.dispose();
@@ -191,7 +193,7 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
         'valorAvulso': _valorAvulso.text,
         'planos': [
           for (final p in _planos)
-            {'nome': p.nome.text, 'aulas': p.aulas, 'valor': p.valor.text, 'descricao': p.descricao.text},
+            {'nome': p.nome.text, 'aulas': p.aulas, 'valor': p.valor.text, 'descricao': p.descricao.text, 'modalidade': p.modalidade, 'academiaId': p.academiaId},
         ],
       });
 
@@ -257,7 +259,9 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
           final mp = Map<String, dynamic>.from(p as Map);
           _planos.add(_PlanoEdicao(nome: mp['nome']?.toString() ?? '', aulas: (mp['aulas'] as int?) ?? 8)
             ..valor.text = mp['valor']?.toString() ?? ''
-            ..descricao.text = mp['descricao']?.toString() ?? '');
+            ..descricao.text = mp['descricao']?.toString() ?? ''
+            ..modalidade = mp['modalidade']?.toString() ?? 'academia'
+            ..academiaId = (mp['academiaId'] as num?)?.toInt());
         }
       });
       final passo = (m['passo'] as int? ?? 0).clamp(0, _titulos.length - 1);
@@ -396,6 +400,8 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
             'descricao': p.descricao.text.trim(),
             'valor': lerMoeda(p.valor.text),
             'qtdAula': p.aulas,
+            'modalidade': p.modalidade,
+            'academiaId': p.modalidade == 'academia' ? p.academiaId : null,
           },
       ];
 
@@ -1084,7 +1090,9 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
                   i + 1,
                   _PlanoEdicao(nome: '${p.nome.text.trim()} (cópia)', aulas: p.aulas)
                     ..valor.text = p.valor.text
-                    ..descricao.text = p.descricao.text)),
+                    ..descricao.text = p.descricao.text
+                    ..modalidade = p.modalidade
+                    ..academiaId = p.academiaId)),
             ),
             IconButton(
               tooltip: 'Remover plano',
@@ -1092,6 +1100,36 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
               onPressed: () => setState(() => _planos.removeAt(i).dispose()),
             ),
           ]),
+          const SizedBox(height: 10),
+          DropdownButtonFormField<String>(
+            key: ValueKey(('modalidade', p)),
+            initialValue: p.modalidade,
+            decoration: _decoracao('Modalidade do atendimento'),
+            items: const [
+              DropdownMenuItem(value: 'online', child: Text('Online')),
+              DropdownMenuItem(value: 'domicilio', child: Text('A domicílio')),
+              DropdownMenuItem(value: 'academia', child: Text('Em academia')),
+            ],
+            onChanged: (v) => setState(() {
+              p.modalidade = v!;
+              if (v != 'academia') p.academiaId = null;
+            }),
+          ),
+          if (p.modalidade == 'academia') ...[
+            const SizedBox(height: 12),
+            DropdownButtonFormField<int>(
+              key: ValueKey(('academia', p)),
+              initialValue: p.academiaId ?? 0,
+              isExpanded: true,
+              decoration: _decoracao('Academia do plano'),
+              items: [
+                const DropdownMenuItem(value: 0, child: Text('Sem academia definida')),
+                for (final a in _academias)
+                  DropdownMenuItem(value: a.id, child: Text(a.nome, overflow: TextOverflow.ellipsis)),
+              ],
+              onChanged: (v) => setState(() => p.academiaId = v == 0 ? null : v),
+            ),
+          ],
           const SizedBox(height: 10),
           Row(children: [
             const Text('Aulas por mês'),
@@ -1230,7 +1268,7 @@ class _WizardPersonalScreenState extends State<WizardPersonalScreen> {
       ]),
       secao('Planos e valores', 3, [
         'Aula avulsa: ${_valorAvulso.text.isEmpty ? '—' : _valorAvulso.text}',
-        for (final p in _planos) '${p.nome.text} · ${p.aulas} aulas/mês · ${p.valor.text}',
+        for (final p in _planos) '${p.nome.text} · ${p.aulas} aulas/mês · ${p.valor.text} · ${p.modalidade == 'domicilio' ? 'A domicílio' : p.modalidade == 'online' ? 'Online' : 'Em academia'}',
       ]),
     ]);
   }
