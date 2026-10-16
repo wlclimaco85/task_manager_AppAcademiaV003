@@ -22,7 +22,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.washingtonclimaco.task_manager_appacademia"
+        applicationId = "task.manager.flutter.AppAcademia"
         minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = 1
