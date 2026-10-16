@@ -6,7 +6,7 @@ import 'package:task_manager_flutter/data/services/network_caller.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:task_manager_flutter/data/models/noticias_model.dart';
-import 'package:task_manager_flutter/ui/screens/NewsDetailScreen.dart';
+import 'package:task_manager_flutter/ui/screens/newsDetailScreen.dart';
 import 'package:task_manager_flutter/ui/widgets/user_banners.dart';
 import 'package:task_manager_flutter/ui/screens/update_profile.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
