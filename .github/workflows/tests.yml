@@ -22,15 +22,12 @@ jobs:
 
       - name: Flutter pub get
         run: flutter pub get
-        working-directory: task_manager_AppAcademiaV003
 
       - name: Flutter analyze
         run: flutter analyze
-        working-directory: task_manager_AppAcademiaV003
 
       - name: Flutter test
         run: flutter test --coverage
-        working-directory: task_manager_AppAcademiaV003
 
   android-tests:
     name: Android Unit Tests
@@ -57,15 +54,12 @@ jobs:
         with:
           ruby-version: '3.2'
           bundler-cache: true
-          working-directory: task_manager_AppAcademiaV003
 
       - name: Flutter pub get
         run: flutter pub get
-        working-directory: task_manager_AppAcademiaV003
 
       - name: Run Android tests via Fastlane
         run: bundle exec fastlane android tests
-        working-directory: task_manager_AppAcademiaV003
 
   ios-tests:
     name: iOS Unit Tests
@@ -86,15 +80,12 @@ jobs:
         with:
           ruby-version: '3.2'
           bundler-cache: true
-          working-directory: task_manager_AppAcademiaV003
 
       - name: Flutter pub get
         run: flutter pub get
-        working-directory: task_manager_AppAcademiaV003
 
       - name: Run iOS tests via Fastlane
         run: bundle exec fastlane ios tests
-        working-directory: task_manager_AppAcademiaV003
         env:
           APP_STORE_CONNECT_API_KEY_KEY_ID:       ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
           APP_STORE_CONNECT_API_KEY_ISSUER_ID:    ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
