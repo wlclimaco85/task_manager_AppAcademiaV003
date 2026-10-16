@@ -9,6 +9,8 @@ import 'package:task_manager_flutter/data/services/exames_offline_repository.dar
 /// Repositório Offline-First de Nutrição, Farmacologia, Suplementação e Timeline 360
 class NutricaoFarmacoOfflineRepository {
   static const String _kAlimentosKey = 'appacademia_alimentos_v1';
+  static const String _kAlimentosImportadosKey =
+      'appacademia_alimentos_importados_v1';
   static const String _kDietasKey = 'appacademia_dietas_v1';
   static const String _kMedicamentosKey = 'appacademia_medicamentos_v1';
   static const String _kSuplementosKey = 'appacademia_suplementos_v1';
@@ -22,7 +24,8 @@ class NutricaoFarmacoOfflineRepository {
   // 1. BANCO DE ALIMENTOS (Tabela TACO / IBGE / Nutrição Esportiva)
   // ─────────────────────────────────────────────────────────────────────────────
 
-  Future<List<AlimentoModel>> getAlimentos({String? busca, String? categoria}) async {
+  Future<List<AlimentoModel>> getAlimentos(
+      {String? busca, String? categoria}) async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_kAlimentosKey);
 
@@ -43,11 +46,32 @@ class NutricaoFarmacoOfflineRepository {
           await _salvarAlimentos(lista);
         }
       } catch (e) {
-        AppLogger.i.warn('Erro ao ler alimentos salvos; usando o catálogo padrão: $e');
+        AppLogger.i
+            .warn('Erro ao ler alimentos salvos; usando o catálogo padrão: $e');
         lista = catalogo;
       }
     }
 
+    final chaveImportados = FitnessContaSync.chave(_kAlimentosImportadosKey);
+    final remotosImportados = await FitnessContaSync.carregar('alimentos');
+    if (FitnessContaSync.chave(_kAlimentosImportadosKey) != chaveImportados) {
+      throw StateError('A conta mudou. Abra o catálogo novamente.');
+    }
+    if (remotosImportados != null &&
+        !await prefs.setString(
+            chaveImportados, json.encode(remotosImportados))) {
+      throw StateError('Não foi possível atualizar o catálogo neste aparelho.');
+    }
+    final importadosRaw = prefs.getString(chaveImportados);
+    if (importadosRaw != null) {
+      final importados = (json.decode(importadosRaw) as List)
+          .map((e) => AlimentoModel.fromMap(Map<String, dynamic>.from(e)));
+      final porId = {for (final a in lista) a.id: a};
+      for (final a in importados) {
+        porId[a.id] = a;
+      }
+      lista = porId.values.toList();
+    }
     if (categoria != null && categoria.isNotEmpty && categoria != 'Todos') {
       lista = lista
           .where((a) => a.categoria.toLowerCase() == categoria.toLowerCase())
@@ -68,9 +92,56 @@ class NutricaoFarmacoOfflineRepository {
   }
 
   Future<void> addAlimento(AlimentoModel alimento) async {
-    final lista = await getAlimentos();
-    lista.insert(0, alimento);
-    await _salvarAlimentos(lista);
+    await salvarAlimentosImportados([alimento]);
+  }
+
+  /// Lote idempotente por ID; fila durável precede cache para não perder pendências.
+  Future<void> salvarAlimentosImportados(List<AlimentoModel> alimentos) async {
+    if (alimentos.isEmpty) return;
+    final chave = FitnessContaSync.chave(_kAlimentosImportadosKey);
+    final filaKey = FitnessContaSync.chave('fitness_pendentes_alimentos');
+    final autenticado = FitnessContaSync.autenticado;
+    try {
+      for (final a in alimentos) {
+        if (a.nome.trim().isEmpty ||
+            !a.porcaoPadraoGramas.isFinite ||
+            a.porcaoPadraoGramas <= 0 ||
+            [a.calorias, a.proteinas, a.carboidratos, a.gorduras, a.fibras]
+                .any((v) => !v.isFinite || v < 0)) {
+          throw ArgumentError('Dados nutricionais inválidos: ${a.nome}');
+        }
+      }
+      final prefs = await SharedPreferences.getInstance();
+      final lista = (json.decode(prefs.getString(chave) ?? '[]') as List)
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+      final porId = {for (final a in lista) a['id']: a};
+      for (final a in alimentos) {
+        porId[a.id] = a.toMap();
+      }
+      if (autenticado) {
+        final fila = Map<String, dynamic>.from(
+            json.decode(prefs.getString(filaKey) ?? '{}'));
+        for (final a in alimentos) {
+          fila[a.id] = a.toMap();
+        }
+        if (!await prefs.setString(filaKey, json.encode(fila))) {
+          throw StateError(
+              'Não foi possível guardar os alimentos para sincronizar.');
+        }
+      }
+      if (!await prefs.setString(chave, json.encode(porId.values.toList()))) {
+        throw StateError(
+            'Não foi possível salvar os alimentos neste aparelho.');
+      }
+      if (autenticado &&
+          FitnessContaSync.chave(_kAlimentosImportadosKey) == chave) {
+        await FitnessContaSync.carregar('alimentos');
+      }
+    } catch (error, stack) {
+      AppLogger.i.error('Falha ao salvar alimentos importados.', stack);
+      rethrow;
+    }
   }
 
   Future<void> _salvarAlimentos(List<AlimentoModel> lista) async {
@@ -107,20 +178,36 @@ class NutricaoFarmacoOfflineRepository {
     }
 
     if (alunoId != null && alunoId.isNotEmpty) {
-      return lista.where((d) => d.alunoId == alunoId || d.alunoId.isEmpty).toList();
+      return lista
+          .where((d) => d.alunoId == alunoId || d.alunoId.isEmpty)
+          .toList();
     }
     return lista;
   }
 
   Future<void> salvarDieta(DietaProtocoloModel dieta) async {
+    final chave = FitnessContaSync.chave(_kDietasKey);
     final lista = await getDietas();
+    if (FitnessContaSync.chave(_kDietasKey) != chave) {
+      throw StateError('A conta mudou. Abra a dieta novamente.');
+    }
     final idx = lista.indexWhere((d) => d.id == dieta.id);
     if (idx >= 0) {
       lista[idx] = dieta;
     } else {
       lista.insert(0, dieta);
     }
-    await _salvarDietas(lista);
+    final prefs = await SharedPreferences.getInstance();
+    if (FitnessContaSync.chave(_kDietasKey) != chave) {
+      throw StateError('A conta mudou. Abra a dieta novamente.');
+    }
+    if (!await prefs.setString(
+        chave, json.encode(lista.map((e) => e.toMap()).toList()))) {
+      throw StateError('Não foi possível salvar a dieta neste aparelho.');
+    }
+    if (FitnessContaSync.chave(_kDietasKey) != chave) {
+      throw StateError('A conta mudou. A dieta foi mantida na conta original.');
+    }
     await FitnessContaSync.salvar('dietas', dieta.toMap());
   }
 
@@ -134,7 +221,8 @@ class NutricaoFarmacoOfflineRepository {
   // 3. MEDICAMENTOS, CICLOS / HORMÔNIOS E PROTETORES
   // ─────────────────────────────────────────────────────────────────────────────
 
-  Future<List<MedicamentoProtocoloModel>> getMedicamentos({String? alunoId}) async {
+  Future<List<MedicamentoProtocoloModel>> getMedicamentos(
+      {String? alunoId}) async {
     final prefs = await SharedPreferences.getInstance();
     final key = FitnessContaSync.chave(_kMedicamentosKey);
     final remoto = await FitnessContaSync.carregar('medicamentos');
@@ -159,7 +247,9 @@ class NutricaoFarmacoOfflineRepository {
     }
 
     if (alunoId != null && alunoId.isNotEmpty) {
-      return lista.where((m) => m.alunoId == alunoId || m.alunoId.isEmpty).toList();
+      return lista
+          .where((m) => m.alunoId == alunoId || m.alunoId.isEmpty)
+          .toList();
     }
     return lista;
   }
@@ -176,7 +266,8 @@ class NutricaoFarmacoOfflineRepository {
     await FitnessContaSync.salvar('medicamentos', med.toMap());
   }
 
-  Future<void> _salvarMedicamentos(List<MedicamentoProtocoloModel> lista) async {
+  Future<void> _salvarMedicamentos(
+      List<MedicamentoProtocoloModel> lista) async {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = json.encode(lista.map((e) => e.toMap()).toList());
     await prefs.setString(FitnessContaSync.chave(_kMedicamentosKey), jsonStr);
@@ -186,7 +277,8 @@ class NutricaoFarmacoOfflineRepository {
   // 4. SUPLEMENTAÇÃO
   // ─────────────────────────────────────────────────────────────────────────────
 
-  Future<List<SuplementoProtocoloModel>> getSuplementos({String? alunoId}) async {
+  Future<List<SuplementoProtocoloModel>> getSuplementos(
+      {String? alunoId}) async {
     final prefs = await SharedPreferences.getInstance();
     final key = FitnessContaSync.chave(_kSuplementosKey);
     final remoto = await FitnessContaSync.carregar('suplementos');
@@ -211,7 +303,9 @@ class NutricaoFarmacoOfflineRepository {
     }
 
     if (alunoId != null && alunoId.isNotEmpty) {
-      return lista.where((s) => s.alunoId == alunoId || s.alunoId.isEmpty).toList();
+      return lista
+          .where((s) => s.alunoId == alunoId || s.alunoId.isEmpty)
+          .toList();
     }
     return lista;
   }
@@ -238,7 +332,8 @@ class NutricaoFarmacoOfflineRepository {
   // 5. TIMELINE FITNESS 360 (Evolução de Peso, % Gordura, Dietas e Medicamentos)
   // ─────────────────────────────────────────────────────────────────────────────
 
-  Future<List<TimelineFitnessEventModel>> getTimelineEventos({String? alunoId}) async {
+  Future<List<TimelineFitnessEventModel>> getTimelineEventos(
+      {String? alunoId}) async {
     final eventos = <TimelineFitnessEventModel>[];
 
     // 1. Avaliações Físicas (Peso & % BF ao longo do tempo)
@@ -249,7 +344,8 @@ class NutricaoFarmacoOfflineRepository {
           data: av['data'] as DateTime,
           tipo: 'avaliacao_fisica',
           titulo: '📊 Avaliação Física',
-          descricao: 'Peso: ${(av['peso'] as double).toStringAsFixed(1)} kg | Gordura: ${(av['bf'] as double).toStringAsFixed(1)}%',
+          descricao:
+              'Peso: ${(av['peso'] as double).toStringAsFixed(1)} kg | Gordura: ${(av['bf'] as double).toStringAsFixed(1)}%',
           pesoKg: av['peso'] as double,
           percentualGordura: av['bf'] as double,
           tagCorHex: '#10B981', // Emerald
@@ -267,7 +363,8 @@ class NutricaoFarmacoOfflineRepository {
             data: dtInicio,
             tipo: 'inicio_dieta',
             titulo: '🥗 Início: ${d.titulo}',
-            descricao: '${d.caloriasMeta.toStringAsFixed(0)} kcal • P: ${d.proteinasMeta.toStringAsFixed(0)}g C: ${d.carboidratosMeta.toStringAsFixed(0)}g G: ${d.gordurasMeta.toStringAsFixed(0)}g',
+            descricao:
+                '${d.caloriasMeta.toStringAsFixed(0)} kcal • P: ${d.proteinasMeta.toStringAsFixed(0)}g C: ${d.carboidratosMeta.toStringAsFixed(0)}g G: ${d.gordurasMeta.toStringAsFixed(0)}g',
             tagCorHex: '#059669', // Emerald Dark
           ),
         );
@@ -298,7 +395,8 @@ class NutricaoFarmacoOfflineRepository {
             data: dtInicio,
             tipo: 'inicio_medicamento',
             titulo: '💊 Início Protocolo: ${m.nomeComposto}',
-            descricao: 'Dose: ${m.dosagem} (${m.frequencia}) • Categoria: ${m.categoria}',
+            descricao:
+                'Dose: ${m.dosagem} (${m.frequencia}) • Categoria: ${m.categoria}',
             tagCorHex: '#EF4444', // Red / Atenção
           ),
         );
@@ -346,7 +444,8 @@ class NutricaoFarmacoOfflineRepository {
             data: dtExame,
             tipo: 'exame_laboratorial',
             titulo: '📄 Exame: ${ex.titulo}',
-            descricao: 'Lab: ${ex.laboratorio} • PDF: ${ex.nomeArquivoPdf ?? "laudo.pdf"}${ex.observacoesResultados != null ? " • " + ex.observacoesResultados! : ""}',
+            descricao:
+                'Lab: ${ex.laboratorio} • PDF: ${ex.nomeArquivoPdf ?? "laudo.pdf"}${ex.observacoesResultados != null ? " • " + ex.observacoesResultados! : ""}',
             tagCorHex: '#8B5CF6', // Purple
           ),
         );
@@ -357,8 +456,6 @@ class NutricaoFarmacoOfflineRepository {
     eventos.sort((a, b) => a.data.compareTo(b.data));
     return eventos;
   }
-
-
 
   // ─────────────────────────────────────────────────────────────────────────────
   // SEEDS INICIAIS (Tabela Nutricional & Medicamentos)
@@ -376,7 +473,8 @@ class NutricaoFarmacoOfflineRepository {
       final raw = await rootBundle.loadString(catalogoAsset);
       final decoded = json.decode(raw) as List<dynamic>;
       _catalogoCache = decoded
-          .map((e) => AlimentoModel.fromMap(Map<String, dynamic>.from(e as Map)))
+          .map(
+              (e) => AlimentoModel.fromMap(Map<String, dynamic>.from(e as Map)))
           .toList();
     } catch (e, st) {
       AppLogger.i.error('Falha ao carregar o catálogo de alimentos: $e', st);
@@ -401,10 +499,4 @@ class NutricaoFarmacoOfflineRepository {
     resultado.addAll(catalogo.where((a) => !vistos.contains(a.id)));
     return resultado;
   }
-
-
-
-
-
-
 }

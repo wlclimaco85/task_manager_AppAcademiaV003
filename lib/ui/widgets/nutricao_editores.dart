@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
+import 'package:flutter/foundation.dart' show compute;
+import 'package:file_picker/file_picker.dart';
 import 'package:task_manager_flutter/ui/widgets/fechamento_modal_seguro.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/auth_utility.dart';
 import 'package:task_manager_flutter/data/models/fitness/nutricao_farmaco_model.dart';
 import 'package:task_manager_flutter/data/services/nutricao_farmaco_offline_repository.dart';
+import 'package:task_manager_flutter/data/services/importacao_dieta_parser.dart';
+import 'package:task_manager_flutter/data/utils/app_logger.dart';
+import 'importar_dieta_dialog.dart';
+
+Future<ResultadoImportacaoDieta> _lerArquivoDieta(PlatformFile arquivo) =>
+    ImportacaoDietaParser().parse(arquivo.name, arquivo.bytes!);
 
 String? _obrigatorio(String? v) =>
     (v?.trim().isEmpty ?? true) ? 'Informe este campo.' : null;
@@ -199,7 +208,8 @@ class _SuplementoEditorState extends State<SuplementoEditor> {
 
 class DietaEditor extends StatefulWidget {
   final DietaProtocoloModel? dieta;
-  const DietaEditor({super.key, this.dieta});
+  final Future<PlatformFile?> Function()? selecionarArquivoImportacao;
+  const DietaEditor({super.key, this.dieta, this.selecionarArquivoImportacao});
   @override
   State<DietaEditor> createState() => _DietaEditorState();
 }
@@ -210,6 +220,10 @@ class _DietaEditorState extends State<DietaEditor> {
   final _metas = List.generate(4, (_) => TextEditingController());
   late final List<RefeicaoModel> _refeicoes;
   bool _salvando = false;
+  bool _importando = false;
+  final _alimentosPendentes = <String, AlimentoModel>{};
+  int? _contaImportacao;
+  bool _temImportacao = false;
   String? _erro;
   @override
   void initState() {
@@ -254,6 +268,73 @@ class _DietaEditorState extends State<DietaEditor> {
       });
   }
 
+  Future<void> _importarArquivo() async {
+    if (_temImportacao && _contaImportacao != AuthUtility.userInfo.login?.id) {
+      setState(() => _erro = 'A conta mudou. Feche e abra a dieta novamente.');
+      return;
+    }
+    setState(() {
+      _importando = true;
+      _erro = null;
+    });
+    final conta = AuthUtility.userInfo.login?.id;
+    try {
+      final PlatformFile? arquivo;
+      if (widget.selecionarArquivoImportacao != null) {
+        arquivo = await widget.selecionarArquivoImportacao!();
+      } else {
+        final escolha = await FilePicker.platform.pickFiles(
+            type: FileType.custom,
+            allowedExtensions: ['xlsx', 'csv', 'pdf'],
+            withData: true,
+            allowMultiple: false);
+        arquivo = escolha?.files.single;
+      }
+      if (arquivo == null) return;
+      if (arquivo.size > ImportacaoDietaParser.limiteBytes) {
+        throw const FormatException('O arquivo deve ter no máximo 10 MB.');
+      }
+      if (arquivo.bytes == null) {
+        throw const FormatException(
+            'Não foi possível ler o arquivo. Selecione-o novamente.');
+      }
+      final resultado = await compute(_lerArquivoDieta, arquivo);
+      final catalogo = await NutricaoFarmacoOfflineRepository().getAlimentos();
+      if (!mounted) return;
+      if (AuthUtility.userInfo.login?.id != conta) {
+        throw StateError('A conta mudou. Importe novamente na conta atual.');
+      }
+      final importacao = await showDialog<DietaImportada>(
+          context: context,
+          builder: (_) => ImportarDietaDialog(
+              resultado: resultado,
+              catalogo: [...catalogo, ..._alimentosPendentes.values]));
+      if (importacao != null && mounted) {
+        if (AuthUtility.userInfo.login?.id != conta) {
+          throw StateError('A conta mudou. Importe o arquivo novamente.');
+        }
+        setState(() {
+          _refeicoes.addAll(importacao.refeicoes);
+          for (final a in importacao.novosAlimentos) {
+            _alimentosPendentes[a.id] = a;
+          }
+          _contaImportacao = conta;
+          _temImportacao = true;
+        });
+      }
+    } catch (error, stack) {
+      AppLogger.i.error('Falha ao importar arquivo de dieta.', stack);
+      if (mounted)
+        setState(() => _erro = error is FormatException
+            ? error.message.toString()
+            : error is StateError
+                ? error.message.toString()
+                : 'Não foi possível importar. Confira o formato e tente novamente.');
+    } finally {
+      if (mounted) setState(() => _importando = false);
+    }
+  }
+
   Future<void> _salvar() async {
     if (!_form.currentState!.validate()) return;
     if (_refeicoes.isEmpty) {
@@ -265,8 +346,9 @@ class _DietaEditorState extends State<DietaEditor> {
       _erro = null;
     });
     final d = widget.dieta;
+    final conta = AuthUtility.userInfo.login?.id;
     try {
-      await NutricaoFarmacoOfflineRepository().salvarDieta(DietaProtocoloModel(
+      final dietaASalvar = DietaProtocoloModel(
           id: d?.id ?? 'dieta_${DateTime.now().microsecondsSinceEpoch}',
           alunoId:
               d?.alunoId ?? AuthUtility.userInfo.login?.id?.toString() ?? '',
@@ -281,9 +363,25 @@ class _DietaEditorState extends State<DietaEditor> {
           dataFim: d?.dataFim,
           ativa: d?.ativa ?? true,
           observacoes: d?.observacoes,
-          refeicoes: List.of(_refeicoes)));
+          refeicoes: List.of(_refeicoes));
+      final idsUsados =
+          _refeicoes.expand((r) => r.itens).map((i) => i.alimentoId).toSet();
+      final novos = _alimentosPendentes.values
+          .where((a) => idsUsados.contains(a.id))
+          .toList();
+      if (_temImportacao && _contaImportacao != conta) {
+        throw StateError('A conta mudou. Importe os alimentos novamente.');
+      }
+      final repo = NutricaoFarmacoOfflineRepository();
+      await repo.salvarAlimentosImportados(novos);
+      if (AuthUtility.userInfo.login?.id != conta) {
+        throw StateError(
+            'A conta mudou. Seus dados anteriores foram preservados.');
+      }
+      await repo.salvarDieta(dietaASalvar);
       if (mounted) Navigator.pop(context, true);
-    } catch (_) {
+    } catch (error, stack) {
+      AppLogger.i.error('Falha ao salvar dieta.', stack);
       if (mounted)
         setState(() =>
             _erro = 'Não foi possível salvar. Suas refeições foram mantidas.');
@@ -308,6 +406,78 @@ class _DietaEditorState extends State<DietaEditor> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             _entrada(_titulo, 'Título da dieta'),
+                            OutlinedButton.icon(
+                              onPressed: _salvando || _importando
+                                  ? null
+                                  : _importarArquivo,
+                              icon: _importando
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2))
+                                  : const Icon(Icons.upload_file),
+                              label: Text(_importando
+                                  ? 'Lendo arquivo...'
+                                  : 'Importar Excel, CSV ou PDF'),
+                            ),
+                            const Padding(
+                                padding: EdgeInsets.only(bottom: 12),
+                                child: Text(
+                                    'Revise antes de aplicar. Aceita Excel .xlsx, CSV '
+                                    'e PDF com texto tabular.')),
+                            TextButton(
+                                onPressed: () => showDialog<void>(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                          title: const Text(
+                                              'Formato da importação'),
+                                          content: const SingleChildScrollView(
+                                              child: Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                Text(
+                                                    'Use uma tabela com cabeçalho. Na planilha, mantenha uma aba preenchida. '
+                                                    'Horários HH:mm e quantidades em gramas. Até 10 MB e 500 linhas; PDF até 50 páginas. '
+                                                    'PDFs escaneados precisam ser convertidos em tabela com texto.'),
+                                                SizedBox(height: 12),
+                                                Text('Colunas obrigatórias:'),
+                                                SelectableText(
+                                                    'refeicao;horario;alimento;quantidade_g'),
+                                                SizedBox(height: 12),
+                                                Text(
+                                                    'Para cadastrar alimentos novos, informe os nutrientes por 100 g '
+                                                    'no arquivo ou na revisão. Não use aqui os totais da porção.'),
+                                                SelectableText(
+                                                    'calorias_100g;proteinas_100g;carboidratos_100g;gorduras_100g;fibras_100g'),
+                                              ])),
+                                          actions: [
+                                            TextButton(
+                                                onPressed: () async {
+                                                  await Clipboard.setData(
+                                                      const ClipboardData(
+                                                          text:
+                                                              'refeicao;horario;alimento;quantidade_g;calorias_100g;proteinas_100g;carboidratos_100g;gorduras_100g;fibras_100g\n'));
+                                                  if (ctx.mounted)
+                                                    ScaffoldMessenger.of(ctx)
+                                                        .showSnackBar(
+                                                            const SnackBar(
+                                                                content: Text(
+                                                                    'Cabeçalho CSV copiado. Preencha com os seus dados.')));
+                                                },
+                                                child: const Text(
+                                                    'Copiar modelo CSV')),
+                                            TextButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(ctx),
+                                                child: const Text('Fechar')),
+                                          ],
+                                        )),
+                                child: const Text(
+                                    'Formato e modelo de importação')),
                             const Text(
                                 'Metas opcionais — preencha somente se já definidas.'),
                             const SizedBox(height: 12),
@@ -356,8 +526,9 @@ class _DietaEditorState extends State<DietaEditor> {
                                         icon: const Icon(Icons.delete_outline))
                                   ])),
                             OutlinedButton.icon(
-                                onPressed:
-                                    _salvando ? null : () => _editarRefeicao(),
+                                onPressed: _salvando || _importando
+                                    ? null
+                                    : () => _editarRefeicao(),
                                 icon: const Icon(Icons.add),
                                 label: const Text('Adicionar refeição')),
                             if (_erro != null)
@@ -372,7 +543,7 @@ class _DietaEditorState extends State<DietaEditor> {
                 style: FilledButton.styleFrom(
                     backgroundColor: GridColors.primary,
                     foregroundColor: Colors.white),
-                onPressed: _salvando ? null : _salvar,
+                onPressed: _salvando || _importando ? null : _salvar,
                 child: Text(_salvando ? 'Salvando...' : 'Salvar dieta'))
           ]);
 }

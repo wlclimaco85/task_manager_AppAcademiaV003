@@ -44,6 +44,7 @@ dependencies:
   excel: ^2.0.6
   share_plus: ^10.0.2
   syncfusion_flutter_pdfviewer: ^31.2.12
+  syncfusion_flutter_pdf: ^31.2.12
   flutter_multi_formatter: ^2.11.0
   web_socket_channel: ^3.0.3
   url_launcher: ^6.3.0
@@ -55,6 +56,7 @@ dependencies:
   printing: ^5.14.3
 
 dev_dependencies:
+  archive: ^3.6.1
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0

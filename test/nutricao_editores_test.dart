@@ -44,6 +44,7 @@ void main() {
             proteinas: 10,
             carboidratos: 20,
             gorduras: 5)));
+    await t.runAsync(() => NutricaoFarmacoOfflineRepository().getAlimentos());
     await abrir(t, const DietaEditor());
     expect(find.text('Nenhuma refeição adicionada.'), findsOneWidget);
     expect(find.textContaining('Ovo Cozido'), findsNothing);
