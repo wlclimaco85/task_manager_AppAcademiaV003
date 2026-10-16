@@ -11,7 +11,8 @@ void main() {
       'BACKEND_CONTEXT_PATH',
       defaultValue: '/boletobancos',
     );
-    final base = '$backend$contextPath';
+    final resolvedBackend = backend.isEmpty ? 'http://127.0.0.1:9001' : backend;
+    final base = '$resolvedBackend$contextPath';
 
     expect(ApiLinks.baseUrl, base);
     expect(ApiLinks.login, '$base/rest/auth/login');
@@ -19,6 +20,14 @@ void main() {
     expect(ApiLinks.registrarPersonal, '$base/rest/auth/registrar-personal');
     expect(ApiLinks.academiasDisponiveis, '$base/rest/auth/academias-disponiveis');
     expect(ApiLinks.personaisDisponiveis, '$base/rest/auth/personais-disponiveis');
+    for (final endpoint in [
+      ApiLinks.login, ApiLinks.registrarAluno, ApiLinks.registrarPersonal,
+      ApiLinks.academiasDisponiveis, ApiLinks.personaisDisponiveis,
+    ]) {
+      final uri = Uri.parse(endpoint);
+      expect(uri.host, isNotEmpty, reason: endpoint);
+      expect(uri.scheme, anyOf('http', 'https'));
+    }
   });
 
   test('chat respeita o websocket local ou explicito', () {
@@ -27,6 +36,6 @@ void main() {
       defaultValue: 'ws://127.0.0.1:9001/boletobancos',
     );
     expect(ApiLinks.chatStart('10', '20'),
-        '$websocket/ws-chat?user=10&sector=20');
+        '${websocket.isEmpty ? 'ws://127.0.0.1:9001/boletobancos' : websocket}/ws-chat?user=10&sector=20');
   });
 }

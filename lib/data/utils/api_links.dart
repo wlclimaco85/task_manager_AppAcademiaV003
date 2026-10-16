@@ -2,19 +2,30 @@ import 'package:flutter/foundation.dart';
 
 class ApiLinks {
   ApiLinks._();
-  static const String _baseIp = String.fromEnvironment(
+  static const String _defaultBackend = kDebugMode
+      ? 'http://127.0.0.1:9001'
+      : 'https://appacademia-production-be7e.up.railway.app';
+  static const String _configuredBackend = String.fromEnvironment(
     'BACKEND_URL',
     defaultValue: kDebugMode
         ? 'http://127.0.0.1:9001'
         : 'https://appacademia-production-be7e.up.railway.app',
   );
+  // Um --dart-define=BACKEND_URL= não pode produzir URLs relativas no Android.
+  static const String _baseIp =
+      _configuredBackend == '' ? _defaultBackend : _configuredBackend;
 
-  static const String _chatId = String.fromEnvironment(
+  static const String _configuredChat = String.fromEnvironment(
     'WS_BACKEND_URL',
     defaultValue: kDebugMode
         ? 'ws://127.0.0.1:9001/boletobancos'
         : 'wss://appacademia-production-be7e.up.railway.app/boletobancos',
   );
+  static const String _chatId = _configuredChat == ''
+      ? (kDebugMode
+          ? 'ws://127.0.0.1:9001/boletobancos'
+          : 'wss://appacademia-production-be7e.up.railway.app/boletobancos')
+      : _configuredChat;
   //"http://192.168.100.41:8088";
   //  "http://192.168.114.1:8088";
   // "http://192.168.100.113:8088";

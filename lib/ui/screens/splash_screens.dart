@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/models/auth_utility.dart';
 import 'package:task_manager_flutter/ui/screens/auth_screens/login_screen.dart';
 import 'package:task_manager_flutter/ui/screens/bottom_navbar_screen.dart';
-import 'package:task_manager_flutter/ui/utils/assets_utils.dart';
 import 'package:task_manager_flutter/ui/widgets/screen_background.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 
@@ -24,6 +23,7 @@ class _SplashScreenState extends State<SplashScreen> {
     Future.delayed(const Duration(seconds: 3)).then((_) async {
       if (mounted) {
         final bool loggedIn = await AuthUtility.isUserLoggedIn();
+        if (!mounted) return;
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
@@ -44,9 +44,8 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo JPG - Corrigido
               Image.asset(
-                AssetsUtils.logoJPG,
+                'assets/images/logo_eu_atleta.png',
                 width: 90,
                 height: 90,
                 fit: BoxFit.contain,

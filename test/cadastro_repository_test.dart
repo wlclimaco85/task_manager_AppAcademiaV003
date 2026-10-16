@@ -12,6 +12,22 @@ void main() {
     'aluno': repository.registrarAluno,
     'personal': repository.registrarPersonal,
   };
+  for (final listagem in {
+    'academias-disponiveis': repository.listarAcademiasDisponiveis,
+    'personais-disponiveis': repository.listarPersonaisDisponiveis,
+  }.entries) {
+    test('lista ${listagem.key} usando URL absoluta', () async {
+      final dados = await http.runWithClient(
+        listagem.value,
+        () => MockClient((request) async {
+          expect(request.url.host, isNotEmpty);
+          expect(request.url.path, endsWith('/rest/auth/${listagem.key}'));
+          return http.Response('[{"id":1,"nome":"Cadastro de teste"}]', 200);
+        }),
+      );
+      expect(dados.single['id'], 1);
+    });
+  }
 
   for (final cadastro in cadastros.entries) {
     group(cadastro.key, () {
