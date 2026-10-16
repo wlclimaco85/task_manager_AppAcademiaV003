@@ -694,9 +694,18 @@ class _BibliotecaExerciciosScreenState
           if (!ex.isCustom)
             TextButton(
               onPressed: salvando ? null : () async {
-                await _repository.restaurarExercicio(ex.id);
-                if (dialogContext.mounted) Navigator.pop(dialogContext);
-                if (mounted) await _carregarExercicios();
+                setModalState(() => salvando = true);
+                try {
+                  await _repository.restaurarExercicio(ex.id);
+                  if (dialogContext.mounted) Navigator.pop(dialogContext);
+                  if (mounted) await _carregarExercicios();
+                } catch (error, stack) {
+                  AppLogger.i.error('Falha ao restaurar o padrao do exercicio.', stack);
+                  if (dialogContext.mounted) {
+                    setModalState(() => salvando = false);
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(const SnackBar(content: Text('Não foi possível restaurar o padrão. Tente novamente.')));
+                  }
+                }
               },
               child: const Text('Restaurar padrão'),
             ),
