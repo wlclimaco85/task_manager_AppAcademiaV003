@@ -46,8 +46,10 @@ android {
     buildTypes {
         getByName("release") {
             signingConfig    = signingConfigs.getByName("release")
-            isMinifyEnabled  = false
-            isShrinkResources = false
+            // R8: ofusca o codigo DEX e remove recursos nao usados (exigido pela Play para a metrica de ofuscacao).
+            isMinifyEnabled  = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }}
 
