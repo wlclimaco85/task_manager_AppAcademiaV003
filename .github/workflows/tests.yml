@@ -64,6 +64,9 @@ jobs:
   ios-tests:
     name: iOS Unit Tests
     runs-on: macos-latest
+    # Desativado: projeto iOS incompleto (sem ios/Podfile) e run_tests falha com output_dir.
+    # Reativar quando o iOS estiver configurado num Mac.
+    if: false
     # Projeto iOS incompleto no repo (sem Podfile): nao bloqueia o CI ate ser montado num Mac.
     continue-on-error: true
     needs: flutter-tests
