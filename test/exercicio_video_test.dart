@@ -1,13 +1,37 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:task_manager_flutter/data/services/exercicio_conta_sync.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
 import 'package:task_manager_flutter/data/utils/exercicio_video_link.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/biblioteca_exercicios_screen.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    // Edicoes exigem conta: simula login e servidor que confirma tudo.
+    ExercicioContaSync.autenticadoForcado = true;
+    final guardados = <String, Map<String, dynamic>>{};
+    ExercicioContaSync.cliente = MockClient((req) async {
+      if (req.method == 'GET') {
+        return http.Response(jsonEncode({'meus': guardados.values.toList(), 'doPersonal': []}), 200);
+      }
+      if (req.method == 'PUT') {
+        final corpo = jsonDecode(req.body) as Map<String, dynamic>;
+        guardados[corpo['id'].toString()] = {'exercicioId': corpo['id'], 'origem': corpo['origem'], 'dados': corpo};
+      }
+      if (req.method == 'DELETE') guardados.remove(req.url.pathSegments.last);
+      return http.Response('{}', 200);
+    });
+  });
+  tearDown(() {
+    ExercicioContaSync.autenticadoForcado = null;
+    ExercicioContaSync.cliente = http.Client();
+  });
   test('YouTube aceita watch, compartilhamento, shorts e embed', () {
     for (final url in [
       'https://www.youtube.com/watch?v=jNQXAC9IVRw',
