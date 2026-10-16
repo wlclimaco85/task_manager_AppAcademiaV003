@@ -522,6 +522,17 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
               id: [for (final d in _divisoes)
                 if (d.exercicios.any((e) => e.exercicioId == id)) 'Treino ${d.letra}'],
           },
+          onRemover: (exercicioId) {
+            if (!mounted) return;
+            setState(() {
+              final divisao = _divisoes[divIndex];
+              _divisoes[divIndex] = DivisaoTreinoModel(
+                id: divisao.id, letra: divisao.letra, nome: divisao.nome,
+                exercicios: divisao.exercicios
+                    .where((e) => e.exercicioId != exercicioId).toList(),
+              );
+            });
+          },
           onPrescrever: (item) {
             if (!mounted) return;
             setState(() {

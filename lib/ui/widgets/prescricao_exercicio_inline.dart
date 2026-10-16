@@ -15,8 +15,8 @@ class PrescricaoExercicioInline extends StatefulWidget {
 
 class _PrescricaoExercicioInlineState extends State<PrescricaoExercicioInline> {
   final _form = GlobalKey<FormState>();
-  int _series = 3, _descanso = 60;
-  String _reps = '10 a 12', _observacao = '';
+  int _series = 4, _descanso = 60;
+  String _reps = '8 a 12', _observacao = '';
   double _carga = 10;
   final List<String?> _alternativas = [null, null];
   Widget _campo(String label, String initial, ValueChanged<String> change,
@@ -37,7 +37,7 @@ class _PrescricaoExercicioInlineState extends State<PrescricaoExercicioInline> {
     padding: const EdgeInsets.all(14), child: Column(
       crossAxisAlignment: CrossAxisAlignment.start, children: [
         Wrap(spacing: 12, runSpacing: 12, children: [
-          _campo('Séries', '3', (v) => _series = int.tryParse(v) ?? 3, numero: true),
+          _campo('Séries', '4', (v) => _series = int.tryParse(v) ?? 4, numero: true),
           _campo('Repetições', _reps, (v) => _reps = v),
           _campo('Carga (kg)', '10', (v) => _carga = double.tryParse(v.replaceAll(',', '.')) ?? 10, numero: true),
           _campo('Descanso (s)', '60', (v) => _descanso = int.tryParse(v) ?? 60, numero: true),

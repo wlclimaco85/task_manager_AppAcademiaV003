@@ -14,6 +14,7 @@ import 'package:task_manager_flutter/ui/widgets/exercicio_midia.dart';
 class BibliotecaExerciciosScreen extends StatefulWidget {
   final bool modoSelecao; // Quando aberta pelo montador de treinos
   final ValueChanged<ItemTreinoModel>? onPrescrever;
+  final ValueChanged<String>? onRemover;
   final String? tituloFicha;
   final String? divisaoDestino;
   final Map<String, List<String>> exerciciosNaFicha;
@@ -23,6 +24,7 @@ class BibliotecaExerciciosScreen extends StatefulWidget {
     super.key,
     this.modoSelecao = false,
     this.onPrescrever,
+    this.onRemover,
     this.tituloFicha,
     this.divisaoDestino,
     this.exerciciosNaFicha = const {},
@@ -131,9 +133,6 @@ class _BibliotecaExerciciosScreenState
           style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
         ),
         actions: [
-          if (widget.onPrescrever != null)
-            TextButton(onPressed: () => Navigator.pop(context),
-              child: Text('Concluir (${_naDivisao.length})')),
           IconButton(
             tooltip: 'Novo Exercício',
             icon: const Icon(Icons.add, color: GridColors.primary),
@@ -184,7 +183,10 @@ class _BibliotecaExerciciosScreenState
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: SizedBox(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.sizeOf(context).height * .22),
+                  child: SingleChildScrollView(child: SizedBox(
                   width: double.infinity,
                   child: Wrap(
                     spacing: 8,
@@ -222,7 +224,7 @@ class _BibliotecaExerciciosScreenState
                       );
                     }).toList(),
                   ),
-                ),
+                ))),
               ),
 
               const SizedBox(height: 6),
@@ -247,7 +249,25 @@ class _BibliotecaExerciciosScreenState
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      bottomNavigationBar: widget.onPrescrever == null ? null : SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            const Text('Revise e salve a ficha na próxima tela.',
+              style: TextStyle(color: GridColors.textSecondary, fontSize: 12)),
+            const SizedBox(height: 8),
+            SizedBox(width: double.infinity, height: 52,
+              child: FilledButton.icon(
+                icon: const Icon(Icons.check_circle_outline),
+                label: Text('Concluir seleção (${_naDivisao.length})',
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+                onPressed: () => Navigator.pop(context),
+              )),
+          ]),
+        ),
+      ),
+      floatingActionButton: widget.onPrescrever != null ? null : FloatingActionButton.extended(
         backgroundColor: GridColors.buttonBackground,
         foregroundColor: GridColors.buttonText,
         icon: const Icon(Icons.add),
@@ -272,18 +292,38 @@ class _BibliotecaExerciciosScreenState
           leading: incluido ? const Icon(Icons.check_circle, color: GridColors.primary) : null,
           trailing: incluido ? const Text('Incluído', style: TextStyle(color: GridColors.primaryDark)) : Icon(_expandidoId == ex.id ? Icons.expand_less : Icons.add_circle_outline),
           onTap: incluido ? null : () => setState(() => _expandidoId = _expandidoId == ex.id ? null : ex.id)),
+        Padding(padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Wrap(spacing: 8, children: [
+            TextButton.icon(
+              icon: const Icon(Icons.info_outline, size: 20),
+              label: const Text('Descrição e vídeo'),
+              onPressed: () => _mostrarDetalhesExercicio(ex),
+            ),
+            if (incluido && widget.onRemover != null)
+              TextButton.icon(
+                icon: const Icon(Icons.remove_circle_outline, size: 20),
+                label: const Text('Remover'),
+                onPressed: () {
+                  widget.onRemover!(ex.id);
+                  setState(() {
+                    _naDivisao.remove(ex.id);
+                    _naFicha[ex.id]?.removeWhere((d) =>
+                        d == (widget.divisaoDestino ?? 'Treino atual'));
+                    _expandidoId = null;
+                  });
+                },
+              ),
+          ]),
+        ),
         if (_expandidoId == ex.id)
           PrescricaoExercicioInline(exercicio: ex, catalogo: _catalogo,
             grupoAlternativas: _grupoSelecionado == 'Todos' ? ex.grupoMuscular : _grupoSelecionado,
             onAdicionar: (item) {
               widget.onPrescrever!(item);
-              final lista = _exerciciosFiltrados;
-              final index = lista.indexWhere((e) => e.id == ex.id);
               setState(() {
                 _naDivisao.add(ex.id);
                 (_naFicha[ex.id] ??= []).add(widget.divisaoDestino ?? 'Treino atual');
-                _expandidoId = lista.skip(index + 1)
-                    .where((e) => !_naDivisao.contains(e.id)).firstOrNull?.id;
+                _expandidoId = null;
               });
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
@@ -426,7 +466,9 @@ class _BibliotecaExerciciosScreenState
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return Container(
+        return SafeArea(child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * .85),
+          child: SingleChildScrollView(child: Container(
           decoration: const BoxDecoration(
             color: GridColors.card,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -511,6 +553,12 @@ class _BibliotecaExerciciosScreenState
                   onPressed: () { Navigator.pop(context); _editarVideoExercicio(ex); },
                 ),
               ]),
+              if (ex.midiaUrl == null)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 12),
+                  child: Text('Vídeo ainda não cadastrado.',
+                    style: TextStyle(color: GridColors.textSecondary)),
+                ),
               const Text(
                 'Execução Biomecânica:',
                 style: TextStyle(
@@ -568,7 +616,7 @@ class _BibliotecaExerciciosScreenState
               ),
             ],
           ),
-        );
+        ))));
       },
     );
   }

@@ -30,16 +30,20 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Adicionar ao treino'));
     await tester.pumpAndSettle();
-    expect(find.text('Concluir (1)'), findsOneWidget);
+    expect(find.text('Concluir seleção (1)'), findsOneWidget);
     expect(itens.single.observacoes, 'Movimento controlado');
     expect(itens.single.exerciciosAlternativos,
       ['Supino Inclinado com Halteres', 'Supino Declinado com Barra']);
     expect(ItemTreinoModel.fromMap(itens.single.toMap()).toMap(), itens.single.toMap());
-    expect(find.text('Observação para o aluno'), findsOneWidget);
+    expect(find.text('Observação para o aluno'), findsNothing);
+    expect(itens.single.series, 4);
+    expect(itens.single.repeticoes, '8 a 12');
+    await tester.tap(find.text('Supino Inclinado com Halteres').first);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Adicionar ao treino'));
     await tester.pumpAndSettle();
     expect(itens.length, 2);
-    expect(find.text('Concluir (2)'), findsOneWidget);
+    expect(find.text('Concluir seleção (2)'), findsOneWidget);
     expect(find.byType(BibliotecaExerciciosScreen), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
