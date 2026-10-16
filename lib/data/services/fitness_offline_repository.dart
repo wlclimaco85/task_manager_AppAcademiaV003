@@ -97,12 +97,14 @@ class FitnessOfflineRepository {
   /// Catalogo geral + personalizacoes. Pendencias ainda nao confirmadas valem por
   /// cima do servidor; exclusoes pendentes escondem a personalizacao.
   Future<List<ExercicioModel>> _aplicarPersonalizacoes(List<ExercicioModel> catalogo) async {
+    if (!ExercicioContaSync.autenticado) return catalogo;
     final prefs = await SharedPreferences.getInstance();
     await _enviarPendentes(prefs);
 
-    final remoto = await ExercicioContaSync.carregar();
-    // Snapshot e leitura da fila no mesmo bloco serializado, para nao misturar com restauracoes.
+    // Leitura do servidor, snapshot e fila no mesmo bloco serializado: uma restauracao
+    // confirmada no meio nao pode ser desfeita por uma resposta antiga.
     return _emSequencia(() async {
+      final remoto = await ExercicioContaSync.carregar();
       final chaveCache = FitnessContaSync.chave(_kCacheKey);
       Map<String, dynamic>? snap;
       if (remoto != null) {
@@ -162,11 +164,15 @@ class FitnessOfflineRepository {
         if (pendentes.isEmpty) return;
         for (final entrada in pendentes.entries.toList()) {
           final registro = entrada.value;
-          final enviado = registro['origem'] == 'EXCLUIR'
-              ? await ExercicioContaSync.excluir(entrada.key)
-              : await ExercicioContaSync.salvar(
-                  Map<String, dynamic>.from(registro['dados'] as Map), registro['origem'].toString());
-          if (enviado) pendentes.remove(entrada.key);
+          try {
+            final enviado = registro['origem'] == 'EXCLUIR'
+                ? await ExercicioContaSync.excluir(entrada.key)
+                : await ExercicioContaSync.salvar(
+                    Map<String, dynamic>.from(registro['dados'] as Map), registro['origem'].toString());
+            if (enviado) pendentes.remove(entrada.key);
+          } catch (e) {
+            AppLogger.i.warn('Pendência de exercício mantida na fila: $e');
+          }
         }
         await prefs.setString(chavePend, jsonEncode(pendentes));
       });
@@ -185,7 +191,8 @@ class FitnessOfflineRepository {
     if (decodificado is! Map) return {};
     final mapa = <String, Map<String, dynamic>>{};
     decodificado.forEach((k, v) {
-      if (v is Map) {
+      final valida = v is Map && (v['origem'] == 'EXCLUIR' || v['dados'] is Map);
+      if (valida) {
         mapa[k.toString()] = Map<String, dynamic>.from(v);
       } else {
         AppLogger.i.warn('Pendência de exercício malformada descartada: $k');

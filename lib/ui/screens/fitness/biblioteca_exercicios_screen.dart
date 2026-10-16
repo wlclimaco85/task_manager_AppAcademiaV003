@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/data/services/exercicio_conta_sync.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
 import 'package:task_manager_flutter/ui/widgets/prescricao_exercicio_inline.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
@@ -90,7 +91,10 @@ class _BibliotecaExerciciosScreenState
       }
     } catch (error, stack) {
       AppLogger.i.error('Falha ao carregar exercícios da biblioteca.', stack);
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível carregar os exercícios.')));
+      }
     }
   }
 
@@ -699,6 +703,10 @@ class _BibliotecaExerciciosScreenState
           if (!ex.isCustom)
             TextButton(
               onPressed: salvando ? null : () async {
+                if (!ExercicioContaSync.autenticado) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(const SnackBar(content: Text('Entre na conta para restaurar o padrão.')));
+                  return;
+                }
                 setModalState(() => salvando = true);
                 try {
                   final confirmado = await _repository.restaurarExercicio(ex.id);

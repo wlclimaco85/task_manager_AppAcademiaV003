@@ -92,6 +92,28 @@ void main() {
     expect(prefs.getString('exercicios_pendentes_v1'), isNull);
   });
 
+  test('entrada malformada na fila nao derruba a lista nem apaga as demais pendencias', () async {
+    SharedPreferences.setMockInitialValues({
+      'exercicios_pendentes_v1': jsonEncode({
+        'ex_quebrado': {'exercicioId': 'ex_quebrado', 'origem': 'BASE'},
+        'ex_supino_reto': {
+          'exercicioId': 'ex_supino_reto',
+          'origem': 'BASE',
+          'dados': {'id': 'ex_supino_reto', 'origem': 'BASE', 'videoUrl': 'https://youtu.be/VALIDO'},
+        },
+      }),
+    });
+    servidor(200);
+    final repo = FitnessOfflineRepository();
+
+    final lista = await repo.getExercicios();
+
+    expect(lista.any((e) => e.id == 'ex_supino_reto'), isTrue);
+    final prefs = await SharedPreferences.getInstance();
+    expect(jsonDecode(prefs.getString('exercicios_pendentes_v1')!)['ex_supino_reto'], isNull,
+        reason: 'pendencia valida enviada e removida');
+  });
+
   test('carregar devolve null quando o servidor falha (usa o cache local)', () async {
     servidor(200, statusDaLeitura: 500);
 
