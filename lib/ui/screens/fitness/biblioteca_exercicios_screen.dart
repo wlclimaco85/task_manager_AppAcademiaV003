@@ -77,15 +77,20 @@ class _BibliotecaExerciciosScreenState
 
   Future<void> _carregarExercicios() async {
     setState(() => _loading = true);
-    final catalogo = await _repository.getExercicios();
-    final lista = _grupoSelecionado == 'Todos' ? catalogo : catalogo
-        .where((e) => e.grupoMuscular == _grupoSelecionado).toList();
-    if (mounted) {
-      setState(() {
-        _exercicios = lista;
-        _catalogo = catalogo;
-        _loading = false;
-      });
+    try {
+      final catalogo = await _repository.getExercicios();
+      final lista = _grupoSelecionado == 'Todos' ? catalogo : catalogo
+          .where((e) => e.grupoMuscular == _grupoSelecionado).toList();
+      if (mounted) {
+        setState(() {
+          _exercicios = lista;
+          _catalogo = catalogo;
+          _loading = false;
+        });
+      }
+    } catch (error, stack) {
+      AppLogger.i.error('Falha ao carregar exercícios da biblioteca.', stack);
+      if (mounted) setState(() => _loading = false);
     }
   }
 

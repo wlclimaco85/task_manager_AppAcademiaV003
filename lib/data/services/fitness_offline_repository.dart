@@ -161,15 +161,27 @@ class FitnessOfflineRepository {
         await prefs.setString(chavePend, jsonEncode(pendentes));
       });
 
+  /// Le a fila entrada a entrada: uma entrada malformada e descartada sozinha,
+  /// sem apagar as pendencias validas (que seriam regravadas sem ela).
   Map<String, Map<String, dynamic>> _lerMapaLocal(String? bruto) {
     if (bruto == null || bruto.isEmpty) return {};
+    final Object? decodificado;
     try {
-      final decodificado = Map<String, dynamic>.from(jsonDecode(bruto) as Map);
-      return decodificado.map((k, v) => MapEntry(k, Map<String, dynamic>.from(v as Map)));
+      decodificado = jsonDecode(bruto);
     } catch (e) {
-      AppLogger.i.warn('Personalizações locais de exercícios ilegíveis; ignoradas: $e');
+      AppLogger.i.warn('Fila de exercícios ilegível; pendências ignoradas: $e');
       return {};
     }
+    if (decodificado is! Map) return {};
+    final mapa = <String, Map<String, dynamic>>{};
+    decodificado.forEach((k, v) {
+      if (v is Map) {
+        mapa[k.toString()] = Map<String, dynamic>.from(v);
+      } else {
+        AppLogger.i.warn('Pendência de exercício malformada descartada: $k');
+      }
+    });
+    return mapa;
   }
 
   Map<String, dynamic>? _lerSnapshot(String? bruto) {
