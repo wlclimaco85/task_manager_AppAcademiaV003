@@ -62,22 +62,6 @@ class NetworkCaller {
             decoded,
           );
         }
-      } else if (AuthUtility.userInfo?.data?.id == null ||
-          AuthUtility.userInfo?.data?.id == 1 && response.statusCode == 403) {
-        loginPadrao();
-        Response response = await get(
-          Uri.parse(TenantContext.applyToUrl(url)),
-          headers: TenantContext.headers,
-        );
-        if (response.statusCode == 200) {
-          return NetworkResponse(
-            true,
-            response.statusCode,
-            jsonDecode(response.body),
-          );
-        } else {
-          return NetworkResponse(false, response.statusCode, null);
-        }
       } else {
         return NetworkResponse(false, response.statusCode, null);
       }
@@ -173,28 +157,6 @@ class NetworkCaller {
       log(e.toString());
     }
     return NetworkResponse(false, -1, null);
-  }
-
-  Future<void> loginPadrao() async {
-    Map<String, dynamic> requestBody = {
-      "email": 'wlclimaco@gmail.com',
-      "password": '123456',
-    };
-    final NetworkResponse response = await NetworkCaller().postRequest(
-      ApiLinks.login,
-      requestBody,
-    );
-
-    if (response.isSuccess) {
-      LoginModel model = LoginModel.fromJson(response.body!);
-      await AuthUtility.setUserInfo(model);
-    } else {
-      if (response.statusCode == 400) {
-        print('Senha ou usuário inválido');
-      } else {
-        print('Erro: ${response.statusCode}');
-      }
-    }
   }
 
   Future<NetworkResponse> putRequest(String url, dynamic body) async {
