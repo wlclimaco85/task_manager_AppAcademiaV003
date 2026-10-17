@@ -61,7 +61,11 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
     _permissoesVerificadasPara = chave;
 
     final estado = await PermissoesAlunoService.meu();
-    if (!mounted || estado == null || !estado.pendente) return;
+    // A conta pode ter trocado enquanto a consulta estava em voo: nao mostra nem grava
+    // permissoes de outra conta.
+    final contaAtual = '${AuthUtility.userInfo.login?.id}';
+    if (!mounted || contaAtual != chave) return;
+    if (estado == null || !estado.pendente) return;
     await showDialog<Map<String, bool>>(
       context: context,
       barrierDismissible: false,

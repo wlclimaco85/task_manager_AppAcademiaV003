@@ -4,8 +4,8 @@ import 'package:task_manager_flutter/data/services/preferencia_tema_service.dart
 
 void main() {
   group('modoDe', () {
-    test('padrao segue o aparelho', () {
-      expect(PreferenciaTema.modoDe(TemaApp.padrao), ThemeMode.system);
+    test('padrao mantem o visual claro atual, sem seguir o aparelho', () {
+      expect(PreferenciaTema.modoDe(TemaApp.padrao), ThemeMode.light);
     });
 
     test('branco e sempre claro', () {

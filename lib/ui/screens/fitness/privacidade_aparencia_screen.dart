@@ -28,7 +28,7 @@ class _PrivacidadeAparenciaScreenState extends State<PrivacidadeAparenciaScreen>
   };
 
   static const Map<TemaApp, String> _rotulosTema = {
-    TemaApp.padrao: 'Padrão (segue o aparelho)',
+    TemaApp.padrao: 'Padrão (visual atual)',
     TemaApp.branco: 'Branco',
     TemaApp.preto: 'Preto',
   };
