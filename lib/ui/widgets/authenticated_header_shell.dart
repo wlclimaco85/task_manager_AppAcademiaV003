@@ -4,6 +4,8 @@ import 'package:task_manager_flutter/data/models/auth_utility.dart';
 import 'package:task_manager_flutter/data/models/login_model.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/utils/fitness_access.dart';
+import 'package:task_manager_flutter/data/services/permissoes_aluno_service.dart';
+import 'package:task_manager_flutter/ui/widgets/permissoes_personal_dialog.dart';
 import 'package:task_manager_flutter/ui/widgets/perfil_fitness_header.dart';
 
 /// Acima do Navigator para permanecer visível também nas telas abertas por push.
@@ -43,7 +45,31 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
       PerfilContaService().carregar().catchError(
             (Object _) => <String, dynamic>{},
           );
+      _verificarPermissoesAluno();
     }
+  }
+
+  String? _permissoesVerificadasPara;
+
+  /// Aluno vinculado por um personal que ainda nao respondeu as permissoes: mostra o popup.
+  /// Personal nao ve este popup; cada login e verificado uma vez por sessao.
+  Future<void> _verificarPermissoesAluno() async {
+    final sessao = AuthUtility.userInfo;
+    if (podeGerenciarAlunos(sessao)) return;
+    final chave = '${sessao.login?.id}';
+    if (_permissoesVerificadasPara == chave) return;
+    _permissoesVerificadasPara = chave;
+
+    final estado = await PermissoesAlunoService.meu();
+    if (!mounted || estado == null || !estado.pendente) return;
+    await showDialog<Map<String, bool>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => PermissoesPersonalDialog(
+        nomePersonal: 'seu personal',
+        inicial: estado.permissoes,
+      ),
+    );
   }
 
   @override

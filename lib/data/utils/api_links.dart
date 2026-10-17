@@ -452,6 +452,8 @@ class ApiLinks {
 
   static String atualizarDadosPessoais(String id) =>
       '$_baseUrlNew/api/dadospessoais/$id';
+  /// Permissoes do aluno para o personal (GET le, PUT responde o popup).
+  static const String permissoesMeu = '$_baseUrlNew/api/fitness/permissoes/meu';
   static String dadosPessoaisPorId(String id) =>
       '$_baseUrlNew/api/dadospessoais/$id';
 
