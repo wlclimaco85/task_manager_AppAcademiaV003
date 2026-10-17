@@ -1,5 +1,6 @@
 import 'package:task_manager_flutter/ui/screens/fitness/meu_perfil_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/data/services/preferencia_tema_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/models/auth_utility.dart';
 import 'package:task_manager_flutter/data/services/auth_service.dart';
@@ -19,7 +20,9 @@ class TaskManagerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final baseTextTheme = GoogleFonts.poppinsTextTheme();
 
-    return MaterialApp(
+    return ValueListenableBuilder<TemaApp>(
+      valueListenable: PreferenciaTema.tema,
+      builder: (context, tema, _) => MaterialApp(
       navigatorKey: globalKey,
       builder: (context, child) => AuthenticatedHeaderShell(
         child: child ?? const SizedBox.shrink(),
@@ -158,8 +161,28 @@ class TaskManagerApp extends StatelessWidget {
           ),
         ),
       ),
-      themeMode: ThemeMode.light,
+      themeMode: PreferenciaTema.modoDe(tema),
+      darkTheme: _temaEscuro(),
       home: const SplashScreen(),
+      ),
     );
   }
+
+  /// Tema escuro com fundo preto (opcao Preto no perfil).
+  static ThemeData _temaEscuro() => ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: GridColors.primary,
+          brightness: Brightness.dark,
+        ),
+        scaffoldBackgroundColor: Colors.black,
+        cardColor: const Color(0xFF121212),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
+      );
 }

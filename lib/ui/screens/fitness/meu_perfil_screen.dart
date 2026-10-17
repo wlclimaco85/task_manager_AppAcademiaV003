@@ -7,6 +7,8 @@ import 'package:image_picker/image_picker.dart';
 import '../../../data/models/auth_utility.dart';
 import '../../../data/services/perfil_conta_service.dart';
 import '../../widgets/perfil_fitness_header.dart';
+import '../editar_dados_usuario_screen.dart';
+import 'privacidade_aparencia_screen.dart';
 
 String prepararFotoPerfil(Uint8List bytes) {
   if (bytes.length > 10 * 1024 * 1024)
@@ -298,10 +300,41 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
                           ],
                         ),
                       ),
+                    const SizedBox(height: 28),
+                    OutlinedButton.icon(
+                      key: const Key('abrir_privacidade_aparencia'),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const PrivacidadeAparenciaScreen()),
+                      ),
+                      icon: const Icon(Icons.shield_outlined),
+                      label: const Text('Privacidade e aparência'),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      key: const Key('abrir_dados_cadastro'),
+                      onPressed: _abrirDadosCadastro,
+                      icon: const Icon(Icons.badge_outlined),
+                      label: const Text('Editar dados de cadastro'),
+                    ),
                   ],
                 ),
               ),
             ),
+    );
+  }
+
+  void _abrirDadosCadastro() {
+    final id = AuthUtility.userInfo.data?.codDadosPessoal?.id;
+    if (id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Cadastro pessoal não encontrado para esta conta.'),
+      ));
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => EditarDadosUsuarioScreen(dadosPessoaisId: id)),
     );
   }
 }
