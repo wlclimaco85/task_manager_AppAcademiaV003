@@ -2,6 +2,9 @@ import 'package:task_manager_flutter/ui/screens/fitness/meu_perfil_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/ui/widgets/fitness_graficos_hub.dart';
 import 'package:task_manager_flutter/ui/widgets/fitness_menu_page.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/selecionar_aluno_avaliacao_screen.dart';
+import 'package:task_manager_flutter/data/models/auth_utility.dart';
+import 'package:task_manager_flutter/data/utils/fitness_access.dart';
 import 'package:task_manager_flutter/data/utils/fitness_access.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/customization/dynamic_grid_dynamic_screen.dart';
@@ -295,10 +298,13 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         );
         break;
       case 'Avaliacao fisica':
+        // Personal escolhe de quem e a avaliacao (dele ou de um aluno).
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (_) => const FitnessMenuPage(child: AvaliacaoFisicaProScreen())),
+              builder: (_) => podeGerenciarAlunos(AuthUtility.session.value)
+                  ? const FitnessMenuPage(child: SelecionarAlunoAvaliacaoScreen())
+                  : const FitnessMenuPage(child: AvaliacaoFisicaProScreen())),
         );
         break;
       case 'Grupo muscular':

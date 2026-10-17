@@ -126,13 +126,26 @@ class _PrescricaoExercicioInlineState extends State<PrescricaoExercicioInline> {
                 maxLines: 3,
                 onChanged: (v) => _observacao = v),
             const SizedBox(height: 12),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Se a máquina estiver ocupada'),
-              subtitle: const Text('Definir exercícios alternativos'),
-              value: _usarAlternativas,
-              onChanged: (v) => setState(() => _usarAlternativas = v),
-            ),
+            // Toggle compacto: uma linha, como os demais ajustes da prescricao.
+            Row(children: [
+              Transform.scale(
+                scale: 0.8,
+                child: Switch(
+                  value: _usarAlternativas,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  onChanged: (v) => setState(() => _usarAlternativas = v),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: InkWell(
+                  // Tocar no texto tambem liga/desliga, como o SwitchListTile fazia.
+                  onTap: () => setState(() => _usarAlternativas = !_usarAlternativas),
+                  child: Text('Se a máquina estiver ocupada',
+                      style: Theme.of(context).textTheme.bodyMedium),
+                ),
+              ),
+            ]),
             if (_usarAlternativas)
               for (int i = 0; i < 2; i++)
                 Padding(
