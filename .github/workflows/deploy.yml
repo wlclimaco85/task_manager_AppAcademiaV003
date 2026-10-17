@@ -12,9 +12,9 @@ on:
         options: [android, ios, all]
         default: android
       lane:
-        description: Destino (beta = teste interno; release = produção)
+        description: Destino (beta = teste interno; teste_fechado = Teste fechado - TESTE; release = produção)
         type: choice
-        options: [beta, release]
+        options: [beta, teste_fechado, release]
         default: beta
 
 permissions:
