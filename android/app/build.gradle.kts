@@ -22,11 +22,13 @@ android {
     }
 
     defaultConfig {
-        applicationId = "task.manager.flutter.AppAcademia"
+        // ID da listagem existente na Play (Eu Atleta); pode ser sobrescrito por -PplayApplicationId.
+        applicationId = providers.gradleProperty("playApplicationId")
+            .getOrElse("task.manager.flutter.AppAcademia")
         minSdk = 26
         targetSdk = flutter.targetSdkVersion
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
     }
 
     signingConfigs {

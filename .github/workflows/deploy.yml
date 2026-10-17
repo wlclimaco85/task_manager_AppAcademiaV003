@@ -2,104 +2,134 @@ name: Deploy
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main]
+    tags: ['v*']
   workflow_dispatch:
     inputs:
       platform:
-        description: 'Plataforma (ios / android / all)'
-        required: true
-        default: 'all'
+        description: Plataforma
+        type: choice
+        options: [android, ios, all]
+        default: android
       lane:
-        description: 'Lane (beta / release)'
-        required: true
-        default: 'beta'
+        description: Destino (beta = teste interno; release = produção)
+        type: choice
+        options: [beta, release]
+        default: beta
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.repository }}
+  cancel-in-progress: false
 
 jobs:
   deploy-android:
     name: Android Deploy
+    if: github.event_name == 'push' || inputs.platform == 'android' || inputs.platform == 'all'
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all' || startsWith(github.ref, 'refs/tags/') }}
+    env:
+      PLAY_APPLICATION_ID: task.manager.flutter.AppAcademia
+      PLAY_RELEASE_STATUS: ${{ vars.PLAY_RELEASE_STATUS || 'draft' }}
+      ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/keystore.jks
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      GOOGLE_PLAY_JSON_KEY: ${{ github.workspace }}/fastlane/google-play-key.json
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.44.6'
           channel: stable
           cache: true
-
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
           bundler-cache: true
-          working-directory: task_manager_AppAcademiaV003
-
+      - name: Prepare CI Gradle settings
+        shell: bash
+        run: |
+          chmod +x android/gradlew
+          # Local settings contain Windows-only JDK and selector paths.
+          sed -i '/^org.gradle.java.home=/d; /^org.gradle.jvmargs=/d' android/gradle.properties
+          echo 'org.gradle.jvmargs=-Xmx4G -XX:MaxMetaspaceSize=2G' >> android/gradle.properties
       - name: Flutter pub get
         run: flutter pub get
-        working-directory: task_manager_AppAcademiaV003
-
-      - name: Decode Keystore
-        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > task_manager_AppAcademiaV003/android/app/keystore.jks
-
-      - name: Decode Google Play Key
-        run: echo "${{ secrets.GOOGLE_PLAY_JSON_KEY_BASE64 }}" | base64 --decode > task_manager_AppAcademiaV003/fastlane/google-play-key.json
-
-      - name: Run Fastlane Android
-        run: bundle exec fastlane android ${{ github.event.inputs.lane || 'beta' }}
-        working-directory: task_manager_AppAcademiaV003
+      - name: Prepare signing and version
+        shell: bash
         env:
-          ANDROID_KEYSTORE_PATH: android/app/keystore.jks
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          GOOGLE_PLAY_JSON_KEY: fastlane/google-play-key.json
-          SLACK_URL: ${{ secrets.SLACK_URL }}
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          PLAY_KEY_BASE64: ${{ secrets.GOOGLE_PLAY_JSON_KEY_BASE64 }}
+        run: |
+          set -euo pipefail
+          for name in KEYSTORE_BASE64 PLAY_KEY_BASE64 ANDROID_KEY_ALIAS ANDROID_STORE_PASSWORD ANDROID_KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Secret obrigatório ausente: $name (consulte docs/FASTLANE_CI.md)"
+              exit 1
+            fi
+          done
+          umask 077
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$ANDROID_KEYSTORE_PATH"
+          printf '%s' "$PLAY_KEY_BASE64" | base64 --decode > "$GOOGLE_PLAY_JSON_KEY"
+          # Greater than the manual bundle 2026101501; retries get a new code.
+          code=$((2026101501 + GITHUB_RUN_NUMBER * 100 + GITHUB_RUN_ATTEMPT))
+          test "$GITHUB_RUN_ATTEMPT" -lt 100
+          test "$code" -le 2100000000
+          echo "CI_BUILD_NUMBER=$code" >> "$GITHUB_ENV"
+      - name: Run Fastlane Android
+        env:
+          DEPLOY_LANE: ${{ inputs.lane || 'beta' }}
+        run: bundle exec fastlane android "$DEPLOY_LANE"
+      - name: Save Android bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Eu-Atleta-Android-${{ github.run_number }}-${{ github.run_attempt }}
+          path: build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: warn
+          retention-days: 14
 
   deploy-ios:
     name: iOS Deploy
+    if: github.event_name == 'workflow_dispatch' && (inputs.platform == 'ios' || inputs.platform == 'all')
     runs-on: macos-latest
-    if: ${{ github.event.inputs.platform == 'ios' || github.event.inputs.platform == 'all' || startsWith(github.ref, 'refs/tags/') }}
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.44.6'
           channel: stable
           cache: true
-
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
           bundler-cache: true
-          working-directory: task_manager_AppAcademiaV003
-
       - name: Flutter pub get
         run: flutter pub get
-        working-directory: task_manager_AppAcademiaV003
-
       - name: Decode App Store Connect API Key
-        run: echo "${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}" | base64 --decode > task_manager_AppAcademiaV003/fastlane/AuthKey.p8
-
-      - name: Run Fastlane iOS
-        run: bundle exec fastlane ios ${{ github.event.inputs.lane || 'beta' }}
-        working-directory: task_manager_AppAcademiaV003
         env:
-          APP_STORE_CONNECT_API_KEY_KEY_ID:       ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
-          APP_STORE_CONNECT_API_KEY_ISSUER_ID:    ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
-          APP_STORE_CONNECT_API_KEY_KEY_FILEPATH: fastlane/AuthKey.p8
-          MATCH_GIT_URL:   ${{ secrets.MATCH_GIT_URL }}
-          MATCH_PASSWORD:  ${{ secrets.MATCH_PASSWORD }}
-          APPLE_TEAM_ID:   ${{ secrets.APPLE_TEAM_ID }}
-          SLACK_URL: ${{ secrets.SLACK_URL }}
+          API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+        run: |
+          umask 077
+          printf '%s' "$API_KEY_BASE64" | base64 --decode > fastlane/AuthKey.p8
+      - name: Run Fastlane iOS
+        run: bundle exec fastlane ios "$DEPLOY_LANE"
+        env:
+          DEPLOY_LANE: ${{ inputs.lane || 'beta' }}
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY_FILEPATH: ${{ github.workspace }}/fastlane/AuthKey.p8
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}

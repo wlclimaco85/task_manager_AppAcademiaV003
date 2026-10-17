@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, desenv]
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, desenv]
 
 jobs:
   flutter-tests:
@@ -58,16 +58,20 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
+      - name: Prepare CI Gradle settings
+        run: |
+          chmod +x android/gradlew
+          sed -i '/^org.gradle.java.home=/d; /^org.gradle.jvmargs=/d' android/gradle.properties
+          echo 'org.gradle.jvmargs=-Xmx4G -XX:MaxMetaspaceSize=2G' >> android/gradle.properties
+
       - name: Run Android tests via Fastlane
         run: bundle exec fastlane android tests
 
   ios-tests:
     name: iOS Unit Tests
     runs-on: macos-latest
-    # Desativado: projeto iOS incompleto (sem ios/Podfile) e run_tests falha com output_dir.
-    # Reativar quando o iOS estiver configurado num Mac.
+    # Desativado: projeto iOS incompleto (sem ios/Podfile). Reativar quando o iOS estiver configurado num Mac.
     if: false
-    # Projeto iOS incompleto no repo (sem Podfile): nao bloqueia o CI ate ser montado num Mac.
     continue-on-error: true
     needs: flutter-tests
     steps:
