@@ -42,6 +42,26 @@ class PermissoesAlunoService {
     }
   }
 
+  /// Permissoes de um aluno vinculado, lidas pelo personal. Em falha ou sem resposta
+  /// devolve o padrao restritivo (so treino): na duvida, bloqueia.
+  static Future<Map<String, bool>> doAluno(String alunoId) async {
+    final padrao = <String, bool>{'treino': true, for (final a in areasOpcionais) a: false};
+    try {
+      final resposta = await NetworkCaller().getRequest(ApiLinks.permissoesDoAluno(alunoId));
+      if (!resposta.isSuccess) return padrao;
+      final data = resposta.body?['data'];
+      final brutas = data is Map ? data['permissoes'] : null;
+      if (brutas is! Map) return padrao;
+      return <String, bool>{
+        'treino': true,
+        for (final area in areasOpcionais) area: brutas[area] == true,
+      };
+    } catch (e) {
+      AppLogger.i.warn('[PermissoesAluno] Falha ao ler permissoes do aluno $alunoId: $e');
+      return padrao;
+    }
+  }
+
   /// Grava a escolha do aluno. Devolve true somente com resposta de sucesso.
   static Future<bool> responder(Map<String, bool> escolhas) async {
     try {

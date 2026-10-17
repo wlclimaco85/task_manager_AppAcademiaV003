@@ -34,10 +34,13 @@ class _SelecionarAlunoAvaliacaoScreenState extends State<SelecionarAlunoAvaliaca
     });
   }
 
-  void _abrir(String rotulo) {
+  /// [alunoId] vazio = avaliacao do proprio personal (nao depende de permissao de aluno).
+  void _abrir(String rotulo, {String? alunoId}) {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => AvaliacaoFisicaProScreen(alunoNome: rotulo)),
+      MaterialPageRoute(
+        builder: (_) => AvaliacaoFisicaProScreen(alunoNome: rotulo, alunoId: alunoId),
+      ),
     );
   }
 
@@ -75,7 +78,7 @@ class _SelecionarAlunoAvaliacaoScreenState extends State<SelecionarAlunoAvaliaca
                       ),
                       title: Text(aluno.nome),
                       subtitle: Text(aluno.objetivo),
-                      onTap: () => _abrir(aluno.nome),
+                      onTap: () => _abrir(aluno.nome, alunoId: aluno.id),
                     ),
                   ),
                 if (_alunos.isEmpty)

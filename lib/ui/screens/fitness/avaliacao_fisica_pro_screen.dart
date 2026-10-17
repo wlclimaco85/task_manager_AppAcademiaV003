@@ -1,15 +1,19 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
+import 'package:task_manager_flutter/data/services/permissoes_aluno_service.dart';
 
 /// Avaliação Física Profissional (Padrão MFIT Personal)
 /// Protocolos científicos de Pollock (3 e 7 dobras), cálculo de %BF, massa magra/gorda e perimetria.
 class AvaliacaoFisicaProScreen extends StatefulWidget {
   final String? alunoNome;
+  /// Aluno avaliado pelo personal. Sem valor, e a propria avaliacao (aluno ou personal).
+  final String? alunoId;
 
   const AvaliacaoFisicaProScreen({
     super.key,
     this.alunoNome,
+    this.alunoId,
   });
 
   @override
@@ -114,7 +118,45 @@ class _AvaliacaoFisicaProScreenState extends State<AvaliacaoFisicaProScreen> {
   double get _imc => _pesoKg / pow(_alturaCm / 100, 2);
 
   @override
+  /// null = ainda consultando; true/false = resposta do aluno (so para personal vendo aluno).
+  bool? _avaliacoesLiberadas;
+
+  @override
+  void initState() {
+    super.initState();
+    _verificarPermissao();
+  }
+
+  Future<void> _verificarPermissao() async {
+    final alunoId = widget.alunoId;
+    if (alunoId == null) {
+      setState(() => _avaliacoesLiberadas = true);
+      return;
+    }
+    final permissoes = await PermissoesAlunoService.doAluno(alunoId);
+    if (!mounted) return;
+    setState(() => _avaliacoesLiberadas = permissoes['avaliacoes'] == true);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_avaliacoesLiberadas != true) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Avaliação Física')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: _avaliacoesLiberadas == null
+                ? const CircularProgressIndicator()
+                : Text(
+                    'O aluno ainda não liberou avaliações físicas para o seu personal.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: GridColors.textSecondary),
+                  ),
+          ),
+        ),
+      );
+    }
     final width = MediaQuery.sizeOf(context).width;
     final isDesktopOrWeb = width >= 800;
 

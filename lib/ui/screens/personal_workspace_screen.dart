@@ -314,7 +314,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (_) => AvaliacaoFisicaProScreen(alunoNome: aluno.nome)),
+                          builder: (_) => AvaliacaoFisicaProScreen(alunoNome: aluno.nome, alunoId: aluno.id)),
                     );
                   }
                 },

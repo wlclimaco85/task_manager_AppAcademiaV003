@@ -8,6 +8,7 @@ import 'package:task_manager_flutter/ui/widgets/imprimir_pdf.dart';
 import 'package:task_manager_flutter/data/models/fitness/nutricao_farmaco_model.dart';
 import 'package:task_manager_flutter/data/services/nutricao_farmaco_offline_repository.dart';
 import 'package:task_manager_flutter/data/services/unidade_medida_catalogo.dart';
+import 'package:task_manager_flutter/data/services/permissoes_aluno_service.dart';
 import 'package:task_manager_flutter/data/utils/fitness_access.dart';
 
 /// Central de Nutrição, Farmacologia, Suplementação & Timeline Fitness 360
@@ -34,6 +35,14 @@ class _NutricaoProtocolosHubScreenState
   List<SuplementoProtocoloModel> _suplementos = [];
   List<TimelineFitnessEventModel> _timelineEventos = [];
   bool _loading = true;
+  /// Permissoes do aluno visto pelo personal. Sem resposta, tudo bloqueado (fail-closed).
+  Map<String, bool> _permissoesAluno = const {
+    'treino': true,
+    'dieta': false,
+    'suplementacao': false,
+    'avaliacoes': false,
+    'metas': false,
+  };
 
   @override
   void initState() {
@@ -50,8 +59,26 @@ class _NutricaoProtocolosHubScreenState
           ? AuthUtility.userInfo.login?.id?.toString()
           : null);
 
+  /// Personal vendo um aluno: a area so aparece se o aluno liberou.
+  bool _bloqueado(String area) => widget.alunoId != null && _permissoesAluno[area] != true;
+
+  Widget _avisoBloqueado(String area) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            'O aluno ainda não liberou o acesso a $area para o seu personal.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: GridColors.textSecondary),
+          ),
+        ),
+      );
+
   Future<void> _carregarDados() async {
     setState(() => _loading = true);
+    if (widget.alunoId != null) {
+      final permissoes = await PermissoesAlunoService.doAluno(widget.alunoId!);
+      if (mounted) setState(() => _permissoesAluno = permissoes);
+    }
     final dietas = await _repository.getDietas(alunoId: _alunoFiltro);
     final medicamentos = await _repository.getMedicamentos(alunoId: _alunoFiltro);
     final suplementos = await _repository.getSuplementos(alunoId: _alunoFiltro);
@@ -135,6 +162,7 @@ class _NutricaoProtocolosHubScreenState
   // ─────────────────────────────────────────────────────────────────────────────
 
   Widget _buildTabDietas() {
+    if (_bloqueado('dieta')) return _avisoBloqueado('dieta');
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -530,6 +558,7 @@ class _NutricaoProtocolosHubScreenState
   // ─────────────────────────────────────────────────────────────────────────────
 
   Widget _buildTabSuplementos() {
+    if (_bloqueado('suplementacao')) return _avisoBloqueado('suplementação');
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -625,6 +654,7 @@ class _NutricaoProtocolosHubScreenState
   // ─────────────────────────────────────────────────────────────────────────────
 
   Widget _buildTabTimeline360() {
+    if (_bloqueado('metas')) return _avisoBloqueado('metas e evolução do corpo');
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
