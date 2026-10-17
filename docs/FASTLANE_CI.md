@@ -63,3 +63,4 @@ Além dos workflows, Fastfile, Appfile, pubspec.yaml, Manifest e Gradle ajustado
 inclua android/.gitignore, android/gradlew, android/gradlew.bat e
 android/gradle/wrapper/gradle-wrapper.jar. O workflow configura permissão de execução
 para o wrapper no runner. Não inclua credenciais nem arquivos de teste pessoais.
+
