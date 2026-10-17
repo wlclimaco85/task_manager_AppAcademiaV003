@@ -77,6 +77,8 @@ class ApiLinks {
 
   // static String login = 'http://192.168.56.1:8088/boletobancos/rest/auth/login';
   static String login = '$_baseUrlNew/rest/auth/login';
+  /// Tipos de conta que o V003 (Eu Atleta) aceita no login: aluno, personal e academia.
+  static const List<String> tiposLoginApp = ['APP_ALUNO', 'APP_PERSONAL', 'APP_ACADEMIA'];
   static String recoverVerifyEmail(String email) =>
       '$_baseUrl/RecoverVerifyEmail/$email';
   static String recoverVerifyOTP(String email, String otp) =>

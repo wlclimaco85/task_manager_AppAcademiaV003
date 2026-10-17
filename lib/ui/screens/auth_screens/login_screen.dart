@@ -38,7 +38,9 @@ class _LoginScreenState extends State<LoginScreen>
 
     Map<String, dynamic> requestBody = {
       "email": _emailController.text.trim(),
-      "password": _passwordController.text
+      "password": _passwordController.text,
+      // Tipos de conta aceitos por este app: impede pegar contas de outros sistemas do mesmo backend.
+      "tiposLogin": ApiLinks.tiposLoginApp,
     };
     final NetworkResponse response =
         await NetworkCaller().postRequest(ApiLinks.login, requestBody);
@@ -57,10 +59,11 @@ class _LoginScreenState extends State<LoginScreen>
     } else {
       if (mounted) {
         _passwordController.clear();
+        final mensagem = response.statusCode == 403
+            ? "Esta conta não pertence a este aplicativo."
+            : "Incorrect email or password - ${ApiLinks.login}";
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Incorrect email or password - ${ApiLinks.login}"),
-          ),
+          SnackBar(content: Text(mensagem)),
         );
       }
     }
