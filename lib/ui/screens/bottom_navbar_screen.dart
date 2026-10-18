@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/ui/widgets/fitness_graficos_hub.dart';
 import 'package:task_manager_flutter/ui/widgets/fitness_menu_page.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/selecionar_aluno_avaliacao_screen.dart';
+import 'package:task_manager_flutter/ui/widgets/cadastro_inicial_banner.dart';
 import 'package:task_manager_flutter/data/models/auth_utility.dart';
 import 'package:task_manager_flutter/data/utils/fitness_access.dart';
 import 'package:task_manager_flutter/data/utils/fitness_access.dart';
@@ -472,6 +473,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                     style: TextStyle(color: Color(0xFF6D647A), fontSize: 13),
                   ),
                   const SizedBox(height: 22),
+                  const CadastroInicialBanner(),
                   for (final section in sections) ...[
                     _FitnessSectionView(
                       section: section,
