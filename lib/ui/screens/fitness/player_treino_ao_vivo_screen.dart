@@ -8,6 +8,7 @@ import 'package:task_manager_flutter/data/models/fitness/execucao_alternativas_t
 import 'package:task_manager_flutter/ui/widgets/compartilhar_treino_sheet.dart';
 import 'package:task_manager_flutter/data/utils/app_logger.dart';
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/data/services/tela_ativa_service.dart';
 import 'package:flutter/services.dart';
 import 'package:task_manager_flutter/ui/widgets/exercicio_midia.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
@@ -65,6 +66,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
   @override
   void initState() {
     super.initState();
+    TelaAtivaService.manterLigada();
     _inicializarSeries();
     _restaurarRascunho();
   }
@@ -324,6 +326,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
   @override
   void dispose() {
     _descansoTimer?.cancel();
+    TelaAtivaService.liberar();
     super.dispose();
   }
 

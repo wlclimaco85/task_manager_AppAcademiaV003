@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/data/services/tela_ativa_service.dart';
 import 'package:task_manager_flutter/data/services/exercicio_conta_sync.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
 import 'package:task_manager_flutter/ui/widgets/prescricao_exercicio_inline.dart';
@@ -73,6 +74,7 @@ class _BibliotecaExerciciosScreenState
   @override
   void initState() {
     super.initState();
+    TelaAtivaService.manterLigada();
     _naFicha = {for (final e in widget.exerciciosNaFicha.entries) e.key: List.of(e.value)};
     _naDivisao = Set.of(widget.exerciciosNaDivisao);
     _carregarExercicios();
@@ -117,6 +119,7 @@ class _BibliotecaExerciciosScreenState
   @override
   void dispose() {
     _searchController.dispose();
+    TelaAtivaService.liberar();
     super.dispose();
   }
 
