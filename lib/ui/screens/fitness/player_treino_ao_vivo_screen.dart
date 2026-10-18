@@ -1106,6 +1106,9 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
   Future<void> _confirmarFinalizarTreino() async {
     int rpeSelecionado = 7;
     final feedbackCtrl = TextEditingController();
+    final duracaoInicial = DateTime.now().difference(_inicioSessao).inMinutes.clamp(1, 1440);
+    final duracaoCtrl = TextEditingController(text: '$duracaoInicial');
+    final scrollCtrl = ScrollController();
     var fotos = <String>[];
     var videos = <String>[];
     final formKey = GlobalKey<FormState>();
@@ -1117,9 +1120,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            final fimSessao = DateTime.now();
             final duracaoMinutos =
-                fimSessao.difference(_inicioSessao).inMinutes.clamp(1, 300);
+                int.tryParse(duracaoCtrl.text.trim())?.clamp(1, 1440) ?? duracaoInicial;
 
             // Calcula tonelagem total levantada (Volume Load)
             double tonelagemKg = 0;
@@ -1134,6 +1136,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
             });
 
             return AlertDialog(
+              insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               backgroundColor: const Color(0xFF1E293B),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
@@ -1147,8 +1150,16 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                           color: Colors.white, fontWeight: FontWeight.w800))),
                 ],
               ),
-              content: SingleChildScrollView(
-                child: Form(key: formKey, child: Column(
+              content: SizedBox(
+                width: 460,
+                height: MediaQuery.sizeOf(context).height * 0.64,
+                child: Scrollbar(
+                  controller: scrollCtrl,
+                  thumbVisibility: true,
+                  child: SingleChildScrollView(
+                    controller: scrollCtrl,
+                    padding: const EdgeInsets.only(right: 10),
+                    child: Form(key: formKey, child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1156,6 +1167,30 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                       'Excelente sessão! Duração: $duracaoMinutos min • $totalSeriesConcluidas séries concluídas.',
                       style: const TextStyle(
                           color: Color(0xFF94A3B8), fontSize: 13),
+                    ),
+                    const SizedBox(height: 12),
+
+                    TextFormField(
+                      controller: duracaoCtrl,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      style: const TextStyle(color: Color(0xFF0F172A)),
+                      decoration: const InputDecoration(
+                        labelText: 'Duração do treino',
+                        hintText: 'Informe o tempo realizado',
+                        suffixText: 'min',
+                        prefixIcon: Icon(Icons.timer_outlined),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                      validator: (value) {
+                        final minutos = int.tryParse(value?.trim() ?? '');
+                        if (minutos == null || minutos < 1 || minutos > 1440) {
+                          return 'Informe uma duração entre 1 e 1440 minutos.';
+                        }
+                        return null;
+                      },
+                      onChanged: (_) => setDialogState(() {}),
                     ),
                     const SizedBox(height: 12),
 
@@ -1249,6 +1284,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                     ),
                   ],
                 )),
+                  ),
+                ),
               ),
               actions: [
                 TextButton(
@@ -1273,6 +1310,9 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                     }
                     setDialogState(() => salvando = true);
                     try {
+                    final fimSessao = DateTime.now();
+                    final inicioCorrigido =
+                        fimSessao.subtract(Duration(minutes: duracaoMinutos));
                     // 1. Gravar sessão no repositório offline
                     final sessao = SessaoTreinoRegistroModel(
                       id: 'sessao_${_inicioSessao.microsecondsSinceEpoch}_${widget.divisao.id}',
@@ -1280,10 +1320,9 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                       divisaoLetra: widget.divisao.letra,
                       divisaoNome: widget.divisao.nome,
                       alunoId: widget.alunoId,
-                      dataHoraInicio: _inicioSessao.toIso8601String(),
-                      dataHoraFim: DateTime.now().toIso8601String(),
-                      duracaoSegundos:
-                          DateTime.now().difference(_inicioSessao).inSeconds,
+                      dataHoraInicio: inicioCorrigido.toIso8601String(),
+                      dataHoraFim: fimSessao.toIso8601String(),
+                      duracaoSegundos: duracaoMinutos * 60,
                       rpe: rpeSelecionado,
                       feedbackAluno: feedbackCtrl.text.trim().isNotEmpty
                           ? feedbackCtrl.text.trim()
@@ -1358,6 +1397,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     await Navigator.of(context).push(route);
     await route.completed;
     feedbackCtrl.dispose();
+    duracaoCtrl.dispose();
+    scrollCtrl.dispose();
   }
 
   Widget _buildMiniStat(String label, String value, IconData icon) {

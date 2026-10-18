@@ -21,6 +21,9 @@ void main() {
     await t.pumpAndSettle();
     await t.tap(find.text('Concluir').first);
     await t.pumpAndSettle();
+    final duracao = find.widgetWithText(TextFormField, 'Duração do treino');
+    expect(duracao, findsOneWidget);
+    await t.enterText(duracao, '75');
     const links = ['https://youtu.be/jNQXAC9IVRw',
       'https://drive.google.com/file/d/abc_123/view',
       'https://www.youtube.com/watch?v=jNQXAC9IVRw'];
@@ -37,6 +40,10 @@ void main() {
     expect(sessoes.single.videosDoTreino, links);
     expect(sessoes.single.treinoId, 'ficha');
     expect(sessoes.single.fotosBase64, isEmpty);
+    expect(sessoes.single.duracaoSegundos, 75 * 60);
+    final inicio = DateTime.parse(sessoes.single.dataHoraInicio);
+    final fim = DateTime.parse(sessoes.single.dataHoraFim);
+    expect(fim.difference(inicio), const Duration(minutes: 75));
     expect(t.takeException(), isNull);
   });
 }

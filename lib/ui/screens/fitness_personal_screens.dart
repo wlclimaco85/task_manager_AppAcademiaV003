@@ -21,6 +21,8 @@ import 'package:task_manager_flutter/data/services/medida_corporal_caller.dart';
 import 'package:task_manager_flutter/data/services/mural_caller.dart';
 import 'package:task_manager_flutter/data/services/saude_diaria_caller.dart';
 import 'package:task_manager_flutter/data/services/health_connect_service.dart';
+import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
+import 'package:task_manager_flutter/data/utils/calorias_treino_forca.dart';
 
 class _ModalidadeAerobicaInfo {
   final String nome;
@@ -99,6 +101,7 @@ class AtividadeScreen extends StatelessWidget {
       defaultTitle: 'Caminhada',
       defaultValue: '5,0 km',
       defaultNote: 'Distancia aerobica diaria do aluno',
+      includeStrengthWorkouts: true,
       metricCards: [
         FitnessMetricSpec('Meta diaria', '--', Icons.flag_outlined),
         FitnessMetricSpec('Calorias', '--', Icons.local_fire_department),
@@ -556,6 +559,7 @@ class FitnessRecordScreen extends StatefulWidget {
     this.extraCards = const [],
     this.tips = const [],
     this.liveWorkout = false,
+    this.includeStrengthWorkouts = false,
   });
 
   final String type;
@@ -571,6 +575,7 @@ class FitnessRecordScreen extends StatefulWidget {
   final List<Widget> extraCards;
   final List<String> tips;
   final bool liveWorkout;
+  final bool includeStrengthWorkouts;
 
   @override
   State<FitnessRecordScreen> createState() => _FitnessRecordScreenState();
@@ -586,7 +591,39 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
   }
 
   void _reload() {
-    _future = Fitness360LocalStore.records(type: widget.type);
+    _future = _carregarRegistros();
+  }
+
+  Future<List<Fitness360Record>> _carregarRegistros() async {
+    final records = await Fitness360LocalStore.records(type: widget.type);
+    if (!widget.includeStrengthWorkouts) return records;
+
+    final summary = await Fitness360LocalStore.summary();
+    final sessoes = await FitnessOfflineRepository().getSessoesConcluidas();
+    final treinos = sessoes.map((sessao) {
+      final minutos = (sessao.duracaoSegundos / 60).ceil().clamp(1, 1440);
+      final calorias = calcularCaloriasTreinoForca(
+        minutos: minutos,
+        rpe: sessao.rpe,
+        pesoKg: summary.weightKg,
+      );
+      final intensidade = intensidadeTreinoForca(sessao.rpe);
+      final data = DateTime.tryParse(sessao.dataHoraFim) ??
+          DateTime.tryParse(sessao.dataHoraInicio) ?? DateTime.now();
+      return Fitness360Record(
+        id: data.microsecondsSinceEpoch,
+        type: 'musculacao',
+        title: 'Musculação • ${sessao.divisaoNome}',
+        value: calorias == null ? '$minutos min' : '$minutos min • $calorias kcal',
+        note: calorias == null
+            ? 'Treino de força • RPE ${sessao.rpe}/10 • $intensidade • Cadastre seu peso em Corpo para calcular calorias.'
+            : 'Treino de força • RPE ${sessao.rpe}/10 • Intensidade $intensidade',
+        createdAt: data,
+      );
+    });
+
+    return [...records, ...treinos]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
   List<FitnessMetricSpec> _metricasReais(List<Fitness360Record> records) {
@@ -1448,19 +1485,26 @@ class _RecordTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final date = DateFormat('dd/MM HH:mm').format(record.createdAt);
+    final musculacao = record.type == 'musculacao';
+    const strengthColor = Color(0xFFDC2626);
+    final accent = musculacao ? strengthColor : GridColors.primary;
     return Container(
+      key: ValueKey('registro_${record.type}_${record.id}'),
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: GridColors.card,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: GridColors.primary.withValues(alpha: 0.10)),
+        border: Border.all(color: accent.withValues(alpha: musculacao ? 0.35 : 0.10)),
       ),
       child: Row(
         children: [
-          const CircleAvatar(
-            backgroundColor: GridColors.filterBackground,
-            child: Icon(Icons.check_circle_outline, color: GridColors.primary),
+          CircleAvatar(
+            backgroundColor: accent.withValues(alpha: 0.10),
+            child: Icon(
+              musculacao ? Icons.fitness_center : Icons.check_circle_outline,
+              color: accent,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1469,8 +1513,8 @@ class _RecordTile extends StatelessWidget {
               children: [
                 Text(
                   record.title,
-                  style: const TextStyle(
-                    color: GridColors.textSecondary,
+                  style: TextStyle(
+                    color: musculacao ? strengthColor : GridColors.textSecondary,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -1492,8 +1536,8 @@ class _RecordTile extends StatelessWidget {
             children: [
               Text(
                 record.value,
-                style: const TextStyle(
-                  color: GridColors.primary,
+                style: TextStyle(
+                  color: accent,
                   fontWeight: FontWeight.w900,
                 ),
               ),

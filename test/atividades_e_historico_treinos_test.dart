@@ -1,7 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_360_local_store.dart';
+import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
+import 'package:task_manager_flutter/data/utils/calorias_treino_forca.dart';
+import 'package:task_manager_flutter/ui/screens/fitness_personal_screens.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -100,6 +104,52 @@ void main() {
       expect(item.repeticoes, '8 a 12');
       expect(item.cargaSugeridaKg, 80.0);
       expect(item.descansoSegundos, 90);
+    });
+  });
+
+  group('Gasto calórico da musculação', () {
+    test('considera tempo, peso e intensidade RPE', () {
+      expect(calcularCaloriasTreinoForca(minutos: 60, rpe: 7, pesoKg: 70), 368);
+      expect(calcularCaloriasTreinoForca(minutos: 60, rpe: 9, pesoKg: 70), 441);
+      expect(intensidadeTreinoForca(9), 'Alta');
+    });
+
+    test('não inventa calorias quando o peso não foi informado', () {
+      expect(calcularCaloriasTreinoForca(minutos: 60, rpe: 7, pesoKg: null), isNull);
+    });
+
+    testWidgets('atividade exibe treino concluído em vermelho com calorias', (tester) async {
+      await Fitness360LocalStore.addRecord(
+        type: 'corpo', title: 'Peso', value: '70 kg', note: 'Peso atual');
+      await FitnessOfflineRepository().registrarSessaoConcluida(
+        const SessaoTreinoRegistroModel(
+          id: 'sessao-forca', treinoId: 'plano', divisaoLetra: 'A',
+          divisaoNome: 'Treino A', alunoId: 'aluno',
+          dataHoraInicio: '2026-10-18T10:00:00',
+          dataHoraFim: '2026-10-18T11:00:00', duracaoSegundos: 3600,
+          rpe: 7, exerciciosExecutados: [],
+        ),
+      );
+
+      tester.view.physicalSize = const Size(500, 1800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(const MaterialApp(home: AtividadeScreen()));
+      await tester.pumpAndSettle();
+
+      final registroId = DateTime.parse('2026-10-18T11:00:00').microsecondsSinceEpoch;
+      final tile = find.byKey(ValueKey('registro_musculacao_$registroId'));
+      expect(tile, findsWidgets);
+      expect(find.text('Musculação • Treino A'), findsWidgets);
+      expect(find.text('60 min • 368 kcal'), findsWidgets);
+      final container = tester.widget<Container>(tile.first);
+      final decoration = container.decoration! as BoxDecoration;
+      expect(
+        decoration.border!.top.color,
+        const Color(0xFFDC2626).withValues(alpha: 0.35),
+      );
+      expect(tester.takeException(), isNull);
     });
   });
 }
