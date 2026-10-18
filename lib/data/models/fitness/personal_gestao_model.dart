@@ -86,6 +86,9 @@ class PersonalAlunoGestaoModel {
   final String? dataUltimoPagamento;
   final String mesReferencia; // ex: "10/2026"
 
+  /// Foto e as 7 medidas do cadastro inicial preenchidas. Default true: sem dado, nao alarma.
+  final bool cadastroInicialCompleto;
+
   const PersonalAlunoGestaoModel({
     required this.id,
     required this.nome,
@@ -95,6 +98,7 @@ class PersonalAlunoGestaoModel {
     this.objetivo = '',
     this.nivel = '',
     this.ativo = true,
+    this.cadastroInicialCompleto = true,
     this.treinoAtualNome,
     this.dataInicioTreino,
     this.validadeTreinoDias = 45,
@@ -172,6 +176,7 @@ class PersonalAlunoGestaoModel {
     StatusMensalidadeAluno? statusMensalidade,
     String? dataUltimoPagamento,
     String? mesReferencia,
+    bool? cadastroInicialCompleto,
   }) {
     return PersonalAlunoGestaoModel(
       id: id ?? this.id,
@@ -182,6 +187,7 @@ class PersonalAlunoGestaoModel {
       objetivo: objetivo ?? this.objetivo,
       nivel: nivel ?? this.nivel,
       ativo: ativo ?? this.ativo,
+      cadastroInicialCompleto: cadastroInicialCompleto ?? this.cadastroInicialCompleto,
       treinoAtualNome: treinoAtualNome ?? this.treinoAtualNome,
       dataInicioTreino: dataInicioTreino ?? this.dataInicioTreino,
       validadeTreinoDias: validadeTreinoDias ?? this.validadeTreinoDias,
@@ -217,6 +223,7 @@ class PersonalAlunoGestaoModel {
       'objetivo': objetivo,
       'nivel': nivel,
       'ativo': ativo,
+      'cadastroInicialCompleto': cadastroInicialCompleto,
       'treinoAtualNome': treinoAtualNome,
       'dataInicioTreino': dataInicioTreino,
       'validadeTreinoDias': validadeTreinoDias,
@@ -250,6 +257,7 @@ class PersonalAlunoGestaoModel {
       objetivo: map['objetivo']?.toString() ?? '',
       nivel: map['nivel']?.toString() ?? '',
       ativo: map['ativo'] != false,
+      cadastroInicialCompleto: map['cadastroInicialCompleto'] != false,
       treinoAtualNome: map['treinoAtualNome']?.toString(),
       dataInicioTreino: map['dataInicioTreino']?.toString(),
       validadeTreinoDias: (map['validadeTreinoDias'] as num?)?.toInt() ?? 45,

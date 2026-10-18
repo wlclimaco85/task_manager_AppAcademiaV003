@@ -2,9 +2,13 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/services/fitness_conta_sync.dart';
+import 'package:task_manager_flutter/data/services/network_caller.dart';
+import 'package:task_manager_flutter/data/utils/api_links.dart';
+import 'package:task_manager_flutter/data/utils/app_logger.dart';
 
 /// Cadastro inicial do aluno: foto e medidas corporais. Tudo opcional.
-/// Guardado no aparelho, por conta. Sincronizacao com o servidor fica para a proxima etapa.
+/// O servidor e a fonte da verdade (o personal enxerga o status); o aparelho guarda
+/// uma copia por conta para mostrar o lembrete sem depender da rede.
 class CadastroInicialService {
   CadastroInicialService._();
 
@@ -20,6 +24,9 @@ class CadastroInicialService {
     (chave: 'coxa', rotulo: 'Coxa', unidade: 'cm'),
     (chave: 'panturrilha', rotulo: 'Panturrilha', unidade: 'cm'),
   ];
+
+  /// Total de campos do cadastro: foto + todas as medidas.
+  static int get totalCampos => medidas.length + 1;
 
   /// Itens que ainda faltam para o cadastro ficar completo (lista vazia = completo).
   /// Nao bloqueia nada: serve so para o lembrete.
@@ -39,17 +46,18 @@ class CadastroInicialService {
   }
 
   static Future<Map<String, dynamic>> carregar() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(FitnessContaSync.chave(_chaveBase));
-    if (raw == null || raw.isEmpty) return {};
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(FitnessContaSync.chave(_chaveBase));
+      if (raw == null || raw.isEmpty) return {};
       return Map<String, dynamic>.from(jsonDecode(raw) as Map);
-    } catch (_) {
+    } catch (e) {
+      AppLogger.i.warn('[CadastroInicial] Copia local invalida, ignorando: $e');
       return {};
     }
   }
 
-  /// Grava os campos informados. Campo vazio apaga o valor anterior.
+  /// Grava os campos informados na copia local. Campo vazio apaga o valor anterior.
   static Future<void> salvar(Map<String, dynamic> novos) async {
     final atuais = await carregar();
     for (final entrada in novos.entries) {
@@ -59,7 +67,54 @@ class CadastroInicialService {
         atuais.remove(entrada.key);
       }
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(FitnessContaSync.chave(_chaveBase), jsonEncode(atuais));
+    await _gravarCopia(atuais);
+  }
+
+  /// Busca o cadastro no servidor e atualiza a copia local. Devolve null se a rede falhar.
+  /// [temPersonal] diz se o aluno tem personal vinculado (usado pelo "!" da tela).
+  static Future<({bool temPersonal, Map<String, dynamic> dados})?> buscarRemoto() async {
+    try {
+      final resposta = await NetworkCaller().getRequest(ApiLinks.cadastroInicialMeu);
+      final data = resposta.body?['data'];
+      if (!resposta.isSuccess || data is! Map) return null;
+      final medidasRemotas = data['medidas'] is Map ? data['medidas'] as Map : const {};
+      final dados = <String, dynamic>{
+        'foto': data['foto'],
+        for (final m in medidas) m.chave: medidasRemotas[m.chave],
+      };
+      await _gravarCopia(dados);
+      return (temPersonal: data['temPersonal'] == true, dados: dados);
+    } catch (e) {
+      AppLogger.i.warn('[CadastroInicial] Falha ao consultar o cadastro no servidor: $e');
+      return null;
+    }
+  }
+
+  /// Envia foto e medidas ao servidor. Devolve false se o servidor recusar ou a rede falhar.
+  static Future<bool> enviar(Map<String, dynamic> dados) async {
+    try {
+      final corpo = <String, dynamic>{
+        'foto': dados['foto'],
+        'medidas': {for (final m in medidas) m.chave: dados[m.chave]},
+      };
+      final resposta = await NetworkCaller().putRequest(ApiLinks.cadastroInicialMeu, corpo);
+      if (!resposta.isSuccess) {
+        AppLogger.i.warn('[CadastroInicial] Servidor recusou o cadastro (status ${resposta.statusCode}).');
+        return false;
+      }
+      return true;
+    } catch (e) {
+      AppLogger.i.warn('[CadastroInicial] Falha ao enviar o cadastro: $e');
+      return false;
+    }
+  }
+
+  static Future<void> _gravarCopia(Map<String, dynamic> dados) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(FitnessContaSync.chave(_chaveBase), jsonEncode(dados));
+    } catch (e) {
+      AppLogger.i.warn('[CadastroInicial] Nao foi possivel gravar a copia local: $e');
+    }
   }
 }

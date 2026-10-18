@@ -29,6 +29,8 @@ class _CadastroInicialBannerState extends State<CadastroInicialBanner> {
       setState(() => _carregado = true);
       return;
     }
+    // Atualiza a copia local pelo servidor; se a rede falhar, usa o que ja estava no aparelho.
+    await CadastroInicialService.buscarRemoto();
     final dados = await CadastroInicialService.carregar();
     if (!mounted) return;
     setState(() {

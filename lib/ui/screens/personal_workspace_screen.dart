@@ -11,6 +11,7 @@ import 'package:task_manager_flutter/data/services/personal_gestao_offline_repos
 import 'package:task_manager_flutter/ui/screens/fitness/montador_treino_screen.dart';
 import 'package:task_manager_flutter/data/services/avaliacao_agendada_service.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/nutricao_protocolos_hub_screen.dart';
+import 'package:task_manager_flutter/ui/widgets/avatar_com_indicador.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/avaliacao_fisica_pro_screen.dart';
 
 /// Workspace Completo do Personal Trainer (MFIT Pro Standard)
@@ -239,15 +240,21 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: CustomColors.primaryGreen.withOpacity(0.2),
-                child: Text(
-                  aluno.nome.isNotEmpty ? aluno.nome[0].toUpperCase() : 'A',
-                  style: const TextStyle(
-                    color: CustomColors.primaryGreen,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
+              AvatarComIndicador(
+                mostrarAlerta: !aluno.cadastroInicialCompleto,
+                rotulo: 'Cadastro inicial de ${aluno.nome} incompleto',
+                titulo: 'Cadastro inicial pendente',
+                corpo: '${aluno.nome} ainda não preencheu a foto ou as medidas. Peça para completar no app.',
+                avatar: CircleAvatar(
+                  radius: 24,
+                  backgroundColor: CustomColors.primaryGreen.withOpacity(0.2),
+                  child: Text(
+                    aluno.nome.isNotEmpty ? aluno.nome[0].toUpperCase() : 'A',
+                    style: const TextStyle(
+                      color: CustomColors.primaryGreen,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
                   ),
                 ),
               ),

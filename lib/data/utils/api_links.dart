@@ -459,6 +459,8 @@ class ApiLinks {
   static const String permissoesMeu = '$_baseUrlNew/api/fitness/permissoes/meu';
   /// Permissoes de um aluno vinculado, lidas pelo personal.
   static String permissoesDoAluno(String alunoId) => '$_baseUrlNew/api/fitness/permissoes/alunos/$alunoId';
+  /// Cadastro inicial (foto e medidas) do aluno logado: GET le, PUT grava.
+  static const String cadastroInicialMeu = '$_baseUrlNew/api/fitness/cadastro-inicial/meu';
   static String dadosPessoaisPorId(String id) =>
       '$_baseUrlNew/api/dadospessoais/$id';
 
