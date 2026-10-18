@@ -35,9 +35,10 @@ class ApiLinks {
   //'https://academia-app-919f42758cd6.herokuapp.com'; // "http://192.168.12.28:8088";
   // "http://192.168.12.23:8088"; // "http://192.168.56.1:8088"; // ; // //"http://192.168.12.23:8088";
   //static const String _baseIp = "http://192.168.56.1:8088"; //"http://192.168.12.23:8088";
+  // Railway atende na raiz: /boletobancos/... devolve 308 e o app nao segue o redirect.
   static const String _contextPath = String.fromEnvironment(
     'BACKEND_CONTEXT_PATH',
-    defaultValue: '/boletobancos',
+    defaultValue: '',
   );
 
   static const String _baseUrl = 'https://task.teamrabbil.com/api/v1';

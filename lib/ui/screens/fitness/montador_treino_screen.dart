@@ -287,10 +287,11 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                   itemCount: divisao.exercicios.length,
                   buildDefaultDragHandles: false,
-                  onReorderItem: (oldIndex, newIndex) {
+                  onReorder: (oldIndex, newIndex) {
                     setState(() {
                       final atual = _divisoes[divisaoIndex];
                       final itens = List<ItemTreinoModel>.from(atual.exercicios);
+                      if (newIndex > oldIndex) newIndex -= 1;
                       itens.insert(newIndex, itens.removeAt(oldIndex));
                       _divisoes[divisaoIndex] = DivisaoTreinoModel(
                         id: atual.id,
