@@ -10,6 +10,7 @@ import 'package:task_manager_flutter/data/models/gamificacao_model.dart';
 import 'package:task_manager_flutter/data/models/hidratacao_model.dart';
 import 'package:task_manager_flutter/data/models/lembrete_model.dart';
 import 'package:task_manager_flutter/data/models/medida_corporal_model.dart';
+import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
 import 'package:task_manager_flutter/data/models/mural_model.dart';
 import 'package:task_manager_flutter/data/models/saude_diaria_model.dart';
 import 'package:task_manager_flutter/data/services/exame_registro_caller.dart';
@@ -692,7 +693,10 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                 if (widget.metricCards.isNotEmpty)
                   _MetricGrid(metrics: _metricasReais(records)),
                 const SizedBox(height: 14),
-                _WeeklyInsightCard(type: widget.type),
+                _WeeklyInsightCard(
+                  type: widget.type,
+                  includeStrengthWorkouts: widget.includeStrengthWorkouts,
+                ),
                 const SizedBox(height: 14),
                 ...widget.extraCards,
                 if (widget.extraCards.isNotEmpty) const SizedBox(height: 4),
@@ -1196,9 +1200,13 @@ class _LiveWorkoutCardState extends State<_LiveWorkoutCard> {
 }
 
 class _WeeklyInsightCard extends StatefulWidget {
-  const _WeeklyInsightCard({required this.type});
+  const _WeeklyInsightCard({
+    required this.type,
+    this.includeStrengthWorkouts = false,
+  });
 
   final String type;
+  final bool includeStrengthWorkouts;
 
   @override
   State<_WeeklyInsightCard> createState() => _WeeklyInsightCardState();
@@ -1207,19 +1215,44 @@ class _WeeklyInsightCard extends StatefulWidget {
 class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
   var _range = 'Semana';
   static const _ranges = ['Dia', 'Semana', 'Mes'];
+  late Future<_InsightChartData> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _loadSeries();
+  }
+
+  @override
+  void didUpdateWidget(covariant _WeeklyInsightCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.type != widget.type ||
+        oldWidget.includeStrengthWorkouts != widget.includeStrengthWorkouts) {
+      _future = _loadSeries();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<int>>(
-      future: Fitness360LocalStore.insightSeries(widget.type, _range),
+    return FutureBuilder<_InsightChartData>(
+      future: _future,
       builder: (context, snapshot) {
-        final values = snapshot.data ?? const <int>[];
-        if (values.isEmpty || values.every((v) => v == 0)) {
+        final data = snapshot.data ?? const _InsightChartData([], []);
+        final values = data.aerobico;
+        final musculacao = data.musculacao;
+        final semAerobico = values.isEmpty || values.every((v) => v == 0);
+        final semMusculacao =
+            musculacao.isEmpty || musculacao.every((v) => v == 0);
+        if (semAerobico && semMusculacao) {
           return _Panel(child: Text(snapshot.connectionState == ConnectionState.waiting
             ? 'Carregando evolução...' : 'Ainda não há registros para mostrar a evolução.'));
         }
-        final max = values.reduce((a, b) => a > b ? a : b).toDouble();
-        final labels = _chartLabels(values.length);
+        final maxAerobico = _maximo(values);
+        final maxMusculacao = _maximo(musculacao);
+        final count = values.length > musculacao.length
+            ? values.length
+            : musculacao.length;
+        final labels = _chartLabels(count);
         return _Panel(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1236,7 +1269,13 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
                     ChoiceChip(
                       label: Text(range),
                       selected: _range == range,
-                      onSelected: (_) => setState(() => _range = range),
+                      onSelected: (_) {
+                        if (_range == range) return;
+                        setState(() {
+                          _range = range;
+                          _future = _loadSeries();
+                        });
+                      },
                   ),
                 ],
               ),
@@ -1248,25 +1287,52 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
                   fontSize: 12,
                 ),
               ),
+              if (widget.includeStrengthWorkouts) ...[
+                const SizedBox(height: 8),
+                const Wrap(
+                  spacing: 16,
+                  runSpacing: 6,
+                  children: [
+                    _ChartLegend(color: GridColors.primary, label: 'Atividades'),
+                    _ChartLegend(color: Color(0xFFDC2626), label: 'Musculação'),
+                  ],
+                ),
+              ],
               const SizedBox(height: 12),
               SizedBox(
                 height: 92,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    for (final value in values)
+                    for (var index = 0; index < count; index++)
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 3),
-                          child: FractionallySizedBox(
-                            heightFactor: (value / max).clamp(0.0, 1.0),
-                            alignment: Alignment.bottomCenter,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: GridColors.primary,
-                                borderRadius: BorderRadius.circular(99),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Expanded(
+                                child: _InsightBar(
+                                  key: ValueKey('grafico_atividade_$index'),
+                                  value: index < values.length ? values[index] : 0,
+                                  max: maxAerobico,
+                                  color: GridColors.primary,
+                                ),
                               ),
-                            ),
+                              if (widget.includeStrengthWorkouts) ...[
+                                const SizedBox(width: 3),
+                                Expanded(
+                                  child: _InsightBar(
+                                    key: ValueKey('grafico_musculacao_$index'),
+                                    value: index < musculacao.length
+                                        ? musculacao[index]
+                                        : 0,
+                                    max: maxMusculacao,
+                                    color: const Color(0xFFDC2626),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                       ),
@@ -1302,6 +1368,46 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
     );
   }
 
+  Future<_InsightChartData> _loadSeries() async {
+    final aerobico = await Fitness360LocalStore.insightSeries(widget.type, _range);
+    if (!widget.includeStrengthWorkouts) {
+      return _InsightChartData(aerobico, const []);
+    }
+    final sessoes = await FitnessOfflineRepository().getSessoesConcluidas();
+    return _InsightChartData(aerobico, _agruparMusculacao(sessoes));
+  }
+
+  List<int> _agruparMusculacao(List<SessaoTreinoRegistroModel> sessoes) {
+    final agora = DateTime.now();
+    final datas = sessoes.map<DateTime?>((sessao) =>
+      DateTime.tryParse(sessao.dataHoraFim) ??
+      DateTime.tryParse(sessao.dataHoraInicio)).whereType<DateTime>().toList();
+    if (_range == 'Dia') {
+      return [for (var i = 0; i < 6; i++)
+        datas.where((data) =>
+          _mesmoDia(data, agora) &&
+          data.hour >= i * 4 && data.hour < (i + 1) * 4).length];
+    }
+    if (_range == 'Mes') {
+      return [for (var i = 0; i < 4; i++)
+        datas.where((data) =>
+          data.isAfter(agora.subtract(Duration(days: (4 - i) * 7))) &&
+          !data.isAfter(agora.subtract(Duration(days: (3 - i) * 7)))).length];
+    }
+    return [for (var i = 6; i >= 0; i--)
+      datas.where((data) =>
+        _mesmoDia(data, agora.subtract(Duration(days: i)))).length];
+  }
+
+  bool _mesmoDia(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  double _maximo(List<int> values) {
+    if (values.isEmpty) return 1;
+    final max = values.reduce((a, b) => a > b ? a : b).toDouble();
+    return max <= 0 ? 1 : max;
+  }
+
   String get _insightText {
     return switch (_range) {
       'Dia' =>
@@ -1322,12 +1428,74 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
   }
 
   List<String> _chartLabels(int count) {
+    if (_range == 'Semana') {
+      const dias = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'];
+      final hoje = DateTime.now();
+      return [for (var i = count - 1; i >= 0; i--)
+        dias[hoje.subtract(Duration(days: i)).weekday - 1]];
+    }
     return switch (_range) {
       'Dia' => const ['00h', '04h', '08h', '12h', '16h', '20h'],
       'Mes' => const ['S1', 'S2', 'S3', 'S4'],
-      _ => const ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'],
+      _ => const <String>[],
     }.take(count).toList();
   }
+}
+
+class _InsightChartData {
+  const _InsightChartData(this.aerobico, this.musculacao);
+
+  final List<int> aerobico;
+  final List<int> musculacao;
+}
+
+class _InsightBar extends StatelessWidget {
+  const _InsightBar({
+    super.key,
+    required this.value,
+    required this.max,
+    required this.color,
+  });
+
+  final int value;
+  final double max;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    if (value <= 0) return const SizedBox.shrink();
+    return FractionallySizedBox(
+      heightFactor: (value / max).clamp(0.0, 1.0),
+      alignment: Alignment.bottomCenter,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(99),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChartLegend extends StatelessWidget {
+  const _ChartLegend({required this.color, required this.label});
+
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Container(
+        width: 10,
+        height: 10,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      ),
+      const SizedBox(width: 5),
+      Text(label, style: const TextStyle(color: Color(0xFF6D647A), fontSize: 11)),
+    ],
+  );
 }
 
 class _MetricGrid extends StatelessWidget {

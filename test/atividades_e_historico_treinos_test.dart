@@ -119,15 +119,17 @@ void main() {
     });
 
     testWidgets('atividade exibe treino concluído em vermelho com calorias', (tester) async {
+      final fimSessao = DateTime.now();
+      final inicioSessao = fimSessao.subtract(const Duration(hours: 1));
       await Fitness360LocalStore.addRecord(
         type: 'corpo', title: 'Peso', value: '70 kg', note: 'Peso atual');
       await FitnessOfflineRepository().registrarSessaoConcluida(
-        const SessaoTreinoRegistroModel(
+        SessaoTreinoRegistroModel(
           id: 'sessao-forca', treinoId: 'plano', divisaoLetra: 'A',
           divisaoNome: 'Treino A', alunoId: 'aluno',
-          dataHoraInicio: '2026-10-18T10:00:00',
-          dataHoraFim: '2026-10-18T11:00:00', duracaoSegundos: 3600,
-          rpe: 7, exerciciosExecutados: [],
+          dataHoraInicio: inicioSessao.toIso8601String(),
+          dataHoraFim: fimSessao.toIso8601String(), duracaoSegundos: 3600,
+          rpe: 7, exerciciosExecutados: const [],
         ),
       );
 
@@ -138,11 +140,42 @@ void main() {
       await tester.pumpWidget(const MaterialApp(home: AtividadeScreen()));
       await tester.pumpAndSettle();
 
-      final registroId = DateTime.parse('2026-10-18T11:00:00').microsecondsSinceEpoch;
+      final registroId = fimSessao.microsecondsSinceEpoch;
       final tile = find.byKey(ValueKey('registro_musculacao_$registroId'));
       expect(tile, findsWidgets);
       expect(find.text('Musculação • Treino A'), findsWidgets);
       expect(find.text('60 min • 368 kcal'), findsWidgets);
+      expect(find.text('Atividades'), findsOneWidget);
+      expect(find.text('Musculação'), findsOneWidget);
+      final barraMusculacao = find.descendant(
+        of: find.byKey(const ValueKey('grafico_musculacao_6')),
+        matching: find.byType(DecoratedBox),
+      );
+      expect(barraMusculacao, findsOneWidget);
+      final barraDecoration =
+          tester.widget<DecoratedBox>(barraMusculacao).decoration as BoxDecoration;
+      expect(barraDecoration.color, const Color(0xFFDC2626));
+
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Dia'));
+      await tester.pumpAndSettle();
+      final blocoHorario = (fimSessao.hour ~/ 4).clamp(0, 5);
+      expect(
+        find.descendant(
+          of: find.byKey(ValueKey('grafico_musculacao_$blocoHorario')),
+          matching: find.byType(DecoratedBox),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Mes'));
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('grafico_musculacao_3')),
+          matching: find.byType(DecoratedBox),
+        ),
+        findsOneWidget,
+      );
       final container = tester.widget<Container>(tile.first);
       final decoration = container.decoration! as BoxDecoration;
       expect(
