@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "526096533745",
+    "project_id": "eu-atleta-45ffa",
+    "storage_bucket": "eu-atleta-45ffa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:526096533745:android:0c0cfd02c0caf4de198150",
+        "android_client_info": {
+          "package_name": "task.manager.flutter.AppAcademia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCoUbzZmUHjq6i3qRoKpBbF9V6KaubrZwI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
