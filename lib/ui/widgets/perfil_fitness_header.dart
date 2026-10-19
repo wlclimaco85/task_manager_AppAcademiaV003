@@ -9,12 +9,20 @@ class PerfilFitnessHeader extends StatelessWidget {
   final String nome;
   final String perfil;
   final String? foto;
+  final bool cadastroIncompleto;
+  final int notificacoesNaoLidas;
+  final VoidCallback? onCadastroIncompleto;
+  final VoidCallback? onNotificacoes;
 
   const PerfilFitnessHeader({
     super.key,
     required this.nome,
     required this.perfil,
     this.foto,
+    this.cadastroIncompleto = false,
+    this.notificacoesNaoLidas = 0,
+    this.onCadastroIncompleto,
+    this.onNotificacoes,
   });
 
   String get _nomeExibido => nome.trim().isEmpty ? 'Minha conta' : nome.trim();
@@ -35,7 +43,7 @@ class PerfilFitnessHeader extends StatelessWidget {
     );
   }
 
-  Widget _foto() {
+  Widget _foto(BuildContext context) {
     final valor = foto?.trim() ?? '';
     if (valor.isEmpty) return _iniciais();
     try {
@@ -72,25 +80,56 @@ class PerfilFitnessHeader extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: GridColors.primarySubtle,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? context.appSurfaceAlt
+            : GridColors.primarySubtle,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: GridColors.primary.withValues(alpha: 0.25)),
       ),
       child: Row(
       children: [
-        Semantics(
-          label: 'Foto de $_nomeExibido',
-          image: true,
-          child: Container(
-            width: 44,
-            height: 44,
-            decoration: const BoxDecoration(
-              color: GridColors.primarySubtle,
-              shape: BoxShape.circle,
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Semantics(
+              label: 'Foto de $_nomeExibido',
+              image: true,
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: context.appSurfaceAlt,
+                  shape: BoxShape.circle,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: _foto(context),
+              ),
             ),
-            clipBehavior: Clip.antiAlias,
-            child: _foto(),
-          ),
+            if (cadastroIncompleto)
+              Positioned(
+                right: -5,
+                bottom: -5,
+                child: Semantics(
+                  label: 'Cadastro incompleto: faltam foto ou medidas',
+                  button: true,
+                  child: InkWell(
+                    key: const Key('cadastro_incompleto_header'),
+                    onTap: onCadastroIncompleto,
+                    customBorder: const CircleBorder(),
+                    child: Container(
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        color: GridColors.secondary,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: context.appSurface, width: 2),
+                      ),
+                      child: const Icon(Icons.question_mark, size: 14, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -102,20 +141,37 @@ class PerfilFitnessHeader extends StatelessWidget {
                 _nomeExibido,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: GridColors.textPrimary,
+                  color: context.appText,
                 ),
               ),
               Text(
                 perfil,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: GridColors.textSecondary,
+                  color: context.appTextSecondary,
                 ),
               ),
             ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Badge(
+          isLabelVisible: notificacoesNaoLidas > 0,
+          label: Text(notificacoesNaoLidas > 99 ? '99+' : '$notificacoesNaoLidas'),
+          child: Semantics(
+            label: notificacoesNaoLidas == 0
+                ? 'Notificações'
+                : 'Notificações, $notificacoesNaoLidas não lidas',
+            button: true,
+            child: IconButton(
+              key: const Key('abrir_notificacoes'),
+              onPressed: onNotificacoes,
+              icon: const Icon(Icons.notifications_outlined),
+              color: context.appText,
+            ),
           ),
         ),
       ],

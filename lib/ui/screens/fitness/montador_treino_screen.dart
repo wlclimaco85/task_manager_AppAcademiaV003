@@ -103,7 +103,7 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
     final isDesktopOrWeb = width >= 800;
 
     return Scaffold(
-      backgroundColor: GridColors.background,
+      backgroundColor: context.appBackground,
       appBar: AppBar(
         title: const Text('Prescrever Treino', style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [
@@ -116,7 +116,7 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Container(
-            color: GridColors.card,
+            color: context.appSurface,
             child: Row(
               children: [
                 Expanded(
@@ -126,7 +126,7 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
                     indicatorColor: GridColors.primary,
                     indicatorWeight: 3,
                     labelColor: GridColors.primary,
-                    unselectedLabelColor: GridColors.textSecondary,
+                    unselectedLabelColor: context.appTextSecondary,
                     labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                     tabs: [
                       for (final div in _divisoes)
@@ -160,9 +160,9 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: GridColors.card,
+                  color: context.appSurface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: GridColors.divider),
+                  border: Border.all(color: context.appBorder),
                 ),
                 child: Column(
                   children: [
@@ -253,10 +253,10 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
         ),
 
         if (divisao.exercicios.length > 1)
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Text('Arraste pelo ícone ⋮⋮ para ordenar. Salve a ficha para manter a ordem.',
-              style: TextStyle(fontSize: 12, color: GridColors.textSecondary)),
+              style: TextStyle(fontSize: 12, color: context.appTextSecondary)),
           ),
         // Lista de Exercícios da Divisão
         Expanded(
@@ -267,17 +267,17 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.directions_run_outlined, size: 48, color: GridColors.textMuted),
+                        Icon(Icons.directions_run_outlined, size: 48, color: context.appTextSecondary),
                         const SizedBox(height: 12),
                         Text(
                           'Nenhum exercício no Treino ${divisao.letra}',
                           style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                         ),
                         const SizedBox(height: 6),
-                        const Text(
+                        Text(
                           'Toque em "Adicionar Exercício" acima para escolher da biblioteca.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: GridColors.textSecondary, fontSize: 13),
+                          style: TextStyle(color: context.appTextSecondary, fontSize: 13),
                         ),
                       ],
                     ),
@@ -320,10 +320,10 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
   Widget _buildCardItemTreino(ItemTreinoModel item, int divIndex, int exIndex) {
     return Card(
       elevation: 0,
-      color: GridColors.card,
+      color: context.appSurface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: GridColors.divider),
+        side: BorderSide(color: context.appBorder),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -358,7 +358,7 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
                       ),
                       Text(
                         item.grupoMuscular,
-                        style: const TextStyle(color: GridColors.textSecondary, fontSize: 12),
+                        style: TextStyle(color: context.appTextSecondary, fontSize: 12),
                       ),
                     ],
                   ),
@@ -381,7 +381,7 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
                 ),
               ],
             ),
-            const Divider(height: 20, color: GridColors.divider),
+            Divider(height: 20, color: context.appBorder),
             TextFormField(
               initialValue: item.observacoes,
               decoration: const InputDecoration(labelText: 'Observação para o aluno'),
@@ -449,18 +449,18 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: GridColors.filterBackground,
+        color: context.appSurfaceAlt,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('$label: ', style: const TextStyle(fontSize: 12, color: GridColors.textSecondary)),
+          Text('$label: ', style: TextStyle(fontSize: 12, color: context.appTextSecondary)),
           Text(valor, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
           const SizedBox(width: 6),
           InkWell(
             onTap: onDecrement,
-            child: const Icon(Icons.remove_circle, size: 18, color: GridColors.textSecondary),
+            child: Icon(Icons.remove_circle, size: 18, color: context.appTextSecondary),
           ),
           const SizedBox(width: 4),
           InkWell(

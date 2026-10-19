@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
+import 'package:task_manager_flutter/data/services/fitness_conta_sync.dart';
 
 /// Modelo de Notificação Push Fitness
 class FitnessNotificationItem {
@@ -10,7 +11,7 @@ class FitnessNotificationItem {
   final String titulo;
   final String corpo;
   final DateTime dataHora;
-  final String tipo; // 'treino_hoje', 'inatividade', 'nova_ficha', 'meta_batida'
+  final String tipo; // treino_hoje, inatividade, nova_ficha, meta_batida, cadastro_inicial
   final bool lida;
   final Map<String, dynamic>? payload;
 
@@ -51,6 +52,8 @@ class FitnessNotificationItem {
 /// Suporta agendamentos locais offline e integração transparente com Firebase Cloud Messaging (FCM).
 class FitnessPushNotificationService {
   static const String _kNotificationsKey = 'appacademia_fitness_notifications_v1';
+
+  String get _notificationsKey => FitnessContaSync.chave(_kNotificationsKey);
 
   static final FitnessPushNotificationService _instance =
       FitnessPushNotificationService._internal();
@@ -158,12 +161,12 @@ class FitnessPushNotificationService {
     lista.insert(0, item);
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = json.encode(lista.map((n) => n.toMap()).toList());
-    await prefs.setString(_kNotificationsKey, jsonStr);
+    await prefs.setString(_notificationsKey, jsonStr);
   }
 
   Future<List<FitnessNotificationItem>> getNotificacoes() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_kNotificationsKey);
+    final raw = prefs.getString(_notificationsKey);
     if (raw == null || raw.isEmpty) return [];
     try {
       final decoded = json.decode(raw) as List<dynamic>;
@@ -192,7 +195,7 @@ class FitnessPushNotificationService {
       );
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
-          _kNotificationsKey, json.encode(lista.map((n) => n.toMap()).toList()));
+          _notificationsKey, json.encode(lista.map((n) => n.toMap()).toList()));
     }
   }
 }

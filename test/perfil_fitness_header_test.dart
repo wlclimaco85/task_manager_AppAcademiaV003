@@ -31,4 +31,32 @@ void main() {
     expect(find.text('Personal'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('mostra sino, contador e alerta de cadastro incompleto',
+      (tester) async {
+    var abriuNotificacoes = false;
+    var abriuCadastro = false;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: PerfilFitnessHeader(
+          nome: 'Lis Valentine',
+          perfil: 'Aluno',
+          cadastroIncompleto: true,
+          notificacoesNaoLidas: 3,
+          onNotificacoes: () => abriuNotificacoes = true,
+          onCadastroIncompleto: () => abriuCadastro = true,
+        ),
+      ),
+    ));
+
+    expect(find.byKey(const Key('abrir_notificacoes')), findsOneWidget);
+    expect(find.byKey(const Key('cadastro_incompleto_header')), findsOneWidget);
+    expect(find.text('3'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('abrir_notificacoes')));
+    await tester.tap(find.byKey(const Key('cadastro_incompleto_header')));
+    expect(abriuNotificacoes, isTrue);
+    expect(abriuCadastro, isTrue);
+    expect(tester.takeException(), isNull);
+  });
 }

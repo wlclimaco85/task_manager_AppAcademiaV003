@@ -26,6 +26,7 @@ import 'package:task_manager_flutter/ui/screens/fitness/avaliacao_fisica_pro_scr
 import 'package:task_manager_flutter/ui/screens/fitness/nutricao_protocolos_hub_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/contratar_profissional_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/exames_clinicos_hub_screen.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/aviso_falta_screen.dart';
 
 class BottomNavBarScreen extends StatefulWidget {
   const BottomNavBarScreen({super.key});
@@ -106,18 +107,18 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                 }
                 setState(() => selectedIndex = index);
               },
-              backgroundColor: GridColors.card,
+              backgroundColor: context.appSurface,
               indicatorColor: GridColors.primarySubtle,
               selectedIconTheme: const IconThemeData(color: GridColors.primary),
               unselectedIconTheme:
-                  const IconThemeData(color: GridColors.textSecondary),
+                  IconThemeData(color: context.appTextSecondary),
               selectedLabelTextStyle: const TextStyle(
                 color: GridColors.primary,
                 fontWeight: FontWeight.w700,
                 fontSize: 12,
               ),
-              unselectedLabelTextStyle: const TextStyle(
-                color: GridColors.textSecondary,
+              unselectedLabelTextStyle: TextStyle(
+                color: context.appTextSecondary,
                 fontWeight: FontWeight.w500,
                 fontSize: 11,
               ),
@@ -155,8 +156,8 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                   ),
               ],
             ),
-            const VerticalDivider(
-                thickness: 1, width: 1, color: GridColors.divider),
+            VerticalDivider(
+                thickness: 1, width: 1, color: context.appBorder),
             Expanded(
               child: activeItem.opensMenu
                   ? navItems.first.screen
@@ -172,9 +173,9 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
       bottomNavigationBar: SafeArea(
         top: false,
         child: Container(
-          decoration: const BoxDecoration(
-            color: GridColors.card,
-            boxShadow: [
+          decoration: BoxDecoration(
+            color: context.appSurface,
+            boxShadow: const [
               BoxShadow(
                 color: GridColors.shadow,
                 blurRadius: 16,
@@ -185,13 +186,13 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
           child: NavigationBar(
             selectedIndex: safeIndex,
             height: 68,
-            backgroundColor: GridColors.card,
+            backgroundColor: context.appSurface,
             indicatorColor: GridColors.primarySubtle,
             labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
             destinations: [
               for (final item in navItems)
                 NavigationDestination(
-                  icon: Icon(item.icon, color: GridColors.textSecondary),
+                  icon: Icon(item.icon, color: context.appTextSecondary),
                   selectedIcon:
                       Icon(item.selectedIcon, color: GridColors.primary),
                   label: item.label,
@@ -230,6 +231,12 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const FitnessMenuPage(child: PersonalWorkspaceScreen())),
+        );
+        break;
+      case 'Aviso de falta':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const FitnessMenuPage(child: AvisoFaltaScreen())),
         );
         break;
       case 'Dieta':
@@ -362,6 +369,13 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
     }
   }
 
+  bool _temPersonalVinculado() {
+    if (podeGerenciarAlunos()) return true;
+    final login = AuthUtility.userInfo.login;
+    if (login == null) return false;
+    return login.parceiro != null || login.empresa != null;
+  }
+
   void _showMenuOptions(BuildContext context, SecurityMatrix sec) {
     final sections = [
       _FitnessMenuSection(
@@ -371,6 +385,8 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
             const _FitnessAction(Icons.groups, 'Alunos do personal'),
           if (sec.canView(AppScreen.exercicios))
             const _FitnessAction(Icons.directions_run, 'Treinos'),
+          if (_temPersonalVinculado())
+            const _FitnessAction(Icons.event_busy_outlined, 'Aviso de falta'),
           if (sec.canView(AppScreen.academias))
             const _FitnessAction(Icons.fitness_center, 'Academias'),
           if (sec.canView(AppScreen.personais))
@@ -439,9 +455,9 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
           expand: false,
           builder: (context, scrollController) {
             return DecoratedBox(
-              decoration: const BoxDecoration(
-                color: GridColors.card,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              decoration: BoxDecoration(
+                color: context.appSurface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: ListView(
                 controller: scrollController,
@@ -452,16 +468,16 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                       width: 44,
                       height: 5,
                       decoration: BoxDecoration(
-                        color: GridColors.divider,
+                        color: context.appBorder,
                         borderRadius: BorderRadius.circular(99),
                       ),
                     ),
                   ),
                   const SizedBox(height: 18),
-                  const Text(
+                  Text(
                     'Hub Fitness',
                     style: TextStyle(
-                      color: GridColors.textSecondary,
+                      color: context.appText,
                       fontSize: 20,
                       fontWeight: FontWeight.w900,
                     ),
@@ -469,7 +485,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                   const SizedBox(height: 4),
                   const Text(
                     'Treinos, saude e evolucao do aluno',
-                    style: TextStyle(color: Color(0xFF6D647A), fontSize: 13),
+                    style: TextStyle(color: context.appTextSecondary, fontSize: 13),
                   ),
                   const SizedBox(height: 22),
                   const CadastroInicialBanner(),
@@ -499,6 +515,8 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         const _FitnessAction(Icons.groups, 'Alunos do personal'),
       if (sec.canView(AppScreen.exercicios))
         const _FitnessAction(Icons.directions_run, 'Treinos'),
+      if (_temPersonalVinculado())
+        const _FitnessAction(Icons.event_busy_outlined, 'Aviso de falta'),
       if (sec.canView(AppScreen.atividades))
         const _FitnessAction(Icons.directions_run, 'Atividade'),
       if (sec.canView(AppScreen.corpo))
@@ -545,13 +563,13 @@ class _FitnessHubScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: GridColors.filterBackground,
+      backgroundColor: context.appBackground,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(20, 18, 20, 12),
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -560,7 +578,7 @@ class _FitnessHubScreen extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: GridColors.textSecondary,
+                        color: context.appText,
                         fontSize: 26,
                         fontWeight: FontWeight.w900,
                       ),
@@ -568,7 +586,7 @@ class _FitnessHubScreen extends StatelessWidget {
                     SizedBox(height: 4),
                     Text(
                       'Resumo do aluno, treinos e evolucao',
-                      style: TextStyle(color: Color(0xFF6D647A), fontSize: 13),
+                      style: TextStyle(color: context.appTextSecondary, fontSize: 13),
                     ),
                     SizedBox(height: 18),
                     _TodaySummaryCard(),
@@ -576,7 +594,7 @@ class _FitnessHubScreen extends StatelessWidget {
                     Text(
                       'Atalhos do aluno',
                       style: TextStyle(
-                        color: GridColors.textSecondary,
+                        color: context.appText,
                         fontSize: 14,
                         fontWeight: FontWeight.w900,
                       ),
@@ -720,8 +738,8 @@ class _SummaryMetric extends StatelessWidget {
           value,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: GridColors.textPrimary,
+          style: TextStyle(
+            color: context.appText,
             fontSize: 24,
             fontWeight: FontWeight.w900,
           ),
@@ -755,7 +773,7 @@ class _FitnessModuleTile extends StatelessWidget {
       onTap: onTap,
       child: Ink(
         decoration: BoxDecoration(
-          color: GridColors.card,
+          color: context.appSurface,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: color.withValues(alpha: 0.12)),
         ),
@@ -781,8 +799,8 @@ class _FitnessModuleTile extends StatelessWidget {
                     action.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: GridColors.textSecondary,
+                    style: TextStyle(
+                      color: context.appText,
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
                       height: 1.15,
@@ -817,8 +835,8 @@ class _FitnessSectionView extends StatelessWidget {
       children: [
         Text(
           section.title,
-          style: const TextStyle(
-            color: GridColors.textSecondary,
+          style: TextStyle(
+            color: context.appText,
             fontSize: 13,
             fontWeight: FontWeight.w800,
           ),
@@ -866,7 +884,7 @@ class _FitnessMenuButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: action.danger
               ? GridColors.error.withValues(alpha: 0.07)
-              : GridColors.filterBackground,
+              : context.appSurfaceAlt,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: color.withValues(alpha: 0.14)),
         ),
@@ -881,8 +899,8 @@ class _FitnessMenuButton extends StatelessWidget {
                   action.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: GridColors.textSecondary,
+                  style: TextStyle(
+                    color: context.appText,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     height: 1.15,
@@ -932,7 +950,7 @@ class _EnhancedFitnessHubScreenState extends State<_EnhancedFitnessHubScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: GridColors.filterBackground,
+      backgroundColor: context.appBackground,
       body: SafeArea(
         child: FutureBuilder<_EnhancedHubState>(
           future: _future,
@@ -941,10 +959,10 @@ class _EnhancedFitnessHubScreenState extends State<_EnhancedFitnessHubScreen> {
               return ListView(
                 padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
                 children: [
-                  const Text(
+                  Text(
                     'Hub Fitness',
                     style: TextStyle(
-                      color: GridColors.textSecondary,
+                      color: context.appText,
                       fontSize: 26,
                       fontWeight: FontWeight.w900,
                     ),
@@ -953,23 +971,23 @@ class _EnhancedFitnessHubScreenState extends State<_EnhancedFitnessHubScreen> {
                   Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: GridColors.card,
+                      color: context.appSurface,
                       borderRadius: BorderRadius.circular(18),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Nao foi possivel carregar o resumo.',
                           style: TextStyle(
-                            color: GridColors.textSecondary,
+                            color: context.appText,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
                         const SizedBox(height: 8),
                         const Text(
                           'Tente sincronizar novamente.',
-                          style: TextStyle(color: Color(0xFF6D647A)),
+                          style: TextStyle(color: context.appTextSecondary),
                         ),
                         const SizedBox(height: 12),
                         ElevatedButton.icon(
@@ -999,7 +1017,7 @@ class _EnhancedFitnessHubScreenState extends State<_EnhancedFitnessHubScreen> {
                 children: [
                   Row(
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -1008,7 +1026,7 @@ class _EnhancedFitnessHubScreenState extends State<_EnhancedFitnessHubScreen> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: GridColors.textSecondary,
+                                color: context.appText,
                                 fontSize: 26,
                                 fontWeight: FontWeight.w900,
                               ),
@@ -1017,7 +1035,7 @@ class _EnhancedFitnessHubScreenState extends State<_EnhancedFitnessHubScreen> {
                             Text(
                               'Resumo do aluno, treinos e evolucao',
                               style: TextStyle(
-                                color: Color(0xFF6D647A),
+                                color: context.appTextSecondary,
                                 fontSize: 13,
                               ),
                             ),
@@ -1081,10 +1099,10 @@ class _EnhancedFitnessHubScreenState extends State<_EnhancedFitnessHubScreen> {
                     },
                   ),
                   const SizedBox(height: 12),
-                  const Text(
+                  Text(
                     'Atalhos do aluno',
                     style: TextStyle(
-                      color: GridColors.textSecondary,
+                      color: context.appText,
                       fontSize: 14,
                       fontWeight: FontWeight.w900,
                     ),
@@ -1151,18 +1169,18 @@ class _EnhancedFitnessHubScreenState extends State<_EnhancedFitnessHubScreen> {
         return StatefulBuilder(
           builder: (context, setSheetState) {
             return DecoratedBox(
-              decoration: const BoxDecoration(
-                color: GridColors.card,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              decoration: BoxDecoration(
+                color: context.appSurface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: ListView(
                 shrinkWrap: true,
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
                 children: [
-                  const Text(
+                  Text(
                     'Cards da home',
                     style: TextStyle(
-                      color: GridColors.textSecondary,
+                      color: context.appText,
                       fontSize: 20,
                       fontWeight: FontWeight.w900,
                     ),
@@ -1170,7 +1188,7 @@ class _EnhancedFitnessHubScreenState extends State<_EnhancedFitnessHubScreen> {
                   const SizedBox(height: 8),
                   const Text(
                     'Arraste os cards na home e oculte o que nao fizer sentido para o aluno.',
-                    style: TextStyle(color: Color(0xFF6D647A)),
+                    style: TextStyle(color: context.appTextSecondary),
                   ),
                   const SizedBox(height: 12),
                   for (final cardId in state.cardOrder)
@@ -1263,7 +1281,7 @@ class _CommunityParticipationBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: GridColors.card,
+        color: context.appSurface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: GridColors.primary.withValues(alpha: 0.12)),
       ),
@@ -1279,8 +1297,8 @@ class _CommunityParticipationBanner extends StatelessWidget {
                   enabled
                       ? 'Participando da comunidade local'
                       : 'Participacao comunitaria desligada',
-                  style: const TextStyle(
-                    color: GridColors.textSecondary,
+                  style: TextStyle(
+                    color: context.appText,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -1296,7 +1314,7 @@ class _CommunityParticipationBanner extends StatelessWidget {
             enabled
                 ? 'Desafios, ranking e conquistas ficam visiveis para o aluno na comunidade local.'
                 : 'Desligado por padrao. Ative o opt-in para liberar desafios e ranking local.',
-            style: const TextStyle(color: Color(0xFF6D647A)),
+            style: TextStyle(color: context.appTextSecondary),
           ),
           const SizedBox(height: 12),
           // Material proprio: o cartao usa BoxDecoration, e o ListTile precisa de Material por perto.
@@ -1432,7 +1450,7 @@ class _HomeHealthCard extends StatelessWidget {
       child: Ink(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: GridColors.card,
+          color: context.appSurface,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: data.color.withValues(alpha: 0.14)),
         ),
@@ -1449,8 +1467,8 @@ class _HomeHealthCard extends StatelessWidget {
                 children: [
                   Text(
                     data.title,
-                    style: const TextStyle(
-                      color: GridColors.textSecondary,
+                    style: TextStyle(
+                      color: context.appText,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -1458,14 +1476,14 @@ class _HomeHealthCard extends StatelessWidget {
                   Text(
                     data.subtitle,
                     style: const TextStyle(
-                      color: Color(0xFF6D647A),
+                      color: context.appTextSecondary,
                       fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.drag_handle, color: Color(0xFF6D647A)),
+            Icon(Icons.drag_handle, color: context.appTextSecondary),
           ],
         ),
       ),

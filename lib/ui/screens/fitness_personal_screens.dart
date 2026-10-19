@@ -175,11 +175,11 @@ class _SonoScreenState extends State<SonoScreen> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
-            backgroundColor: GridColors.filterBackground,
+            backgroundColor: context.appBackground,
             appBar: AppBar(
               title: const Text('Sono e Habitos'),
-              backgroundColor: GridColors.filterBackground,
-              foregroundColor: GridColors.textSecondary,
+              backgroundColor: context.appBackground,
+              foregroundColor: context.appText,
               elevation: 0,
             ),
             body: const Center(child: CircularProgressIndicator()),
@@ -268,8 +268,8 @@ class _BatimentosScreenState extends State<BatimentosScreen> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
-            backgroundColor: GridColors.filterBackground,
-            appBar: AppBar(title: const Text('Sinais Vitais'), backgroundColor: GridColors.filterBackground),
+            backgroundColor: context.appBackground,
+            appBar: AppBar(title: const Text('Sinais Vitais'), backgroundColor: context.appBackground),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
@@ -366,11 +366,11 @@ class _CorpoScreenState extends State<CorpoScreen> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
-            backgroundColor: GridColors.filterBackground,
+            backgroundColor: context.appBackground,
             appBar: AppBar(
               title: const Text('Corpo e Exames'),
-              backgroundColor: GridColors.filterBackground,
-              foregroundColor: GridColors.textSecondary,
+              backgroundColor: context.appBackground,
+              foregroundColor: context.appText,
               elevation: 0,
             ),
             body: const Center(child: CircularProgressIndicator()),
@@ -652,11 +652,11 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: GridColors.filterBackground,
+      backgroundColor: context.appBackground,
       appBar: AppBar(
         title: Text(widget.title),
-        backgroundColor: GridColors.filterBackground,
-        foregroundColor: GridColors.textSecondary,
+        backgroundColor: context.appBackground,
+        foregroundColor: context.appText,
         elevation: 0,
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -746,9 +746,9 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
             bottom: MediaQuery.viewInsetsOf(context).bottom,
           ),
           child: DecoratedBox(
-            decoration: const BoxDecoration(
-              color: GridColors.card,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            decoration: BoxDecoration(
+              color: context.appSurface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: SingleChildScrollView(
               child: Padding(
@@ -759,8 +759,8 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                   children: [
                     Text(
                       widget.primaryActionLabel,
-                      style: const TextStyle(
-                        color: GridColors.textSecondary,
+                      style: TextStyle(
+                        color: context.appText,
                         fontSize: 20,
                         fontWeight: FontWeight.w900,
                       ),
@@ -837,9 +837,9 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                 bottom: MediaQuery.viewInsetsOf(context).bottom,
               ),
               child: DecoratedBox(
-                decoration: const BoxDecoration(
-                  color: GridColors.card,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                decoration: BoxDecoration(
+                  color: context.appSurface,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                 ),
                 child: SingleChildScrollView(
                   child: Padding(
@@ -856,14 +856,14 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                               child: Icon(modalidade.icone),
                             ),
                             const SizedBox(width: 12),
-                            const Expanded(
+                            Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     'Registrar Atividade Aeróbica',
                                     style: TextStyle(
-                                      color: GridColors.textSecondary,
+                                      color: context.appText,
                                       fontSize: 18,
                                       fontWeight: FontWeight.w900,
                                     ),
@@ -879,12 +879,12 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                         ),
                         const SizedBox(height: 16),
                         // Dropdown de Modalidade
-                        const Text('Modalidade Aeróbica', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: GridColors.textSecondary)),
+                        Text('Modalidade Aeróbica', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: context.appTextSecondary)),
                         const SizedBox(height: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14),
                           decoration: BoxDecoration(
-                            color: GridColors.filterBackground,
+                            color: context.appSurfaceAlt,
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: DropdownButtonHideUnderline(
@@ -931,7 +931,7 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                                   labelText: 'Duração (minutos)',
                                   prefixIcon: const Icon(Icons.timer_outlined, color: GridColors.primary),
                                   filled: true,
-                                  fillColor: GridColors.filterBackground,
+                                  fillColor: context.appSurfaceAlt,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(14),
                                     borderSide: BorderSide.none,
@@ -950,7 +950,7 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                                     labelText: 'Distância (km)',
                                     prefixIcon: const Icon(Icons.route_outlined, color: GridColors.primary),
                                     filled: true,
-                                    fillColor: GridColors.filterBackground,
+                                    fillColor: context.appSurfaceAlt,
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(14),
                                       borderSide: BorderSide.none,
@@ -969,9 +969,11 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                           children: [20, 30, 45, 60, 90].map((t) {
                             return ActionChip(
                               label: Text('$t min', style: const TextStyle(fontSize: 12)),
-                              backgroundColor: minutos == t ? GridColors.primarySubtle : GridColors.filterBackground,
+                              backgroundColor: minutos == t
+                                  ? GridColors.primary.withValues(alpha: .18)
+                                  : context.appSurfaceAlt,
                               labelStyle: TextStyle(
-                                color: minutos == t ? GridColors.primaryDark : GridColors.textSecondary,
+                                color: minutos == t ? GridColors.primaryLight : context.appTextSecondary,
                                 fontWeight: minutos == t ? FontWeight.w800 : FontWeight.normal,
                               ),
                               onPressed: () {
@@ -1009,7 +1011,7 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                                   const SizedBox(height: 2),
                                   Text(
                                     '$caloriasCalculadas kcal',
-                                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: GridColors.textSecondary),
+                                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: context.appText),
                                   ),
                                 ],
                               ),
@@ -1026,7 +1028,7 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                                     const SizedBox(height: 2),
                                     Text(
                                       '${distanciaFinalKm.toStringAsFixed(1)} km',
-                                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: GridColors.textSecondary),
+                                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: context.appText),
                                     ),
                                   ],
                                 ),
@@ -1042,7 +1044,7 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                                   const SizedBox(height: 2),
                                   Text(
                                     '$minutos min',
-                                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: GridColors.textSecondary),
+                                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: context.appText),
                                   ),
                                 ],
                               ),
@@ -1164,10 +1166,10 @@ class _LiveWorkoutCardState extends State<_LiveWorkoutCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Treino ao vivo',
                   style: TextStyle(
-                    color: GridColors.textSecondary,
+                    color: context.appText,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -1283,7 +1285,7 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
               Text(
                 _rangeSubtitle,
                 style: const TextStyle(
-                  color: Color(0xFF6D647A),
+                  color: context.appTextSecondary,
                   fontSize: 12,
                 ),
               ),
@@ -1348,7 +1350,7 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
                         label,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          color: Color(0xFF8A8196),
+                          color: context.appTextSecondary,
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                         ),
@@ -1359,7 +1361,7 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
               const SizedBox(height: 10),
               Text(
                 _insightText,
-                style: const TextStyle(color: Color(0xFF6D647A), fontSize: 12),
+                style: TextStyle(color: context.appTextSecondary, fontSize: 12),
               ),
             ],
           ),
@@ -1493,7 +1495,7 @@ class _ChartLegend extends StatelessWidget {
         decoration: BoxDecoration(color: color, shape: BoxShape.circle),
       ),
       const SizedBox(width: 5),
-      Text(label, style: const TextStyle(color: Color(0xFF6D647A), fontSize: 11)),
+      Text(label, style: TextStyle(color: context.appTextSecondary, fontSize: 11)),
     ],
   );
 }
@@ -1546,8 +1548,8 @@ class _MetricTile extends StatelessWidget {
                     Text(
                       spec.value,
                       maxLines: 1,
-                      style: const TextStyle(
-                        color: GridColors.textSecondary,
+                      style: TextStyle(
+                        color: context.appText,
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
                       ),
@@ -1555,7 +1557,7 @@ class _MetricTile extends StatelessWidget {
                     Text(
                       spec.label,
                       maxLines: 1,
-                      style: const TextStyle(color: Color(0xFF6D647A), fontSize: 11),
+                      style: TextStyle(color: context.appTextSecondary, fontSize: 11),
                     ),
                   ],
                 ),
@@ -1613,8 +1615,8 @@ class _HeroCard extends StatelessWidget {
                 const SizedBox(height: 18),
                 Text(
                   value,
-                  style: const TextStyle(
-                    color: GridColors.textPrimary,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimary,
                     fontSize: 30,
                     fontWeight: FontWeight.w900,
                   ),
@@ -1661,7 +1663,7 @@ class _RecordTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: GridColors.card,
+        color: context.appSurface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: accent.withValues(alpha: musculacao ? 0.35 : 0.10)),
       ),
@@ -1682,7 +1684,7 @@ class _RecordTile extends StatelessWidget {
                 Text(
                   record.title,
                   style: TextStyle(
-                    color: musculacao ? strengthColor : GridColors.textSecondary,
+                    color: musculacao ? strengthColor : context.appText,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -1692,7 +1694,7 @@ class _RecordTile extends StatelessWidget {
                     record.note,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Color(0xFF6D647A)),
+                    style: TextStyle(color: context.appTextSecondary),
                   ),
                 ],
               ],
@@ -1712,7 +1714,7 @@ class _RecordTile extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 date,
-                style: const TextStyle(color: Color(0xFF6D647A), fontSize: 11),
+                style: TextStyle(color: context.appTextSecondary, fontSize: 11),
               ),
             ],
           ),
@@ -1994,9 +1996,9 @@ Future<bool?> _showBottomSheet({
               bottom: MediaQuery.viewInsetsOf(context).bottom,
             ),
             child: DecoratedBox(
-              decoration: const BoxDecoration(
-                color: GridColors.card,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              decoration: BoxDecoration(
+                color: context.appSurface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: SingleChildScrollView(
                 child: Padding(
@@ -2007,8 +2009,8 @@ Future<bool?> _showBottomSheet({
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
-                          color: GridColors.textSecondary,
+                        style: TextStyle(
+                          color: context.appText,
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
                         ),
@@ -2239,9 +2241,9 @@ class _CorpoEvolutionChartCardState extends State<_CorpoEvolutionChartCard> {
                             padding: const EdgeInsets.only(top: 4),
                             child: Text(
                               '${d.day}/${d.month}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 10,
-                                color: GridColors.textSecondary,
+                                color: context.appTextSecondary,
                               ),
                             ),
                           );
@@ -2381,7 +2383,7 @@ class _TimelineTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
-            backgroundColor: GridColors.filterBackground,
+            backgroundColor: context.appSurfaceAlt,
             child: Icon(evento.icon, color: GridColors.primary, size: 18),
           ),
           const SizedBox(width: 12),
@@ -2391,14 +2393,14 @@ class _TimelineTile extends StatelessWidget {
               children: [
                 Text(
                   evento.titulo,
-                  style: const TextStyle(
-                    color: GridColors.textSecondary,
+                  style: TextStyle(
+                    color: context.appText,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
                 Text(
                   evento.detalhe,
-                  style: const TextStyle(color: Color(0xFF6D647A)),
+                  style: TextStyle(color: context.appTextSecondary),
                 ),
               ],
             ),
@@ -2406,7 +2408,7 @@ class _TimelineTile extends StatelessWidget {
           const SizedBox(width: 10),
           Text(
             date,
-            style: const TextStyle(color: Color(0xFF6D647A), fontSize: 11),
+            style: TextStyle(color: context.appTextSecondary, fontSize: 11),
           ),
         ],
       ),
@@ -2530,8 +2532,8 @@ class _HidratacaoCardState extends State<_HidratacaoCard> {
                   Expanded(
                     child: Text(
                       resumoLabel,
-                      style: const TextStyle(
-                        color: GridColors.textSecondary,
+                      style: TextStyle(
+                        color: context.appText,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -2586,10 +2588,10 @@ class _IntegrationConsentCardState extends State<_IntegrationConsentCard> {
           child: SwitchListTile(
             contentPadding: EdgeInsets.zero,
             value: enabled,
-            title: const Text(
+            title: Text(
               'Integracoes de saude',
               style: TextStyle(
-                color: GridColors.textSecondary,
+                color: context.appText,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -2784,8 +2786,8 @@ class _CommunityPrivacyCardState extends State<_CommunityPrivacyCard> {
                   enabled
                       ? 'Participando da comunidade local'
                       : 'Participar da comunidade local',
-                  style: const TextStyle(
-                    color: GridColors.textSecondary,
+                  style: TextStyle(
+                    color: context.appText,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -2931,9 +2933,9 @@ class _RankingCardState extends State<_RankingCard> {
                         width: 28,
                         child: Text(
                           '${item.posicao}.',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w800,
-                            color: GridColors.textSecondary,
+                            color: context.appText,
                           ),
                         ),
                       ),
@@ -2945,13 +2947,13 @@ class _RankingCardState extends State<_RankingCard> {
                                 item.voce ? FontWeight.w900 : FontWeight.w500,
                             color: item.voce
                                 ? GridColors.primary
-                                : GridColors.textSecondary,
+                                : context.appTextSecondary,
                           ),
                         ),
                       ),
                       Text(
                         '${item.pontuacao} pontos',
-                        style: const TextStyle(color: Color(0xFF6D647A)),
+                        style: TextStyle(color: context.appTextSecondary),
                       ),
                     ],
                   ),
@@ -3085,14 +3087,14 @@ class _MuralCardState extends State<_MuralCard> {
                                     : FontWeight.w700,
                                 color: post.voce
                                     ? GridColors.primary
-                                    : GridColors.textSecondary,
+                                    : context.appTextSecondary,
                               ),
                             ),
                             const SizedBox(width: 8),
                             Text(
                               _formatarDataHora(post.criadoEm),
                               style: const TextStyle(
-                                color: Color(0xFF6D647A),
+                                color: context.appTextSecondary,
                                 fontSize: 11,
                               ),
                             ),
@@ -3107,7 +3109,7 @@ class _MuralCardState extends State<_MuralCard> {
               if (!podePostar)
                 const Text(
                   'Ative a participacao na comunidade para poder postar no mural.',
-                  style: TextStyle(color: Color(0xFF6D647A), fontSize: 12),
+                  style: TextStyle(color: context.appTextSecondary, fontSize: 12),
                 )
               else ...[
                 TextField(
@@ -3135,7 +3137,7 @@ class _MuralCardState extends State<_MuralCard> {
                     Text(
                       '$caracteresRestantes caracteres restantes',
                       style: const TextStyle(
-                        color: Color(0xFF6D647A),
+                        color: context.appTextSecondary,
                         fontSize: 12,
                       ),
                     ),
@@ -3208,7 +3210,7 @@ class _TipsCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       tip,
-                      style: const TextStyle(color: Color(0xFF6D647A)),
+                      style: TextStyle(color: context.appTextSecondary),
                     ),
                   ),
                 ],
@@ -3235,7 +3237,7 @@ class _Panel extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: padding,
       decoration: BoxDecoration(
-        color: GridColors.card,
+        color: context.appSurface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: GridColors.primary.withValues(alpha: 0.10)),
       ),
@@ -3260,8 +3262,8 @@ class _SectionTitle extends StatelessWidget {
         Expanded(
           child: Text(
             title,
-            style: const TextStyle(
-              color: GridColors.textSecondary,
+            style: TextStyle(
+              color: context.appText,
               fontSize: 14,
               fontWeight: FontWeight.w900,
             ),
@@ -3269,7 +3271,7 @@ class _SectionTitle extends StatelessWidget {
         ),
         Text(
           trailing,
-          style: const TextStyle(color: Color(0xFF6D647A), fontSize: 12),
+          style: TextStyle(color: context.appTextSecondary, fontSize: 12),
         ),
       ],
     );
@@ -3302,7 +3304,7 @@ class _ProgressRow extends StatelessWidget {
           const SizedBox(height: 5),
           LinearProgressIndicator(
             value: progress,
-            backgroundColor: GridColors.filterBackground,
+            backgroundColor: context.appSurfaceAlt,
             valueColor: const AlwaysStoppedAnimation(GridColors.primary),
           ),
         ],
@@ -3345,13 +3347,13 @@ class _ReminderLine extends StatelessWidget {
                 label,
                 style: concluido
                     ? const TextStyle(
-                        color: Color(0xFF6D647A),
+                        color: context.appTextSecondary,
                         decoration: TextDecoration.lineThrough,
                       )
                     : null,
               ),
             ),
-            Text(time, style: const TextStyle(color: Color(0xFF6D647A))),
+            Text(time, style: TextStyle(color: context.appTextSecondary)),
           ],
         ),
       ),
@@ -3394,7 +3396,7 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Panel(
-      child: Text(label, style: const TextStyle(color: Color(0xFF6D647A))),
+      child: Text(label, style: TextStyle(color: context.appTextSecondary)),
     );
   }
 }
@@ -3415,7 +3417,7 @@ class _TextField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: GridColors.filterBackground,
+        fillColor: context.appSurfaceAlt,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,

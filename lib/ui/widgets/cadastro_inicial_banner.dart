@@ -69,14 +69,17 @@ class _CadastroInicialBannerState extends State<CadastroInicialBanner> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Complete seu cadastro inicial',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: context.appText,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         'Faltam: ${_pendencias.take(3).join(', ')}${_pendencias.length > 3 ? '...' : ''}',
-                        style: const TextStyle(fontSize: 12),
+                        style: TextStyle(fontSize: 12, color: context.appTextSecondary),
                       ),
                     ],
                   ),

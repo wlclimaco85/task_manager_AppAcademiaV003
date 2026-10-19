@@ -7,7 +7,7 @@ class FitnessMenuPage extends StatelessWidget {
   const FitnessMenuPage({super.key, required this.child});
   @override
   Widget build(BuildContext context) => Column(children: [
-    Material(color: GridColors.card, child: SizedBox(width: double.infinity,
+    Material(color: context.appSurface, child: SizedBox(width: double.infinity,
       child: Align(alignment: Alignment.centerLeft,
         child: TextButton.icon(
           style: TextButton.styleFrom(foregroundColor: GridColors.primary),

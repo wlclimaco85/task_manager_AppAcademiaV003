@@ -56,7 +56,7 @@ class TaskManagerApp extends StatelessWidget {
       ],
       theme: ThemeData(
         useMaterial3: true,
-        scaffoldBackgroundColor: GridColors.background,
+        scaffoldBackgroundColor: fundoTemaClaro(tema),
         colorScheme: ColorScheme.fromSeed(
           seedColor: GridColors.primary,
           primary: GridColors.primary,
@@ -162,19 +162,30 @@ class TaskManagerApp extends StatelessWidget {
         ),
       ),
       themeMode: PreferenciaTema.modoDe(tema),
-      darkTheme: _temaEscuro(),
+      darkTheme: temaEscuro(),
       home: const SplashScreen(),
       ),
     );
   }
 
+  static Color fundoTemaClaro(TemaApp tema) =>
+      tema == TemaApp.branco ? Colors.white : GridColors.background;
+
   /// Tema escuro com fundo preto (opcao Preto no perfil).
-  static ThemeData _temaEscuro() => ThemeData(
+  static ThemeData temaEscuro() => ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
         colorScheme: ColorScheme.fromSeed(
           seedColor: GridColors.primary,
           brightness: Brightness.dark,
+        ).copyWith(
+          surface: const Color(0xFF111827),
+          surfaceContainerLow: const Color(0xFF18212F),
+          surfaceContainer: const Color(0xFF1E293B),
+          onSurface: const Color(0xFFF8FAFC),
+          onSurfaceVariant: const Color(0xFFCBD5E1),
+          outline: const Color(0xFF64748B),
+          outlineVariant: const Color(0xFF334155),
         ),
         scaffoldBackgroundColor: Colors.black,
         cardColor: const Color(0xFF121212),
@@ -182,6 +193,39 @@ class TaskManagerApp extends StatelessWidget {
           backgroundColor: Colors.black,
           foregroundColor: Colors.white,
           elevation: 0,
+        ),
+        cardTheme: CardThemeData(
+          color: const Color(0xFF111827),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFF334155)),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFF18212F),
+          hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF334155)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF334155)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: GridColors.primaryLight, width: 1.5),
+          ),
+        ),
+        navigationBarTheme: const NavigationBarThemeData(
+          backgroundColor: Color(0xFF111827),
+          indicatorColor: Color(0xFF064E3B),
+        ),
+        bottomSheetTheme: const BottomSheetThemeData(
+          backgroundColor: Color(0xFF111827),
+          modalBackgroundColor: Color(0xFF111827),
         ),
         textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
       );

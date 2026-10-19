@@ -103,13 +103,13 @@ class _GraficoReal extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-          color: GridColors.card,
+          color: context.appSurface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: GridColors.divider)),
+          border: Border.all(color: context.appBorder)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(serie.titulo, style: const TextStyle(fontWeight: FontWeight.w700)),
         Text(serie.unidade,
-            style: const TextStyle(color: GridColors.textSecondary)),
+            style: TextStyle(color: context.appTextSecondary)),
         const SizedBox(height: 12),
         if (pontos.isEmpty)
           const SizedBox(
