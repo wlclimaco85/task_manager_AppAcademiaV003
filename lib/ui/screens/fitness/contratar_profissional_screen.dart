@@ -521,12 +521,12 @@ class _ContratarProfissionalScreenState
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.schedule,
+                          Icon(Icons.schedule,
                               size: 14, color: GridColors.primaryDark),
                           const SizedBox(width: 4),
                           Text(
                             '${prof.totalHorariosLivres} horários livres disponíveis esta semana',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: GridColors.primaryDark,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,

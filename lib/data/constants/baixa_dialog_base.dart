@@ -98,7 +98,7 @@ class BaixaDialogBase {
             onPressed: onPick,
             child: Text(
               '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}',
-              style: const TextStyle(
+              style: TextStyle(
                   fontWeight: FontWeight.bold, color: GridColors.primary),
             ),
           ),

@@ -109,7 +109,7 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
         actions: [
           IconButton(
             tooltip: 'Salvar Ficha',
-            icon: const Icon(Icons.check, color: GridColors.primary),
+            icon: Icon(Icons.check, color: GridColors.primary),
             onPressed: _salvarPlano,
           ),
         ],
@@ -136,7 +136,7 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
                 ),
                 IconButton(
                   tooltip: 'Adicionar divisão de treino',
-                  icon: const Icon(Icons.add_circle, color: GridColors.primary),
+                  icon: Icon(Icons.add_circle, color: GridColors.primary),
                   onPressed: _adicionarDivisao,
                 ),
                 if (_divisoes.length > 1)
@@ -169,7 +169,7 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
                     TextField(
                       controller: _tituloController,
                       style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Título da Ficha de Treino',
                         hintText: 'Ex: Hipertrofia ABC - Mês 1',
                         prefixIcon: Icon(Icons.fitness_center, color: GridColors.primary),
@@ -340,8 +340,8 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
                     child: SizedBox(
                       width: 56, height: 48,
                       child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        const Icon(Icons.drag_indicator, color: GridColors.primary, size: 22),
-                        Text('${exIndex + 1}', style: const TextStyle(
+                        Icon(Icons.drag_indicator, color: GridColors.primary, size: 22),
+                        Text('${exIndex + 1}', style: TextStyle(
                           color: GridColors.primaryDark, fontWeight: FontWeight.w800)),
                       ]),
                     ),
@@ -396,7 +396,7 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
                 child: Text('Biset com ${item.exercicioBiset!.exercicioNome}\n'
                   '${item.exercicioBiset!.repeticoes} reps • '
                   '${item.exercicioBiset!.cargaSugeridaKg} kg',
-                  style: const TextStyle(color: GridColors.primaryDark,
+                  style: TextStyle(color: GridColors.primaryDark,
                     fontWeight: FontWeight.w600))),
             const SizedBox(height: 10),
 
@@ -465,7 +465,7 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
           const SizedBox(width: 4),
           InkWell(
             onTap: onIncrement,
-            child: const Icon(Icons.add_circle, size: 18, color: GridColors.primary),
+            child: Icon(Icons.add_circle, size: 18, color: GridColors.primary),
           ),
         ],
       ),

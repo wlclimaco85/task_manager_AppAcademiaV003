@@ -9,7 +9,9 @@ import 'package:task_manager_flutter/ui/widgets/permissoes_personal_dialog.dart'
 import 'package:task_manager_flutter/ui/widgets/perfil_fitness_header.dart';
 import 'package:task_manager_flutter/data/services/cadastro_inicial_service.dart';
 import 'package:task_manager_flutter/data/services/fitness_push_notification_service.dart';
+import 'package:task_manager_flutter/data/services/push_registration_service.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/cadastro_inicial_screen.dart';
+import 'package:task_manager_flutter/ui/widgets/fitness_notificacoes_sheet.dart';
 
 /// Acima do Navigator para permanecer visível também nas telas abertas por push.
 class AuthenticatedHeaderShell extends StatefulWidget {
@@ -44,7 +46,10 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
     final chave = '${s.login?.id ?? s.data?.id ?? 'usuario'}:${s.token ?? ''}';
     if (_sessaoCarregada == chave) return;
     _sessaoCarregada = chave;
-    PerfilContaService().carregar().catchError((Object _) => <String, dynamic>{});
+    PushRegistrationService().sincronizar();
+    PerfilContaService()
+        .carregar()
+        .catchError((Object _) => <String, dynamic>{});
     _verificarPermissoesAluno();
     _carregarIndicadores(chave);
   }
@@ -63,7 +68,8 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
 
       // 2. Tenta atualizar remotamente em segundo plano sem bloquear a UI
       try {
-        await CadastroInicialService.buscarRemoto().timeout(const Duration(seconds: 3));
+        await CadastroInicialService.buscarRemoto()
+            .timeout(const Duration(seconds: 3));
         dados = await CadastroInicialService.carregar();
         pendencias = CadastroInicialService.pendencias(dados);
         incompleto = pendencias.isNotEmpty;
@@ -74,14 +80,16 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
           FitnessNotificationItem(
             id: 'cadastro_inicial_${AuthUtility.userInfo.login?.id ?? 'aluno'}',
             titulo: 'Complete seu cadastro inicial',
-            corpo: 'Inclua sua foto e medidas para acompanhar sua evolução completa.',
+            corpo:
+                'Inclua sua foto e medidas para acompanhar sua evolução completa.',
             dataHora: DateTime.now(),
             tipo: 'cadastro_inicial',
           ),
         );
       }
     }
-    final notificacoes = await FitnessPushNotificationService().getNotificacoes();
+    final notificacoes =
+        await FitnessPushNotificationService().getNotificacoes();
     if (!mounted || _sessaoCarregada != chaveSessao) return;
     setState(() {
       _cadastroIncompleto = incompleto;
@@ -97,72 +105,22 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
     if (chave != null) await _carregarIndicadores(chave);
   }
 
-  Future<void> _abrirNotificacoes() async {
-    var itens = await FitnessPushNotificationService().getNotificacoes();
-    if (!mounted) return;
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (sheetContext) => StatefulBuilder(
-        builder: (context, setSheetState) => SafeArea(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * .72),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-                  child: Text('Notificações', style: Theme.of(context).textTheme.titleLarge),
-                ),
-                Flexible(
-                  child: itens.isEmpty
-                      ? const Padding(
-                          padding: EdgeInsets.all(24),
-                          child: Center(child: Text('Nenhuma notificação por enquanto.')),
-                        )
-                      : ListView.separated(
-                          shrinkWrap: true,
-                          itemCount: itens.length,
-                          separatorBuilder: (_, __) => const Divider(height: 1),
-                          itemBuilder: (context, index) {
-                            final item = itens[index];
-                            return ListTile(
-                              key: ValueKey('notificacao_${item.id}'),
-                              leading: Icon(
-                                item.tipo == 'cadastro_inicial'
-                                    ? Icons.person_outline
-                                    : Icons.notifications_outlined,
-                                color: item.lida ? context.appTextSecondary : GridColors.primary,
-                              ),
-                              title: Text(item.titulo,
-                                  style: TextStyle(fontWeight: item.lida ? FontWeight.w500 : FontWeight.w700)),
-                              subtitle: Text(item.corpo),
-                              trailing: item.lida
-                                  ? null
-                                  : const Icon(Icons.circle, size: 10, color: GridColors.primary),
-                              onTap: () async {
-                                await FitnessPushNotificationService().marcarComoLida(item.id);
-                                itens = await FitnessPushNotificationService().getNotificacoes();
-                                setSheetState(() {});
-                                if (item.tipo == 'cadastro_inicial' && sheetContext.mounted) {
-                                  Navigator.pop(sheetContext);
-                                  await _abrirCadastroInicial();
-                                }
-                              },
-                            );
-                          },
-                        ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+  Future<void> _avisarAvaliacaoInicialPendente() async {
+    await mostrarDialogoAvaliacaoInicialPendente(
+      context,
+      onFazerAgora: _abrirCadastroInicial,
     );
+  }
+
+  Future<void> _abrirNotificacoes() async {
     final chave = _sessaoCarregada;
-    if (chave != null) await _carregarIndicadores(chave);
+    await mostrarCentralNotificacoes(
+      context,
+      onAtualizarIndicadores: () {
+        if (chave != null) _carregarIndicadores(chave);
+      },
+      onAbrirAvaliacaoInicial: _abrirCadastroInicial,
+    );
   }
 
   String? _permissoesVerificadasPara;
@@ -218,32 +176,29 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: InkWell(
-                            onTap: widget.onEditar,
-                            borderRadius: BorderRadius.circular(16),
-                            child: PerfilFitnessHeader(
-                              nome: sessao.perfilConta?['nome'] as String? ??
-                                  sessao.login?.nome ??
-                                  sessao.data?.codDadosPessoal?.nome ??
-                                  [
-                                    sessao.data?.firstName,
-                                    sessao.data?.lastName,
-                                  ].whereType<String>().join(' '),
-                              foto: sessao.perfilConta?['foto'] as String? ??
-                                  sessao.login?.foto ??
-                                  sessao.data?.codDadosPessoal?.photo ??
-                                  sessao.data?.photo,
-                              perfil: podeGerenciarAlunos(sessao)
-                                  ? 'Personal'
-                                  : sessao.login?.tipoLogin ==
-                                          LoginEnum.APP_ALUNO
-                                      ? 'Aluno'
-                                      : 'Minha conta',
-                              cadastroIncompleto: _cadastroIncompleto,
-                              notificacoesNaoLidas: _notificacoesNaoLidas,
-                              onCadastroIncompleto: _abrirCadastroInicial,
-                              onNotificacoes: _abrirNotificacoes,
-                            ),
+                          child: PerfilFitnessHeader(
+                            nome: sessao.perfilConta?['nome'] as String? ??
+                                sessao.login?.nome ??
+                                sessao.data?.codDadosPessoal?.nome ??
+                                [
+                                  sessao.data?.firstName,
+                                  sessao.data?.lastName,
+                                ].whereType<String>().join(' '),
+                            foto: sessao.perfilConta?['foto'] as String? ??
+                                sessao.login?.foto ??
+                                sessao.data?.codDadosPessoal?.photo ??
+                                sessao.data?.photo,
+                            perfil: podeGerenciarAlunos(sessao)
+                                ? 'Personal'
+                                : sessao.login?.tipoLogin ==
+                                        LoginEnum.APP_ALUNO
+                                    ? 'Aluno'
+                                    : 'Minha conta',
+                            cadastroIncompleto: _cadastroIncompleto,
+                            notificacoesNaoLidas: _notificacoesNaoLidas,
+                            onEditar: widget.onEditar,
+                            onCadastroIncompleto: _avisarAvaliacaoInicialPendente,
+                            onNotificacoes: _abrirNotificacoes,
                           ),
                         ),
                         const SizedBox(width: 8),

@@ -77,7 +77,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
         actions: [
           IconButton(
             tooltip: 'Biblioteca de Exercícios',
-            icon: const Icon(Icons.fitness_center, color: GridColors.primary),
+            icon: Icon(Icons.fitness_center, color: GridColors.primary),
             onPressed: () {
               Navigator.push(
                 context,
@@ -108,7 +108,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: isDesktopOrWeb ? 1100 : double.infinity),
           child: _loading
-              ? const Center(child: CircularProgressIndicator(color: GridColors.primary))
+              ? Center(child: CircularProgressIndicator(color: GridColors.primary))
               : TabBarView(
                   controller: _tabController,
                   children: [
@@ -214,7 +214,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                   ),
                   child: Text(
                     '${plano.divisoes.length} divisões',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: GridColors.primaryDark,
                       fontWeight: FontWeight.w700,
                       fontSize: 12,
@@ -260,7 +260,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                               spacing: 6, runSpacing: 2,
                               children: [
                                 Text('${div.exercicios.length} exercícios', style: TextStyle(fontSize: 11, color: GridColors.textSecondary)),
-                                const Text('• Toque p/ ver ficha', style: TextStyle(fontSize: 11, color: GridColors.primary, fontWeight: FontWeight.bold)),
+                                Text('• Toque p/ ver ficha', style: TextStyle(fontSize: 11, color: GridColors.primary, fontWeight: FontWeight.bold)),
                               ],
                             ),
                           ],
@@ -270,7 +270,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                     OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
                         foregroundColor: GridColors.primary,
-                        side: const BorderSide(color: GridColors.primary),
+                        side: BorderSide(color: GridColors.primary),
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                         textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
                       ),
@@ -429,7 +429,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                 if (sessao.feedbackAluno != null)
                   Text(
                     '"${sessao.feedbackAluno}"',
-                    style: const TextStyle(fontStyle: FontStyle.italic, color: GridColors.primaryDark),
+                    style: TextStyle(fontStyle: FontStyle.italic, color: GridColors.primaryDark),
                   ),
                 const SizedBox(height: 4),
                 Row(
@@ -532,19 +532,19 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.fitness_center, size: 16, color: GridColors.primaryDark),
+                        Icon(Icons.fitness_center, size: 16, color: GridColors.primaryDark),
                         const SizedBox(width: 6),
                         Text(
                           '${div.exercicios.length} exercícios',
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: GridColors.primaryDark),
+                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: GridColors.primaryDark),
                         ),
                       ],
                     ),
                     Row(
                       children: [
-                        const Icon(Icons.timer_outlined, size: 16, color: GridColors.primaryDark),
+                        Icon(Icons.timer_outlined, size: 16, color: GridColors.primaryDark),
                         const SizedBox(width: 6),
-                        const Text(
+                        Text(
                           '~45-60 min',
                           style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: GridColors.primaryDark),
                         ),
@@ -552,11 +552,11 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                     ),
                     Row(
                       children: [
-                        const Icon(Icons.flag_outlined, size: 16, color: GridColors.primaryDark),
+                        Icon(Icons.flag_outlined, size: 16, color: GridColors.primaryDark),
                         const SizedBox(width: 6),
                         Text(
                           plano.objetivo,
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: GridColors.primaryDark),
+                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: GridColors.primaryDark),
                         ),
                       ],
                     ),
@@ -620,7 +620,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                                       ),
                                       child: Text(
                                         ex.grupoMuscular,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           color: GridColors.primaryDark,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 10,
@@ -699,7 +699,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                                   Text('Biset com ${ex.exercicioBiset!.exercicioNome} • '
                                     '${ex.exercicioBiset!.repeticoes} reps • '
                                     '${ex.exercicioBiset!.cargaSugeridaKg} kg',
-                                    style: const TextStyle(color: GridColors.primaryDark,
+                                    style: TextStyle(color: GridColors.primaryDark,
                                       fontWeight: FontWeight.w600)),
                                 if (ex.exerciciosAlternativos.isNotEmpty)
                                   Text('Máquina ocupada? ${ex.exerciciosAlternativos.join(' ou ')}',

@@ -106,7 +106,7 @@ class TaskManagerApp extends StatelessWidget {
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide:
-                const BorderSide(color: GridColors.primary, width: 1.5),
+                BorderSide(color: GridColors.primary, width: 1.5),
           ),
         ),
         textTheme: baseTextTheme.copyWith(
@@ -149,7 +149,7 @@ class TaskManagerApp extends StatelessWidget {
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
             foregroundColor: GridColors.primary,
-            side: const BorderSide(color: GridColors.primary, width: 1.2),
+            side: BorderSide(color: GridColors.primary, width: 1.2),
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -188,18 +188,18 @@ class TaskManagerApp extends StatelessWidget {
           outlineVariant: const Color(0xFF334155),
         ),
         scaffoldBackgroundColor: Colors.black,
-        cardColor: const Color(0xFF121212),
+        cardColor: const Color(0xFF1F2937),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.black,
-          foregroundColor: Colors.white,
+          foregroundColor: Color(0xFFF3F4F6),
           elevation: 0,
         ),
         cardTheme: CardThemeData(
-          color: const Color(0xFF111827),
+          color: const Color(0xFF1F2937),
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: Color(0xFF334155)),
+            side: const BorderSide(color: Color(0xFF374151)),
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
@@ -216,7 +216,7 @@ class TaskManagerApp extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: GridColors.primaryLight, width: 1.5),
+            borderSide: BorderSide(color: GridColors.primaryLight, width: 1.5),
           ),
         ),
         navigationBarTheme: const NavigationBarThemeData(

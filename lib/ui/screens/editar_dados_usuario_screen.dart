@@ -144,10 +144,10 @@ class _EditarDadosUsuarioScreenState extends State<EditarDadosUsuarioScreen> {
                 backgroundColor: GridColors.primarySubtle,
                 backgroundImage: imagem,
                 child: imagem == null
-                    ? const Icon(Icons.person, size: 52, color: GridColors.primary)
+                    ? Icon(Icons.person, size: 52, color: GridColors.primary)
                     : null,
               ),
-              const Positioned(
+              Positioned(
                 right: 0,
                 bottom: 0,
                 child: CircleAvatar(

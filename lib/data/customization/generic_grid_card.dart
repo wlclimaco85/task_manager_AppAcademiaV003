@@ -607,7 +607,7 @@ class _GenericMobileGridScreenState<T>
                   item == null
                       ? 'Nova Conta Bancária'
                       : 'Editar Conta Bancária',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: GridColors.primary,
@@ -861,7 +861,7 @@ class _GenericMobileGridScreenState<T>
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: GridColors.primary, width: 1.5),
+          borderSide: BorderSide(color: GridColors.primary, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -943,7 +943,7 @@ class _GenericMobileGridScreenState<T>
         filled: true,
         fillColor: Colors.white,
         focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: GridColors.primary, width: 1.5),
+          borderSide: BorderSide(color: GridColors.primary, width: 1.5),
           borderRadius: BorderRadius.circular(12),
         ),
         labelStyle: const TextStyle(color: GridColors.secondary),
@@ -1021,11 +1021,11 @@ class _GenericMobileGridScreenState<T>
         hintText: 'Digite ${config.label.toLowerCase()}',
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: GridColors.primary, width: 1.5),
+          borderSide: BorderSide(color: GridColors.primary, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: GridColors.primary, width: 2.5),
+          borderSide: BorderSide(color: GridColors.primary, width: 2.5),
         ),
       ),
       keyboardType: _getKeyboardType(config.fieldType),
@@ -1042,11 +1042,11 @@ class _GenericMobileGridScreenState<T>
         hintText: 'Digite ${config.label.toLowerCase()}',
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: GridColors.primary, width: 1.5),
+          borderSide: BorderSide(color: GridColors.primary, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: GridColors.primary, width: 2.5),
+          borderSide: BorderSide(color: GridColors.primary, width: 2.5),
         ),
       ),
       maxLines: 4,
@@ -1176,7 +1176,7 @@ class _GenericMobileGridScreenState<T>
               labelText: config.label,
               border:
                   OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              focusedBorder: const OutlineInputBorder(
+              focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: GridColors.primary, width: 2),
               ),
             ),
@@ -1319,12 +1319,12 @@ class _GenericMobileGridScreenState<T>
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide:
-                      const BorderSide(color: GridColors.primary, width: 1.5),
+                      BorderSide(color: GridColors.primary, width: 1.5),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide:
-                      const BorderSide(color: GridColors.primary, width: 2.5),
+                      BorderSide(color: GridColors.primary, width: 2.5),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -2373,7 +2373,7 @@ class _GenericMobileGridScreenState<T>
                               ),
                               child: Text(
                                 '#$id',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   color: GridColors.primary,
                                   fontSize: 11,
@@ -2472,7 +2472,7 @@ class _GenericMobileGridScreenState<T>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.attach_file,
                     size: 14,
                     color: GridColors.primary,
@@ -2481,7 +2481,7 @@ class _GenericMobileGridScreenState<T>
                   Flexible(
                     child: Text(
                       fileName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         color: GridColors.primary,
                         decoration: TextDecoration.underline,

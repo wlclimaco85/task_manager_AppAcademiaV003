@@ -929,7 +929,7 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                                 keyboardType: TextInputType.number,
                                 decoration: InputDecoration(
                                   labelText: 'Duração (minutos)',
-                                  prefixIcon: const Icon(Icons.timer_outlined, color: GridColors.primary),
+                                  prefixIcon: Icon(Icons.timer_outlined, color: GridColors.primary),
                                   filled: true,
                                   fillColor: context.appSurfaceAlt,
                                   border: OutlineInputBorder(
@@ -948,7 +948,7 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                   decoration: InputDecoration(
                                     labelText: 'Distância (km)',
-                                    prefixIcon: const Icon(Icons.route_outlined, color: GridColors.primary),
+                                    prefixIcon: Icon(Icons.route_outlined, color: GridColors.primary),
                                     filled: true,
                                     fillColor: context.appSurfaceAlt,
                                     border: OutlineInputBorder(
@@ -1176,7 +1176,7 @@ class _LiveWorkoutCardState extends State<_LiveWorkoutCard> {
                 const SizedBox(height: 6),
                 Text(
                   '$mm:$ss',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: GridColors.primary,
                     fontSize: 30,
                     fontWeight: FontWeight.w900,
@@ -1291,7 +1291,7 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
               ),
               if (widget.includeStrengthWorkouts) ...[
                 const SizedBox(height: 8),
-                const Wrap(
+                Wrap(
                   spacing: 16,
                   runSpacing: 6,
                   children: [
@@ -2523,7 +2523,7 @@ class _HidratacaoCardState extends State<_HidratacaoCard> {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.water_drop_outlined,
                     color: GridColors.primary,
                     size: 20,
@@ -2777,7 +2777,7 @@ class _CommunityPrivacyCardState extends State<_CommunityPrivacyCard> {
                         width: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(
+                    : Icon(
                         Icons.privacy_tip_outlined,
                         color: GridColors.primary,
                       ),
@@ -3305,7 +3305,7 @@ class _ProgressRow extends StatelessWidget {
           LinearProgressIndicator(
             value: progress,
             backgroundColor: context.appSurfaceAlt,
-            valueColor: const AlwaysStoppedAnimation(GridColors.primary),
+            valueColor: AlwaysStoppedAnimation(GridColors.primary),
           ),
         ],
       ),

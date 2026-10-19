@@ -172,7 +172,7 @@ class _AvaliacaoFisicaProScreenState extends State<AvaliacaoFisicaProScreen> {
         actions: [
           IconButton(
             tooltip: 'Salvar Avaliação',
-            icon: const Icon(Icons.check, color: GridColors.primary),
+            icon: Icon(Icons.check, color: GridColors.primary),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -447,7 +447,7 @@ class _AvaliacaoFisicaProScreenState extends State<AvaliacaoFisicaProScreen> {
                 ),
                 Text(
                   'Soma: ${_somaDobras.toStringAsFixed(1)} mm',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: GridColors.primary,
                     fontWeight: FontWeight.w700,
                     fontSize: 13,

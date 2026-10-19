@@ -112,7 +112,7 @@ class _NutricaoProtocolosHubScreenState
         backgroundColor: GridColors.card,
         foregroundColor: GridColors.textPrimary,
         elevation: 0,
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.restaurant_menu, color: GridColors.primary, size: 24),
             SizedBox(width: 8),
@@ -138,7 +138,7 @@ class _NutricaoProtocolosHubScreenState
         ),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: GridColors.primary))
+          ? Center(child: CircularProgressIndicator(color: GridColors.primary))
           : Center(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
@@ -333,7 +333,7 @@ class _NutricaoProtocolosHubScreenState
                     Text('${ref.nome} (${ref.horario})',
                         style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
                     Text('${ref.totalCalorias.toStringAsFixed(0)} kcal',
-                        style: const TextStyle(color: GridColors.primary, fontWeight: FontWeight.w700, fontSize: 12)),
+                        style: TextStyle(color: GridColors.primary, fontWeight: FontWeight.w700, fontSize: 12)),
                   ],
                 ),
                 subtitle: Text(
@@ -346,7 +346,7 @@ class _NutricaoProtocolosHubScreenState
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Row(
                         children: [
-                          const Icon(Icons.circle, size: 6, color: GridColors.primary),
+                          Icon(Icons.circle, size: 6, color: GridColors.primary),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -643,7 +643,7 @@ class _NutricaoProtocolosHubScreenState
               ],
             ),
           ),
-          IconButton(tooltip: 'Editar suplemento', onPressed:()=>_abrirDialogCriarSuplemento(sup),icon:const Icon(Icons.edit_outlined,color:GridColors.primary)),
+          IconButton(tooltip: 'Editar suplemento', onPressed:()=>_abrirDialogCriarSuplemento(sup),icon:Icon(Icons.edit_outlined,color:GridColors.primary)),
         ],
       ),
     );

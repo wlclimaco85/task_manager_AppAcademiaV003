@@ -750,7 +750,7 @@ class _AlimentoEditorState extends State<_AlimentoEditor> {
                                       title: Text(lista[i].nome),
                                       selected: _selecionado?.id == lista[i].id,
                                       trailing: _selecionado?.id == lista[i].id
-                                          ? const Icon(Icons.check_circle,
+                                          ? Icon(Icons.check_circle,
                                               color: GridColors.primary)
                                           : null,
                                       onTap: () => setState(

@@ -28,6 +28,7 @@ import 'package:task_manager_flutter/ui/screens/fitness/nutricao_protocolos_hub_
 import 'package:task_manager_flutter/ui/screens/fitness/contratar_profissional_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/exames_clinicos_hub_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/aviso_falta_screen.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/agenda_compartilhada_screen.dart';
 
 class BottomNavBarScreen extends StatefulWidget {
   const BottomNavBarScreen({super.key});
@@ -125,10 +126,10 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
               },
               backgroundColor: context.appSurface,
               indicatorColor: GridColors.primarySubtle,
-              selectedIconTheme: const IconThemeData(color: GridColors.primary),
+              selectedIconTheme: IconThemeData(color: GridColors.primary),
               unselectedIconTheme:
                   IconThemeData(color: context.appTextSecondary),
-              selectedLabelTextStyle: const TextStyle(
+              selectedLabelTextStyle: TextStyle(
                 color: GridColors.primary,
                 fontWeight: FontWeight.w700,
                 fontSize: 12,
@@ -152,7 +153,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    const Text(
+                    Text(
                       'Eu Atleta',
                       style: TextStyle(
                         fontSize: 11,
@@ -253,6 +254,14 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const FitnessMenuPage(child: AvisoFaltaScreen())),
+        );
+        break;
+      case 'Agenda':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => const FitnessMenuPage(
+                  child: AgendaCompartilhadaScreen())),
         );
         break;
       case 'Dieta':
@@ -401,6 +410,8 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
             const _FitnessAction(Icons.directions_run, 'Treinos'),
           if (_temPersonalVinculado())
             const _FitnessAction(Icons.event_busy_outlined, 'Aviso de falta'),
+          if (_temPersonalVinculado())
+            const _FitnessAction(Icons.calendar_month_outlined, 'Agenda'),
           if (sec.canView(AppScreen.academias))
             const _FitnessAction(Icons.fitness_center, 'Academias'),
           if (sec.canView(AppScreen.personais))
@@ -531,6 +542,8 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         const _FitnessAction(Icons.directions_run, 'Treinos'),
       if (_temPersonalVinculado())
         const _FitnessAction(Icons.event_busy_outlined, 'Aviso de falta'),
+      if (_temPersonalVinculado())
+        const _FitnessAction(Icons.calendar_month_outlined, 'Agenda'),
       if (sec.canView(AppScreen.atividades))
         const _FitnessAction(Icons.directions_run, 'Atividade'),
       if (sec.canView(AppScreen.corpo))
@@ -1304,7 +1317,7 @@ class _CommunityParticipationBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.groups_outlined, color: GridColors.primary),
+              Icon(Icons.groups_outlined, color: GridColors.primary),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -1553,7 +1566,7 @@ _HomeCardData _homeCardData(String cardId, Fitness360Summary summary) {
         icon: Icons.flag_outlined,
         color: GridColors.success,
       ),
-    'community' => const _HomeCardData(
+    'community' => _HomeCardData(
         title: 'Comunidade',
         subtitle: 'Ranking opcional, desafios e conquistas',
         icon: Icons.groups_outlined,

@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:task_manager_flutter/data/services/fitness_push_notification_service.dart';
+import 'package:task_manager_flutter/ui/widgets/fitness_notificacoes_sheet.dart';
 import 'package:task_manager_flutter/ui/widgets/perfil_fitness_header.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   testWidgets('Nome longo cabe no celular e ausência de foto usa iniciais',
       (tester) async {
     await tester.pumpWidget(const MaterialApp(
@@ -32,7 +37,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('mostra sino, contador e alerta de cadastro incompleto',
+  testWidgets('mostra sino, contador e alerta de cadastro com exclamação',
       (tester) async {
     var abriuNotificacoes = false;
     var abriuCadastro = false;
@@ -53,10 +58,90 @@ void main() {
     expect(find.byKey(const Key('cadastro_incompleto_header')), findsOneWidget);
     expect(find.text('3'), findsOneWidget);
 
+    // O ícone deve ser exclamação (Icons.priority_high), NÃO interrogação
+    expect(find.byIcon(Icons.priority_high), findsOneWidget);
+    expect(find.byIcon(Icons.question_mark), findsNothing);
+
     await tester.tap(find.byKey(const Key('abrir_notificacoes')));
     await tester.tap(find.byKey(const Key('cadastro_incompleto_header')));
     expect(abriuNotificacoes, isTrue);
     expect(abriuCadastro, isTrue);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Diálogo avisa claramente que falta fazer a avaliação inicial',
+      (tester) async {
+    var clicouFazerAgora = false;
+
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => ElevatedButton(
+            onPressed: () => mostrarDialogoAvaliacaoInicialPendente(
+              context,
+              onFazerAgora: () => clicouFazerAgora = true,
+            ),
+            child: const Text('Abrir Diálogo'),
+          ),
+        ),
+      ),
+    ));
+
+    await tester.tap(find.text('Abrir Diálogo'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Avaliação Inicial Pendente'), findsOneWidget);
+    expect(find.text('Falta você fazer a sua avaliação inicial!'), findsOneWidget);
+    expect(find.text('Fazer Avaliação Agora'), findsOneWidget);
+
+    await tester.tap(find.text('Fazer Avaliação Agora'));
+    await tester.pumpAndSettle();
+
+    expect(clicouFazerAgora, isTrue);
+  });
+
+  testWidgets('Central de Notificações exibe os detalhes completos da notificação',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final notifService = FitnessPushNotificationService();
+    await notifService.agendarNotificacao(
+      FitnessNotificationItem(
+        id: 'notif_1',
+        titulo: 'Complete seu cadastro inicial',
+        corpo: 'Inclua sua foto e medidas para acompanhar sua evolução completa.',
+        dataHora: DateTime.now(),
+        tipo: 'cadastro_inicial',
+      ),
+    );
+
+    var abriuAvaliacao = false;
+
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => ElevatedButton(
+            onPressed: () => mostrarCentralNotificacoes(
+              context,
+              onAtualizarIndicadores: () {},
+              onAbrirAvaliacaoInicial: () => abriuAvaliacao = true,
+            ),
+            child: const Text('Abrir Notificações'),
+          ),
+        ),
+      ),
+    ));
+
+    await tester.tap(find.text('Abrir Notificações'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Notificações'), findsOneWidget);
+    expect(find.text('Complete seu cadastro inicial'), findsOneWidget);
+    expect(find.text('Inclua sua foto e medidas para acompanhar sua evolução completa.'), findsOneWidget);
+    expect(find.text('Fazer Avaliação →'), findsOneWidget);
+
+    await tester.tap(find.text('Fazer Avaliação →'));
+    await tester.pumpAndSettle();
+
+    expect(abriuAvaliacao, isTrue);
   });
 }

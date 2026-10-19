@@ -494,6 +494,8 @@ class ApiLinks {
   static String get fitnessExames => '$_baseUrlNew/api/fitness/exames';
   static String get fitnessCheckinDiario => '$_baseUrlNew/api/fitness/checkin';
   static String get fitnessLembretes => '$_baseUrlNew/api/fitness/lembretes';
+  static const String fitnessAgenda = '$_baseUrlNew/api/fitness/agenda';
+  static const String deviceToken = '$_baseUrlNew/api/device-token';
   static String get fitnessHidratacaoResumo =>
       '$_baseUrlNew/api/hidratacao/resumo';
   static String get fitnessHidratacaoRegistros =>

@@ -138,7 +138,7 @@ class _BibliotecaExerciciosScreenState
         actions: [
           IconButton(
             tooltip: 'Novo Exercício',
-            icon: const Icon(Icons.add, color: GridColors.primary),
+            icon: Icon(Icons.add, color: GridColors.primary),
             onPressed: _abrirModalNovoExercicio,
           ),
         ],
@@ -158,7 +158,7 @@ class _BibliotecaExerciciosScreenState
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text('Ficha: ${widget.tituloFicha}\nDestino: ${widget.divisaoDestino ?? ""}',
-                    style: const TextStyle(color: GridColors.primaryDark, fontWeight: FontWeight.w600)),
+                    style: TextStyle(color: GridColors.primaryDark, fontWeight: FontWeight.w600)),
                 ),
               // 1. Barra de Pesquisa
               Padding(
@@ -235,7 +235,7 @@ class _BibliotecaExerciciosScreenState
               // 3. Lista de Exercícios Filtrada
               Expanded(
                 child: _loading
-                    ? const Center(child: CircularProgressIndicator(color: GridColors.primary))
+                    ? Center(child: CircularProgressIndicator(color: GridColors.primary))
                     : _exerciciosFiltrados.isEmpty
                         ? _buildEstadoVazio()
                         : ListView.separated(
@@ -292,8 +292,8 @@ class _BibliotecaExerciciosScreenState
             ex.grupoMuscular,
             if (divisoes.isNotEmpty) 'Na ficha • ${divisoes.join(", ")}',
           ].join('\n')),
-          leading: incluido ? const Icon(Icons.check_circle, color: GridColors.primary) : null,
-          trailing: incluido ? const Text('Incluído', style: TextStyle(color: GridColors.primaryDark)) : Icon(_expandidoId == ex.id ? Icons.expand_less : Icons.add_circle_outline),
+          leading: incluido ? Icon(Icons.check_circle, color: GridColors.primary) : null,
+          trailing: incluido ? Text('Incluído', style: TextStyle(color: GridColors.primaryDark)) : Icon(_expandidoId == ex.id ? Icons.expand_less : Icons.add_circle_outline),
           onTap: incluido ? null : () => setState(() => _expandidoId = _expandidoId == ex.id ? null : ex.id)),
         Padding(padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Wrap(spacing: 8, children: [
@@ -398,7 +398,7 @@ class _BibliotecaExerciciosScreenState
                           ),
                           child: Text(
                             ex.grupoMuscular,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: GridColors.primaryDark,
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -512,7 +512,7 @@ class _BibliotecaExerciciosScreenState
                     ),
                     child: Text(
                       ex.grupoMuscular,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: GridColors.primaryDark,
                         fontWeight: FontWeight.w700,
                         fontSize: 12,

@@ -55,6 +55,8 @@ dependencies:
   pdf: ^3.12.0
   printing: ^5.14.3
   wakelock_plus: ^1.5.2
+  firebase_core: ^5.0.0
+  firebase_messaging: ^17.0.0
 
 dev_dependencies:
   archive: ^3.6.1

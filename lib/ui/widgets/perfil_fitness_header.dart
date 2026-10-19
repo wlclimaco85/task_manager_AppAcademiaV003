@@ -11,6 +11,7 @@ class PerfilFitnessHeader extends StatelessWidget {
   final String? foto;
   final bool cadastroIncompleto;
   final int notificacoesNaoLidas;
+  final VoidCallback? onEditar;
   final VoidCallback? onCadastroIncompleto;
   final VoidCallback? onNotificacoes;
 
@@ -21,6 +22,7 @@ class PerfilFitnessHeader extends StatelessWidget {
     this.foto,
     this.cadastroIncompleto = false,
     this.notificacoesNaoLidas = 0,
+    this.onEditar,
     this.onCadastroIncompleto,
     this.onNotificacoes,
   });
@@ -34,7 +36,7 @@ class PerfilFitnessHeader extends StatelessWidget {
     return Center(
       child: Text(
         iniciais.toUpperCase(),
-        style: const TextStyle(
+        style: TextStyle(
           color: GridColors.primary,
           fontWeight: FontWeight.w700,
           fontSize: 16,
@@ -87,77 +89,89 @@ class PerfilFitnessHeader extends StatelessWidget {
         border: Border.all(color: GridColors.primary.withValues(alpha: 0.25)),
       ),
       child: Row(
-      children: [
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Semantics(
-              label: 'Foto de $_nomeExibido',
-              image: true,
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: context.appSurfaceAlt,
-                  shape: BoxShape.circle,
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: _foto(context),
-              ),
-            ),
-            if (cadastroIncompleto)
-              Positioned(
-                right: -5,
-                bottom: -5,
-                child: Semantics(
-                  label: 'Cadastro incompleto: faltam foto ou medidas',
-                  button: true,
-                  child: InkWell(
-                    key: const Key('cadastro_incompleto_header'),
-                    onTap: onCadastroIncompleto,
-                    customBorder: const CircleBorder(),
-                    child: Container(
-                      width: 22,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        color: GridColors.secondary,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: context.appSurface, width: 2),
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: onEditar,
+              borderRadius: BorderRadius.circular(12),
+              child: Row(
+                children: [
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Semantics(
+                        label: 'Foto de $_nomeExibido',
+                        image: true,
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: context.appSurfaceAlt,
+                            shape: BoxShape.circle,
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: _foto(context),
+                        ),
                       ),
-                      child: const Icon(Icons.question_mark, size: 14, color: Colors.white),
+                      if (cadastroIncompleto)
+                        Positioned(
+                          right: -5,
+                          bottom: -5,
+                          child: Semantics(
+                            label: 'Avaliação inicial pendente: faltam foto ou medidas',
+                            button: true,
+                            child: InkWell(
+                              key: const Key('cadastro_incompleto_header'),
+                              onTap: onCadastroIncompleto,
+                              customBorder: const CircleBorder(),
+                              child: Container(
+                                width: 22,
+                                height: 22,
+                                decoration: BoxDecoration(
+                                  color: GridColors.secondary,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: context.appSurface, width: 2),
+                                ),
+                                child: const Center(
+                                  child: Icon(Icons.priority_high, size: 14, color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _nomeExibido,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: context.appText,
+                          ),
+                        ),
+                        Text(
+                          perfil,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.appTextSecondary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
+                ],
               ),
-          ],
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                _nomeExibido,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: context.appText,
-                ),
-              ),
-              Text(
-                perfil,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: context.appTextSecondary,
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-        const SizedBox(width: 8),
+          const SizedBox(width: 8),
         Badge(
           isLabelVisible: notificacoesNaoLidas > 0,
           label: Text(notificacoesNaoLidas > 99 ? '99+' : '$notificacoesNaoLidas'),

@@ -106,7 +106,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
           backgroundColor: GridColors.card,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: GridColors.primary, width: 2),
+            side: BorderSide(color: GridColors.primary, width: 2),
           ),
           title: const Text(
             "Enviar Arquivo",
@@ -128,7 +128,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                     label: const Text("Selecionar Arquivo",
                         style: TextStyle(color: GridColors.secondary)),
                     style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: GridColors.primary)),
+                        side: BorderSide(color: GridColors.primary)),
                     onPressed: () async {
                       final result = await FilePicker.platform.pickFiles();
                       if (result != null) {
@@ -174,7 +174,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                         ),
                       ),
                     ),
-                    dropdownDecoratorProps: const DropDownDecoratorProps(
+                    dropdownDecoratorProps: DropDownDecoratorProps(
                       dropdownSearchDecoration: InputDecoration(
                         labelText: "Diretório",
                         border: OutlineInputBorder(),
@@ -203,7 +203,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                         ),
                       ),
                     ),
-                    dropdownDecoratorProps: const DropDownDecoratorProps(
+                    dropdownDecoratorProps: DropDownDecoratorProps(
                       dropdownSearchDecoration: InputDecoration(
                         labelText: "Parceiro",
                         border: OutlineInputBorder(),
@@ -220,7 +220,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
 
                   if (fileType != null)
                     Text("Tipo: $fileType",
-                        style: const TextStyle(color: GridColors.primaryLight)),
+                        style: TextStyle(color: GridColors.primaryLight)),
 
                   if (fileBytes != null)
                     Padding(
@@ -359,7 +359,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                   // Header
                   Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: GridColors.primary,
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(20),
@@ -468,7 +468,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                             label: const Text('Baixar',
                                 style: TextStyle(color: GridColors.secondary)),
                             style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: GridColors.primary),
+                              side: BorderSide(color: GridColors.primary),
                             ),
                             onPressed: () async {
                               if (_isDownloading) return;
@@ -489,7 +489,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                             label: const Text('Excluir',
                                 style: TextStyle(color: GridColors.error)),
                             style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: GridColors.primary),
+                              side: BorderSide(color: GridColors.primary),
                             ),
                             onPressed: () => _confirmDelete(fileId, dirId),
                           ),
@@ -522,9 +522,9 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
         backgroundColor: GridColors.card,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: GridColors.primary, width: 2),
+          side: BorderSide(color: GridColors.primary, width: 2),
         ),
-        title: const Text(
+        title: Text(
           "Excluir Documento",
           style:
               TextStyle(color: GridColors.primary, fontWeight: FontWeight.bold),

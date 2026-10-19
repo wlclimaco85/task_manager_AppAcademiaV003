@@ -13,6 +13,7 @@ import 'package:task_manager_flutter/data/services/avaliacao_agendada_service.da
 import 'package:task_manager_flutter/ui/screens/fitness/nutricao_protocolos_hub_screen.dart';
 import 'package:task_manager_flutter/ui/widgets/avatar_com_indicador.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/avaliacao_fisica_pro_screen.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/agenda_compartilhada_screen.dart';
 
 /// Workspace Completo do Personal Trainer (MFIT Pro Standard)
 /// 4 Abas Especializadas:
@@ -37,7 +38,6 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
   bool _loading = true;
   List<PersonalAlunoGestaoModel> _alunos = [];
 Map<String, DateTime> _avaliacoesAgendadas = {};
-  List<PersonalAgendamentoAulaModel> _agendamentos = [];
 
   @override
   void initState() {
@@ -55,12 +55,10 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
   Future<void> _carregarDados() async {
     setState(() => _loading = true);
     final alunos = await _repo.getAlunos();
-    final agendamentos = await _repo.getAgendamentos();
     final avaliacoes = await AvaliacaoAgendadaService.listar();
     if (mounted) {
       setState(() {
         _alunos = alunos;
-        _agendamentos = agendamentos;
         _avaliacoesAgendadas = avaliacoes;
         _loading = false;
       });
@@ -611,190 +609,8 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
   // ABA 2: AGENDA DE AULAS & ACADEMIAS
   // ─────────────────────────────────────────────────────────────────────────────
 
-  Widget _buildAbaAgenda() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Aulas e Consultorias',
-              style: TextStyle(
-                color: GridColors.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            ElevatedButton.icon(
-              onPressed: () => _modalAgendarAula(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: CustomColors.primaryGreen,
-                foregroundColor: GridColors.textOnPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Agendar Aula',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        ..._agendamentos.map((agenda) => _buildCardAgenda(agenda)),
-      ],
-    );
-  }
-
-  Widget _buildCardAgenda(PersonalAgendamentoAulaModel agenda) {
-    final bool isRemarcada =
-        agenda.status == StatusAgendamentoAula.remarcada;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: GridColors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isRemarcada
-              ? GridColors.secondaryDark.withOpacity(0.5)
-              : GridColors.divider,
-          width: 1.2,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: CustomColors.primaryGreen.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '${agenda.horarioInicio} - ${agenda.horarioFim}',
-                  style: const TextStyle(
-                    color: CustomColors.primaryGreen,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  agenda.alunoNome,
-                  style: TextStyle(
-                    color: GridColors.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              if (isRemarcada)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: GridColors.secondaryDark.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Text(
-                    'REMARCADA',
-                    style: TextStyle(
-                      color: GridColors.secondaryDark,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Icon(Icons.location_on_outlined,
-                  size: 16, color: GridColors.textSecondary),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  'Academia: ${agenda.academiaNome}',
-                  style: TextStyle(
-                    color: GridColors.textSecondary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Icon(Icons.fitness_center_outlined,
-                  size: 16, color: GridColors.textSecondary),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  'Tipo: ${agenda.tipoAula}',
-                  style: TextStyle(
-                    color: GridColors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (agenda.motivoRemarcacao != null &&
-              agenda.motivoRemarcacao!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: GridColors.secondaryDark.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'Motivo Remarcação: ${agenda.motivoRemarcacao}',
-                style: const TextStyle(
-                  color: GridColors.secondaryDark,
-                  fontSize: 11,
-                ),
-              ),
-            ),
-          ],
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              OutlinedButton.icon(
-                onPressed: () => _modalRemarcarAula(context, agenda),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: GridColors.secondaryDark,
-                  side: const BorderSide(color: GridColors.secondaryDark),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                icon: const Icon(Icons.edit_calendar, size: 16),
-                label: const Text('Remarcar Horário',
-                    style: TextStyle(fontSize: 12)),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // ABA 3: CONTROLE FINANCEIRO SIMPLES
-  // ─────────────────────────────────────────────────────────────────────────────
+  Widget _buildAbaAgenda() =>
+      const AgendaCompartilhadaScreen(embedded: true);
 
   Widget _buildAbaFinanceiro() {
     double totalRecebido = 0;
@@ -1647,218 +1463,6 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
     );
   }
 
-  void _modalRemarcarAula(
-      BuildContext context, PersonalAgendamentoAulaModel agenda) {
-    final horarioController =
-        TextEditingController(text: agenda.horarioInicio);
-    final academiaController =
-        TextEditingController(text: agenda.academiaNome);
-    final motivoController = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: GridColors.card,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Remarcar Aula: ${agenda.alunoNome}',
-              style: TextStyle(
-                color: GridColors.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: horarioController,
-              style: TextStyle(color: GridColors.textPrimary),
-              decoration: InputDecoration(
-                labelText: 'Novo Horário (HH:MM)',
-                labelStyle: TextStyle(color: GridColors.textSecondary),
-                filled: true,
-                fillColor: GridColors.inputBackground,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: academiaController,
-              style: TextStyle(color: GridColors.textPrimary),
-              decoration: InputDecoration(
-                labelText: 'Academia / Local',
-                labelStyle: TextStyle(color: GridColors.textSecondary),
-                filled: true,
-                fillColor: GridColors.inputBackground,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: motivoController,
-              style: TextStyle(color: GridColors.textPrimary),
-              decoration: InputDecoration(
-                labelText: 'Motivo da Remarcação',
-                labelStyle: TextStyle(color: GridColors.textSecondary),
-                filled: true,
-                fillColor: GridColors.inputBackground,
-              ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  await _repo.remarcarAula(
-                    aulaId: agenda.id,
-                    novaData: agenda.data,
-                    novoHorarioInicio: horarioController.text,
-                    novoHorarioFim: '09:00',
-                    novaAcademia: academiaController.text,
-                    motivo: motivoController.text,
-                  );
-                  Navigator.pop(ctx);
-                  _carregarDados();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: GridColors.secondaryDark,
-                  foregroundColor: GridColors.textOnPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: const Text('Confirmar Remarcação',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _modalAgendarAula(BuildContext context) {
-    String alunoSelecionado = _alunos.isNotEmpty ? _alunos.first.id : '';
-    final academiaController =
-        TextEditingController(text: 'SmartFit - Shopping Uberaba');
-    final horarioController = TextEditingController(text: '10:00');
-    final tipoController =
-        TextEditingController(text: 'Musculação Acompanhada');
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: GridColors.card,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 20,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Agendar Nova Aula / Consultoria',
-                style: TextStyle(
-                  color: GridColors.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: alunoSelecionado,
-                dropdownColor: GridColors.card,
-                style: TextStyle(color: GridColors.textPrimary),
-                decoration: InputDecoration(
-                  labelText: 'Aluno',
-                  labelStyle: TextStyle(color: GridColors.textSecondary),
-                  filled: true,
-                  fillColor: GridColors.inputBackground,
-                ),
-                items: _alunos
-                    .map((a) =>
-                        DropdownMenuItem(value: a.id, child: Text(a.nome)))
-                    .toList(),
-                onChanged: (val) {
-                  if (val != null) setModalState(() => alunoSelecionado = val);
-                },
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: academiaController,
-                style: TextStyle(color: GridColors.textPrimary),
-                decoration: InputDecoration(
-                  labelText: 'Academia / Local',
-                  labelStyle: TextStyle(color: GridColors.textSecondary),
-                  filled: true,
-                  fillColor: GridColors.inputBackground,
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: horarioController,
-                style: TextStyle(color: GridColors.textPrimary),
-                decoration: InputDecoration(
-                  labelText: 'Horário de Início (HH:MM)',
-                  labelStyle: TextStyle(color: GridColors.textSecondary),
-                  filled: true,
-                  fillColor: GridColors.inputBackground,
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final aluno = _alunos.firstWhere(
-                        (a) => a.id == alunoSelecionado,
-                        orElse: () => _alunos.first);
-                    final novaAula = PersonalAgendamentoAulaModel(
-                      id: 'agenda-${DateTime.now().millisecondsSinceEpoch}',
-                      alunoId: aluno.id,
-                      alunoNome: aluno.nome,
-                      academiaNome: academiaController.text,
-                      data: DateTime.now().toIso8601String().substring(0, 10),
-                      horarioInicio: horarioController.text,
-                      horarioFim: '11:00',
-                      tipoAula: tipoController.text,
-                    );
-                    await _repo.agendarAula(novaAula);
-                    Navigator.pop(ctx);
-                    _carregarDados();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: CustomColors.primaryGreen,
-                    foregroundColor: GridColors.textOnPrimary,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: const Text('Salvar Agendamento',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Future<void> _modalNovoAluno(BuildContext context, {PersonalAlunoGestaoModel? aluno}) async {
     final salvo = await showModalBottomSheet<PersonalAlunoGestaoModel>(
       context: context, backgroundColor: GridColors.card, isScrollControlled: true,
@@ -1866,7 +1470,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
       builder: (_) => PersonalAlunoSheet(aluno: aluno));
     if (salvo != null && context.mounted) {
       await _carregarDados();
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         backgroundColor:CustomColors.primaryGreen,content:Text('Aluno salvo. Alterações offline ficam pendentes para sincronizar.',style:TextStyle(color:GridColors.textOnPrimary))));
     }
   }
@@ -1921,7 +1525,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
   void _snack(String mensagem) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       backgroundColor: CustomColors.primaryGreen,
-      content: Text(mensagem, style: const TextStyle(color: GridColors.textOnPrimary)),
+      content: Text(mensagem, style: TextStyle(color: GridColors.textOnPrimary)),
     ));
   }
 

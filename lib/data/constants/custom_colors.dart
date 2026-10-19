@@ -6,8 +6,8 @@ import 'package:task_manager_flutter/data/services/preferencia_tema_service.dart
 /// Suporta dinamicamente os 3 temas: Padrão (Emerald Pro), Branco (Clean) e Preto (OLED Black).
 class GridColors {
   // Marca / Ações principais (Emerald Pro)
-  static const Color primary = Color(0xFF059669); // Emerald 600
-  static const Color primaryDark = Color(0xFF047857); // Emerald 700
+  static const Color primary = Color(0xFF047857); // Emerald 700 (contraste >= 4.5:1 sobre branco)
+  static const Color primaryDark = Color(0xFF065F46); // Emerald 800
   static const Color primaryLight = Color(0xFF10B981); // Emerald 500
 
   static Color get primarySubtle => PreferenciaTema.tema.value == TemaApp.preto
@@ -53,14 +53,14 @@ class GridColors {
 
   static Color get textSecondary => switch (PreferenciaTema.tema.value) {
         TemaApp.preto => const Color(0xFF94A3B8), // Slate 400
-        TemaApp.branco => const Color(0xFF64748B),
-        TemaApp.padrao => const Color(0xFF64748B), // Slate 500
+        TemaApp.branco => const Color(0xFF475569), // Slate 600
+        TemaApp.padrao => const Color(0xFF475569), // Slate 600
       };
 
   static Color get textMuted => switch (PreferenciaTema.tema.value) {
-        TemaApp.preto => const Color(0xFF64748B),
-        TemaApp.branco => const Color(0xFF94A3B8),
-        TemaApp.padrao => const Color(0xFF94A3B8),
+        TemaApp.preto => const Color(0xFFA1A1AA), // Zinc 400
+        TemaApp.branco => const Color(0xFF475569), // Slate 600
+        TemaApp.padrao => const Color(0xFF475569), // Slate 600
       };
 
   static const Color textOnPrimary = Color(0xFFFFFFFF); // Texto em botões coloridos

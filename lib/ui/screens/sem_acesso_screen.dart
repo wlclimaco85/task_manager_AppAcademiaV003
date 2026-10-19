@@ -20,7 +20,7 @@ class SemAcessoScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.lock_outline, size: 80, color: GridColors.primary),
+              Icon(Icons.lock_outline, size: 80, color: GridColors.primary),
               const SizedBox(height: 32),
               Text(
                 'Olá, $nome',
