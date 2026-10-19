@@ -11,7 +11,8 @@ class FitnessNotificationItem {
   final String titulo;
   final String corpo;
   final DateTime dataHora;
-  final String tipo; // treino_hoje, inatividade, nova_ficha, meta_batida, cadastro_inicial
+  final String
+      tipo; // treino_hoje, inatividade, nova_ficha, meta_batida, cadastro_inicial
   final bool lida;
   final Map<String, dynamic>? payload;
 
@@ -51,7 +52,8 @@ class FitnessNotificationItem {
 /// Serviço de Notificações Push Inteligentes (Padrão MFIT Personal & MyFitCoach)
 /// Suporta agendamentos locais offline e integração transparente com Firebase Cloud Messaging (FCM).
 class FitnessPushNotificationService {
-  static const String _kNotificationsKey = 'appacademia_fitness_notifications_v1';
+  static const String _kNotificationsKey =
+      'appacademia_fitness_notifications_v1';
 
   String get _notificationsKey => FitnessContaSync.chave(_kNotificationsKey);
 
@@ -61,6 +63,7 @@ class FitnessPushNotificationService {
   FitnessPushNotificationService._internal();
 
   final _repo = FitnessOfflineRepository();
+  final ValueNotifier<int> mudancas = ValueNotifier<int>(0);
 
   /// Inicializa e verifica gatilhos automáticos (ex: inatividade ou lembrete de treino do dia)
   Future<void> inicializarVerificacoesAutomaticas({String? alunoId}) async {
@@ -68,7 +71,8 @@ class FitnessPushNotificationService {
       await verificarLembreteInatividade(alunoId: alunoId);
       await verificarLembreteTreinoDoDia(alunoId: alunoId);
     } catch (e) {
-      debugPrint('[FitnessPushNotificationService] Erro nas verificações automáticas: $e');
+      debugPrint(
+          '[FitnessPushNotificationService] Erro nas verificações automáticas: $e');
     }
   }
 
@@ -87,7 +91,8 @@ class FitnessPushNotificationService {
         FitnessNotificationItem(
           id: 'inatividade_${DateTime.now().day}',
           titulo: '⚡ Sentimos sua falta no treino!',
-          corpo: 'Você está há $dias dias sem treinar. Que tal bater a meta de hoje e manter o foco?',
+          corpo:
+              'Você está há $dias dias sem treinar. Que tal bater a meta de hoje e manter o foco?',
           dataHora: DateTime.now(),
           tipo: 'inatividade',
         ),
@@ -107,7 +112,8 @@ class FitnessPushNotificationService {
       FitnessNotificationItem(
         id: 'treino_hoje_${DateTime.now().day}',
         titulo: '🔥 Treino de Hoje Pronto!',
-        corpo: 'Hoje é dia de Treino ${divisaoSugerida.letra} (${divisaoSugerida.nome}). Abra o app e inicie sua sessão.',
+        corpo:
+            'Hoje é dia de Treino ${divisaoSugerida.letra} (${divisaoSugerida.nome}). Abra o app e inicie sua sessão.',
         dataHora: DateTime.now(),
         tipo: 'treino_hoje',
         payload: {
@@ -128,7 +134,8 @@ class FitnessPushNotificationService {
       FitnessNotificationItem(
         id: 'nova_ficha_${plano.id}',
         titulo: '📋 Nova Ficha Prescrita!',
-        corpo: 'O Personal $personalNome acabou de prescrever seu novo treino "${plano.titulo}". Acesse agora para conferir.',
+        corpo:
+            'O Personal $personalNome acabou de prescrever seu novo treino "${plano.titulo}". Acesse agora para conferir.',
         dataHora: DateTime.now(),
         tipo: 'nova_ficha',
         payload: {'planoId': plano.id},
@@ -145,7 +152,8 @@ class FitnessPushNotificationService {
       FitnessNotificationItem(
         id: 'meta_${DateTime.now().millisecondsSinceEpoch}',
         titulo: '🏆 Treino Batido com Sucesso!',
-        corpo: 'Você levantou ${(tonelagemKg / 1000).toStringAsFixed(1)} toneladas hoje! Sequência de $streakDias dias consecutivos.',
+        corpo:
+            'Você levantou ${(tonelagemKg / 1000).toStringAsFixed(1)} toneladas hoje! Sequência de $streakDias dias consecutivos.',
         dataHora: DateTime.now(),
         tipo: 'meta_batida',
       ),
@@ -161,7 +169,8 @@ class FitnessPushNotificationService {
       FitnessNotificationItem(
         id: 'mensalidade_vencida_${DateTime.now().month}_${DateTime.now().year}',
         titulo: '💳 Mensalidade Vencendo Hoje',
-        corpo: 'Lembrete: sua mensalidade com o personal $personalNome vence no dia $diaVencimento.',
+        corpo:
+            'Lembrete: sua mensalidade com o personal $personalNome vence no dia $diaVencimento.',
         dataHora: DateTime.now(),
         tipo: 'mensalidade_vencendo',
       ),
@@ -177,7 +186,8 @@ class FitnessPushNotificationService {
       FitnessNotificationItem(
         id: 'treino_atualizado_${DateTime.now().millisecondsSinceEpoch}',
         titulo: '🔄 Treino Atualizado pelo Personal',
-        corpo: 'O Personal $personalNome atualizou a rotina "$treinoTitulo". Acesse para ver as novas séries e cargas.',
+        corpo:
+            'O Personal $personalNome atualizou a rotina "$treinoTitulo". Acesse para ver as novas séries e cargas.',
         dataHora: DateTime.now(),
         tipo: 'treino_atualizado',
       ),
@@ -190,7 +200,8 @@ class FitnessPushNotificationService {
       FitnessNotificationItem(
         id: 'meta_nao_cumprida_${DateTime.now().day}_${DateTime.now().month}',
         titulo: '😴 Você não treinou hoje',
-        corpo: 'Que tal descansar bem esta noite para voltar com força total no próximo treino?',
+        corpo:
+            'Que tal descansar bem esta noite para voltar com força total no próximo treino?',
         dataHora: DateTime.now(),
         tipo: 'meta_dia_nao_cumprida',
       ),
@@ -223,7 +234,8 @@ class FitnessPushNotificationService {
       FitnessNotificationItem(
         id: 'aluno_finalizou_${DateTime.now().millisecondsSinceEpoch}',
         titulo: '💪 $alunoNome Concluiu o Treino!',
-        corpo: '$alunoNome finalizou $treinoNome levantando ${tonelagemKg.toStringAsFixed(0)} kg.',
+        corpo:
+            '$alunoNome finalizou $treinoNome levantando ${tonelagemKg.toStringAsFixed(0)} kg.',
         dataHora: DateTime.now(),
         tipo: 'aluno_treino_finalizado',
       ),
@@ -257,6 +269,7 @@ class FitnessPushNotificationService {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = json.encode(lista.map((n) => n.toMap()).toList());
     await prefs.setString(_notificationsKey, jsonStr);
+    mudancas.value++;
   }
 
   Future<List<FitnessNotificationItem>> getNotificacoes() async {
@@ -266,10 +279,12 @@ class FitnessPushNotificationService {
     try {
       final decoded = json.decode(raw) as List<dynamic>;
       return decoded
-          .map((e) => FitnessNotificationItem.fromMap(e as Map<String, dynamic>))
+          .map(
+              (e) => FitnessNotificationItem.fromMap(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      debugPrint('[FitnessPushNotificationService] Erro decode notificações: $e');
+      debugPrint(
+          '[FitnessPushNotificationService] Erro decode notificações: $e');
       return [];
     }
   }
@@ -291,6 +306,7 @@ class FitnessPushNotificationService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
           _notificationsKey, json.encode(lista.map((n) => n.toMap()).toList()));
+      mudancas.value++;
     }
   }
 }

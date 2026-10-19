@@ -87,7 +87,7 @@ class PushRegistrationService {
     await inicializar();
     if (!_inicializado) return;
     final sessao = AuthUtility.userInfo;
-    final loginId = sessao.login?.id ?? sessao.data?.login?.id;
+    final loginId = TenantContext.userLogadoId;
     if (loginId == null || (sessao.token?.isEmpty ?? true)) return;
     try {
       await FirebaseMessaging.instance.register(
@@ -101,7 +101,7 @@ class PushRegistrationService {
 
   Future<void> _registrar(String token) async {
     final sessao = AuthUtility.userInfo;
-    final loginId = sessao.login?.id ?? sessao.data?.login?.id;
+    final loginId = TenantContext.userLogadoId;
     if (loginId == null || (sessao.token?.isEmpty ?? true)) return;
     final chave = '$loginId:$token';
     if (_ultimaContaToken == chave) return;

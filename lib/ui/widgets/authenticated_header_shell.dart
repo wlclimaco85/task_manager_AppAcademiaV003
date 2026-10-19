@@ -38,7 +38,16 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
   void initState() {
     super.initState();
     AuthUtility.session.addListener(_atualizar);
+    FitnessPushNotificationService().mudancas.addListener(_atualizarContador);
     _atualizar();
+  }
+
+  Future<void> _atualizarContador() async {
+    final notificacoes =
+        await FitnessPushNotificationService().getNotificacoes();
+    if (!mounted) return;
+    setState(() => _notificacoesNaoLidas =
+        notificacoes.where((item) => !item.lida).length);
   }
 
   void _atualizar() {
@@ -153,6 +162,9 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
   @override
   void dispose() {
     AuthUtility.session.removeListener(_atualizar);
+    FitnessPushNotificationService()
+        .mudancas
+        .removeListener(_atualizarContador);
     super.dispose();
   }
 
@@ -190,14 +202,14 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
                                 sessao.data?.photo,
                             perfil: podeGerenciarAlunos(sessao)
                                 ? 'Personal'
-                                : sessao.login?.tipoLogin ==
-                                        LoginEnum.APP_ALUNO
+                                : sessao.login?.tipoLogin == LoginEnum.APP_ALUNO
                                     ? 'Aluno'
                                     : 'Minha conta',
                             cadastroIncompleto: _cadastroIncompleto,
                             notificacoesNaoLidas: _notificacoesNaoLidas,
                             onEditar: widget.onEditar,
-                            onCadastroIncompleto: _avisarAvaliacaoInicialPendente,
+                            onCadastroIncompleto:
+                                _avisarAvaliacaoInicialPendente,
                             onNotificacoes: _abrirNotificacoes,
                           ),
                         ),
