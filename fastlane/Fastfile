@@ -1,7 +1,8 @@
 fastlane_version "2.0.0"
 
 # ID da faixa "Teste fechado - TESTE" no Google Play Console (Testar e lançar > Teste fechado).
-PLAY_TRILHA_TESTE_FECHADO = "4697815559366390824"
+# Nome interno da faixa na API do Google Play (o ID numerico da URL nao e aceito: "Track not found").
+PLAY_TRILHA_TESTE_FECHADO = "alpha"
 
 def flutter_version
   pubspec = File.read("../pubspec.yaml")
