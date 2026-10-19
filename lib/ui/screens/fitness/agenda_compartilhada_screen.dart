@@ -4,6 +4,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/fitness/agenda_evento_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/personal_gestao_model.dart';
+import 'package:task_manager_flutter/data/repository/cadastro_repository.dart';
 import 'package:task_manager_flutter/data/services/agenda_repository.dart';
 import 'package:task_manager_flutter/data/services/personal_gestao_offline_repository.dart';
 import 'package:task_manager_flutter/data/utils/fitness_access.dart';
@@ -18,11 +19,25 @@ class AgendaCompartilhadaScreen extends StatefulWidget {
 }
 
 class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
+  static const List<String> _academiasPadrao = [
+    'Smart Fit',
+    'Bluefit',
+    'Bodytech',
+    'Selfit',
+    'Bio Ritmo',
+    'Panobianco',
+    'Academia Central',
+  ];
+
+  static const String _opcaoResidencia = 'Residência';
+  static const String _opcaoOutro = 'Outro local (especificar)';
+
   final _repo = AgendaRepository();
   DateTime _focado = DateTime.now();
   DateTime _selecionado = DateTime.now();
   List<AgendaEventoModel> _eventos = [];
   List<PersonalAlunoGestaoModel> _alunos = [];
+  List<String> _academias = List.from(_academiasPadrao);
   bool _carregando = true;
 
   bool get _personal => podeGerenciarAlunos();
@@ -41,13 +56,34 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
       final resultados = await Future.wait<dynamic>([
         _repo.listar(inicio, fim),
         if (_personal) PersonalGestaoOfflineRepository().getAlunos(),
+        CadastroRepository()
+            .listarAcademiasDisponiveis()
+            .catchError((_) => <Map<String, dynamic>>[]),
       ]);
       if (!mounted) return;
+      final eventos = resultados[0] as List<AgendaEventoModel>;
+      final alunos = _personal && resultados.length > 1
+          ? resultados[1] as List<PersonalAlunoGestaoModel>
+          : <PersonalAlunoGestaoModel>[];
+
+      final dynamic rawAcademias = _personal && resultados.length > 2
+          ? resultados[2]
+          : (!_personal && resultados.length > 1 ? resultados[1] : null);
+
+      final novasAcademias = <String>{..._academiasPadrao};
+      if (rawAcademias is List) {
+        for (final item in rawAcademias) {
+          if (item is Map && item['nome'] != null) {
+            final nome = item['nome'].toString().trim();
+            if (nome.isNotEmpty) novasAcademias.add(nome);
+          }
+        }
+      }
+
       setState(() {
-        _eventos = resultados.first as List<AgendaEventoModel>;
-        _alunos = _personal && resultados.length > 1
-            ? resultados[1] as List<PersonalAlunoGestaoModel>
-            : [];
+        _eventos = eventos;
+        _alunos = alunos;
+        _academias = novasAcademias.toList();
       });
     } catch (e) {
       if (mounted) _erro('$e');
@@ -55,6 +91,23 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
       if (mounted) setState(() => _carregando = false);
     }
   }
+
+  List<String> _locaisDisponiveis() {
+    final list = <String>[];
+    for (final ac in _academias) {
+      final t = ac.trim();
+      if (t.isNotEmpty &&
+          t.toLowerCase() != 'residência' &&
+          t.toLowerCase() != 'residencia' &&
+          !list.contains(t)) {
+        list.add(t);
+      }
+    }
+    // "coloque as academias e por ultimo residencia"
+    list.add(_opcaoResidencia);
+    return list;
+  }
+
 
   List<AgendaEventoModel> _doDia(DateTime dia) =>
       _eventos.where((item) => isSameDay(item.inicio, dia)).toList()
@@ -87,7 +140,7 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
           todayDecoration: BoxDecoration(
               color: GridColors.primary.withValues(alpha: .18),
               shape: BoxShape.circle),
-          markerDecoration: const BoxDecoration(
+          markerDecoration: BoxDecoration(
               color: GridColors.secondary, shape: BoxShape.circle),
           defaultTextStyle: TextStyle(color: context.appText),
           weekendTextStyle: TextStyle(color: context.appTextSecondary),

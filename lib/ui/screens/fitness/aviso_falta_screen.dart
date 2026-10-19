@@ -119,7 +119,7 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
       await _carregar();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('✅ Aviso enviado com sucesso!'),
             backgroundColor: CustomColors.primaryGreen,
           ),
@@ -268,7 +268,7 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
                   color: CustomColors.primaryGreen.withValues(alpha: 0.25)),
             ),
             child: Row(children: [
-              const Icon(Icons.info_outline,
+              Icon(Icons.info_outline,
                   color: CustomColors.primaryGreen, size: 20),
               const SizedBox(width: 10),
               Expanded(
@@ -276,7 +276,7 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
                   _souPersonal
                       ? 'Avise seus alunos sobre uma ausência. Eles receberão uma notificação e poderão confirmar a leitura.'
                       : 'Avise seu personal sobre uma ausência. Ele receberá uma notificação e poderá marcar como visto.',
-                  style: const TextStyle(
+                  style: TextStyle(
                       color: CustomColors.primaryGreen, fontSize: 13),
                 ),
               ),
@@ -302,7 +302,7 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
                 border: Border.all(color: context.appBorder),
               ),
               child: Row(children: [
-                const Icon(Icons.calendar_today_outlined,
+                Icon(Icons.calendar_today_outlined,
                     color: CustomColors.primaryGreen, size: 20),
                 const SizedBox(width: 12),
                 Text(
@@ -335,7 +335,7 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
                 border: Border.all(color: context.appBorder),
               ),
               child: Row(children: [
-                const Icon(Icons.access_time_outlined,
+                Icon(Icons.access_time_outlined,
                     color: CustomColors.primaryGreen, size: 20),
                 const SizedBox(width: 12),
                 Text(

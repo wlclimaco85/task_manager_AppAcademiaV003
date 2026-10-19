@@ -69,7 +69,7 @@ class _CadastroInicialScreenState extends State<CadastroInicialScreen> {
     final (arquivo, base64Str) = await pickImageWithValidation(origem);
     if (!mounted) return;
     if (base64Str == 'LIMITE_EXCEDIDO') {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('A imagem deve ter no máximo 2MB.'),
         backgroundColor: CustomColors.primaryGreen,
       ));
@@ -96,7 +96,7 @@ class _CadastroInicialScreenState extends State<CadastroInicialScreen> {
     if (!enviado) {
       // Copia local ja ficou gravada; o aluno pode tentar de novo sem perder o que digitou.
       setState(() => _salvando = false);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Não foi possível salvar no servidor agora. Seus dados ficaram neste aparelho.'),
         backgroundColor: CustomColors.primaryGreen,
       ));
@@ -127,7 +127,7 @@ class _CadastroInicialScreenState extends State<CadastroInicialScreen> {
             backgroundColor: CustomColors.primaryGreen.withValues(alpha: 0.15),
             backgroundImage: imagem,
             child: imagem == null
-                ? const Icon(Icons.add_a_photo_outlined, size: 36, color: CustomColors.primaryGreen)
+                ? Icon(Icons.add_a_photo_outlined, size: 36, color: CustomColors.primaryGreen)
                 : null,
           ),
         ),
@@ -153,7 +153,7 @@ class _CadastroInicialScreenState extends State<CadastroInicialScreen> {
                   '$_camposPreenchidos de ${CadastroInicialService.totalCampos} campos preenchidos',
                   key: const Key('cadastro_inicial_progresso'),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontWeight: FontWeight.w600, color: CustomColors.primaryGreen),
+                  style: TextStyle(fontWeight: FontWeight.w600, color: CustomColors.primaryGreen),
                 ),
                 const SizedBox(height: 20),
                 _avatar(),

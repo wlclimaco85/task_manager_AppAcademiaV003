@@ -38,7 +38,7 @@ class _CheckoutPagamentoScreenState extends State<CheckoutPagamentoScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const CircularProgressIndicator(color: CustomColors.primaryGreen),
+                  CircularProgressIndicator(color: CustomColors.primaryGreen),
                   const SizedBox(height: 20),
                   Text('Processando pagamento...',
                       style: TextStyle(color: GridColors.textPrimary.withOpacity(0.8))),
@@ -61,7 +61,7 @@ class _CheckoutPagamentoScreenState extends State<CheckoutPagamentoScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Resumo da Contratação',
+                        Text('Resumo da Contratação',
                             style: TextStyle(
                                 color: CustomColors.primaryGreen,
                                 fontSize: 14,
@@ -106,7 +106,7 @@ class _CheckoutPagamentoScreenState extends State<CheckoutPagamentoScreen> {
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold)),
                             Text('R\$ ${widget.pacote.precoMensal.toStringAsFixed(2)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                     color: CustomColors.primaryGreen,
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold)),
@@ -150,7 +150,7 @@ class _CheckoutPagamentoScreenState extends State<CheckoutPagamentoScreen> {
                               style: TextStyle(color: GridColors.textPrimary, fontSize: 16)),
                           const Spacer(),
                           if (_metodoPagamento == 0)
-                            const Icon(Icons.check_circle,
+                            Icon(Icons.check_circle,
                                 color: CustomColors.primaryGreen),
                         ],
                       ),
@@ -184,7 +184,7 @@ class _CheckoutPagamentoScreenState extends State<CheckoutPagamentoScreen> {
                               style: TextStyle(color: GridColors.textPrimary, fontSize: 16)),
                           const Spacer(),
                           if (_metodoPagamento == 1)
-                            const Icon(Icons.check_circle,
+                            Icon(Icons.check_circle,
                                 color: CustomColors.primaryGreen),
                         ],
                       ),
@@ -226,7 +226,7 @@ class _CheckoutPagamentoScreenState extends State<CheckoutPagamentoScreen> {
             onPressed: () {
               Clipboard.setData(ClipboardData(text: _pixCode));
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
+                SnackBar(
                     content: Text('Código Pix copiado!'),
                     backgroundColor: CustomColors.primaryGreen),
               );
@@ -333,7 +333,7 @@ class _CheckoutPagamentoScreenState extends State<CheckoutPagamentoScreen> {
         barrierDismissible: false,
         builder: (context) => AlertDialog(
           backgroundColor: GridColors.card,
-          title: const Icon(Icons.check_circle, color: CustomColors.primaryGreen, size: 60),
+          title: Icon(Icons.check_circle, color: CustomColors.primaryGreen, size: 60),
           content: Text(
             'Pagamento Aprovado!\n\nVocê contratou o personal ${widget.profissional.nome} com sucesso. Os dados de contato e ficha estarão disponíveis em instantes.',
             textAlign: TextAlign.center,
@@ -346,7 +346,7 @@ class _CheckoutPagamentoScreenState extends State<CheckoutPagamentoScreen> {
                 Navigator.pop(context); // fecha tela de checkout
                 Navigator.pop(context); // fecha tela do personal
               },
-              child: const Text('Voltar ao Início', style: TextStyle(color: CustomColors.primaryGreen)),
+              child: Text('Voltar ao Início', style: TextStyle(color: CustomColors.primaryGreen)),
             ),
           ],
         ),

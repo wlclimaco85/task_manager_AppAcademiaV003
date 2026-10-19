@@ -86,7 +86,7 @@ class _ContratarProfissionalScreenState
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_business_outlined, color: CustomColors.primaryGreen),
+            icon: Icon(Icons.add_business_outlined, color: CustomColors.primaryGreen),
             tooltip: 'Cadastrar Academia',
             onPressed: () => _modalCadastrarAcademia(context),
           ),
@@ -115,7 +115,7 @@ class _ContratarProfissionalScreenState
                     hintStyle:
                         TextStyle(color: GridColors.textSecondary, fontSize: 12),
                     prefixIcon:
-                        const Icon(Icons.search, color: CustomColors.primaryGreen),
+                        Icon(Icons.search, color: CustomColors.primaryGreen),
                     suffixIcon: _buscaController.text.isNotEmpty
                         ? IconButton(
                             icon: Icon(Icons.clear,
@@ -140,7 +140,7 @@ class _ContratarProfissionalScreenState
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide:
-                          const BorderSide(color: CustomColors.primaryGreen),
+                          BorderSide(color: CustomColors.primaryGreen),
                     ),
                   ),
                 ),
@@ -196,7 +196,7 @@ class _ContratarProfissionalScreenState
                             dropdownColor: GridColors.card,
                             style: TextStyle(
                                 color: GridColors.textPrimary, fontSize: 12),
-                            icon: const Icon(Icons.arrow_drop_down,
+                            icon: Icon(Icons.arrow_drop_down,
                                 color: CustomColors.primaryGreen, size: 20),
                             items: [
                               const DropdownMenuItem(
@@ -230,7 +230,7 @@ class _ContratarProfissionalScreenState
           // Lista de Cards de Profissionais
           Expanded(
             child: _loading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(
                         color: CustomColors.primaryGreen),
                   )
@@ -391,12 +391,12 @@ class _ContratarProfissionalScreenState
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              const Icon(Icons.star,
+                              Icon(Icons.star,
                                   color: GridColors.secondaryDark, size: 16),
                               const SizedBox(width: 4),
                               Text(
                                 '${prof.avaliacaoMedia} (${prof.totalAvaliacoes} avaliações)',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: GridColors.secondaryDark,
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
@@ -417,7 +417,7 @@ class _ContratarProfissionalScreenState
                         ),
                         Text(
                           'R\$ ${prof.precoMinimoMensal.toStringAsFixed(0)}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: CustomColors.primaryGreen,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -491,7 +491,7 @@ class _ContratarProfissionalScreenState
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.location_on,
+                                Icon(Icons.location_on,
                                     size: 12,
                                     color: CustomColors.primaryGreen),
                                 const SizedBox(width: 4),
@@ -662,7 +662,7 @@ class _ContratarProfissionalScreenState
                           children: [
                             Text(
                               grade.diaSemana,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: CustomColors.primaryGreen,
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
@@ -709,7 +709,7 @@ class _ContratarProfissionalScreenState
                                         ),
                                         child: Text(
                                           h,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             color: CustomColors.primaryGreen,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 12,
@@ -797,7 +797,7 @@ class _ContratarProfissionalScreenState
                     const SizedBox(height: 2),
                     Text(
                       'WhatsApp Direto: ${prof.whatsapp}',
-                      style: const TextStyle(
+                      style: TextStyle(
                           color: CustomColors.primaryGreen,
                           fontSize: 12,
                           fontWeight: FontWeight.bold),
@@ -842,7 +842,7 @@ class _ContratarProfissionalScreenState
                           ),
                           Text(
                             'R\$ ${pacote.precoMensal.toStringAsFixed(2)}/mês',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: CustomColors.primaryGreen,
                               fontSize: 14,
                               fontWeight: FontWeight.bold,

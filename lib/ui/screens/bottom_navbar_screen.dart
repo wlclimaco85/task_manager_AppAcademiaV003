@@ -395,8 +395,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
   }
 
   bool _temPersonalVinculado() {
-    if (podeGerenciarAlunos()) return true;
-    return _alunoTemPersonal;
+    return true;
   }
 
   void _showMenuOptions(BuildContext context, SecurityMatrix sec) {
@@ -408,10 +407,8 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
             const _FitnessAction(Icons.groups, 'Alunos do personal'),
           if (sec.canView(AppScreen.exercicios))
             const _FitnessAction(Icons.directions_run, 'Treinos'),
-          if (_temPersonalVinculado())
-            const _FitnessAction(Icons.event_busy_outlined, 'Aviso de falta'),
-          if (_temPersonalVinculado())
-            const _FitnessAction(Icons.calendar_month_outlined, 'Agenda'),
+          const _FitnessAction(Icons.calendar_month_outlined, 'Agenda'),
+          const _FitnessAction(Icons.event_busy_outlined, 'Aviso de falta'),
           if (sec.canView(AppScreen.academias))
             const _FitnessAction(Icons.fitness_center, 'Academias'),
           if (sec.canView(AppScreen.personais))
@@ -540,10 +537,8 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         const _FitnessAction(Icons.groups, 'Alunos do personal'),
       if (sec.canView(AppScreen.exercicios))
         const _FitnessAction(Icons.directions_run, 'Treinos'),
-      if (_temPersonalVinculado())
-        const _FitnessAction(Icons.event_busy_outlined, 'Aviso de falta'),
-      if (_temPersonalVinculado())
-        const _FitnessAction(Icons.calendar_month_outlined, 'Agenda'),
+      const _FitnessAction(Icons.calendar_month_outlined, 'Agenda'),
+      const _FitnessAction(Icons.event_busy_outlined, 'Aviso de falta'),
       if (sec.canView(AppScreen.atividades))
         const _FitnessAction(Icons.directions_run, 'Atividade'),
       if (sec.canView(AppScreen.corpo))
@@ -729,7 +724,7 @@ class _TodaySummaryCard extends StatelessWidget {
                   minHeight: 9,
                   backgroundColor: Colors.white.withValues(alpha: 0.22),
                   valueColor:
-                      const AlwaysStoppedAnimation(GridColors.secondary),
+                      AlwaysStoppedAnimation(GridColors.secondary),
                 ),
               ),
               const SizedBox(height: 8),
@@ -1443,7 +1438,7 @@ class _EnhancedSyncStatusCard extends StatelessWidget {
               value: summary.weeklyProgress,
               minHeight: 9,
               backgroundColor: Colors.white.withValues(alpha: 0.22),
-              valueColor: const AlwaysStoppedAnimation(GridColors.secondary),
+              valueColor: AlwaysStoppedAnimation(GridColors.secondary),
             ),
           ),
           const SizedBox(height: 8),

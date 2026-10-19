@@ -40,7 +40,7 @@ class _PermissoesPersonalDialogState extends State<PermissoesPersonalDialog> {
       return;
     }
     setState(() => _enviando = false);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       backgroundColor: CustomColors.primaryGreen,
       content: Text('Não foi possível salvar agora. Tente de novo com conexão.',
           style: TextStyle(color: Colors.white)),

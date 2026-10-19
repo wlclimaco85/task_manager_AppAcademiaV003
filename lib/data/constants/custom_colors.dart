@@ -6,18 +6,39 @@ import 'package:task_manager_flutter/data/services/preferencia_tema_service.dart
 /// Suporta dinamicamente os 3 temas: Padrão (Emerald Pro), Branco (Clean) e Preto (OLED Black).
 class GridColors {
   // Marca / Ações principais (Emerald Pro)
-  static const Color primary = Color(0xFF047857); // Emerald 700 (contraste >= 4.5:1 sobre branco)
-  static const Color primaryDark = Color(0xFF065F46); // Emerald 800
-  static const Color primaryLight = Color(0xFF10B981); // Emerald 500
+  // Padrao e Preto: Emerald. Branco: roxo (blusa do desenho) como cor principal.
+  static Color get primary => switch (PreferenciaTema.tema.value) {
+        TemaApp.branco => const Color(0xFF7828A8), // Roxo da blusa do desenho
+        _ => const Color(0xFF047857), // Emerald 700 (contraste >= 4.5:1 sobre branco)
+      };
+  static Color get primaryDark => switch (PreferenciaTema.tema.value) {
+        TemaApp.branco => const Color(0xFF581C87),
+        _ => const Color(0xFF065F46), // Emerald 800
+      };
+  static Color get primaryLight => switch (PreferenciaTema.tema.value) {
+        TemaApp.branco => const Color(0xFF9333EA),
+        _ => const Color(0xFF10B981), // Emerald 500
+      };
 
-  static Color get primarySubtle => PreferenciaTema.tema.value == TemaApp.preto
-      ? const Color(0xFF064E3B) // Emerald 900 escuro para contraste no preto
-      : const Color(0xFFECFDF5); // Emerald 50
+  static Color get primarySubtle => switch (PreferenciaTema.tema.value) {
+        TemaApp.preto => const Color(0xFF064E3B), // Emerald 900 escuro para contraste no preto
+        TemaApp.branco => const Color(0xFFF3E8FF), // Roxo claro
+        _ => const Color(0xFFECFDF5), // Emerald 50
+      };
 
-  // Acentos e Metas
-  static const Color secondary = Color(0xFFF59E0B); // Amber 500 (metas, conquistas)
-  static const Color secondaryLight = Color(0xFFFDE68A);
-  static const Color secondaryDark = Color(0xFFD97706);
+  // Acentos e Metas. Branco: laranja do fundo do desenho.
+  static Color get secondary => switch (PreferenciaTema.tema.value) {
+        TemaApp.branco => const Color(0xFFE87848), // Laranja do desenho
+        _ => const Color(0xFFF59E0B), // Amber 500 (metas, conquistas)
+      };
+  static Color get secondaryLight => switch (PreferenciaTema.tema.value) {
+        TemaApp.branco => const Color(0xFFFBD3BD),
+        _ => const Color(0xFFFDE68A),
+      };
+  static Color get secondaryDark => switch (PreferenciaTema.tema.value) {
+        TemaApp.branco => const Color(0xFFC2562A),
+        _ => const Color(0xFFD97706),
+      };
 
   // Superfícies e Fundos (Adaptativos aos 3 temas)
   static Color get background => switch (PreferenciaTema.tema.value) {
@@ -128,9 +149,9 @@ extension AppThemeColors on BuildContext {
 }
 
 class CustomColors {
-  static const Color primaryGreen = GridColors.primary;
-  static const Color darkGreen = GridColors.primaryDark;
-  static const Color lightGreen = GridColors.primaryLight;
+  static Color get primaryGreen => GridColors.primary;
+  static Color get darkGreen => GridColors.primaryDark;
+  static Color get lightGreen => GridColors.primaryLight;
   static Color get card => GridColors.card;
   static Color get background => GridColors.background;
   static Color get textPrimary => GridColors.textPrimary;

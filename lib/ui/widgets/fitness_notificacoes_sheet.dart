@@ -27,7 +27,7 @@ Future<void> mostrarDialogoAvaliacaoInicialPendente(
               color: GridColors.secondary.withValues(alpha: 0.18),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.priority_high, color: GridColors.secondary, size: 28),
+            child: Icon(Icons.priority_high, color: GridColors.secondary, size: 28),
           ),
           const SizedBox(width: 12),
           Expanded(

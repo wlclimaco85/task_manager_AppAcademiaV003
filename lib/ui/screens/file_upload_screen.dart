@@ -108,7 +108,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: GridColors.primary, width: 2),
           ),
-          title: const Text(
+          title: Text(
             "Enviar Arquivo",
             style: TextStyle(
               color: GridColors.secondary,
@@ -123,9 +123,9 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   OutlinedButton.icon(
-                    icon: const Icon(Icons.attach_file,
+                    icon: Icon(Icons.attach_file,
                         color: GridColors.secondary),
-                    label: const Text("Selecionar Arquivo",
+                    label: Text("Selecionar Arquivo",
                         style: TextStyle(color: GridColors.secondary)),
                     style: OutlinedButton.styleFrom(
                         side: BorderSide(color: GridColors.primary)),
@@ -238,7 +238,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                                   ),
                                   builder: (context, snapshot) {
                                     if (!snapshot.hasData) {
-                                      return const Center(
+                                      return Center(
                                         child: CircularProgressIndicator(
                                             color: GridColors.secondary),
                                       );
@@ -397,7 +397,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                       future: _fetchFileBytes(fileId),
                       builder: (context, snap) {
                         if (snap.connectionState == ConnectionState.waiting) {
-                          return const Center(
+                          return Center(
                             child: CircularProgressIndicator(
                                 color: GridColors.secondary),
                           );
@@ -424,7 +424,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                             ),
                             builder: (context, pdfSnap) {
                               if (!pdfSnap.hasData) {
-                                return const Center(
+                                return Center(
                                   child: CircularProgressIndicator(
                                       color: GridColors.secondary),
                                 );
@@ -463,9 +463,9 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                       children: [
                         Expanded(
                           child: OutlinedButton.icon(
-                            icon: const Icon(Icons.download,
+                            icon: Icon(Icons.download,
                                 color: GridColors.secondary),
-                            label: const Text('Baixar',
+                            label: Text('Baixar',
                                 style: TextStyle(color: GridColors.secondary)),
                             style: OutlinedButton.styleFrom(
                               side: BorderSide(color: GridColors.primary),
@@ -503,7 +503,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
             if (_isDownloading)
               Container(
                 color: Colors.black26,
-                child: const Center(
+                child: Center(
                   child: CircularProgressIndicator(color: GridColors.secondary),
                 ),
               ),
@@ -536,7 +536,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancelar",
+            child: Text("Cancelar",
                 style: TextStyle(color: GridColors.secondary)),
           ),
           TextButton(
@@ -838,7 +838,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                           children: [
                             IconButton(
                               tooltip: 'Baixar',
-                              icon: const Icon(Icons.download,
+                              icon: Icon(Icons.download,
                                   color: GridColors.secondary),
                               onPressed: () async {
                                 if (_isDownloading) return;
@@ -910,7 +910,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
           const SizedBox(height: 4),
           Expanded(
             child: _isLoading
-                ? const Center(
+                ? Center(
                     child:
                         CircularProgressIndicator(color: GridColors.secondary))
                 : filtrados.isEmpty

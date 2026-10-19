@@ -63,7 +63,7 @@ class _CadastroInicialBannerState extends State<CadastroInicialBanner> {
             padding: const EdgeInsets.all(14),
             child: Row(
               children: [
-                const Icon(Icons.assignment_turned_in_outlined, color: CustomColors.primaryGreen),
+                Icon(Icons.assignment_turned_in_outlined, color: CustomColors.primaryGreen),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -84,7 +84,7 @@ class _CadastroInicialBannerState extends State<CadastroInicialBanner> {
                     ],
                   ),
                 ),
-                const Icon(Icons.chevron_right, color: CustomColors.primaryGreen),
+                Icon(Icons.chevron_right, color: CustomColors.primaryGreen),
               ],
             ),
           ),

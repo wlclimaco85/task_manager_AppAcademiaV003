@@ -309,7 +309,7 @@ class _PersonalAlunoSheetState extends State<PersonalAlunoSheet> {
                                             _valor.text = p['valor'].toString();
                                           })),
                               if (_planos.isEmpty)
-                                const Text(
+                                Text(
                                     'Nenhum plano cadastrado disponível. Use valor à parte.',
                                     style: TextStyle(color: GridColors.secondaryDark)),
                               const SizedBox(height: 12),

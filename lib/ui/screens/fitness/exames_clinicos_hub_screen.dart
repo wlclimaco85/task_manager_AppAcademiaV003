@@ -137,7 +137,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
           // Lista de Exames
           Expanded(
             child: _loading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(
                         color: CustomColors.primaryGreen),
                   )
@@ -240,7 +240,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                   color: CustomColors.primaryGreen.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.picture_as_pdf,
+                child: Icon(Icons.picture_as_pdf,
                     color: CustomColors.primaryGreen, size: 24),
               ),
               const SizedBox(width: 12),
@@ -577,7 +577,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.attach_file,
+                      Icon(Icons.attach_file,
                           color: CustomColors.primaryGreen, size: 20),
                       const SizedBox(width: 8),
                       Expanded(
@@ -591,7 +591,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                       ),
                       TextButton(
                         onPressed: () {},
-                        child: const Text('Alterar',
+                        child: Text('Alterar',
                             style: TextStyle(
                                 color: CustomColors.primaryGreen,
                                 fontSize: 12)),

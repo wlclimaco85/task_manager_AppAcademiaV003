@@ -54,4 +54,23 @@ class AgendaEventoModel {
         personalNome: map['personalNome']?.toString(),
         podeEditar: map['podeEditar'] == true,
       );
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        if (serieId != null) 'serieId': serieId,
+        'titulo': titulo,
+        'tipo': tipo,
+        'inicio': inicio.toIso8601String(),
+        'fim': fim.toIso8601String(),
+        'local': local,
+        'observacao': observacao,
+        'status': status,
+        'compartilhado': compartilhado,
+        'lembreteMinutos': lembreteMinutos,
+        if (alunoId != null) 'alunoId': alunoId,
+        if (alunoNome != null) 'alunoNome': alunoNome,
+        if (personalNome != null) 'personalNome': personalNome,
+        'podeEditar': podeEditar,
+      };
 }
+

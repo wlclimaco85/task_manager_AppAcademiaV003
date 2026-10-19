@@ -111,7 +111,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                 color: CustomColors.primaryGreen.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.sports,
+              child: Icon(Icons.sports,
                   color: CustomColors.primaryGreen, size: 22),
             ),
             const SizedBox(width: 12),
@@ -158,7 +158,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
         ),
       ),
       body: _loading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(
                   color: CustomColors.primaryGreen),
             )
@@ -248,7 +248,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                   backgroundColor: CustomColors.primaryGreen.withOpacity(0.2),
                   child: Text(
                     aluno.nome.isNotEmpty ? aluno.nome[0].toUpperCase() : 'A',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: CustomColors.primaryGreen,
                       fontWeight: FontWeight.bold,
                       fontSize: 20,
@@ -427,7 +427,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                 ),
                 TextButton(
                   onPressed: () => _modalDefinirValidadeTreino(context, aluno),
-                  child: const Text('Ajustar',
+                  child: Text('Ajustar',
                       style: TextStyle(
                           color: CustomColors.primaryGreen, fontSize: 12)),
                 ),
@@ -439,7 +439,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
           Row(
             children: [
               Expanded(child:InkWell(onTap:()=>_modalNovoAluno(context,aluno:aluno),
-                child:Column(children:[Text(aluno.resumoAulasContratadas,style:const TextStyle(color:GridColors.secondaryDark,fontWeight:FontWeight.bold)),
+                child:Column(children:[Text(aluno.resumoAulasContratadas,style:TextStyle(color:GridColors.secondaryDark,fontWeight:FontWeight.bold)),
                   Text('Contratada • editar',style:TextStyle(color:GridColors.textSecondary,fontSize:11))]))),
               const SizedBox(width: 8),
               _buildMiniMetrica(
@@ -518,7 +518,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                     children: [
                       Text(
                         aluno.feedbacks.first.divisaoNome,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: CustomColors.primaryGreen,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -555,8 +555,8 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
             alignment: Alignment.centerRight,
             child: TextButton.icon(
               onPressed: () => _modalHistoricoTreinosAluno(context, aluno),
-              icon: const Icon(Icons.history_edu, size: 16, color: CustomColors.primaryGreen),
-              label: const Text('Ver Histórico de Treinos e Cargas',
+              icon: Icon(Icons.history_edu, size: 16, color: CustomColors.primaryGreen),
+              label: Text('Ver Histórico de Treinos e Cargas',
                   style: TextStyle(color: CustomColors.primaryGreen, fontSize: 12, fontWeight: FontWeight.bold)),
             ),
           ),
@@ -1246,7 +1246,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                                   ),
                                   child: Text(
                                     'RPE ${sessao.rpe}/10',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: GridColors.secondaryDark,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 11,
@@ -1283,7 +1283,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                                   const SizedBox(width: 10),
                                   Text(
                                     '${sessao.exerciciosExecutados.length} exercícios',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: CustomColors.primaryGreen,
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
@@ -1393,7 +1393,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                 ),
                 child: Text(
                   ex.grupoMuscular,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: CustomColors.primaryGreen,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -1436,7 +1436,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                     const SizedBox(width: 4),
                     Text(
                       '@ ${s.cargaRealKg.toStringAsFixed(0)} kg',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: CustomColors.primaryGreen,
                         fontSize: 11,
                         fontWeight: FontWeight.w900,

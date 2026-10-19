@@ -56,7 +56,7 @@ class _SelecionarAlunoAvaliacaoScreenState extends State<SelecionarAlunoAvaliaca
               children: [
                 Card(
                   child: ListTile(
-                    leading: const CircleAvatar(
+                    leading: CircleAvatar(
                       backgroundColor: CustomColors.primaryGreen,
                       child: Icon(Icons.person, color: Colors.white),
                     ),
@@ -73,7 +73,7 @@ class _SelecionarAlunoAvaliacaoScreenState extends State<SelecionarAlunoAvaliaca
                         backgroundColor: CustomColors.primaryGreen.withValues(alpha: 0.2),
                         child: Text(
                           aluno.nome.isNotEmpty ? aluno.nome[0].toUpperCase() : 'A',
-                          style: const TextStyle(color: CustomColors.primaryGreen),
+                          style: TextStyle(color: CustomColors.primaryGreen),
                         ),
                       ),
                       title: Text(aluno.nome),
