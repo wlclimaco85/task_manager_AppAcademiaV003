@@ -2,7 +2,7 @@ name: task_manager_flutter
 description: A new Flutter project.
 publish_to: 'none'
 
-version: 1.0.2+2026101501
+version: 1.0.2+2026101801
 
 environment:
   sdk: '>=3.0.6 <4.0.0'
