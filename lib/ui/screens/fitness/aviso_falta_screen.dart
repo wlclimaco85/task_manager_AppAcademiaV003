@@ -36,7 +36,7 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
   @override
   void initState() {
     super.initState();
-    _tab = TabController(length: 2, vsync: this);
+    _tab = TabController(length: 3, vsync: this);
     _carregar();
   }
 
@@ -48,12 +48,21 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
   }
 
   Future<void> _carregar() async {
-    final e = await _repo.getEnviados();
-    final r = await _repo.getRecebidos();
-    if (mounted) setState(() {
-      _enviados = e;
-      _recebidos = r;
-    });
+    try {
+      final caixa = await _repo.carregar();
+      if (mounted) {
+        setState(() {
+          _enviados = caixa.enviados;
+          _recebidos = caixa.recebidos;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Não foi possível atualizar os avisos: $e')),
+        );
+      }
+    }
   }
 
   // ── Dados do usuário logado ───────────────────────────────────
@@ -91,7 +100,8 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
         // Por ora usa o parceiro da sessão como identificador do personal.
         final parceiro = AuthUtility.userInfo.login?.parceiro;
         final personalId = parceiro?.id?.toString() ?? 'personal';
-        final personalNome = parceiro?.nome ?? parceiro?.razaoSocial ?? 'Personal';
+        final personalNome =
+            parceiro?.nome ?? parceiro?.razaoSocial ?? 'Personal';
         await _repo.enviar(
           remetenteTipo: 'aluno',
           remetenteId: _meuId,
@@ -104,7 +114,6 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
         );
       }
 
-
       _motivoCtrl.clear();
       setState(() => _dataAula = DateTime.now().add(const Duration(days: 1)));
       await _carregar();
@@ -115,7 +124,7 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
             backgroundColor: CustomColors.primaryGreen,
           ),
         );
-        _tab.animateTo(1); // vai para aba "Enviados"
+        _tab.animateTo(2); // vai para aba "Enviados"
       }
     } catch (e) {
       if (mounted) {
@@ -129,18 +138,34 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
   }
 
   Future<void> _marcarVisto(String id) async {
-    await _repo.marcarComoVisto(id);
-    await _carregar();
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ Marcado como visto.')),
-      );
+    try {
+      await _repo.marcarComoVisto(id);
+      await _carregar();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('✅ Marcado como visto.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Não foi possível confirmar: $e')),
+        );
+      }
     }
   }
 
   Future<void> _remover(String id) async {
-    await _repo.removerEnviado(id);
-    await _carregar();
+    try {
+      await _repo.removerEnviado(id);
+      await _carregar();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Não foi possível remover: $e')),
+        );
+      }
+    }
   }
 
   // ── Build ─────────────────────────────────────────────────────
@@ -159,12 +184,37 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
               fontSize: 18),
         ),
         bottom: TabBar(
+          isScrollable: true,
           controller: _tab,
           labelColor: CustomColors.primaryGreen,
           unselectedLabelColor: context.appTextSecondary,
           indicatorColor: CustomColors.primaryGreen,
           tabs: [
             const Tab(text: 'Novo aviso'),
+            Tab(
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                const Text('Recebidos'),
+                if (_recebidos.where((item) => !item.foiVisto).isNotEmpty) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${_recebidos.where((item) => !item.foiVisto).length}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ]),
+            ),
             Tab(
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 const Text('Enviados'),
@@ -193,6 +243,7 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
         controller: _tab,
         children: [
           _buildFormulario(),
+          _buildListaRecebidos(),
           _buildListaEnviados(),
         ],
       ),
@@ -205,7 +256,8 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
       padding: const EdgeInsets.all(20),
       child: Form(
         key: _formKey,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           // Banner contextual
           Container(
             padding: const EdgeInsets.all(14),
@@ -243,8 +295,7 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
             onTap: _ocupado ? null : _selecionarData,
             borderRadius: BorderRadius.circular(12),
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 color: context.appSurface,
                 borderRadius: BorderRadius.circular(12),
@@ -277,8 +328,7 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
             onTap: _ocupado ? null : _selecionarHorario,
             borderRadius: BorderRadius.circular(12),
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 color: context.appSurface,
                 borderRadius: BorderRadius.circular(12),
@@ -325,8 +375,7 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
             maxLength: 200,
             style: TextStyle(color: context.appText),
             decoration: InputDecoration(
-              hintText:
-                  'Ex: médico, compromisso profissional, viagem...',
+              hintText: 'Ex: médico, compromisso profissional, viagem...',
               hintStyle:
                   TextStyle(color: context.appTextSecondary, fontSize: 13),
               filled: true,
@@ -360,8 +409,8 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
                         strokeWidth: 2, color: Colors.white))
                 : const Icon(Icons.send_outlined),
             label: Text(_ocupado ? 'Enviando...' : 'Enviar aviso de falta',
-                style: const TextStyle(
-                    fontWeight: FontWeight.w700, fontSize: 15)),
+                style:
+                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
           ),
         ]),
       ),
@@ -387,7 +436,32 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
     if (pick != null && mounted) setState(() => _horario = pick);
   }
 
-  // ── Aba 2: Enviados ───────────────────────────────────────────
+  // ── Aba 2: Recebidos ──────────────────────────────────────────
+  Widget _buildListaRecebidos() {
+    if (_recebidos.isEmpty) {
+      return Center(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(Icons.mark_email_read_outlined,
+              size: 56, color: context.appTextSecondary),
+          const SizedBox(height: 12),
+          Text('Nenhum aviso recebido.',
+              style: TextStyle(color: context.appTextSecondary, fontSize: 15)),
+        ]),
+      );
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      itemCount: _recebidos.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, i) => _AvisoCard(
+        aviso: _recebidos[i],
+        recebido: true,
+        onMarcarVisto: _marcarVisto,
+      ),
+    );
+  }
+
+  // ── Aba 3: Enviados ───────────────────────────────────────────
   Widget _buildListaEnviados() {
     if (_enviados.isEmpty) {
       return Center(
@@ -396,8 +470,7 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
               size: 56, color: context.appTextSecondary),
           const SizedBox(height: 12),
           Text('Nenhum aviso enviado ainda.',
-              style:
-                  TextStyle(color: context.appTextSecondary, fontSize: 15)),
+              style: TextStyle(color: context.appTextSecondary, fontSize: 15)),
         ]),
       );
     }
@@ -408,8 +481,8 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, i) => _AvisoCard(
         aviso: _enviados[i],
-        onMarcarVisto: (id) => _marcarVisto(id),
-        onRemover: (id) => _remover(id),
+        recebido: false,
+        onRemover: _remover,
       ),
     );
   }
@@ -419,13 +492,15 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
 
 class _AvisoCard extends StatelessWidget {
   final AvisoFaltaModel aviso;
-  final ValueChanged<String> onMarcarVisto;
-  final ValueChanged<String> onRemover;
+  final bool recebido;
+  final ValueChanged<String>? onMarcarVisto;
+  final ValueChanged<String>? onRemover;
 
   const _AvisoCard({
     required this.aviso,
-    required this.onMarcarVisto,
-    required this.onRemover,
+    required this.recebido,
+    this.onMarcarVisto,
+    this.onRemover,
   });
 
   String _formatarData(String iso) {
@@ -476,8 +551,8 @@ class _AvisoCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isPersonalEnviando
-                          ? 'Para: ${aviso.destinatarioNome}'
+                      recebido
+                          ? 'De: ${aviso.remetenteNome}'
                           : 'Para: ${aviso.destinatarioNome}',
                       style: TextStyle(
                           color: context.appText,
@@ -494,8 +569,7 @@ class _AvisoCard extends StatelessWidget {
             ),
             // Badge status
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: aviso.foiVisto
                     ? Colors.green.withValues(alpha: 0.12)
@@ -548,22 +622,24 @@ class _AvisoCard extends StatelessWidget {
           // Ações
           const SizedBox(height: 10),
           Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-            if (isPendente)
+            if (recebido && isPendente && onMarcarVisto != null)
               TextButton.icon(
                 style: TextButton.styleFrom(
                     foregroundColor: CustomColors.primaryGreen),
-                onPressed: () => onMarcarVisto(aviso.id),
+                onPressed: () => onMarcarVisto!(aviso.id),
                 icon: const Icon(Icons.done_all, size: 16),
-                label: const Text('Marcar visto', style: TextStyle(fontSize: 12)),
+                label:
+                    const Text('Marcar visto', style: TextStyle(fontSize: 12)),
               ),
-            const SizedBox(width: 4),
-            TextButton.icon(
-              style: TextButton.styleFrom(
-                  foregroundColor: GridColors.error),
-              onPressed: () => onRemover(aviso.id),
-              icon: const Icon(Icons.delete_outline, size: 16),
-              label: const Text('Remover', style: TextStyle(fontSize: 12)),
-            ),
+            if (!recebido && onRemover != null) ...[
+              const SizedBox(width: 4),
+              TextButton.icon(
+                style: TextButton.styleFrom(foregroundColor: GridColors.error),
+                onPressed: () => onRemover!(aviso.id),
+                icon: const Icon(Icons.delete_outline, size: 16),
+                label: const Text('Remover', style: TextStyle(fontSize: 12)),
+              ),
+            ],
           ]),
         ]),
       ),

@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/services/aviso_falta_repository.dart';
 import 'package:task_manager_flutter/data/services/fitness_push_notification_service.dart';
+import 'package:task_manager_flutter/data/services/network_caller.dart';
+import 'package:task_manager_flutter/data/models/network_response.dart';
 import 'package:task_manager_flutter/data/services/preferencia_tema_service.dart';
 
 void main() {
@@ -18,8 +20,10 @@ void main() {
   });
 
   group('Aviso de Falta na Aula (Aluno <-> Personal)', () {
-    test('Aluno avisa que vai faltar e Personal marca como visto', () async {
-      final repo = AvisoFaltaRepository();
+    test('envio é confirmado pelo servidor e não é simulado em recebidos',
+        () async {
+      final api = _FakeAvisoFaltaApi();
+      final repo = AvisoFaltaRepository(network: api);
 
       final aviso = await repo.enviar(
         remetenteId: 'aluno_1',
@@ -27,7 +31,7 @@ void main() {
         remetenteTipo: 'aluno',
         destinatarioId: 'personal_99',
         destinatarioNome: 'Professor Rodrigo',
-        dataAula: '19/10/2026',
+        dataAula: '2026-10-20',
         horario: '08:00',
         motivo: 'Consulta médica de rotina',
       );
@@ -36,51 +40,43 @@ void main() {
       expect(aviso.status, 'aguardando');
       expect(aviso.motivo, 'Consulta médica de rotina');
 
-      // Personal lista avisos recebidos
-      final recebidos = await repo.getRecebidos();
-      expect(recebidos.length, 1);
-      expect(recebidos.first.remetenteNome, 'Carlos Aluno');
-      expect(recebidos.first.status, 'aguardando');
-      expect(await repo.countNaoVistos(), 1);
-
-      // Personal marca visto
-      await repo.marcarComoVisto(aviso.id);
-
-      // Consulta se foi atualizado
-      final recebidosAtualizados = await repo.getRecebidos();
-      expect(recebidosAtualizados.first.status, 'visto');
-      expect(recebidosAtualizados.first.foiVisto, isTrue);
-      expect(recebidosAtualizados.first.vistoEm, isNotNull);
-      expect(await repo.countNaoVistos(), 0);
-
-      // Aluno consulta enviados e vê que o status foi atualizado
       final enviados = await repo.getEnviados();
-      expect(enviados.first.status, 'visto');
+      final recebidos = await repo.getRecebidos();
+      expect(enviados, hasLength(1));
+      expect(recebidos, isEmpty,
+          reason: 'o remetente não pode receber o próprio aviso');
+      expect(api.postagens, 1);
     });
 
-    test('Personal avisa que não haverá aula e aluno recebe notificação', () async {
-      final repo = AvisoFaltaRepository();
+    test('destinatário confirma no servidor que viu o aviso', () async {
+      final api = _FakeAvisoFaltaApi()
+        ..recebidos.add(_FakeAvisoFaltaApi.aviso(
+          id: '88',
+          remetenteTipo: 'personal',
+          remetenteId: 'personal_99',
+          remetenteNome: 'Professor Rodrigo',
+          destinatarioId: 'aluno_1',
+          destinatarioNome: 'Carlos Aluno',
+        ));
+      final repo = AvisoFaltaRepository(network: api);
 
-      final aviso = await repo.enviar(
-        remetenteId: 'personal_99',
-        remetenteNome: 'Professor Rodrigo',
-        remetenteTipo: 'personal',
-        destinatarioId: 'aluno_1',
-        destinatarioNome: 'Carlos Aluno',
-        dataAula: '20/10/2026',
-        horario: '18:00',
-        motivo: 'Imprevisto com transporte',
-      );
+      final antes = await repo.getRecebidos();
+      expect(antes.single.foiVisto, isFalse);
+      await repo.marcarComoVisto('88');
+      final depois = await repo.getRecebidos();
+      expect(depois.single.foiVisto, isTrue);
+      expect(api.confirmacoes, 1);
 
-      expect(aviso.remetenteTipo, 'personal');
-
-      final notificacoes = await FitnessPushNotificationService().getNotificacoes();
-      expect(notificacoes.any((n) => n.titulo.contains('Professor Rodrigo')), isTrue);
+      final notificacoes =
+          await FitnessPushNotificationService().getNotificacoes();
+      expect(notificacoes.any((n) => n.tipo == 'falta_personal'), isTrue);
     });
   });
 
   group('Notificações Aluno x Personal expandidas', () {
-    test('Mensalidade vencida, troca de treino, meta diária e feedbacks são gerados', () async {
+    test(
+        'Mensalidade vencida, troca de treino, meta diária e feedbacks são gerados',
+        () async {
       final service = FitnessPushNotificationService();
 
       await service.notificarMensalidadeVencida(
@@ -117,15 +113,20 @@ void main() {
 
       expect(notificacoes.any((n) => n.tipo == 'mensalidade_vencendo'), isTrue);
       expect(notificacoes.any((n) => n.tipo == 'treino_atualizado'), isTrue);
-      expect(notificacoes.any((n) => n.tipo == 'meta_dia_nao_cumprida'), isTrue);
+      expect(
+          notificacoes.any((n) => n.tipo == 'meta_dia_nao_cumprida'), isTrue);
       expect(notificacoes.any((n) => n.tipo == 'aviso_personal'), isTrue);
-      expect(notificacoes.any((n) => n.tipo == 'aluno_treino_finalizado'), isTrue);
-      expect(notificacoes.any((n) => n.tipo == 'aluno_comentario_treino'), isTrue);
+      expect(
+          notificacoes.any((n) => n.tipo == 'aluno_treino_finalizado'), isTrue);
+      expect(
+          notificacoes.any((n) => n.tipo == 'aluno_comentario_treino'), isTrue);
     });
   });
 
   group('Validação dos 3 Temas Visuais (Padrão, Branco, Preto)', () {
-    test('GridColors e CustomColors se adaptam dinamicamente ao tema selecionado', () {
+    test(
+        'GridColors e CustomColors se adaptam dinamicamente ao tema selecionado',
+        () {
       // 1. Tema Padrão
       PreferenciaTema.tema.value = TemaApp.padrao;
       expect(GridColors.background, const Color(0xFFF8FAFC));
@@ -151,4 +152,86 @@ void main() {
       expect(GridColors.textPrimary.computeLuminance(), greaterThan(0.8));
     });
   });
+}
+
+class _FakeAvisoFaltaApi extends NetworkCaller {
+  final List<Map<String, dynamic>> recebidos = [];
+  final List<Map<String, dynamic>> enviados = [];
+  int postagens = 0;
+  int confirmacoes = 0;
+
+  static Map<String, dynamic> aviso({
+    required String id,
+    required String remetenteTipo,
+    required String remetenteId,
+    required String remetenteNome,
+    required String destinatarioId,
+    required String destinatarioNome,
+    String motivo = '',
+  }) =>
+      {
+        'id': id,
+        'remetenteTipo': remetenteTipo,
+        'remetenteId': remetenteId,
+        'remetenteNome': remetenteNome,
+        'destinatarioId': destinatarioId,
+        'destinatarioNome': destinatarioNome,
+        'dataAula': '2026-10-20',
+        'horario': '08:00',
+        'motivo': motivo,
+        'enviadoEm': '2026-10-19T08:00:00',
+        'status': 'aguardando',
+        'vistoEm': null,
+      };
+
+  Map<String, dynamic> get _caixa => {
+        'vinculado': true,
+        'recebidos': recebidos,
+        'enviados': enviados,
+      };
+
+  @override
+  Future<NetworkResponse> getRequest(String url) async =>
+      NetworkResponse(true, 200, {'data': _caixa});
+
+  @override
+  Future<NetworkResponse> postRequest(
+      String url, Map<String, dynamic>? body) async {
+    postagens++;
+    final item = aviso(
+      id: '${100 + postagens}',
+      remetenteTipo: 'aluno',
+      remetenteId: 'aluno_1',
+      remetenteNome: 'Carlos Aluno',
+      destinatarioId: 'personal_99',
+      destinatarioNome: 'Professor Rodrigo',
+      motivo: body?['motivo']?.toString() ?? '',
+    );
+    enviados.insert(0, item);
+    return NetworkResponse(true, 201, {'data': item});
+  }
+
+  @override
+  Future<NetworkResponse> putRequest(String url, dynamic body) async {
+    confirmacoes++;
+    final id = Uri.parse(url).pathSegments.reversed.skip(1).first;
+    final index = recebidos.indexWhere((item) => item['id'] == id);
+    if (index < 0) return NetworkResponse(false, 403, null);
+    recebidos[index] = {
+      ...recebidos[index],
+      'status': 'visto',
+      'vistoEm': '2026-10-19T09:00:00',
+    };
+    return NetworkResponse(true, 200, {'data': recebidos[index]});
+  }
+
+  @override
+  Future<NetworkResponse> deleteRequest(
+    String url, {
+    Map<String, dynamic>? queryParams,
+  }) async {
+    final id = Uri.parse(url).pathSegments.last;
+    enviados.removeWhere((item) => item['id'] == id);
+    return NetworkResponse(true, 204, null);
+  }
 }

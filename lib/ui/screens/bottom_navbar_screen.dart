@@ -13,6 +13,7 @@ import 'package:task_manager_flutter/data/services/fitness_resumo_hoje_service.d
 import 'package:task_manager_flutter/data/services/checkin_diario_caller.dart';
 import 'package:task_manager_flutter/data/services/hidratacao_caller.dart';
 import 'package:task_manager_flutter/data/services/saude_diaria_caller.dart';
+import 'package:task_manager_flutter/data/services/aviso_falta_repository.dart';
 import 'package:task_manager_flutter/data/utils/security_matrix.dart';
 import 'package:task_manager_flutter/ui/screens/fitness_personal_screens.dart';
 import 'package:task_manager_flutter/ui/screens/personal_workspace_screen.dart';
@@ -37,6 +38,21 @@ class BottomNavBarScreen extends StatefulWidget {
 
 class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
   int selectedIndex = 0;
+  bool _alunoTemPersonal = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarVinculoPersonal();
+  }
+
+  Future<void> _carregarVinculoPersonal() async {
+    if (podeGerenciarAlunos() || AuthUtility.userInfo.login == null) return;
+    final vinculado = await AvisoFaltaRepository().temVinculo();
+    if (mounted && vinculado != _alunoTemPersonal) {
+      setState(() => _alunoTemPersonal = vinculado);
+    }
+  }
 
   List<_FitnessNavItem> _navItems(SecurityMatrix sec) {
     return [
@@ -371,9 +387,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
 
   bool _temPersonalVinculado() {
     if (podeGerenciarAlunos()) return true;
-    final login = AuthUtility.userInfo.login;
-    if (login == null) return false;
-    return login.parceiro != null || login.empresa != null;
+    return _alunoTemPersonal;
   }
 
   void _showMenuOptions(BuildContext context, SecurityMatrix sec) {

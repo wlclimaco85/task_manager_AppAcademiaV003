@@ -1,5 +1,5 @@
 /// Modelo de Aviso de Falta — Aluno avisa Personal e Personal avisa Alunos.
-/// Persiste offline em SharedPreferences; sincroniza em background quando autenticado.
+/// O servidor entrega entre contas; o app mantém apenas um cache local de leitura.
 class AvisoFaltaModel {
   final String id;
 

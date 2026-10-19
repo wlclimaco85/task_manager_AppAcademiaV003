@@ -1,50 +1,84 @@
 import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/models/fitness/aviso_falta_model.dart';
+import 'package:task_manager_flutter/data/models/network_response.dart';
 import 'package:task_manager_flutter/data/services/fitness_conta_sync.dart';
 import 'package:task_manager_flutter/data/services/fitness_push_notification_service.dart';
+import 'package:task_manager_flutter/data/services/network_caller.dart';
+import 'package:task_manager_flutter/data/utils/api_links.dart';
+import 'package:task_manager_flutter/data/utils/fitness_access.dart';
 
-/// Repositório Offline-First para Avisos de Falta (aluno ↔ personal).
-///
-/// Persiste em SharedPreferences; usa duas chaves separadas:
-///   - [_kEnviadosKey] → avisos enviados pelo usuário atual
-///   - [_kRecebidosKey] → avisos recebidos pelo usuário atual
+class AvisoFaltaCaixa {
+  final bool vinculado;
+  final List<AvisoFaltaModel> recebidos;
+  final List<AvisoFaltaModel> enviados;
+
+  const AvisoFaltaCaixa({
+    required this.vinculado,
+    required this.recebidos,
+    required this.enviados,
+  });
+}
+
+/// Repositório servidor-first. O cache permite leitura offline, mas nunca
+/// simula que um aviso foi entregue à outra conta.
 class AvisoFaltaRepository {
-  static const String _kEnviadosKey = 'appacademia_avisos_falta_enviados_v1';
-  static const String _kRecebidosKey = 'appacademia_avisos_falta_recebidos_v1';
+  static const _cacheKeyBase = 'appacademia_avisos_falta_caixa_v2';
+  static const _vinculoKeyBase = 'appacademia_avisos_falta_vinculo_v2';
 
-  static final AvisoFaltaRepository _instance =
-      AvisoFaltaRepository._internal();
-  factory AvisoFaltaRepository() => _instance;
-  AvisoFaltaRepository._internal();
+  final NetworkCaller _network;
+  final FitnessPushNotificationService _notif;
 
-  final _notif = FitnessPushNotificationService();
+  AvisoFaltaRepository({
+    NetworkCaller? network,
+    FitnessPushNotificationService? notificacoes,
+  })  : _network = network ?? NetworkCaller(),
+        _notif = notificacoes ?? FitnessPushNotificationService();
 
-  String get _enviadosKey => FitnessContaSync.chave(_kEnviadosKey);
-  String get _recebidosKey => FitnessContaSync.chave(_kRecebidosKey);
+  bool get _souPersonal => podeGerenciarAlunos();
+  String get _cacheKey => FitnessContaSync.chave(_cacheKeyBase);
+  String get _vinculoKey => FitnessContaSync.chave(_vinculoKeyBase);
 
-  // ── Leitura ────────────────────────────────────────────────────
-
-  Future<List<AvisoFaltaModel>> getEnviados() async {
-    final prefs = await SharedPreferences.getInstance();
-    return _decode(prefs.getString(_enviadosKey));
+  Future<AvisoFaltaCaixa> carregar({bool aceitarCache = true}) async {
+    final response =
+        await _network.getRequest(ApiLinks.avisosFaltaMeus(_souPersonal));
+    if (response.isSuccess) {
+      final data = response.body?['data'];
+      if (data is Map) {
+        final caixa = AvisoFaltaCaixa(
+          vinculado: data['vinculado'] == true,
+          recebidos: _lista(data['recebidos']),
+          enviados: _lista(data['enviados']),
+        );
+        await _notificarNovosRecebidos(caixa.recebidos);
+        await _salvarCache(caixa);
+        return caixa;
+      }
+    }
+    if (aceitarCache) return _lerCache();
+    throw StateError(
+        _mensagemErro(response, 'Não foi possível consultar os avisos.'));
   }
 
-  Future<List<AvisoFaltaModel>> getRecebidos() async {
-    final prefs = await SharedPreferences.getInstance();
-    return _decode(prefs.getString(_recebidosKey));
+  Future<bool> temVinculo() async {
+    try {
+      return (await carregar()).vinculado;
+    } catch (_) {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(_vinculoKey) ?? false;
+    }
   }
 
-  /// Retorna o total de avisos recebidos ainda não marcados como vistos.
-  Future<int> countNaoVistos() async {
-    final lista = await getRecebidos();
-    return lista.where((a) => !a.foiVisto).length;
-  }
+  Future<List<AvisoFaltaModel>> getEnviados() async =>
+      (await carregar()).enviados;
 
-  // ── Envio ──────────────────────────────────────────────────────
+  Future<List<AvisoFaltaModel>> getRecebidos() async =>
+      (await carregar()).recebidos;
 
-  /// Envia um aviso de falta.
-  /// [remetenteTipo] = 'aluno' ou 'personal'.
+  Future<int> countNaoVistos() async =>
+      (await getRecebidos()).where((item) => !item.foiVisto).length;
+
   Future<AvisoFaltaModel> enviar({
     required String remetenteTipo,
     required String remetenteId,
@@ -55,126 +89,121 @@ class AvisoFaltaRepository {
     String? horario,
     String motivo = '',
   }) async {
-    final aviso = AvisoFaltaModel(
-      id: 'aviso_${DateTime.now().millisecondsSinceEpoch}',
-      remetenteTipo: remetenteTipo,
-      remetenteId: remetenteId,
-      remetenteNome: remetenteNome,
-      destinatarioId: destinatarioId,
-      destinatarioNome: destinatarioNome,
-      dataAula: dataAula,
-      horario: horario,
-      motivo: motivo,
-      enviadoEm: DateTime.now(),
+    final response = await _network.postRequest(
+      _souPersonal ? ApiLinks.avisosFaltaPersonal : ApiLinks.avisosFaltaAluno,
+      {'dataAula': dataAula, 'horario': horario, 'motivo': motivo},
     );
-
-    // Salva na fila "enviados" do remetente
-    final enviados = await getEnviados();
-    enviados.insert(0, aviso);
-    await _salvarEnviados(enviados);
-
-    // Simula entrega ao destinatário (persiste em recebidos do mesmo device
-    // quando o mesmo app serve os dois perfis; em produção, o backend distribui).
-    final recebidos = await getRecebidos();
-    recebidos.insert(0, aviso);
-    await _salvarRecebidos(recebidos);
-
-    // Gera notificação local
-    final isAlunoAvisando = remetenteTipo == 'aluno';
-    await _notif.agendarNotificacao(
-      FitnessNotificationItem(
-        id: aviso.id,
-        titulo: isAlunoAvisando
-            ? '🔔 $remetenteNome avisou que não vai treinar'
-            : '😔 Personal $remetenteNome não poderá atender hoje',
-        corpo: isAlunoAvisando
-            ? '$remetenteNome avisou falta para ${_formatarData(dataAula)}${horario != null ? " às $horario" : ""}.'
-                '${motivo.isNotEmpty ? " Motivo: $motivo" : ""}'
-            : '$remetenteNome avisou que não terá aula em ${_formatarData(dataAula)}${horario != null ? " às $horario" : ""}.'
-                '${motivo.isNotEmpty ? " Motivo: $motivo" : ""}',
-        dataHora: DateTime.now(),
-        tipo: isAlunoAvisando ? 'falta_aluno' : 'falta_personal',
-        payload: aviso.toMap(),
-      ),
-    );
-
-    return aviso;
-  }
-
-  // ── Confirmação de leitura ─────────────────────────────────────
-
-  /// Marca um aviso recebido como visto e gera notificação de confirmação
-  /// para o remetente.
-  Future<void> marcarComoVisto(String avisoId) async {
-    final recebidos = await getRecebidos();
-    final idx = recebidos.indexWhere((a) => a.id == avisoId);
-    if (idx < 0) return;
-
-    final atualizado = recebidos[idx].copyWith(
-      status: 'visto',
-      vistoEm: DateTime.now(),
-    );
-    recebidos[idx] = atualizado;
-    await _salvarRecebidos(recebidos);
-
-    // Atualiza na fila de enviados (se o mesmo device)
-    final enviados = await getEnviados();
-    final eIdx = enviados.indexWhere((a) => a.id == avisoId);
-    if (eIdx >= 0) {
-      enviados[eIdx] = atualizado;
-      await _salvarEnviados(enviados);
+    if (!response.isSuccess) {
+      throw StateError(
+          _mensagemErro(response, 'Não foi possível enviar o aviso.'));
     }
-
-    // Notificação de confirmação para o remetente
-    await _notif.agendarNotificacao(
-      FitnessNotificationItem(
-        id: 'visto_${avisoId}',
-        titulo: '✅ ${atualizado.destinatarioNome} viu seu aviso de falta',
-        corpo:
-            'O aviso para ${_formatarData(atualizado.dataAula)} foi confirmado como visto.',
-        dataHora: DateTime.now(),
-        tipo: 'aviso_falta_lido',
-        payload: atualizado.toMap(),
-      ),
-    );
+    final data = response.body?['data'];
+    final criados = data is List
+        ? _lista(data)
+        : data is Map
+            ? [AvisoFaltaModel.fromMap(Map<String, dynamic>.from(data))]
+            : <AvisoFaltaModel>[];
+    if (criados.isEmpty) {
+      throw StateError('O servidor não confirmou o envio.');
+    }
+    await carregar(aceitarCache: false);
+    return criados.first;
   }
 
-  // ── Deleção ────────────────────────────────────────────────────
+  Future<void> marcarComoVisto(String avisoId) async {
+    final response = await _network.putRequest(
+      ApiLinks.avisoFaltaVisto(_souPersonal, avisoId),
+      const <String, dynamic>{},
+    );
+    if (!response.isSuccess) {
+      throw StateError(
+          _mensagemErro(response, 'Não foi possível confirmar a leitura.'));
+    }
+    await carregar(aceitarCache: false);
+  }
 
   Future<void> removerEnviado(String avisoId) async {
-    final lista = await getEnviados();
-    lista.removeWhere((a) => a.id == avisoId);
-    await _salvarEnviados(lista);
+    final response = await _network.deleteRequest(
+      ApiLinks.avisoFaltaRemover(_souPersonal, avisoId),
+    );
+    if (!response.isSuccess) {
+      throw StateError(
+          _mensagemErro(response, 'Não foi possível remover o aviso.'));
+    }
+    await carregar(aceitarCache: false);
   }
 
-  // ── Privados ───────────────────────────────────────────────────
+  List<AvisoFaltaModel> _lista(dynamic raw) {
+    if (raw is! List) return [];
+    return raw
+        .whereType<Map>()
+        .map((item) => AvisoFaltaModel.fromMap(Map<String, dynamic>.from(item)))
+        .toList();
+  }
 
-  List<AvisoFaltaModel> _decode(String? raw) {
-    if (raw == null || raw.isEmpty) return [];
-    try {
-      return (jsonDecode(raw) as List)
-          .map((e) => AvisoFaltaModel.fromMap(e as Map<String, dynamic>))
-          .toList();
-    } catch (_) {
-      return [];
+  Future<void> _notificarNovosRecebidos(List<AvisoFaltaModel> atuais) async {
+    final anterior = await _lerCache();
+    final idsAnteriores = anterior.recebidos.map((item) => item.id).toSet();
+    for (final aviso in atuais
+        .where((item) => !item.foiVisto && !idsAnteriores.contains(item.id))) {
+      final alunoAvisou = aviso.remetenteTipo == 'aluno';
+      await _notif.agendarNotificacao(FitnessNotificationItem(
+        id: 'aviso_falta_${aviso.id}',
+        titulo: alunoAvisou
+            ? '${aviso.remetenteNome} avisou que vai faltar'
+            : '${aviso.remetenteNome} cancelou uma aula',
+        corpo:
+            '${_formatarData(aviso.dataAula)}${aviso.horario == null ? '' : ' às ${aviso.horario}'}${aviso.motivo.isEmpty ? '' : ' • ${aviso.motivo}'}',
+        dataHora: aviso.enviadoEm,
+        tipo: alunoAvisou ? 'falta_aluno' : 'falta_personal',
+        payload: aviso.toMap(),
+      ));
     }
   }
 
-  Future<void> _salvarEnviados(List<AvisoFaltaModel> lista) async {
+  Future<void> _salvarCache(AvisoFaltaCaixa caixa) async {
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_vinculoKey, caixa.vinculado);
     await prefs.setString(
-        _enviadosKey, jsonEncode(lista.map((a) => a.toMap()).toList()));
+        _cacheKey,
+        jsonEncode({
+          'vinculado': caixa.vinculado,
+          'recebidos': caixa.recebidos.map((item) => item.toMap()).toList(),
+          'enviados': caixa.enviados.map((item) => item.toMap()).toList(),
+        }));
   }
 
-  Future<void> _salvarRecebidos(List<AvisoFaltaModel> lista) async {
+  Future<AvisoFaltaCaixa> _lerCache() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-        _recebidosKey, jsonEncode(lista.map((a) => a.toMap()).toList()));
+    final raw = prefs.getString(_cacheKey);
+    if (raw == null || raw.isEmpty) {
+      return AvisoFaltaCaixa(
+        vinculado: prefs.getBool(_vinculoKey) ?? _souPersonal,
+        recebidos: const [],
+        enviados: const [],
+      );
+    }
+    try {
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      return AvisoFaltaCaixa(
+        vinculado: data['vinculado'] == true,
+        recebidos: _lista(data['recebidos']),
+        enviados: _lista(data['enviados']),
+      );
+    } catch (_) {
+      return const AvisoFaltaCaixa(
+          vinculado: false, recebidos: [], enviados: []);
+    }
+  }
+
+  String _mensagemErro(NetworkResponse response, String padrao) {
+    final mensagem = response.body?['message'] ?? response.body?['error'];
+    return mensagem is String && mensagem.trim().isNotEmpty ? mensagem : padrao;
   }
 
   static String _formatarData(String iso) {
-    final d = DateTime.tryParse(iso);
-    if (d == null) return iso;
-    return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+    final data = DateTime.tryParse(iso);
+    if (data == null) return iso;
+    return '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}';
   }
 }
