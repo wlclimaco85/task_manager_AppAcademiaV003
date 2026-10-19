@@ -151,7 +151,7 @@ class _AvaliacaoFisicaProScreenState extends State<AvaliacaoFisicaProScreen> {
                 : Text(
                     'O aluno ainda não liberou avaliações físicas para o seu personal.',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: GridColors.textSecondary),
+                    style: TextStyle(color: GridColors.textSecondary),
                   ),
           ),
         ),
@@ -242,7 +242,7 @@ class _AvaliacaoFisicaProScreenState extends State<AvaliacaoFisicaProScreen> {
       decoration: BoxDecoration(
         color: GridColors.primary,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
             color: GridColors.shadow,
             blurRadius: 16,
@@ -343,7 +343,7 @@ class _AvaliacaoFisicaProScreenState extends State<AvaliacaoFisicaProScreen> {
       color: GridColors.card,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: GridColors.divider),
+        side: BorderSide(color: GridColors.divider),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -431,7 +431,7 @@ class _AvaliacaoFisicaProScreenState extends State<AvaliacaoFisicaProScreen> {
       color: GridColors.card,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: GridColors.divider),
+        side: BorderSide(color: GridColors.divider),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -514,7 +514,7 @@ class _AvaliacaoFisicaProScreenState extends State<AvaliacaoFisicaProScreen> {
       color: GridColors.card,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: GridColors.divider),
+        side: BorderSide(color: GridColors.divider),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),

@@ -5,9 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import '../../../data/models/auth_utility.dart';
+import '../../../data/constants/custom_colors.dart';
 import '../../../data/services/perfil_conta_service.dart';
+import '../../../data/services/cadastro_inicial_service.dart';
+import '../../../data/services/fitness_push_notification_service.dart';
+import '../../../data/utils/fitness_access.dart';
 import '../../widgets/perfil_fitness_header.dart';
 import '../editar_dados_usuario_screen.dart';
+import 'cadastro_inicial_screen.dart';
 import 'privacidade_aparencia_screen.dart';
 
 String prepararFotoPerfil(Uint8List bytes) {
@@ -45,6 +50,8 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
   late final _conta = AuthUtility.userInfo.login?.id;
   bool _carregado = false;
   bool _carregando = true, _salvando = false, _fotoCarregando = false;
+  bool _cadastroIncompleto = false;
+  int _notificacoesNaoLidas = 0;
   String? _erro, _foto;
   String _email = '', _cpf = '';
   bool _mesmaConta() => AuthUtility.userInfo.login?.id == _conta;
@@ -52,6 +59,91 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
   void initState() {
     super.initState();
     _carregar();
+    _carregarIndicadores();
+  }
+
+  Future<void> _carregarIndicadores() async {
+    final ehAluno = !podeGerenciarAlunos(AuthUtility.userInfo);
+    var incompleto = false;
+    if (ehAluno) {
+      final dados = await CadastroInicialService.carregar();
+      final pendencias = CadastroInicialService.pendencias(dados);
+      incompleto = pendencias.isNotEmpty;
+    }
+    final notificacoes = await FitnessPushNotificationService().getNotificacoes();
+    if (!mounted) return;
+    setState(() {
+      _cadastroIncompleto = incompleto;
+      _notificacoesNaoLidas = notificacoes.where((n) => !n.lida).length;
+    });
+  }
+
+  Future<void> _abrirNotificacoes() async {
+    var itens = await FitnessPushNotificationService().getNotificacoes();
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) => SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * .72),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                  child: Text('Notificações', style: Theme.of(context).textTheme.titleLarge),
+                ),
+                Flexible(
+                  child: itens.isEmpty
+                      ? const Padding(
+                          padding: EdgeInsets.all(24),
+                          child: Center(child: Text('Nenhuma notificação por enquanto.')),
+                        )
+                      : ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: itens.length,
+                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          itemBuilder: (context, index) {
+                            final item = itens[index];
+                            return ListTile(
+                              key: ValueKey('notificacao_${item.id}'),
+                              leading: Icon(
+                                item.tipo == 'cadastro_inicial'
+                                    ? Icons.person_outline
+                                    : Icons.notifications_outlined,
+                                color: item.lida ? Colors.grey : GridColors.primary,
+                              ),
+                              title: Text(item.titulo,
+                                  style: TextStyle(fontWeight: item.lida ? FontWeight.w500 : FontWeight.w700)),
+                              subtitle: Text(item.corpo),
+                              trailing: item.lida
+                                  ? null
+                                  : Icon(Icons.circle, size: 10, color: GridColors.primary),
+                              onTap: () async {
+                                await FitnessPushNotificationService().marcarComoLida(item.id);
+                                itens = await FitnessPushNotificationService().getNotificacoes();
+                                setSheetState(() {});
+                                if (item.tipo == 'cadastro_inicial' && sheetContext.mounted) {
+                                  Navigator.pop(sheetContext);
+                                  await Navigator.push(context, MaterialPageRoute(builder: (_) => const CadastroInicialScreen()));
+                                  _carregarIndicadores();
+                                }
+                              },
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await _carregarIndicadores();
   }
 
   Future<void> _carregar() async {
@@ -193,6 +285,16 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
                               nome: _nome.text,
                               perfil: 'Minha conta',
                               foto: _foto,
+                              cadastroIncompleto: _cadastroIncompleto,
+                              notificacoesNaoLidas: _notificacoesNaoLidas,
+                              onCadastroIncompleto: () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const CadastroInicialScreen()),
+                                );
+                                _carregarIndicadores();
+                              },
+                              onNotificacoes: _abrirNotificacoes,
                             ),
                             Wrap(
                               spacing: 8,

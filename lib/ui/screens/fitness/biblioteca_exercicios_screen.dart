@@ -168,7 +168,7 @@ class _BibliotecaExerciciosScreenState
                   onChanged: (val) => setState(() => _filtroTexto = val),
                   decoration: InputDecoration(
                     hintText: 'Buscar exercício por nome ou músculo...',
-                    prefixIcon: const Icon(Icons.search, color: GridColors.textSecondary),
+                    prefixIcon: Icon(Icons.search, color: GridColors.textSecondary),
                     suffixIcon: _filtroTexto.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.clear, size: 20),
@@ -257,7 +257,7 @@ class _BibliotecaExerciciosScreenState
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Text('Revise e salve a ficha na próxima tela.',
+            Text('Revise e salve a ficha na próxima tela.',
               style: TextStyle(color: GridColors.textSecondary, fontSize: 12)),
             const SizedBox(height: 8),
             SizedBox(width: double.infinity, height: 52,
@@ -343,7 +343,7 @@ class _BibliotecaExerciciosScreenState
       color: GridColors.card,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: GridColors.divider, width: 1),
+        side: BorderSide(color: GridColors.divider, width: 1),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -381,7 +381,7 @@ class _BibliotecaExerciciosScreenState
                   children: [
                     Text(
                       ex.nome,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: GridColors.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -409,7 +409,7 @@ class _BibliotecaExerciciosScreenState
                           const SizedBox(width: 8),
                           Text(
                             '• ${ex.equipamento}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: GridColors.textSecondary,
                               fontSize: 12,
                             ),
@@ -443,7 +443,7 @@ class _BibliotecaExerciciosScreenState
           children: [
             Icon(Icons.fitness_center_outlined, size: 54, color: GridColors.textMuted),
             const SizedBox(height: 14),
-            const Text(
+            Text(
               'Nenhum exercício encontrado',
               style: TextStyle(
                 fontSize: 16,
@@ -452,7 +452,7 @@ class _BibliotecaExerciciosScreenState
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'Tente buscar outro termo ou cadastre um novo exercício personalizado.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: GridColors.textSecondary),
@@ -472,7 +472,7 @@ class _BibliotecaExerciciosScreenState
         return SafeArea(child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * .85),
           child: SingleChildScrollView(child: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: GridColors.card,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
@@ -497,7 +497,7 @@ class _BibliotecaExerciciosScreenState
                   Expanded(
                     child: Text(
                       ex.nome,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                         color: GridColors.textPrimary,
@@ -525,15 +525,15 @@ class _BibliotecaExerciciosScreenState
                 const SizedBox(height: 4),
                 Text(
                   'Equipamento: ${ex.equipamento}',
-                  style: const TextStyle(color: GridColors.textSecondary, fontSize: 13),
+                  style: TextStyle(color: GridColors.textSecondary, fontSize: 13),
                 ),
               ],
               if (ex.nivelTexto != null)
                 Text(
                   'Nível: ${ex.nivelTexto}',
-                  style: const TextStyle(color: GridColors.textSecondary, fontSize: 13),
+                  style: TextStyle(color: GridColors.textSecondary, fontSize: 13),
                 ),
-              const Divider(height: 28, color: GridColors.divider),
+              Divider(height: 28, color: GridColors.divider),
               Wrap(spacing: 8, children: [
                 if (ex.midiaUrl != null)
                   TextButton.icon(
@@ -557,12 +557,12 @@ class _BibliotecaExerciciosScreenState
                 ),
               ]),
               if (ex.midiaUrl == null)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.only(bottom: 12),
                   child: Text('Vídeo ainda não cadastrado.',
                     style: TextStyle(color: GridColors.textSecondary)),
                 ),
-              const Text(
+              Text(
                 'Execução Biomecânica:',
                 style: TextStyle(
                   fontSize: 14,
@@ -575,11 +575,11 @@ class _BibliotecaExerciciosScreenState
                 ex.instrucoes.isNotEmpty
                     ? ex.instrucoes
                     : 'Execute o movimento com controle e amplitude completa.',
-                style: const TextStyle(fontSize: 13, height: 1.4, color: GridColors.textSecondary),
+                style: TextStyle(fontSize: 13, height: 1.4, color: GridColors.textSecondary),
               ),
               if (ex.descricao.isNotEmpty) ...[
                 const SizedBox(height: 14),
-                const Text(
+                Text(
                   'Passo a Passo:',
                   style: TextStyle(
                     fontSize: 14,
@@ -590,7 +590,7 @@ class _BibliotecaExerciciosScreenState
                 const SizedBox(height: 6),
                 Text(
                   ex.descricao,
-                  style: const TextStyle(fontSize: 13, height: 1.5, color: GridColors.textSecondary),
+                  style: TextStyle(fontSize: 13, height: 1.5, color: GridColors.textSecondary),
                 ),
               ],
               if (ex.errosComuns != null && ex.errosComuns!.isNotEmpty) ...[
@@ -606,7 +606,7 @@ class _BibliotecaExerciciosScreenState
                 const SizedBox(height: 6),
                 Text(
                   ex.errosComuns!,
-                  style: const TextStyle(fontSize: 13, height: 1.35, color: GridColors.textSecondary),
+                  style: TextStyle(fontSize: 13, height: 1.35, color: GridColors.textSecondary),
                 ),
               ],
               const SizedBox(height: 24),

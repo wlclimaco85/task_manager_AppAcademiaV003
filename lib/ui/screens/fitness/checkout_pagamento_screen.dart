@@ -68,26 +68,26 @@ class _CheckoutPagamentoScreenState extends State<CheckoutPagamentoScreen> {
                                 fontWeight: FontWeight.bold)),
                         const SizedBox(height: 12),
                         Text(widget.profissional.nome,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 color: GridColors.textPrimary,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold)),
                         Text('Personal Trainer',
                             style: TextStyle(
                                 color: GridColors.textPrimary.withOpacity(0.6), fontSize: 13)),
-                        const Divider(color: GridColors.divider, height: 30),
+                        Divider(color: GridColors.divider, height: 30),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text('Plano: ${widget.pacote.titulo}',
-                                style: const TextStyle(color: GridColors.textPrimary)),
+                                style: TextStyle(color: GridColors.textPrimary)),
                             Text('R\$ ${widget.pacote.precoMensal.toStringAsFixed(2)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                     color: GridColors.textPrimary, fontWeight: FontWeight.bold)),
                           ],
                         ),
                         const SizedBox(height: 10),
-                        const Row(
+                        Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text('Taxa de Serviço',
@@ -96,11 +96,11 @@ class _CheckoutPagamentoScreenState extends State<CheckoutPagamentoScreen> {
                                 style: TextStyle(color: CustomColors.primaryGreen)),
                           ],
                         ),
-                        const Divider(color: GridColors.divider, height: 30),
+                        Divider(color: GridColors.divider, height: 30),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Total a Pagar',
+                            Text('Total a Pagar',
                                 style: TextStyle(
                                     color: GridColors.textPrimary,
                                     fontSize: 16,
@@ -117,7 +117,7 @@ class _CheckoutPagamentoScreenState extends State<CheckoutPagamentoScreen> {
                   ),
                   const SizedBox(height: 30),
                   
-                  const Text('Método de Pagamento',
+                  Text('Método de Pagamento',
                       style: TextStyle(
                           color: GridColors.textPrimary,
                           fontSize: 18,
@@ -146,7 +146,7 @@ class _CheckoutPagamentoScreenState extends State<CheckoutPagamentoScreen> {
                                   ? CustomColors.primaryGreen
                                   : GridColors.textMuted),
                           const SizedBox(width: 12),
-                          const Text('Pix Copia e Cola',
+                          Text('Pix Copia e Cola',
                               style: TextStyle(color: GridColors.textPrimary, fontSize: 16)),
                           const Spacer(),
                           if (_metodoPagamento == 0)
@@ -180,7 +180,7 @@ class _CheckoutPagamentoScreenState extends State<CheckoutPagamentoScreen> {
                                   ? CustomColors.primaryGreen
                                   : GridColors.textMuted),
                           const SizedBox(width: 12),
-                          const Text('Cartão de Crédito',
+                          Text('Cartão de Crédito',
                               style: TextStyle(color: GridColors.textPrimary, fontSize: 16)),
                           const Spacer(),
                           if (_metodoPagamento == 1)
@@ -207,7 +207,7 @@ class _CheckoutPagamentoScreenState extends State<CheckoutPagamentoScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Pague com Pix para liberação imediata',
+        Text('Pague com Pix para liberação imediata',
             style: TextStyle(color: GridColors.textSecondary)),
         const SizedBox(height: 16),
         Container(
@@ -252,10 +252,10 @@ class _CheckoutPagamentoScreenState extends State<CheckoutPagamentoScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TextField(
-          style: const TextStyle(color: GridColors.textPrimary),
+          style: TextStyle(color: GridColors.textPrimary),
           decoration: InputDecoration(
             labelText: 'Número do Cartão',
-            labelStyle: const TextStyle(color: GridColors.textSecondary),
+            labelStyle: TextStyle(color: GridColors.textSecondary),
             filled: true,
             fillColor: GridColors.card,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -266,10 +266,10 @@ class _CheckoutPagamentoScreenState extends State<CheckoutPagamentoScreen> {
           children: [
             Expanded(
               child: TextField(
-                style: const TextStyle(color: GridColors.textPrimary),
+                style: TextStyle(color: GridColors.textPrimary),
                 decoration: InputDecoration(
                   labelText: 'Validade (MM/AA)',
-                  labelStyle: const TextStyle(color: GridColors.textSecondary),
+                  labelStyle: TextStyle(color: GridColors.textSecondary),
                   filled: true,
                   fillColor: GridColors.card,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -279,10 +279,10 @@ class _CheckoutPagamentoScreenState extends State<CheckoutPagamentoScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: TextField(
-                style: const TextStyle(color: GridColors.textPrimary),
+                style: TextStyle(color: GridColors.textPrimary),
                 decoration: InputDecoration(
                   labelText: 'CVV',
-                  labelStyle: const TextStyle(color: GridColors.textSecondary),
+                  labelStyle: TextStyle(color: GridColors.textSecondary),
                   filled: true,
                   fillColor: GridColors.card,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -293,10 +293,10 @@ class _CheckoutPagamentoScreenState extends State<CheckoutPagamentoScreen> {
         ),
         const SizedBox(height: 12),
         TextField(
-          style: const TextStyle(color: GridColors.textPrimary),
+          style: TextStyle(color: GridColors.textPrimary),
           decoration: InputDecoration(
             labelText: 'Nome no Cartão',
-            labelStyle: const TextStyle(color: GridColors.textSecondary),
+            labelStyle: TextStyle(color: GridColors.textSecondary),
             filled: true,
             fillColor: GridColors.card,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -337,7 +337,7 @@ class _CheckoutPagamentoScreenState extends State<CheckoutPagamentoScreen> {
           content: Text(
             'Pagamento Aprovado!\n\nVocê contratou o personal ${widget.profissional.nome} com sucesso. Os dados de contato e ficha estarão disponíveis em instantes.',
             textAlign: TextAlign.center,
-            style: const TextStyle(color: GridColors.textPrimary),
+            style: TextStyle(color: GridColors.textPrimary),
           ),
           actions: [
             TextButton(

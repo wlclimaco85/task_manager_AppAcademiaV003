@@ -1284,7 +1284,7 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
               const SizedBox(height: 6),
               Text(
                 _rangeSubtitle,
-                style: const TextStyle(
+                style: TextStyle(
                   color: context.appTextSecondary,
                   fontSize: 12,
                 ),
@@ -1349,7 +1349,7 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
                       child: Text(
                         label,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: context.appTextSecondary,
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -1590,7 +1590,7 @@ class _HeroCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: GridColors.primary,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
             color: GridColors.shadow,
             blurRadius: 18,
@@ -3093,7 +3093,7 @@ class _MuralCardState extends State<_MuralCard> {
                             const SizedBox(width: 8),
                             Text(
                               _formatarDataHora(post.criadoEm),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: context.appTextSecondary,
                                 fontSize: 11,
                               ),
@@ -3107,7 +3107,7 @@ class _MuralCardState extends State<_MuralCard> {
                   ),
               const Divider(height: 20),
               if (!podePostar)
-                const Text(
+                Text(
                   'Ative a participacao na comunidade para poder postar no mural.',
                   style: TextStyle(color: context.appTextSecondary, fontSize: 12),
                 )
@@ -3136,7 +3136,7 @@ class _MuralCardState extends State<_MuralCard> {
                   children: [
                     Text(
                       '$caracteresRestantes caracteres restantes',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: context.appTextSecondary,
                         fontSize: 12,
                       ),
@@ -3346,7 +3346,7 @@ class _ReminderLine extends StatelessWidget {
               child: Text(
                 label,
                 style: concluido
-                    ? const TextStyle(
+                    ? TextStyle(
                         color: context.appTextSecondary,
                         decoration: TextDecoration.lineThrough,
                       )

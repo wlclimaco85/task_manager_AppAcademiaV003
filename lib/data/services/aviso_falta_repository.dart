@@ -86,7 +86,7 @@ class AvisoFaltaRepository {
         id: aviso.id,
         titulo: isAlunoAvisando
             ? '🔔 $remetenteNome avisou que não vai treinar'
-            : '😔 Seu personal não poderá atender hoje',
+            : '😔 Personal $remetenteNome não poderá atender hoje',
         corpo: isAlunoAvisando
             ? '$remetenteNome avisou falta para ${_formatarData(dataAula)}${horario != null ? " às $horario" : ""}.'
                 '${motivo.isNotEmpty ? " Motivo: $motivo" : ""}'

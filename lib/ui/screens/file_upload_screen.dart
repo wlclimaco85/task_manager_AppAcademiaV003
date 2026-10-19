@@ -144,7 +144,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: nomeController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: "Nome do Arquivo",
                       labelStyle: TextStyle(color: GridColors.textSecondary),
                       border: OutlineInputBorder(
@@ -267,12 +267,12 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
             ),
             ElevatedButton.icon(
               icon: _isUploading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
                           strokeWidth: 2, color: GridColors.textPrimary))
-                  : const Icon(Icons.upload, color: GridColors.textPrimary),
+                  : Icon(Icons.upload, color: GridColors.textPrimary),
               label: const Text("Enviar"),
               style: ElevatedButton.styleFrom(
                 backgroundColor: GridColors.success,
@@ -347,7 +347,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
           children: [
             Container(
               height: MediaQuery.of(context).size.height * 0.85,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: GridColors.card,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(20),
@@ -376,14 +376,14 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                             fileName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: GridColors.textPrimary,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close,
+                          icon: Icon(Icons.close,
                               color: GridColors.textPrimary),
                           onPressed: () => Navigator.pop(context),
                         )
@@ -529,7 +529,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
           style:
               TextStyle(color: GridColors.primary, fontWeight: FontWeight.bold),
         ),
-        content: const Text(
+        content: Text(
           "Deseja realmente excluir este documento?",
           style: TextStyle(color: GridColors.textSecondary),
         ),
@@ -579,7 +579,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(msg,
-                  style: const TextStyle(color: GridColors.textPrimary)),
+                  style: TextStyle(color: GridColors.textPrimary)),
             ),
           ],
         ),
@@ -674,7 +674,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
       decoration: BoxDecoration(
         color: GridColors.card,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
               color: GridColors.shadow, blurRadius: 6, offset: Offset(0, 2))
         ],
@@ -689,7 +689,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
           trailing: AnimatedRotation(
             turns: _expandedTiles.contains(id) ? 0.5 : 0,
             duration: const Duration(milliseconds: 200),
-            child: const Icon(Icons.keyboard_arrow_down,
+            child: Icon(Icons.keyboard_arrow_down,
                 color: GridColors.textSecondary),
           ),
           onExpansionChanged: (expanded) {
@@ -716,7 +716,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                   const SizedBox(width: 8),
                   Text(
                     nome,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: GridColors.textSecondary),
                   ),
@@ -734,7 +734,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                           borderRadius: BorderRadius.circular(12)),
                       child: Text(
                         "$naoLidos não lidos",
-                        style: const TextStyle(
+                        style: TextStyle(
                             color: GridColors.textPrimary, fontSize: 12),
                       ),
                     ),
@@ -746,7 +746,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                         borderRadius: BorderRadius.circular(12)),
                     child: Text(
                       "$total docs",
-                      style: const TextStyle(
+                      style: TextStyle(
                           color: GridColors.textSecondary, fontSize: 12),
                     ),
                   ),
@@ -760,7 +760,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
               crossFadeState: arquivos.isEmpty
                   ? CrossFadeState.showFirst
                   : CrossFadeState.showSecond,
-              firstChild: const Padding(
+              firstChild: Padding(
                 padding: EdgeInsets.all(12),
                 child: Text(
                   "Nenhum arquivo disponível",
@@ -799,7 +799,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                       decoration: BoxDecoration(
                         color: GridColors.card,
                         borderRadius: BorderRadius.circular(10),
-                        boxShadow: const [
+                        boxShadow: [
                           BoxShadow(color: GridColors.shadow, blurRadius: 4)
                         ],
                       ),
@@ -891,7 +891,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
             padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
             child: TextField(
               onChanged: (v) => setState(() => _searchQuery = v),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Buscar pasta ou arquivo…',
                 prefixIcon: Icon(Icons.search, color: GridColors.secondary),
                 filled: true,
@@ -914,7 +914,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                     child:
                         CircularProgressIndicator(color: GridColors.secondary))
                 : filtrados.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text("Nenhum diretório/arquivo encontrado",
                             style: TextStyle(color: GridColors.textPrimary)))
                     : ListView.builder(
@@ -945,7 +945,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
         color: GridColors.card,
         border: Border.all(color: GridColors.primary, width: 2),
         shape: BoxShape.circle,
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(color: GridColors.shadow, blurRadius: 8, spreadRadius: 2)
         ],
       ),

@@ -65,7 +65,7 @@ class TaskManagerApp extends StatelessWidget {
           error: GridColors.error,
           brightness: Brightness.light,
         ),
-        appBarTheme: const AppBarTheme(
+        appBarTheme: AppBarTheme(
           backgroundColor: GridColors.card,
           foregroundColor: GridColors.textPrimary,
           elevation: 0,
@@ -82,7 +82,7 @@ class TaskManagerApp extends StatelessWidget {
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: GridColors.divider, width: 1),
+            side: BorderSide(color: GridColors.divider, width: 1),
           ),
           margin: EdgeInsets.zero,
         ),
@@ -91,17 +91,17 @@ class TaskManagerApp extends StatelessWidget {
           fillColor: GridColors.inputBackground,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-          hintStyle: const TextStyle(
+          hintStyle: TextStyle(
             color: GridColors.textMuted,
             fontSize: 14,
           ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: GridColors.inputBorder),
+            borderSide: BorderSide(color: GridColors.inputBorder),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: GridColors.inputBorder),
+            borderSide: BorderSide(color: GridColors.inputBorder),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),

@@ -200,12 +200,12 @@ Widget buildTextField(
       controller: c,
       readOnly: readOnly,
       keyboardType: type,
-      style: const TextStyle(color: GridColors.textSecondary, fontSize: 16),
+      style: TextStyle(color: GridColors.textSecondary, fontSize: 16),
       decoration: InputDecoration(
         labelText: label,
         filled: true,
         fillColor: GridColors.inputBackground,
-        labelStyle: const TextStyle(color: GridColors.textSecondary),
+        labelStyle: TextStyle(color: GridColors.textSecondary),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
       validator: (v) {
@@ -229,12 +229,12 @@ Widget buildTextFieldMasked(
       controller: c,
       keyboardType: type,
       inputFormatters: mask != null ? [mask] : [],
-      style: const TextStyle(color: GridColors.textSecondary, fontSize: 16),
+      style: TextStyle(color: GridColors.textSecondary, fontSize: 16),
       decoration: InputDecoration(
         labelText: label,
         filled: true,
         fillColor: GridColors.inputBackground,
-        labelStyle: const TextStyle(color: GridColors.textSecondary),
+        labelStyle: TextStyle(color: GridColors.textSecondary),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
       validator: (v) {

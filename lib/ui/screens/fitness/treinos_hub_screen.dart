@@ -152,7 +152,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Toque em "Prescrever Treino" para criar uma nova rotina.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 13, color: GridColors.textSecondary),
@@ -180,7 +180,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
       color: GridColors.card,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: GridColors.divider),
+        side: BorderSide(color: GridColors.divider),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -201,7 +201,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                       const SizedBox(height: 4),
                       Text(
                         'Aluno: ${plano.alunoNome} • Objetivo: ${plano.objetivo}',
-                        style: const TextStyle(color: GridColors.textSecondary, fontSize: 13),
+                        style: TextStyle(color: GridColors.textSecondary, fontSize: 13),
                       ),
                     ],
                   ),
@@ -223,10 +223,10 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                 ),
               ],
             ),
-            const Divider(height: 24, color: GridColors.divider),
+            Divider(height: 24, color: GridColors.divider),
 
             // Divisões da Ficha (Treino A, Treino B, Treino C)
-            const Text(
+            Text(
               'Divisões de Treino:',
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: GridColors.textSecondary),
             ),
@@ -259,7 +259,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                             Wrap(
                               spacing: 6, runSpacing: 2,
                               children: [
-                                Text('${div.exercicios.length} exercícios', style: const TextStyle(fontSize: 11, color: GridColors.textSecondary)),
+                                Text('${div.exercicios.length} exercícios', style: TextStyle(fontSize: 11, color: GridColors.textSecondary)),
                                 const Text('• Toque p/ ver ficha', style: TextStyle(fontSize: 11, color: GridColors.primary, fontWeight: FontWeight.bold)),
                               ],
                             ),
@@ -362,7 +362,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Inicie um treino ao vivo. Todas as repetições e cargas serão salvas localmente mesmo sem internet.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 13, color: GridColors.textSecondary),
@@ -387,7 +387,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
           color: GridColors.card,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: GridColors.divider),
+            side: BorderSide(color: GridColors.divider),
           ),
           child: ListTile(
             contentPadding: const EdgeInsets.all(14),
@@ -507,7 +507,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                         ),
                         Text(
                           '${plano.titulo} • Aluno: ${plano.alunoNome}',
-                          style: const TextStyle(color: GridColors.textSecondary, fontSize: 12),
+                          style: TextStyle(color: GridColors.textSecondary, fontSize: 12),
                         ),
                       ],
                     ),
@@ -564,7 +564,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                 ),
               ),
               const SizedBox(height: 14),
-              const Text(
+              Text(
                 'Ficha Completa de Exercícios:',
                 style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: GridColors.textSecondary),
               ),
@@ -572,7 +572,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
               // Lista didática e autoexplicativa dos exercícios
               Expanded(
                 child: div.exercicios.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(
                           'Nenhum exercício cadastrado nesta divisão.',
                           style: TextStyle(color: GridColors.textSecondary),
@@ -684,7 +684,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                                         Expanded(
                                           child: Text(
                                             ex.observacoes!,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 11,
                                               fontStyle: FontStyle.italic,
                                               color: GridColors.textSecondary,
@@ -703,7 +703,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                                       fontWeight: FontWeight.w600)),
                                 if (ex.exerciciosAlternativos.isNotEmpty)
                                   Text('Máquina ocupada? ${ex.exerciciosAlternativos.join(' ou ')}',
-                                    style: const TextStyle(color: GridColors.textSecondary)),
+                                    style: TextStyle(color: GridColors.textSecondary)),
                               ],
                             ),
                           );

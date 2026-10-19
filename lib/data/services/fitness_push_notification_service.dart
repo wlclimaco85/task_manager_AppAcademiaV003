@@ -152,6 +152,101 @@ class FitnessPushNotificationService {
     );
   }
 
+  /// 5. Notificação de Mensalidade Vencendo / Vencida
+  Future<void> notificarMensalidadeVencida({
+    required String personalNome,
+    required int diaVencimento,
+  }) async {
+    await agendarNotificacao(
+      FitnessNotificationItem(
+        id: 'mensalidade_vencida_${DateTime.now().month}_${DateTime.now().year}',
+        titulo: '💳 Mensalidade Vencendo Hoje',
+        corpo: 'Lembrete: sua mensalidade com o personal $personalNome vence no dia $diaVencimento.',
+        dataHora: DateTime.now(),
+        tipo: 'mensalidade_vencendo',
+      ),
+    );
+  }
+
+  /// 6. Notificação de Treino Atualizado / Troca de Treino
+  Future<void> notificarTreinoAtualizado({
+    required String personalNome,
+    required String treinoTitulo,
+  }) async {
+    await agendarNotificacao(
+      FitnessNotificationItem(
+        id: 'treino_atualizado_${DateTime.now().millisecondsSinceEpoch}',
+        titulo: '🔄 Treino Atualizado pelo Personal',
+        corpo: 'O Personal $personalNome atualizou a rotina "$treinoTitulo". Acesse para ver as novas séries e cargas.',
+        dataHora: DateTime.now(),
+        tipo: 'treino_atualizado',
+      ),
+    );
+  }
+
+  /// 7. Notificação de Meta do Dia não Cumprida
+  Future<void> notificarMetaDiaNaoCumprida() async {
+    await agendarNotificacao(
+      FitnessNotificationItem(
+        id: 'meta_nao_cumprida_${DateTime.now().day}_${DateTime.now().month}',
+        titulo: '😴 Você não treinou hoje',
+        corpo: 'Que tal descansar bem esta noite para voltar com força total no próximo treino?',
+        dataHora: DateTime.now(),
+        tipo: 'meta_dia_nao_cumprida',
+      ),
+    );
+  }
+
+  /// 8. Aviso Geral do Personal para o Aluno
+  Future<void> notificarAvisoPersonal({
+    required String personalNome,
+    required String aviso,
+  }) async {
+    await agendarNotificacao(
+      FitnessNotificationItem(
+        id: 'aviso_personal_${DateTime.now().millisecondsSinceEpoch}',
+        titulo: '📣 Recado do Personal $personalNome',
+        corpo: aviso,
+        dataHora: DateTime.now(),
+        tipo: 'aviso_personal',
+      ),
+    );
+  }
+
+  /// 9. Notificação para o Personal: Aluno Finalizou o Treino
+  Future<void> notificarAlunoFinalizouTreino({
+    required String alunoNome,
+    required String treinoNome,
+    required double tonelagemKg,
+  }) async {
+    await agendarNotificacao(
+      FitnessNotificationItem(
+        id: 'aluno_finalizou_${DateTime.now().millisecondsSinceEpoch}',
+        titulo: '💪 $alunoNome Concluiu o Treino!',
+        corpo: '$alunoNome finalizou $treinoNome levantando ${tonelagemKg.toStringAsFixed(0)} kg.',
+        dataHora: DateTime.now(),
+        tipo: 'aluno_treino_finalizado',
+      ),
+    );
+  }
+
+  /// 10. Notificação para o Personal: Aluno comentou no treino
+  Future<void> notificarAlunoComentarioTreino({
+    required String alunoNome,
+    required String treinoNome,
+    required String comentario,
+  }) async {
+    await agendarNotificacao(
+      FitnessNotificationItem(
+        id: 'aluno_comentario_${DateTime.now().millisecondsSinceEpoch}',
+        titulo: '💬 Novo Feedback de $alunoNome',
+        corpo: 'Comentário sobre $treinoNome: "$comentario"',
+        dataHora: DateTime.now(),
+        tipo: 'aluno_comentario_treino',
+      ),
+    );
+  }
+
   /// Grava a notificação no repositório local
   Future<void> agendarNotificacao(FitnessNotificationItem item) async {
     final lista = await getNotificacoes();

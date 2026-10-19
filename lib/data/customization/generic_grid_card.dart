@@ -928,13 +928,13 @@ class _GenericMobileGridScreenState<T>
         onPrimary: GridColors.textPrimary,
         onSecondary: GridColors.textPrimary,
       ),
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: GridColors.primary,
         foregroundColor: GridColors.textPrimary,
         centerTitle: false,
         elevation: 2,
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: GridColors.secondary,
         foregroundColor: GridColors.textPrimary,
       ),
@@ -968,7 +968,7 @@ class _GenericMobileGridScreenState<T>
       ),
       dividerColor: GridColors.divider,
       cardColor: GridColors.card,
-      snackBarTheme: const SnackBarThemeData(
+      snackBarTheme: SnackBarThemeData(
         backgroundColor: GridColors.secondary,
         contentTextStyle: TextStyle(color: GridColors.textPrimary),
       ),

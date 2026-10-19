@@ -89,7 +89,7 @@ class BaixaDialogBase {
       padding: kDialogContentPadding,
       child: Row(
         children: [
-          const Icon(Icons.calendar_today,
+          Icon(Icons.calendar_today,
               size: 20, color: GridColors.inputBorder),
           const SizedBox(width: 8),
           const Text('Data da Baixa:'),

@@ -41,28 +41,34 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
 
   void _atualizar() {
     final s = AuthUtility.userInfo;
-    final chave = s.token == null || s.token!.isEmpty
-        ? null
-        : '${s.login?.id}:${s.token}';
+    final chave = '${s.login?.id ?? s.data?.id ?? 'usuario'}:${s.token ?? ''}';
     if (_sessaoCarregada == chave) return;
     _sessaoCarregada = chave;
-    if (chave != null && s.login?.id != null) {
-      PerfilContaService().carregar().catchError(
-            (Object _) => <String, dynamic>{},
-          );
-      _verificarPermissoesAluno();
-      _carregarIndicadores(chave);
-    }
+    PerfilContaService().carregar().catchError((Object _) => <String, dynamic>{});
+    _verificarPermissoesAluno();
+    _carregarIndicadores(chave);
   }
 
   Future<void> _carregarIndicadores(String chaveSessao) async {
     final ehAluno = !podeGerenciarAlunos(AuthUtility.userInfo);
     var incompleto = false;
     if (ehAluno) {
-      await CadastroInicialService.buscarRemoto();
-      final dados = await CadastroInicialService.carregar();
-      final pendencias = CadastroInicialService.pendencias(dados);
+      // 1. Carrega dados locais imediatamente (offline-first)
+      var dados = await CadastroInicialService.carregar();
+      var pendencias = CadastroInicialService.pendencias(dados);
       incompleto = pendencias.isNotEmpty;
+      if (mounted && _sessaoCarregada == chaveSessao) {
+        setState(() => _cadastroIncompleto = incompleto);
+      }
+
+      // 2. Tenta atualizar remotamente em segundo plano sem bloquear a UI
+      try {
+        await CadastroInicialService.buscarRemoto().timeout(const Duration(seconds: 3));
+        dados = await CadastroInicialService.carregar();
+        pendencias = CadastroInicialService.pendencias(dados);
+        incompleto = pendencias.isNotEmpty;
+      } catch (_) {}
+
       if (incompleto) {
         await FitnessPushNotificationService().agendarNotificacao(
           FitnessNotificationItem(
@@ -196,8 +202,11 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
   Widget build(BuildContext context) => ValueListenableBuilder<LoginModel>(
         valueListenable: AuthUtility.session,
         builder: (context, sessao, _) {
-          if (sessao.token == null || sessao.token!.isEmpty)
-            return widget.child;
+          final temUsuario = sessao.login != null ||
+              sessao.data != null ||
+              sessao.perfilConta != null ||
+              (sessao.token != null && sessao.token!.isNotEmpty);
+          if (!temUsuario) return widget.child;
           return Column(
             children: [
               Material(

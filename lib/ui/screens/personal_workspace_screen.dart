@@ -117,7 +117,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                   color: CustomColors.primaryGreen, size: 22),
             ),
             const SizedBox(width: 12),
-            const Column(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -141,7 +141,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: GridColors.textSecondary),
+            icon: Icon(Icons.refresh, color: GridColors.textSecondary),
             onPressed: _carregarDados,
             tooltip: 'Atualizar Dados',
           ),
@@ -189,7 +189,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
           children: [
             Text(
               'Total de Alunos (${_alunos.length})',
-              style: const TextStyle(
+              style: TextStyle(
                 color: GridColors.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -265,7 +265,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                   children: [
                     Text(
                       aluno.nome,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: GridColors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -274,7 +274,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                     const SizedBox(height: 2),
                     Text(
                       [aluno.objetivo, aluno.nivel].where((v)=>v.isNotEmpty).join(' • '),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: GridColors.textSecondary,
                         fontSize: 13,
                       ),
@@ -294,7 +294,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                 ),
               ),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, color: GridColors.textSecondary),
+                icon: Icon(Icons.more_vert, color: GridColors.textSecondary),
                 color: GridColors.card,
                 onSelected: (val) {
                   if (val == 'historico_treinos') {
@@ -326,8 +326,8 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                   }
                 },
                 itemBuilder: (ctx) => [
-                  const PopupMenuItem(value:'editar_aluno',child:Text('Editar frequência e cobrança',style:TextStyle(color:GridColors.textPrimary))),
-                  const PopupMenuItem(
+                  PopupMenuItem(value:'editar_aluno',child:Text('Editar frequência e cobrança',style:TextStyle(color:GridColors.textPrimary))),
+                  PopupMenuItem(
                     value: 'historico_treinos',
                     child: Row(
                       children: [
@@ -338,32 +338,32 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'montar_treino',
                     child: Text('Montar / Atualizar Treino',
                         style: TextStyle(color: GridColors.textPrimary)),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'dieta_suplementos',
                     child: Text('Ver dieta e suplementação',
                         style: TextStyle(color: GridColors.textPrimary)),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'clonar_treino',
                     child: Text('Clonar treino de outro aluno',
                         style: TextStyle(color: GridColors.textPrimary)),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'alterar_validade',
                     child: Text('Definir Validade da Ficha',
                         style: TextStyle(color: GridColors.textPrimary)),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'agendar_avaliacao',
                     child: Text('Agendar nova avaliação física',
                         style: TextStyle(color: GridColors.textPrimary)),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'avaliacao',
                     child: Text('Abrir avaliação física',
                         style: TextStyle(color: GridColors.textPrimary)),
@@ -402,7 +402,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                     children: [
                       Text(
                         aluno.treinoAtualNome ?? 'Sem ficha ativa',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: GridColors.textPrimary,
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
@@ -442,7 +442,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
             children: [
               Expanded(child:InkWell(onTap:()=>_modalNovoAluno(context,aluno:aluno),
                 child:Column(children:[Text(aluno.resumoAulasContratadas,style:const TextStyle(color:GridColors.secondaryDark,fontWeight:FontWeight.bold)),
-                  const Text('Contratada • editar',style:TextStyle(color:GridColors.textSecondary,fontSize:11))]))),
+                  Text('Contratada • editar',style:TextStyle(color:GridColors.textSecondary,fontSize:11))]))),
               const SizedBox(width: 8),
               _buildMiniMetrica(
                   'Tonelagem',
@@ -496,7 +496,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
           ),
           if (aluno.feedbacks.isNotEmpty) ...[
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'Último Feedback do Aluno no Treino:',
               style: TextStyle(
                 color: GridColors.textSecondary,
@@ -528,7 +528,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                       ),
                       Text(
                         'RPE ${aluno.feedbacks.first.rpe}/10 • ${aluno.feedbacks.first.data}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: GridColors.textSecondary,
                           fontSize: 11,
                         ),
@@ -538,7 +538,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                   const SizedBox(height: 4),
                   Text(
                     '"${aluno.feedbacks.first.comentario}"',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: GridColors.textSecondary,
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
@@ -596,7 +596,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
             const SizedBox(height: 2),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 color: GridColors.textSecondary,
                 fontSize: 10,
               ),
@@ -618,7 +618,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Aulas e Consultorias',
               style: TextStyle(
                 color: GridColors.textPrimary,
@@ -689,7 +689,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
               Expanded(
                 child: Text(
                   agenda.alunoNome,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: GridColors.textPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
@@ -718,13 +718,13 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
           const SizedBox(height: 10),
           Row(
             children: [
-              const Icon(Icons.location_on_outlined,
+              Icon(Icons.location_on_outlined,
                   size: 16, color: GridColors.textSecondary),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   'Academia: ${agenda.academiaNome}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: GridColors.textSecondary,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -736,13 +736,13 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
           const SizedBox(height: 6),
           Row(
             children: [
-              const Icon(Icons.fitness_center_outlined,
+              Icon(Icons.fitness_center_outlined,
                   size: 16, color: GridColors.textSecondary),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   'Tipo: ${agenda.tipoAula}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: GridColors.textSecondary,
                     fontSize: 12,
                   ),
@@ -840,7 +840,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
           ],
         ),
         const SizedBox(height: 20),
-        const Text(
+        Text(
           'Cobranças dos alunos',
           style: TextStyle(
             color: GridColors.textPrimary,
@@ -879,7 +879,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
             const SizedBox(height: 2),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 color: GridColors.textSecondary,
                 fontSize: 11,
               ),
@@ -915,7 +915,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
               children: [
                 Text(
                   aluno.nome,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: GridColors.textPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
@@ -924,7 +924,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                 const SizedBox(height: 4),
                 Text(
                   'Vencimento: Dia ${aluno.diaVencimento} • Valor: R\$ ${aluno.valorMensalidade.toStringAsFixed(2)}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: GridColors.textSecondary,
                     fontSize: 12,
                   ),
@@ -964,7 +964,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                       const SizedBox(width: 8),
                       Text(
                         'Pago em: ${aluno.dataUltimoPagamento}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: GridColors.textSecondary,
                           fontSize: 11,
                         ),
@@ -1126,7 +1126,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
       ),
       child: Text(
         msg,
-        style: const TextStyle(color: GridColors.textSecondary, fontSize: 13),
+        style: TextStyle(color: GridColors.textSecondary, fontSize: 13),
       ),
     );
   }
@@ -1157,7 +1157,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
               children: [
                 Text(
                   titulo,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: GridColors.textPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -1166,7 +1166,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                 const SizedBox(height: 2),
                 Text(
                   subtitulo,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: GridColors.textSecondary,
                     fontSize: 12,
                   ),
@@ -1223,7 +1223,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
             children: [
               Text(
                 'Definir Vigência do Treino: ${aluno.nome}',
-                style: const TextStyle(
+                style: TextStyle(
                   color: GridColors.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -1232,8 +1232,8 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
               const SizedBox(height: 16),
               TextField(
                 controller: treinoController,
-                style: const TextStyle(color: GridColors.textPrimary),
-                decoration: const InputDecoration(
+                style: TextStyle(color: GridColors.textPrimary),
+                decoration: InputDecoration(
                   labelText: 'Nome da Ficha / Treino',
                   labelStyle: TextStyle(color: GridColors.textSecondary),
                   filled: true,
@@ -1241,7 +1241,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Tempo para Alerta de Mudança de Treino:',
                 style: TextStyle(
                   color: GridColors.textSecondary,
@@ -1346,7 +1346,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                         children: [
                           Text(
                             'Histórico de Treinos: ${aluno.nome}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: GridColors.textPrimary,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -1354,7 +1354,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                           ),
                           Text(
                             '${sessoes.length} sessões • Toque no treino para ver os exercícios e cargas',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: GridColors.textSecondary,
                               fontSize: 12,
                             ),
@@ -1363,14 +1363,14 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: GridColors.textSecondary),
+                      icon: Icon(Icons.close, color: GridColors.textSecondary),
                       onPressed: () => Navigator.pop(ctx),
                     ),
                   ],
                 ),
-                const Divider(color: GridColors.divider, height: 24),
+                Divider(color: GridColors.divider, height: 24),
                 Expanded(
-                  child: sessoes.isEmpty ? const Center(child:Text('Nenhum treino concluído por este aluno.',style:TextStyle(color:GridColors.textSecondary))) : ListView.separated(
+                  child: sessoes.isEmpty ? Center(child:Text('Nenhum treino concluído por este aluno.',style:TextStyle(color:GridColors.textSecondary))) : ListView.separated(
                     itemCount: sessoes.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, idx) {
@@ -1414,7 +1414,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                                 Expanded(
                                   child: Text(
                                     sessao.divisaoNome,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: GridColors.textPrimary,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
@@ -1443,23 +1443,23 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                               padding: const EdgeInsets.only(top: 4),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.calendar_today,
+                                  Icon(Icons.calendar_today,
                                       size: 12, color: GridColors.textSecondary),
                                   const SizedBox(width: 4),
                                   Text(
                                     sessao.dataHoraInicio,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: GridColors.textSecondary,
                                       fontSize: 11,
                                     ),
                                   ),
                                   const SizedBox(width: 10),
-                                  const Icon(Icons.timer_outlined,
+                                  Icon(Icons.timer_outlined,
                                       size: 12, color: GridColors.textSecondary),
                                   const SizedBox(width: 4),
                                   Text(
                                     '$minutos min',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: GridColors.textSecondary,
                                       fontSize: 11,
                                     ),
@@ -1499,7 +1499,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                                       Expanded(
                                         child: Text(
                                           '"${sessao.feedbackAluno}"',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             color: GridColors.textSecondary,
                                             fontSize: 12,
                                             fontStyle: FontStyle.italic,
@@ -1516,7 +1516,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
+                                    Text(
                                       'Exercícios Realizados e Cargas:',
                                       style: TextStyle(
                                         color: GridColors.textPrimary,
@@ -1562,7 +1562,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
               Expanded(
                 child: Text(
                   ex.exercicioNome,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: GridColors.textPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
@@ -1605,14 +1605,14 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
                   children: [
                     Text(
                       'S${s.numero}: ',
-                      style: const TextStyle(
+                      style: TextStyle(
                           color: GridColors.textSecondary,
                           fontSize: 11,
                           fontWeight: FontWeight.w600),
                     ),
                     Text(
                       '${s.repeticoesRealizadas} reps',
-                      style: const TextStyle(
+                      style: TextStyle(
                           color: GridColors.textPrimary,
                           fontSize: 11,
                           fontWeight: FontWeight.bold),
@@ -1635,7 +1635,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
             const SizedBox(height: 6),
             Text(
               'Obs: ${ex.observacaoAluno}',
-              style: const TextStyle(
+              style: TextStyle(
                 color: GridColors.textSecondary,
                 fontSize: 11,
                 fontStyle: FontStyle.italic,
@@ -1675,7 +1675,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
           children: [
             Text(
               'Remarcar Aula: ${agenda.alunoNome}',
-              style: const TextStyle(
+              style: TextStyle(
                 color: GridColors.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -1684,8 +1684,8 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
             const SizedBox(height: 16),
             TextField(
               controller: horarioController,
-              style: const TextStyle(color: GridColors.textPrimary),
-              decoration: const InputDecoration(
+              style: TextStyle(color: GridColors.textPrimary),
+              decoration: InputDecoration(
                 labelText: 'Novo Horário (HH:MM)',
                 labelStyle: TextStyle(color: GridColors.textSecondary),
                 filled: true,
@@ -1695,8 +1695,8 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
             const SizedBox(height: 12),
             TextField(
               controller: academiaController,
-              style: const TextStyle(color: GridColors.textPrimary),
-              decoration: const InputDecoration(
+              style: TextStyle(color: GridColors.textPrimary),
+              decoration: InputDecoration(
                 labelText: 'Academia / Local',
                 labelStyle: TextStyle(color: GridColors.textSecondary),
                 filled: true,
@@ -1706,8 +1706,8 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
             const SizedBox(height: 12),
             TextField(
               controller: motivoController,
-              style: const TextStyle(color: GridColors.textPrimary),
-              decoration: const InputDecoration(
+              style: TextStyle(color: GridColors.textPrimary),
+              decoration: InputDecoration(
                 labelText: 'Motivo da Remarcação',
                 labelStyle: TextStyle(color: GridColors.textSecondary),
                 filled: true,
@@ -1772,7 +1772,7 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Agendar Nova Aula / Consultoria',
                 style: TextStyle(
                   color: GridColors.textPrimary,
@@ -1784,8 +1784,8 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
               DropdownButtonFormField<String>(
                 value: alunoSelecionado,
                 dropdownColor: GridColors.card,
-                style: const TextStyle(color: GridColors.textPrimary),
-                decoration: const InputDecoration(
+                style: TextStyle(color: GridColors.textPrimary),
+                decoration: InputDecoration(
                   labelText: 'Aluno',
                   labelStyle: TextStyle(color: GridColors.textSecondary),
                   filled: true,
@@ -1802,8 +1802,8 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
               const SizedBox(height: 12),
               TextField(
                 controller: academiaController,
-                style: const TextStyle(color: GridColors.textPrimary),
-                decoration: const InputDecoration(
+                style: TextStyle(color: GridColors.textPrimary),
+                decoration: InputDecoration(
                   labelText: 'Academia / Local',
                   labelStyle: TextStyle(color: GridColors.textSecondary),
                   filled: true,
@@ -1813,8 +1813,8 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
               const SizedBox(height: 12),
               TextField(
                 controller: horarioController,
-                style: const TextStyle(color: GridColors.textPrimary),
-                decoration: const InputDecoration(
+                style: TextStyle(color: GridColors.textPrimary),
+                decoration: InputDecoration(
                   labelText: 'Horário de Início (HH:MM)',
                   labelStyle: TextStyle(color: GridColors.textSecondary),
                   filled: true,
@@ -1882,13 +1882,13 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
       context: context,
       builder: (ctx) => SimpleDialog(
         backgroundColor: GridColors.card,
-        title: const Text('Copiar treino de qual aluno?',
+        title: Text('Copiar treino de qual aluno?',
             style: TextStyle(color: GridColors.textPrimary)),
         children: [
           for (final a in outros)
             SimpleDialogOption(
               onPressed: () => Navigator.pop(ctx, a),
-              child: Text(a.nome, style: const TextStyle(color: GridColors.textPrimary)),
+              child: Text(a.nome, style: TextStyle(color: GridColors.textPrimary)),
             ),
         ],
       ),

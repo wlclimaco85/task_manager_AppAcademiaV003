@@ -22,7 +22,7 @@ dependencies:
   qr: ^3.0.2
   image: ^4.3.0
   image_picker: ^1.0.1
-  font_awesome_flutter: ^10.5.0
+  font_awesome_flutter: ^11.0.0
   fluttertoast: ^8.2.2
   intl: 0.20.2
   simple_gesture_detector: ^0.2.0

@@ -76,7 +76,7 @@ class _SignUpFormScreenState extends State<SignUpFormScreen> {
     return MaterialApp(
       theme: ThemeData(
         useMaterial3: true, // Opcional: para usar Material 3
-        colorScheme: const ColorScheme.light(
+        colorScheme: ColorScheme.light(
           primary: GridColors.primary, // Vermelho da logo
           secondary: GridColors.secondary, // Verde da logo
           surface: GridColors.card, // Verde para fundo
@@ -86,7 +86,7 @@ class _SignUpFormScreenState extends State<SignUpFormScreen> {
           error: GridColors.error, // Vermelho para errors
         ),
         // Você também pode personalizar componentes específicos
-        appBarTheme: const AppBarTheme(
+        appBarTheme: AppBarTheme(
           backgroundColor: GridColors.primary,
           foregroundColor: GridColors.textPrimary,
         ),

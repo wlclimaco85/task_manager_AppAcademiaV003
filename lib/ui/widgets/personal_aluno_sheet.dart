@@ -171,10 +171,10 @@ class _PersonalAlunoSheetState extends State<PersonalAlunoSheet> {
               keyboardType: numero
                   ? const TextInputType.numberWithOptions(decimal: true)
                   : TextInputType.text,
-              style: const TextStyle(color: GridColors.textPrimary),
+              style: TextStyle(color: GridColors.textPrimary),
               decoration: InputDecoration(
                   labelText: label,
-                  labelStyle: const TextStyle(color: GridColors.textSecondary),
+                  labelStyle: TextStyle(color: GridColors.textSecondary),
                   filled: true,
                   fillColor: GridColors.inputBackground),
               validator: validar ??
@@ -188,7 +188,7 @@ class _PersonalAlunoSheetState extends State<PersonalAlunoSheet> {
     return Theme(
         data: Theme.of(context).copyWith(
             brightness: Brightness.light,
-            colorScheme: const ColorScheme.light(
+            colorScheme: ColorScheme.light(
                 primary: CustomColors.primaryGreen,
                 surface: GridColors.card)),
         child: SafeArea(
@@ -205,18 +205,18 @@ class _PersonalAlunoSheetState extends State<PersonalAlunoSheet> {
                               edicao
                                   ? 'Editar aluno e cobrança'
                                   : 'Adicionar aluno',
-                              style: const TextStyle(
+                              style: TextStyle(
                                   color: GridColors.textPrimary,
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold)),
                           const SizedBox(height: 16),
                           if (!edicao) ...[
-                            const Text('O aluno já tem usuário no app?',
+                            Text('O aluno já tem usuário no app?',
                                 style: TextStyle(color: GridColors.textPrimary)),
                             Wrap(spacing: 12, children: [
                               for (final tem in [true, false])
                                 ChoiceChip(
-                                    labelStyle: const TextStyle(color: GridColors.textPrimary),
+                                    labelStyle: TextStyle(color: GridColors.textPrimary),
                                     backgroundColor: GridColors.inputBackground,
                                     selectedColor: CustomColors.primaryGreen.withValues(alpha: 0.15),
                                     checkmarkColor: CustomColors.primaryGreen,
@@ -244,10 +244,10 @@ class _PersonalAlunoSheetState extends State<PersonalAlunoSheet> {
                               ListTile(
                                   title: Text(r['nome']?.toString() ?? '',
                                       style:
-                                          const TextStyle(color: GridColors.textPrimary)),
+                                          TextStyle(color: GridColors.textPrimary)),
                                   subtitle: Text(
                                       [r['telefone'], r['email']].where((v) => v != null && v.toString().isNotEmpty).join(' • '),
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           color: GridColors.textSecondary)),
                                   trailing: Icon(
                                       _selecionado?['id'] == r['id']
@@ -331,7 +331,7 @@ class _PersonalAlunoSheetState extends State<PersonalAlunoSheet> {
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 12),
                                 child: Text('$_aulasPlanoMes aulas por mês incluídas no plano.',
-                                    style: const TextStyle(color: GridColors.textPrimary)),
+                                    style: TextStyle(color: GridColors.textPrimary)),
                               )
                             else
                             _campo(_frequencia,
@@ -349,7 +349,7 @@ class _PersonalAlunoSheetState extends State<PersonalAlunoSheet> {
                                   ? 'Informe um dia de 1 a 31.'
                                   : null;
                             }),
-                            const Text(
+                            Text(
                                 'A frequência contratada é independente da frequência real de treinos.',
                                 style: TextStyle(color: GridColors.textSecondary)),
                             const SizedBox(height: 12),

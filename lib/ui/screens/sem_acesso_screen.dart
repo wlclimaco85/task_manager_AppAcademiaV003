@@ -25,20 +25,20 @@ class SemAcessoScreen extends StatelessWidget {
               Text(
                 'Olá, $nome',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: GridColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Você ainda não possui permissão para acessar nenhuma tela do sistema.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: GridColors.textSecondary),
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Entre em contato com o responsável pelo seu cadastro para que ele conceda as permissões necessárias.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 15, color: GridColors.textSecondary),

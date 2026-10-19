@@ -175,7 +175,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         child: Container(
           decoration: BoxDecoration(
             color: context.appSurface,
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
                 color: GridColors.shadow,
                 blurRadius: 16,
@@ -483,7 +483,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Treinos, saude e evolucao do aluno',
                     style: TextStyle(color: context.appTextSecondary, fontSize: 13),
                   ),
@@ -646,7 +646,7 @@ class _TodaySummaryCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: GridColors.primary,
             borderRadius: BorderRadius.circular(24),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
                 color: GridColors.shadow,
                 blurRadius: 18,
@@ -985,7 +985,7 @@ class _EnhancedFitnessHubScreenState extends State<_EnhancedFitnessHubScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const Text(
+                        Text(
                           'Tente sincronizar novamente.',
                           style: TextStyle(color: context.appTextSecondary),
                         ),
@@ -1186,7 +1186,7 @@ class _EnhancedFitnessHubScreenState extends State<_EnhancedFitnessHubScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Arraste os cards na home e oculte o que nao fizer sentido para o aluno.',
                     style: TextStyle(color: context.appTextSecondary),
                   ),
@@ -1356,7 +1356,7 @@ class _EnhancedSyncStatusCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: GridColors.primary,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
             color: GridColors.shadow,
             blurRadius: 18,
@@ -1475,7 +1475,7 @@ class _HomeHealthCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     data.subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: context.appTextSecondary,
                       fontSize: 12,
                     ),

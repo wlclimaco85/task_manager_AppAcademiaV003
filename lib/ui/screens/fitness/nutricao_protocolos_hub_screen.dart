@@ -68,7 +68,7 @@ class _NutricaoProtocolosHubScreenState
           child: Text(
             'O aluno ainda não liberou o acesso a $area para o seu personal.',
             textAlign: TextAlign.center,
-            style: const TextStyle(color: GridColors.textSecondary),
+            style: TextStyle(color: GridColors.textSecondary),
           ),
         ),
       );
@@ -173,7 +173,7 @@ class _NutricaoProtocolosHubScreenState
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Protocolos Nutricionais',
                   style: TextStyle(
                       fontSize: 18,
@@ -182,7 +182,7 @@ class _NutricaoProtocolosHubScreenState
                 ),
                 Text(
                   '${_dietas.length} plano(s) cadastrado(s)',
-                  style: const TextStyle(color: GridColors.textSecondary, fontSize: 12),
+                  style: TextStyle(color: GridColors.textSecondary, fontSize: 12),
                 ),
               ],
             ),
@@ -216,7 +216,7 @@ class _NutricaoProtocolosHubScreenState
         color: GridColors.card,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: GridColors.inputBorder),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(color: GridColors.shadow, blurRadius: 10, offset: Offset(0, 4)),
         ],
       ),
@@ -232,7 +232,7 @@ class _NutricaoProtocolosHubScreenState
                   children: [
                     Text(
                       dieta.titulo,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
                           color: GridColors.textPrimary),
@@ -240,7 +240,7 @@ class _NutricaoProtocolosHubScreenState
                     const SizedBox(height: 4),
                     Text(
                       '📅 Vigência: ${dieta.dataInicio} ${dieta.dataFim != null ? 'até ${dieta.dataFim}' : '(Em andamento)'}',
-                      style: const TextStyle(color: GridColors.textSecondary, fontSize: 12),
+                      style: TextStyle(color: GridColors.textSecondary, fontSize: 12),
                     ),
                   ],
                 ),
@@ -311,7 +311,7 @@ class _NutricaoProtocolosHubScreenState
           const SizedBox(height: 16),
 
           // Refeições da Dieta
-          const Text('Refeições Prescritas:',
+          Text('Refeições Prescritas:',
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: GridColors.textPrimary)),
           const SizedBox(height: 8),
 
@@ -338,7 +338,7 @@ class _NutricaoProtocolosHubScreenState
                 ),
                 subtitle: Text(
                   '${ref.itens.length} alimento(s) • P: ${ref.totalProteinas.toStringAsFixed(0)}g C: ${ref.totalCarboidratos.toStringAsFixed(0)}g G: ${ref.totalGorduras.toStringAsFixed(0)}g',
-                  style: const TextStyle(color: GridColors.textSecondary, fontSize: 11),
+                  style: TextStyle(color: GridColors.textSecondary, fontSize: 11),
                 ),
                 children: [
                   for (final item in ref.itens)
@@ -356,7 +356,7 @@ class _NutricaoProtocolosHubScreenState
                           ),
                           Text(
                             '${item.calorias.toStringAsFixed(0)} kcal (P:${item.proteinas.toStringAsFixed(0)}g C:${item.carboidratos.toStringAsFixed(0)}g G:${item.gorduras.toStringAsFixed(0)}g)',
-                            style: const TextStyle(fontSize: 11, color: GridColors.textSecondary),
+                            style: TextStyle(fontSize: 11, color: GridColors.textSecondary),
                           ),
                         ],
                       ),
@@ -378,7 +378,7 @@ class _NutricaoProtocolosHubScreenState
       children: [
         Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w700)),
         const SizedBox(height: 2),
-        Text(valor, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: GridColors.textPrimary)),
+        Text(valor, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: GridColors.textPrimary)),
       ],
     );
   }
@@ -397,7 +397,7 @@ class _NutricaoProtocolosHubScreenState
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Medicamentos & Ciclos',
                   style: TextStyle(
                       fontSize: 18,
@@ -406,7 +406,7 @@ class _NutricaoProtocolosHubScreenState
                 ),
                 Text(
                   '${_medicamentos.length} protocolo(s) de compostos',
-                  style: const TextStyle(color: GridColors.textSecondary, fontSize: 12),
+                  style: TextStyle(color: GridColors.textSecondary, fontSize: 12),
                 ),
               ],
             ),
@@ -443,7 +443,7 @@ class _NutricaoProtocolosHubScreenState
         color: GridColors.card,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: corDestaque.withValues(alpha: 0.3)),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(color: GridColors.shadow, blurRadius: 10, offset: Offset(0, 4)),
         ],
       ),
@@ -471,7 +471,7 @@ class _NutricaoProtocolosHubScreenState
                         children: [
                           Text(
                             med.nomeComposto,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w800,
                                 color: GridColors.textPrimary),
@@ -481,7 +481,7 @@ class _NutricaoProtocolosHubScreenState
                             style: TextStyle(color: corDestaque, fontSize: 12, fontWeight: FontWeight.w700),
                           ),
                           if (!med.visivelParaPersonal)
-                            const Padding(
+                            Padding(
                               padding: EdgeInsets.only(top: 4),
                               child: Row(
                                 children: [
@@ -520,17 +520,17 @@ class _NutricaoProtocolosHubScreenState
           const SizedBox(height: 10),
           Row(
             children: [
-              const Icon(Icons.calendar_today, size: 14, color: GridColors.textSecondary),
+              Icon(Icons.calendar_today, size: 14, color: GridColors.textSecondary),
               const SizedBox(width: 6),
               Text(
                 'Período: ${med.dataInicio} ${med.dataFim != null ? 'até ${med.dataFim}' : '(Contínuo)'}',
-                style: const TextStyle(color: GridColors.textSecondary, fontSize: 12),
+                style: TextStyle(color: GridColors.textSecondary, fontSize: 12),
               ),
               if (med.horario != null) ...[
                 const SizedBox(width: 12),
-                const Icon(Icons.access_time, size: 14, color: GridColors.textSecondary),
+                Icon(Icons.access_time, size: 14, color: GridColors.textSecondary),
                 const SizedBox(width: 4),
-                Text(med.horario!, style: const TextStyle(color: GridColors.textSecondary, fontSize: 12)),
+                Text(med.horario!, style: TextStyle(color: GridColors.textSecondary, fontSize: 12)),
               ],
               const Spacer(),
               TextButton.icon(
@@ -568,7 +568,7 @@ class _NutricaoProtocolosHubScreenState
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Suplementação Diária',
                   style: TextStyle(
                       fontSize: 18,
@@ -577,7 +577,7 @@ class _NutricaoProtocolosHubScreenState
                 ),
                 Text(
                   '${_suplementos.length} item(ns) em uso',
-                  style: const TextStyle(color: GridColors.textSecondary, fontSize: 12),
+                  style: TextStyle(color: GridColors.textSecondary, fontSize: 12),
                 ),
               ],
             ),
@@ -629,17 +629,17 @@ class _NutricaoProtocolosHubScreenState
               children: [
                 Text(
                   sup.nome,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: GridColors.textPrimary),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: GridColors.textPrimary),
                 ),
-                if(sup.marca.isNotEmpty)Text(sup.marca,style:const TextStyle(color:GridColors.textSecondary)),
-                if(sup.quantidadePote!=null)Text('Pote: '+sup.quantidadePote!.toString()+' '+sup.unidadePote,style:const TextStyle(color:GridColors.textSecondary)),
+                if(sup.marca.isNotEmpty)Text(sup.marca,style:TextStyle(color:GridColors.textSecondary)),
+                if(sup.quantidadePote!=null)Text('Pote: '+sup.quantidadePote!.toString()+' '+sup.unidadePote,style:TextStyle(color:GridColors.textSecondary)),
                 const SizedBox(height: 2),
                 Text(
                   '${sup.dosagem} • Horário: ${sup.horario}',
                   style: const TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.w700, fontSize: 12),
                 ),
                 if (sup.observacoes != null)
-                  Text(sup.observacoes!, style: const TextStyle(color: GridColors.textSecondary, fontSize: 11)),
+                  Text(sup.observacoes!, style: TextStyle(color: GridColors.textSecondary, fontSize: 11)),
               ],
             ),
           ),
@@ -659,11 +659,11 @@ class _NutricaoProtocolosHubScreenState
       padding: const EdgeInsets.all(16),
       children: [
         // Header
-        const Text(
+        Text(
           'Timeline de Evolução 360°',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: GridColors.textPrimary),
         ),
-        const Text(
+        Text(
           'Cruzamento temporal de Peso, % de Gordura, Dietas, Medicamentos e Suplementos',
           style: TextStyle(color: GridColors.textSecondary, fontSize: 12),
         ),
@@ -676,7 +676,7 @@ class _NutricaoProtocolosHubScreenState
             color: GridColors.card,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: GridColors.inputBorder),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(color: GridColors.shadow, blurRadius: 12, offset: Offset(0, 4)),
             ],
           ),
@@ -718,7 +718,7 @@ class _NutricaoProtocolosHubScreenState
                           reservedSize: 34,
                           interval: 20,
                           getTitlesWidget: (val, _) => Text('${val.toInt()}',
-                              style: const TextStyle(color: GridColors.textSecondary, fontSize: 10)),
+                              style: TextStyle(color: GridColors.textSecondary, fontSize: 10)),
                         ),
                       ),
                       rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -780,7 +780,7 @@ class _NutricaoProtocolosHubScreenState
         const SizedBox(height: 20),
 
         // Lista Cronológica de Eventos e Protocolos
-        const Text(
+        Text(
           'Marcos & Linha do Tempo',
           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: GridColors.textPrimary),
         ),
@@ -796,7 +796,7 @@ class _NutricaoProtocolosHubScreenState
       children: [
         Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: GridColors.textSecondary)),
+        Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: GridColors.textSecondary)),
       ],
     );
   }
@@ -835,12 +835,12 @@ class _NutricaoProtocolosHubScreenState
                     Text(ev.titulo,
                         style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
                     Text(dataFormatada,
-                        style: const TextStyle(color: GridColors.textSecondary, fontSize: 11)),
+                        style: TextStyle(color: GridColors.textSecondary, fontSize: 11)),
                   ],
                 ),
                 const SizedBox(height: 2),
                 Text(ev.descricao,
-                    style: const TextStyle(color: GridColors.textSecondary, fontSize: 12)),
+                    style: TextStyle(color: GridColors.textSecondary, fontSize: 12)),
               ],
             ),
           ),
@@ -886,7 +886,7 @@ class _NutricaoProtocolosHubScreenState
         children: [
           Icon(icon, size: 40, color: GridColors.textSecondary),
           const SizedBox(height: 12),
-          Text(msg, style: const TextStyle(color: GridColors.textSecondary)),
+          Text(msg, style: TextStyle(color: GridColors.textSecondary)),
         ],
       ),
     );

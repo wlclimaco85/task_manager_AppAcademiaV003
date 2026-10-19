@@ -54,7 +54,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
                   // Fallback se a imagem não carregar
-                  return const Icon(
+                  return Icon(
                     Icons.apps,
                     size: 90,
                     color: GridColors.textPrimary,
@@ -65,7 +65,7 @@ class _SplashScreenState extends State<SplashScreen> {
               const SizedBox(height: 40),
 
               // Texto "Carregando..."
-              const Text(
+              Text(
                 'Carregando...',
                 style: TextStyle(
                   color: GridColors.textPrimary,
@@ -77,7 +77,7 @@ class _SplashScreenState extends State<SplashScreen> {
               const SizedBox(height: 20),
 
               // Indicador de loading
-              const SizedBox(
+              SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(

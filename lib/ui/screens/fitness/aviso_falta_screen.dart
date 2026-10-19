@@ -302,7 +302,7 @@ class _AvisoFaltaScreenState extends State<AvisoFaltaScreen>
                   const Spacer(),
                   GestureDetector(
                     onTap: () => setState(() => _horario = null),
-                    child: const Icon(Icons.close,
+                    child: Icon(Icons.close,
                         size: 18, color: GridColors.textSecondary),
                   ),
                 ],
