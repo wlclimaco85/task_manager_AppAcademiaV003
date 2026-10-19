@@ -24,16 +24,24 @@ class FinanceiroAcademiaService {
     }
   }
 
-  /// Marca ou desfaz o pagamento do aluno no mes. Devolve false se o servidor recusar.
+  /// Marca ou desfaz o pagamento do aluno no mes. Valor e dia de vencimento sao opcionais:
+  /// sem eles o servidor mantem o que ja estava gravado. Devolve false se o servidor recusar.
   static Future<bool> darBaixa({
     required String mes,
     required String alunoId,
     required bool pago,
+    double? valor,
+    int? diaVencimento,
   }) async {
     try {
+      final corpo = <String, dynamic>{
+        'pago': pago,
+        if (valor != null) 'valor': valor,
+        if (diaVencimento != null) 'diaVencimento': diaVencimento,
+      };
       final resposta = await NetworkCaller().putRequest(
         ApiLinks.financeiroAcademiaBaixa(mes, alunoId),
-        {'pago': pago},
+        corpo,
       );
       if (!resposta.isSuccess) {
         AppLogger.i.warn('[FinanceiroAcademia] Baixa recusada (aluno $alunoId, $mes, status ${resposta.statusCode}).');

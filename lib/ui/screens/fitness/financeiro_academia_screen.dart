@@ -3,6 +3,19 @@ import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/fitness/financeiro_academia_model.dart';
 import 'package:task_manager_flutter/data/services/financeiro_academia_service.dart';
 
+/// Valor e dia de vencimento digitados no diálogo. Null = entrada invalida.
+typedef MensalidadeInformada = ({double valor, int dia});
+
+/// Interpreta o valor (aceita virgula) e o dia de vencimento (1 a 31).
+/// Devolve null quando algum campo nao e valido.
+MensalidadeInformada? interpretarMensalidade(String valorTexto, String diaTexto) {
+  final valor = double.tryParse(valorTexto.trim().replaceAll(',', '.'));
+  final dia = int.tryParse(diaTexto.trim());
+  if (valor == null || valor < 0) return null;
+  if (dia == null || dia < 1 || dia > 31) return null;
+  return (valor: valor, dia: dia);
+}
+
 /// Financeiro da academia: quem pagou e quem esta pendente ou atrasado no mes.
 class FinanceiroAcademiaScreen extends StatefulWidget {
   const FinanceiroAcademiaScreen({super.key});
@@ -67,6 +80,77 @@ class _FinanceiroAcademiaScreenState extends State<FinanceiroAcademiaScreen> {
     setState(() => _baixaEmAndamento.remove(aluno.alunoId));
     if (!ok) {
       _mostrarErro('Não foi possível registrar a baixa de ${aluno.nome}. Tente novamente.');
+      return;
+    }
+    await _carregar();
+  }
+
+  Future<void> _editarMensalidade(FinanceiroAcademiaAluno aluno) async {
+    final valorCtrl = TextEditingController(text: aluno.valor.toStringAsFixed(2).replaceAll('.', ','));
+    final diaCtrl = TextEditingController(text: aluno.diaVencimento.toString());
+    final informado = await showDialog<MensalidadeInformada>(
+      context: context,
+      builder: (context) {
+        String? erro;
+        return StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            title: Text('Mensalidade de ${aluno.nome}'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: valorCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(labelText: 'Valor (R\$)', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: diaCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Dia de vencimento (1 a 31)',
+                    border: const OutlineInputBorder(),
+                    errorText: erro,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: CustomColors.primaryGreen),
+                onPressed: () {
+                  final resultado = interpretarMensalidade(valorCtrl.text, diaCtrl.text);
+                  if (resultado == null) {
+                    setDialogState(() => erro = 'Informe um valor válido e um dia entre 1 e 31');
+                    return;
+                  }
+                  Navigator.pop(context, resultado);
+                },
+                child: const Text('Salvar'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    valorCtrl.dispose();
+    diaCtrl.dispose();
+    if (informado == null || !mounted) return;
+
+    final ok = await FinanceiroAcademiaService.darBaixa(
+      mes: _mesChave,
+      alunoId: aluno.alunoId,
+      pago: aluno.pago,
+      valor: informado.valor,
+      diaVencimento: informado.dia,
+    );
+    if (!mounted) return;
+    if (!ok) {
+      _mostrarErro('Não foi possível salvar a mensalidade de ${aluno.nome}. Tente novamente.');
       return;
     }
     await _carregar();
@@ -203,6 +287,12 @@ class _FinanceiroAcademiaScreenState extends State<FinanceiroAcademiaScreen> {
                   aluno.nome,
                   style: TextStyle(color: GridColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15),
                 ),
+              ),
+              IconButton(
+                tooltip: 'Editar valor e vencimento',
+                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                onPressed: () => _editarMensalidade(aluno),
+                icon: Icon(Icons.edit_outlined, color: GridColors.textSecondary),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

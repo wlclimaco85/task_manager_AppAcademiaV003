@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:task_manager_flutter/data/models/fitness/financeiro_academia_model.dart';
 import 'package:task_manager_flutter/data/models/login_model.dart';
 import 'package:task_manager_flutter/data/utils/fitness_access.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/financeiro_academia_screen.dart';
 
 void main() {
   group('FinanceiroAcademiaMes.fromMap', () {
@@ -54,6 +55,23 @@ void main() {
       expect(ehAcademia(LoginModel(login: Login(tipoLogin: LoginEnum.APP_PERSONAL))), isFalse);
       expect(ehAcademia(LoginModel(login: Login(tipoLogin: LoginEnum.APP_ALUNO))), isFalse);
       expect(ehAcademia(LoginModel()), isFalse);
+    });
+  });
+
+  group('interpretarMensalidade', () {
+    test('aceita valor com virgula e dia entre 1 e 31', () {
+      final r = interpretarMensalidade('150,50', ' 10 ');
+      expect(r, isNotNull);
+      expect(r!.valor, 150.5);
+      expect(r.dia, 10);
+    });
+
+    test('recusa valor negativo, texto e dia fora do intervalo', () {
+      expect(interpretarMensalidade('-1', '10'), isNull);
+      expect(interpretarMensalidade('abc', '10'), isNull);
+      expect(interpretarMensalidade('100', '0'), isNull);
+      expect(interpretarMensalidade('100', '32'), isNull);
+      expect(interpretarMensalidade('100', ''), isNull);
     });
   });
 }
