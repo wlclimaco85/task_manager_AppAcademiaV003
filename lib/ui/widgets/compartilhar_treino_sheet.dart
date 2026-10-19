@@ -1,16 +1,15 @@
 import 'dart:convert';
-import 'dart:io';
-import 'package:task_manager_flutter/ui/widgets/midias_sessao_treino.dart';
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart' show kIsWeb, Uint8List;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:task_manager_flutter/data/utils/app_logger.dart';
+import 'package:task_manager_flutter/ui/widgets/midias_sessao_treino.dart';
 
 class CompartilharTreinoSheet extends StatefulWidget {
   final String treino;
@@ -102,41 +101,61 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
     }
   }
 
-  /// Renderiza o card EU ATLETA em PNG e salva em arquivo temporário.
-  Future<File> _renderizarCardPng() async {
+  /// Renderiza o card EU ATLETA em PNG (bytes em memória).
+  Future<Uint8List> _renderizarCardBytes() async {
     await WidgetsBinding.instance.endOfFrame;
     final boundary = _cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
     final imagem = await boundary.toImage(pixelRatio: 3);
     final dados = await imagem.toByteData(format: ui.ImageByteFormat.png);
     imagem.dispose();
-    final dir = await getTemporaryDirectory();
-    final arquivo = File('${dir.path}/meu-treino.png');
-    await arquivo.writeAsBytes(dados!.buffer.asUint8List());
-    return arquivo;
+    return dados!.buffer.asUint8List();
   }
 
   Future<void> _compartilharInstagram() async {
     setState(() => _ocupado = true);
     try {
-      final arquivo = await _renderizarCardPng();
+      final bytes = await _renderizarCardBytes();
       if (!mounted) return;
-      // Tenta abrir Instagram Stories diretamente com a imagem
-      final uri = Uri.parse('instagram://sharesheet');
-      if (await canLaunchUrl(uri)) {
-        await Share.shareXFiles(
-          [XFile(arquivo.path, mimeType: 'image/png', name: 'meu-treino.png')],
-          text: _legenda,
-        );
-      } else {
-        // Fallback: abre o app do Instagram (feed/stories) sem imagem pré-carregada
-        final uriStore = Uri.parse('https://www.instagram.com/');
-        await Share.shareXFiles(
-          [XFile(arquivo.path, mimeType: 'image/png', name: 'meu-treino.png')],
-          text: _legenda,
-        );
-        if (await canLaunchUrl(uriStore) && mounted) {
+
+      // Copia a legenda para a área de transferência
+      await Clipboard.setData(ClipboardData(text: _legenda));
+
+      if (kIsWeb) {
+        // Na Web: baixa a imagem para a máquina e abre o Instagram no navegador
+        final xFile = XFile.fromData(bytes, mimeType: 'image/png', name: 'meu-treino.png');
+        try {
+          await xFile.saveTo('meu-treino.png');
+        } catch (_) {}
+
+        final urlInstagram = Uri.parse('https://www.instagram.com/');
+        await launchUrl(urlInstagram, mode: LaunchMode.externalApplication);
+
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Salve a imagem e publique no Instagram.')));
+            const SnackBar(
+              content: Text('Imagem do treino baixada e legenda copiada! Abra o Instagram para publicar.'),
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+        return;
+      }
+
+      // No Mobile (Android / iOS)
+      final xFile = XFile.fromData(bytes, mimeType: 'image/png', name: 'meu-treino.png');
+      final box = context.findRenderObject() as RenderBox?;
+      final origin = box != null ? (box.localToGlobal(Offset.zero) & box.size) : null;
+
+      final uriApp = Uri.parse('instagram://sharesheet');
+      if (await canLaunchUrl(uriApp)) {
+        await Share.shareXFiles([xFile], text: _legenda, sharePositionOrigin: origin);
+      } else {
+        await Share.shareXFiles([xFile], text: _legenda, sharePositionOrigin: origin);
+        final uriWeb = Uri.parse('https://www.instagram.com/');
+        if (await canLaunchUrl(uriWeb) && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Salve a imagem e publique no Instagram.')),
+          );
         }
       }
     } catch (error, stack) {
@@ -153,12 +172,38 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
   Future<void> _compartilharFacebook() async {
     setState(() => _ocupado = true);
     try {
-      final arquivo = await _renderizarCardPng();
+      final bytes = await _renderizarCardBytes();
       if (!mounted) return;
-      await Share.shareXFiles(
-        [XFile(arquivo.path, mimeType: 'image/png', name: 'meu-treino.png')],
-        text: _legenda,
-      );
+
+      // Copia a legenda para a área de transferência
+      await Clipboard.setData(ClipboardData(text: _legenda));
+
+      if (kIsWeb) {
+        // Na Web: baixa a imagem para a máquina e abre o Facebook no navegador
+        final xFile = XFile.fromData(bytes, mimeType: 'image/png', name: 'meu-treino.png');
+        try {
+          await xFile.saveTo('meu-treino.png');
+        } catch (_) {}
+
+        final urlFacebook = Uri.parse('https://www.facebook.com/');
+        await launchUrl(urlFacebook, mode: LaunchMode.externalApplication);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Imagem do treino baixada e legenda copiada! Cole no Facebook para publicar.'),
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+        return;
+      }
+
+      // No Mobile (Android / iOS)
+      final xFile = XFile.fromData(bytes, mimeType: 'image/png', name: 'meu-treino.png');
+      final box = context.findRenderObject() as RenderBox?;
+      final origin = box != null ? (box.localToGlobal(Offset.zero) & box.size) : null;
+      await Share.shareXFiles([xFile], text: _legenda, sharePositionOrigin: origin);
     } catch (error, stack) {
       AppLogger.i.error('Falha ao compartilhar no Facebook.', stack);
       if (mounted) {
@@ -173,16 +218,28 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
   Future<void> _compartilhar() async {
     setState(() => _ocupado = true);
     try {
-      await WidgetsBinding.instance.endOfFrame;
-      final boundary = _cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      final imagem = await boundary.toImage(pixelRatio: 3);
-      final dados = await imagem.toByteData(format: ui.ImageByteFormat.png);
-      imagem.dispose();
+      final bytes = await _renderizarCardBytes();
       if (!mounted) return;
-      final box = context.findRenderObject() as RenderBox;
-      await Share.shareXFiles([XFile.fromData(dados!.buffer.asUint8List(),
-        mimeType: 'image/png', name: 'meu-treino.png')],
-        text: _legenda, sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);
+
+      final xFile = XFile.fromData(bytes, mimeType: 'image/png', name: 'meu-treino.png');
+      final box = context.findRenderObject() as RenderBox?;
+      final origin = box != null ? (box.localToGlobal(Offset.zero) & box.size) : null;
+
+      if (kIsWeb) {
+        try {
+          await Share.shareXFiles([xFile], text: _legenda, sharePositionOrigin: origin);
+        } catch (_) {
+          await xFile.saveTo('meu-treino.png');
+          await Clipboard.setData(ClipboardData(text: _legenda));
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Imagem baixada e legenda copiada!')),
+            );
+          }
+        }
+      } else {
+        await Share.shareXFiles([xFile], text: _legenda, sharePositionOrigin: origin);
+      }
     } catch (error, stack) {
       AppLogger.i.error('Falha ao compartilhar foto do treino.', stack);
       if (mounted) {
