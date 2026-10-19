@@ -108,6 +108,10 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
     return list;
   }
 
+  @visibleForTesting
+  List<String> locaisDisponiveisTest() => _locaisDisponiveis();
+
+
 
   List<AgendaEventoModel> _doDia(DateTime dia) =>
       _eventos.where((item) => isSameDay(item.inicio, dia)).toList()
@@ -346,9 +350,8 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
 
   Future<void> _abrirFormulario({AgendaEventoModel? evento}) async {
     final titulo = TextEditingController(text: evento?.titulo ?? '');
-    final local = TextEditingController(text: evento?.local ?? '');
     final observacao = TextEditingController(text: evento?.observacao ?? '');
-    var tipo = evento?.tipo ?? (_personal ? 'AULA' : 'COMPROMISSO');
+    var tipo = evento?.tipo ?? 'AULA';
     var dia = evento?.inicio ?? _selecionado;
     var hora = TimeOfDay.fromDateTime(
         evento?.inicio ?? DateTime.now().add(const Duration(hours: 1)));
@@ -358,6 +361,20 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
     var alunoId =
         evento?.alunoId ?? (_alunos.isEmpty ? null : _alunos.first.id);
     var semanas = 1;
+
+    final locais = _locaisDisponiveis();
+    String? localSelecionado;
+    final localInicial = evento?.local.trim() ?? '';
+    if (localInicial.isNotEmpty) {
+      if (locais.contains(localInicial)) {
+        localSelecionado = localInicial;
+      } else {
+        localSelecionado = _opcaoOutro;
+      }
+    }
+    final localOutroController = TextEditingController(
+      text: localSelecionado == _opcaoOutro ? localInicial : '',
+    );
 
     final salvo = await showModalBottomSheet<bool>(
       context: context,
@@ -376,7 +393,7 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                       style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    initialValue: tipo,
+                    value: tipo,
                     decoration: const InputDecoration(labelText: 'Tipo'),
                     items: _tiposPermitidos()
                         .map((item) => DropdownMenuItem(
@@ -389,11 +406,16 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                   const SizedBox(height: 12),
                   TextField(
                       controller: titulo,
-                      decoration: const InputDecoration(labelText: 'Título')),
+                      decoration: InputDecoration(
+                        labelText: 'Título',
+                        hintText: tipo == 'AULA'
+                            ? (_personal ? 'Ex: Aula de musculação' : 'Ex: Treino com personal')
+                            : 'Ex: Consulta de rotina',
+                      )),
                   if (_personal && tipo == 'AULA') ...[
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      initialValue: alunoId,
+                      value: alunoId,
                       decoration:
                           const InputDecoration(labelText: 'Aluno vinculado'),
                       items: _alunos
@@ -443,7 +465,7 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                   ]),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
-                    initialValue: duracao,
+                    value: duracao,
                     decoration: const InputDecoration(labelText: 'Duração'),
                     items: const [30, 45, 60, 90, 120]
                         .map((m) => DropdownMenuItem(
@@ -452,11 +474,113 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                     onChanged: (value) =>
                         setSheetState(() => duracao = value ?? 60),
                   ),
-                  const SizedBox(height: 12),
-                  TextField(
-                      controller: local,
-                      decoration:
-                          const InputDecoration(labelText: 'Local (opcional)')),
+                  const SizedBox(height: 14),
+                  // ─── Local: Academias e por último Residência ───
+                  DropdownButtonFormField<String>(
+                    value: localSelecionado,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Local',
+                      prefixIcon: Icon(Icons.place_outlined),
+                    ),
+                    hint: const Text('Selecione uma academia ou residência'),
+                    items: [
+                      ...locais.map((loc) {
+                        final isResidencia = loc == _opcaoResidencia;
+                        return DropdownMenuItem<String>(
+                          value: loc,
+                          child: Row(
+                            children: [
+                              Icon(
+                                isResidencia ? Icons.home_outlined : Icons.fitness_center,
+                                size: 18,
+                                color: isResidencia
+                                    ? Colors.amber[700]
+                                    : GridColors.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  loc,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontWeight: isResidencia
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                      const DropdownMenuItem<String>(
+                        value: _opcaoOutro,
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_location_alt_outlined,
+                                size: 18, color: Colors.blueGrey),
+                            SizedBox(width: 8),
+                            Text(_opcaoOutro),
+                          ],
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setSheetState(() {
+                        localSelecionado = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 6),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: locais.map((loc) {
+                        final isResidencia = loc == _opcaoResidencia;
+                        final isSelected = localSelecionado == loc;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: ChoiceChip(
+                            label: Text(loc),
+                            avatar: Icon(
+                              isResidencia ? Icons.home_outlined : Icons.fitness_center,
+                              size: 14,
+                              color: isSelected
+                                  ? Colors.white
+                                  : (isResidencia ? Colors.amber[700] : GridColors.primary),
+                            ),
+                            selected: isSelected,
+                            selectedColor: isResidencia ? Colors.amber[800] : GridColors.primary,
+                            labelStyle: TextStyle(
+                              color: isSelected ? Colors.white : context.appText,
+                              fontSize: 11,
+                              fontWeight:
+                                  isResidencia ? FontWeight.w700 : FontWeight.normal,
+                            ),
+                            onSelected: (selected) {
+                              if (selected) {
+                                setSheetState(() {
+                                  localSelecionado = loc;
+                                  localOutroController.clear();
+                                });
+                              }
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  if (localSelecionado == _opcaoOutro) ...[
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: localOutroController,
+                      decoration: const InputDecoration(
+                        labelText: 'Digite o endereço ou nome do local',
+                        prefixIcon: Icon(Icons.edit_location_outlined),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   TextField(
                       controller: observacao,
@@ -465,7 +589,7 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                           labelText: 'Observação (opcional)')),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
-                    initialValue: lembrete,
+                    value: lembrete,
                     decoration:
                         const InputDecoration(labelText: 'Notificar antes'),
                     items: const {
@@ -486,7 +610,7 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                   if (evento == null && _personal && tipo == 'AULA') ...[
                     const SizedBox(height: 12),
                     DropdownButtonFormField<int>(
-                      initialValue: semanas,
+                      value: semanas,
                       decoration:
                           const InputDecoration(labelText: 'Repetição semanal'),
                       items: const {
@@ -507,11 +631,29 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                   const SizedBox(height: 20),
                   FilledButton.icon(
                     onPressed: () async {
-                      if (titulo.text.trim().isEmpty ||
-                          (_personal && tipo == 'AULA' && alunoId == null)) {
-                        _erro('Preencha o título e selecione o aluno.');
+                      if (titulo.text.trim().isEmpty) {
+                        if (tipo == 'AULA') {
+                          titulo.text = _personal ? 'Aula com aluno' : 'Aula com personal';
+                        } else if (tipo == 'TREINO') {
+                          titulo.text = 'Treino individual';
+                        } else if (tipo == 'AVALIACAO') {
+                          titulo.text = 'Avaliação física';
+                        } else if (tipo == 'CONSULTA') {
+                          titulo.text = 'Consulta';
+                        } else {
+                          _erro('Preencha o título do evento.');
+                          return;
+                        }
+                      }
+                      if (_personal && tipo == 'AULA' && alunoId == null && _alunos.isNotEmpty) {
+                        _erro('Selecione o aluno vinculado para a aula.');
                         return;
                       }
+
+                      final localFinal = localSelecionado == _opcaoOutro
+                          ? localOutroController.text.trim()
+                          : (localSelecionado ?? '');
+
                       final inicio = DateTime(
                           dia.year, dia.month, dia.day, hora.hour, hora.minute);
                       final dados = <String, dynamic>{
@@ -519,7 +661,7 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                         'tipo': tipo,
                         'inicio': _iso(inicio),
                         'fim': _iso(inicio.add(Duration(minutes: duracao))),
-                        'local': local.text.trim(),
+                        'local': localFinal,
                         'observacao': observacao.text.trim(),
                         'lembreteMinutos': lembrete,
                         'repetirSemanas': semanas,
@@ -550,22 +692,28 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
       ),
     );
     titulo.dispose();
-    local.dispose();
     observacao.dispose();
+    localOutroController.dispose();
     if (salvo == true) await _carregar();
   }
 
   List<MapEntry<String, String>> _tiposPermitidos() => [
-        if (_personal) const MapEntry('AULA', 'Aula com aluno'),
+        if (_personal)
+          const MapEntry('AULA', 'Aula com aluno')
+        else ...[
+          const MapEntry('AULA', 'Aula com personal'),
+          const MapEntry('TREINO', 'Treino individual'),
+        ],
         const MapEntry('CONSULTA', 'Consulta'),
         const MapEntry('MEDICAMENTO', 'Medicamento'),
-        const MapEntry('AVALIACAO', 'Avaliação'),
+        const MapEntry('AVALIACAO', 'Avaliação física'),
         const MapEntry('COMPROMISSO', 'Compromisso'),
         const MapEntry('OUTRO', 'Outro'),
       ];
 
   Color _corTipo(String tipo) => switch (tipo) {
         'AULA' => GridColors.primary,
+        'TREINO' => Colors.teal,
         'MEDICAMENTO' => Colors.red,
         'CONSULTA' => Colors.blue,
         'AVALIACAO' => Colors.purple,
