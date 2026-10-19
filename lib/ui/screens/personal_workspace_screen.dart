@@ -5,6 +5,8 @@ import 'package:task_manager_flutter/data/utils/fitness_access.dart';
 import 'package:task_manager_flutter/ui/screens/sem_acesso_screen.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/fitness/personal_gestao_model.dart';
+import 'package:task_manager_flutter/data/models/fitness/personal_conta_pagar_model.dart';
+import 'package:task_manager_flutter/data/models/fitness/personal_pix_cobranca_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
 import 'package:task_manager_flutter/data/services/personal_gestao_offline_repository.dart';
@@ -14,6 +16,8 @@ import 'package:task_manager_flutter/ui/screens/fitness/nutricao_protocolos_hub_
 import 'package:task_manager_flutter/ui/widgets/avatar_com_indicador.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/avaliacao_fisica_pro_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/agenda_compartilhada_screen.dart';
+import 'package:task_manager_flutter/ui/widgets/personal_qr_code_pix_dialog.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/meu_perfil_screen.dart';
 
 /// Workspace Completo do Personal Trainer (MFIT Pro Standard)
 /// 4 Abas Especializadas:
@@ -37,7 +41,10 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
 
   bool _loading = true;
   List<PersonalAlunoGestaoModel> _alunos = [];
-Map<String, DateTime> _avaliacoesAgendadas = {};
+  Map<String, DateTime> _avaliacoesAgendadas = {};
+  List<PersonalContaPagarModel> _contasPagar = [];
+  PersonalPixCobrancaModel _pixConfig = PersonalPixCobrancaModel();
+  int _secaoFinanceira = 0; // 0 = A Receber, 1 = A Pagar, 2 = Balanço
 
   @override
   void initState() {
@@ -56,10 +63,14 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
     setState(() => _loading = true);
     final alunos = await _repo.getAlunos();
     final avaliacoes = await AvaliacaoAgendadaService.listar();
+    final contas = await _repo.getContasPagar();
+    final pix = await _repo.getPixCobranca();
     if (mounted) {
       setState(() {
         _alunos = alunos;
         _avaliacoesAgendadas = avaliacoes;
+        _contasPagar = contas;
+        _pixConfig = pix;
         _loading = false;
       });
     }
@@ -613,6 +624,199 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
       const AgendaCompartilhadaScreen(embedded: true);
 
   Widget _buildAbaFinanceiro() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Card de destaque da Cobrança Pix & Mensalidade
+        _buildCardPixDestaque(),
+        const SizedBox(height: 16),
+
+        // Seletor de Seções Financeiras (A Receber | A Pagar | Balanço)
+        Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: GridColors.card,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: GridColors.divider),
+          ),
+          child: Row(
+            children: [
+              _buildBotaoAbaFinanceira(
+                indice: 0,
+                titulo: 'A Receber (Alunos)',
+                icone: Icons.arrow_downward,
+                cor: CustomColors.primaryGreen,
+              ),
+              _buildBotaoAbaFinanceira(
+                indice: 1,
+                titulo: 'A Pagar (Despesas)',
+                icone: Icons.arrow_upward,
+                cor: GridColors.error,
+              ),
+              _buildBotaoAbaFinanceira(
+                indice: 2,
+                titulo: 'Balanço',
+                icone: Icons.pie_chart_outline,
+                cor: GridColors.info,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        if (_secaoFinanceira == 0) ...[
+          _buildSecaoContasReceber(),
+        ] else if (_secaoFinanceira == 1) ...[
+          _buildSecaoContasPagar(),
+        ] else ...[
+          _buildSecaoBalancoGeral(),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildCardPixDestaque() {
+    final bool temPix = _pixConfig.configurado;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: GridColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: CustomColors.primaryGreen.withOpacity(0.35)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: CustomColors.primaryGreen.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.qr_code_2,
+              color: CustomColors.primaryGreen,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Meu Pix & QR Code',
+                      style: TextStyle(
+                        color: GridColors.textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: CustomColors.primaryGreen.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        temPix ? 'CONFIGURADO' : 'PENDENTE',
+                        style: TextStyle(
+                          color: CustomColors.primaryGreen,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  temPix
+                      ? 'Mensalidade Padrão: R\$ ${_pixConfig.valorMensalidadePadrao.toStringAsFixed(2)} • ${_pixConfig.tipoChavePix}'
+                      : 'Configure sua chave Pix e mensalidade no perfil',
+                  style: TextStyle(
+                    color: GridColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              PersonalQrCodePixDialog.show(
+                context,
+                pixConfig: _pixConfig,
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: CustomColors.primaryGreen,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            icon: const Icon(Icons.qr_code, size: 18),
+            label: const Text(
+              'Abrir QR Code',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBotaoAbaFinanceira({
+    required int indice,
+    required String titulo,
+    required IconData icone,
+    required Color cor,
+  }) {
+    final bool ativo = _secaoFinanceira == indice;
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => _secaoFinanceira = indice),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          decoration: BoxDecoration(
+            color: ativo ? cor.withOpacity(0.18) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+            border: ativo ? Border.all(color: cor.withOpacity(0.5)) : null,
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icone,
+                size: 18,
+                color: ativo ? cor : GridColors.textSecondary,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                titulo,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: ativo ? GridColors.textPrimary : GridColors.textSecondary,
+                  fontWeight: ativo ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SEÇÃO 1: CONTAS A RECEBER (ALUNOS)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  Widget _buildSecaoContasReceber() {
     double totalRecebido = 0;
     double totalPendente = 0;
     double totalAtrasado = 0;
@@ -627,10 +831,10 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
       }
     }
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Cards Resumo Financeiro
+        // Métricas de Recebimento
         Row(
           children: [
             _buildCardMetricaFinanceira(
@@ -656,8 +860,508 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
           ],
         ),
         const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Cobranças dos Alunos (${_alunos.length})',
+              style: TextStyle(
+                color: GridColors.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              'Total: R\$ ${(totalRecebido + totalPendente + totalAtrasado).toStringAsFixed(2)}',
+              style: TextStyle(
+                color: GridColors.textSecondary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (_alunos.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: GridColors.card,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Center(
+              child: Text(
+                'Nenhum aluno vinculado ainda.',
+                style: TextStyle(color: GridColors.textSecondary),
+              ),
+            ),
+          )
+        else
+          ..._alunos.map((aluno) => _buildCardFinanceiroAluno(aluno)),
+      ],
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SEÇÃO 2: CONTAS A PAGAR (DESPESAS DO PERSONAL)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  Widget _buildSecaoContasPagar() {
+    double totalPago = 0;
+    double totalPendente = 0;
+    double totalAtrasado = 0;
+
+    for (var c in _contasPagar) {
+      if (c.pago) {
+        totalPago += c.valor;
+      } else if (c.atrasado) {
+        totalAtrasado += c.valor;
+      } else {
+        totalPendente += c.valor;
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Métricas de Pagamento
+        Row(
+          children: [
+            _buildCardMetricaFinanceira(
+              'Total Pago',
+              'R\$ ${totalPago.toStringAsFixed(0)}',
+              Icons.task_alt,
+              CustomColors.primaryGreen,
+            ),
+            const SizedBox(width: 8),
+            _buildCardMetricaFinanceira(
+              'A Vencer',
+              'R\$ ${totalPendente.toStringAsFixed(0)}',
+              Icons.schedule,
+              GridColors.info,
+            ),
+            const SizedBox(width: 8),
+            _buildCardMetricaFinanceira(
+              'Em Atraso',
+              'R\$ ${totalAtrasado.toStringAsFixed(0)}',
+              Icons.error_outline,
+              GridColors.error,
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+
+        // Barra de ação: Título + Botão Nova Conta
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Despesas do Personal (${_contasPagar.length})',
+              style: TextStyle(
+                color: GridColors.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            ElevatedButton.icon(
+              onPressed: _abrirModalNovaContaPagar,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: GridColors.error,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text(
+                'Nova Despesa',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        if (_contasPagar.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: GridColors.card,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: GridColors.divider),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.receipt_long, size: 40, color: GridColors.textSecondary),
+                const SizedBox(height: 8),
+                Text(
+                  'Nenhuma conta a pagar cadastrada.',
+                  style: TextStyle(
+                    color: GridColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Cadastre seu aluguel de academia, CREF, equipamentos, etc.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: GridColors.textSecondary, fontSize: 12),
+                ),
+              ],
+            ),
+          )
+        else
+          ..._contasPagar.map((conta) => _buildCardContaPagar(conta)),
+      ],
+    );
+  }
+
+  Widget _buildCardContaPagar(PersonalContaPagarModel conta) {
+    final bool isPago = conta.pago;
+    final bool isAtrasado = conta.atrasado;
+
+    Color corStatus = GridColors.info;
+    String statusTexto = 'PENDENTE';
+    if (isPago) {
+      corStatus = CustomColors.primaryGreen;
+      statusTexto = 'PAGO';
+    } else if (isAtrasado) {
+      corStatus = GridColors.error;
+      statusTexto = 'EM ATRASO';
+    }
+
+    final dataVencFormatada =
+        '${conta.dataVencimento.day.toString().padLeft(2, '0')}/${conta.dataVencimento.month.toString().padLeft(2, '0')}/${conta.dataVencimento.year}';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: GridColors.card,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isAtrasado
+              ? GridColors.error.withOpacity(0.5)
+              : GridColors.divider,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      conta.descricao,
+                      style: TextStyle(
+                        color: GridColors.textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Categoria: ${conta.categoria} • Vencimento: $dataVencFormatada',
+                      style: TextStyle(
+                        color: GridColors.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                'R\$ ${conta.valor.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: isPago ? CustomColors.primaryGreen : GridColors.textPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (conta.observacao != null && conta.observacao!.isNotEmpty) ...[
+            Text(
+              'Obs: ${conta.observacao}',
+              style: TextStyle(
+                color: GridColors.textSecondary,
+                fontSize: 11,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: corStatus.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  statusTexto,
+                  style: TextStyle(
+                    color: corStatus,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.delete_outline, size: 20, color: GridColors.textSecondary),
+                    tooltip: 'Excluir conta',
+                    onPressed: () async {
+                      final confirma = await showDialog<bool>(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: const Text('Excluir Despesa'),
+                          content: Text('Deseja excluir a conta "${conta.descricao}"?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Cancelar'),
+                            ),
+                            FilledButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              style: FilledButton.styleFrom(backgroundColor: GridColors.error),
+                              child: const Text('Excluir'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirma == true) {
+                        await _repo.excluirContaPagar(conta.id);
+                        _carregarDados();
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await _repo.registrarPagamentoConta(conta.id, pago: !isPago);
+                      _carregarDados();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              !isPago
+                                  ? 'Despesa "${conta.descricao}" marcada como paga!'
+                                  : 'Pagamento de "${conta.descricao}" estornado para pendente.',
+                            ),
+                            backgroundColor: !isPago
+                                ? CustomColors.primaryGreen
+                                : GridColors.secondaryDark,
+                          ),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isPago
+                          ? GridColors.divider
+                          : CustomColors.primaryGreen,
+                      foregroundColor: isPago
+                          ? GridColors.textSecondary
+                          : Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      isPago ? 'Paga (Desfazer)' : 'Marcar Paga',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SEÇÃO 3: BALANÇO GERAL (RECEITAS X DESPESAS)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  Widget _buildSecaoBalancoGeral() {
+    double totalReceitas = 0;
+    double totalReceitasRecebidas = 0;
+    for (var a in _alunos) {
+      totalReceitas += a.valorMensalidade;
+      if (a.statusMensalidade == StatusMensalidadeAluno.pago) {
+        totalReceitasRecebidas += a.valorMensalidade;
+      }
+    }
+
+    double totalDespesas = 0;
+    double totalDespesasPagas = 0;
+    for (var c in _contasPagar) {
+      totalDespesas += c.valor;
+      if (c.pago) {
+        totalDespesasPagas += c.valor;
+      }
+    }
+
+    final double saldoProjetado = totalReceitas - totalDespesas;
+    final double saldoEfetivo = totalReceitasRecebidas - totalDespesasPagas;
+    final bool positivo = saldoProjetado >= 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Card Principal de Lucro Líquido / Saldo
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: GridColors.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: positivo
+                  ? CustomColors.primaryGreen.withOpacity(0.4)
+                  : GridColors.error.withOpacity(0.4),
+              width: 1.5,
+            ),
+          ),
+          child: Column(
+            children: [
+              Text(
+                'LUCRO LÍQUIDO PROJETADO (MÊS)',
+                style: TextStyle(
+                  color: GridColors.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.1,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'R\$ ${saldoProjetado.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: positivo ? CustomColors.primaryGreen : GridColors.error,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Saldo em Caixa Atual: R\$ ${saldoEfetivo.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: GridColors.textSecondary,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Comparativo em Cards
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: GridColors.card,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: CustomColors.primaryGreen.withOpacity(0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.arrow_downward, color: CustomColors.primaryGreen, size: 20),
+                        SizedBox(width: 6),
+                        Text(
+                          'Receitas',
+                          style: TextStyle(
+                            color: CustomColors.primaryGreen,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'R\$ ${totalReceitas.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: GridColors.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${_alunos.length} alunos cadastrados',
+                      style: TextStyle(color: GridColors.textSecondary, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: GridColors.card,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: GridColors.error.withOpacity(0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: const [
+                        Icon(Icons.arrow_upward, color: GridColors.error, size: 20),
+                        SizedBox(width: 6),
+                        Text(
+                          'Despesas',
+                          style: TextStyle(
+                            color: GridColors.error,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'R\$ ${totalDespesas.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: GridColors.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${_contasPagar.length} despesas cadastradas',
+                      style: TextStyle(color: GridColors.textSecondary, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+
+        // Detalhamento de Despesas por Categoria
         Text(
-          'Cobranças dos alunos',
+          'Despesas por Categoria',
           style: TextStyle(
             color: GridColors.textPrimary,
             fontSize: 16,
@@ -665,39 +1369,279 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
           ),
         ),
         const SizedBox(height: 12),
-        ..._alunos.map((aluno) => _buildCardFinanceiroAluno(aluno)),
+        ..._buildListaCategoriasDespesas(totalDespesas),
       ],
     );
   }
 
-  Widget _buildCardMetricaFinanceira(
-      String label, String valor, IconData icon, Color cor) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+  List<Widget> _buildListaCategoriasDespesas(double totalDespesas) {
+    final Map<String, double> categorias = {};
+    for (var c in _contasPagar) {
+      categorias[c.categoria] = (categorias[c.categoria] ?? 0) + c.valor;
+    }
+
+    if (categorias.isEmpty) {
+      return [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: GridColors.card,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Text(
+              'Nenhuma despesa para detalhar.',
+              style: TextStyle(color: GridColors.textSecondary),
+            ),
+          ),
+        ),
+      ];
+    }
+
+    return categorias.entries.map((e) {
+      final double percentual = totalDespesas > 0 ? (e.value / totalDespesas) * 100 : 0;
+      return Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: GridColors.card,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: cor.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: GridColors.divider),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  e.key,
+                  style: TextStyle(
+                    color: GridColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  '${percentual.toStringAsFixed(1)}% do total de custos',
+                  style: TextStyle(
+                    color: GridColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+            Text(
+              'R\$ ${e.value.toStringAsFixed(2)}',
+              style: TextStyle(
+                color: GridColors.textPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
+            ),
+          ],
+        ),
+      );
+    }).toList();
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // MODAL NOVA CONTA A PAGAR
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  Future<void> _abrirModalNovaContaPagar() async {
+    final descCtrl = TextEditingController();
+    final valorCtrl = TextEditingController();
+    final obsCtrl = TextEditingController();
+    String categoria = CategoriaContaPagar.espacoAcademia;
+    DateTime dataVenc = DateTime.now().add(const Duration(days: 7));
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: GridColors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          final dataFormatada =
+              '${dataVenc.day.toString().padLeft(2, '0')}/${dataVenc.month.toString().padLeft(2, '0')}/${dataVenc.year}';
+
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Nova Despesa / Conta a Pagar',
+                        style: TextStyle(
+                          color: GridColors.textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: descCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Descrição da despesa',
+                      hintText: 'Ex: Aluguel Academia, Anuidade CREF, etc.',
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  DropdownButtonFormField<String>(
+                    value: categoria,
+                    decoration: const InputDecoration(labelText: 'Categoria'),
+                    items: CategoriaContaPagar.todas.map((c) {
+                      return DropdownMenuItem(value: c, child: Text(c));
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) setModalState(() => categoria = val);
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: valorCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      labelText: 'Valor (R\$)',
+                      prefixText: 'R\$ ',
+                      hintText: '150,00',
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  InkWell(
+                    onTap: () async {
+                      final escolhida = await showDatePicker(
+                        context: context,
+                        initialDate: dataVenc,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2035),
+                      );
+                      if (escolhida != null) {
+                        setModalState(() => dataVenc = escolhida);
+                      }
+                    },
+                    child: InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'Data de Vencimento',
+                        suffixIcon: Icon(Icons.calendar_today, size: 20),
+                      ),
+                      child: Text(dataFormatada),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: obsCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Observações (opcional)',
+                      hintText: 'Detalhes adicionais, parcelamento, etc.',
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: () async {
+                      final desc = descCtrl.text.trim();
+                      if (desc.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Informe a descrição da despesa.')),
+                        );
+                        return;
+                      }
+                      final valor = double.tryParse(valorCtrl.text.replaceAll(',', '.')) ?? 0;
+                      if (valor <= 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Informe um valor válido maior que zero.')),
+                        );
+                        return;
+                      }
+
+                      final novaConta = PersonalContaPagarModel(
+                        id: 'pagar_${DateTime.now().millisecondsSinceEpoch}',
+                        descricao: desc,
+                        categoria: categoria,
+                        valor: valor,
+                        dataVencimento: dataVenc,
+                        observacao: obsCtrl.text.trim().isNotEmpty ? obsCtrl.text.trim() : null,
+                      );
+
+                      await _repo.salvarContaPagar(novaConta);
+                      Navigator.pop(context);
+                      _carregarDados();
+                      ScaffoldMessenger.of(this.context).showSnackBar(
+                        SnackBar(
+                          content: Text('Despesa cadastrada com sucesso!'),
+                          backgroundColor: CustomColors.primaryGreen,
+                        ),
+                      );
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: CustomColors.primaryGreen,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.check),
+                    label: const Text(
+                      'Salvar Despesa',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Card de metrica do resumo financeiro (Recebido, A Vencer, Em Atraso...).
+  Widget _buildCardMetricaFinanceira(
+      String titulo, String valor, IconData icone, Color cor) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: GridColors.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: cor.withOpacity(0.4)),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: cor, size: 22),
+            Icon(icone, color: cor, size: 20),
             const SizedBox(height: 6),
             Text(
-              valor,
-              style: TextStyle(
-                color: cor,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              titulo,
+              style: TextStyle(color: GridColors.textSecondary, fontSize: 11),
             ),
             const SizedBox(height: 2),
             Text(
-              label,
+              valor,
               style: TextStyle(
-                color: GridColors.textSecondary,
-                fontSize: 11,
+                color: GridColors.textPrimary,
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],
@@ -723,108 +1667,168 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
               : GridColors.divider,
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  aluno.nome,
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      aluno.nome,
+                      style: TextStyle(
+                        color: GridColors.textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Vencimento: Dia ${aluno.diaVencimento} • Valor: R\$ ${aluno.valorMensalidade.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: GridColors.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                'R\$ ${aluno.valorMensalidade.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: isPago ? CustomColors.primaryGreen : GridColors.textPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isPago
+                      ? CustomColors.primaryGreen.withOpacity(0.2)
+                      : isAtrasado
+                          ? GridColors.error.withOpacity(0.2)
+                          : GridColors.secondaryDark.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  isPago
+                      ? 'PAGO'
+                      : isAtrasado
+                          ? 'ATRASADO / DEVENDO'
+                          : 'PENDENTE',
                   style: TextStyle(
-                    color: GridColors.textPrimary,
-                    fontSize: 15,
+                    color: isPago
+                        ? CustomColors.primaryGreen
+                        : isAtrasado
+                            ? GridColors.error
+                            : GridColors.secondaryDark,
+                    fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 4),
+              ),
+              if (isPago && aluno.dataUltimoPagamento != null) ...[
+                const SizedBox(width: 8),
                 Text(
-                  'Vencimento: Dia ${aluno.diaVencimento} • Valor: R\$ ${aluno.valorMensalidade.toStringAsFixed(2)}',
+                  'Pago em: ${aluno.dataUltimoPagamento}',
                   style: TextStyle(
                     color: GridColors.textSecondary,
-                    fontSize: 12,
+                    fontSize: 11,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: isPago
-                            ? CustomColors.primaryGreen.withOpacity(0.2)
-                            : isAtrasado
-                                ? GridColors.error.withOpacity(0.2)
-                                : GridColors.secondaryDark.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        isPago
-                            ? 'PAGO'
-                            : isAtrasado
-                                ? 'ATRASADO / DEVENDO'
-                                : 'PENDENTE',
-                        style: TextStyle(
-                          color: isPago
-                              ? CustomColors.primaryGreen
-                              : isAtrasado
-                                  ? GridColors.error
-                                  : GridColors.secondaryDark,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    if (isPago && aluno.dataUltimoPagamento != null) ...[
-                      const SizedBox(width: 8),
-                      Text(
-                        'Pago em: ${aluno.dataUltimoPagamento}',
-                        style: TextStyle(
-                          color: GridColors.textSecondary,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
               ],
-            ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: isPago
-                ? null
-                : () async {
-                    await _repo.registrarRecebimentoMensalidade(
-                      alunoId: aluno.id,
-                      mesReferencia: '${DateTime.now().month.toString().padLeft(2,'0')}/${DateTime.now().year}',
-                    );
-                    _carregarDados();
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              'Mensalidade de ${aluno.nome} recebida com sucesso!'),
-                          backgroundColor: CustomColors.primaryGreen,
-                        ),
-                      );
-                    }
-                  },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isPago
-                  ? GridColors.divider
-                  : CustomColors.primaryGreen,
-              foregroundColor: isPago
-                  ? GridColors.textSecondary
-                  : GridColors.textOnPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              // Botão Cobrar com Pix
+              OutlinedButton.icon(
+                onPressed: () {
+                  PersonalQrCodePixDialog.show(
+                    context,
+                    pixConfig: _pixConfig,
+                    valorCobrado: aluno.valorMensalidade,
+                    alunoNome: aluno.nome,
+                  );
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: CustomColors.primaryGreen,
+                  side: BorderSide(color: CustomColors.primaryGreen),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                icon: const Icon(Icons.qr_code, size: 16),
+                label: const Text(
+                  'Cobrar Pix',
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                ),
               ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: isPago
+                    ? null
+                    : () async {
+                        await _repo.registrarRecebimentoMensalidade(
+                          alunoId: aluno.id,
+                          mesReferencia: '${DateTime.now().month.toString().padLeft(2,'0')}/${DateTime.now().year}',
+                        );
+                        _carregarDados();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  'Mensalidade de ${aluno.nome} recebida com sucesso!'),
+                              backgroundColor: CustomColors.primaryGreen,
+                            ),
+                          );
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isPago
+                      ? GridColors.divider
+                      : CustomColors.primaryGreen,
+                  foregroundColor: isPago
+                      ? GridColors.textSecondary
+                      : GridColors.textOnPrimary,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  isPago ? 'Recebido' : 'Dar Baixa',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            title: Text(
+              'Ocultar ficha de treino do aluno',
+              style: TextStyle(color: GridColors.textPrimary, fontSize: 13),
             ),
-            child: Text(
-              isPago ? 'Recebido' : 'Dar Baixa',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
+            value: aluno.fichaOcultaParaAluno,
+            activeColor: CustomColors.primaryGreen,
+            onChanged: (oculta) async {
+              await _repo.definirFichaOculta(alunoId: aluno.id, oculta: oculta);
+              _carregarDados();
+            },
           ),
         ],
       ),
@@ -842,10 +1846,31 @@ Map<String, DateTime> _avaliacoesAgendadas = {};
         _alunos.where((a) => a.alertaInadimplente).toList();
     final alunosAusentes =
         _alunos.where((a) => a.diasSemTreinar >= 3).toList();
+    final contasEmAtraso =
+        _contasPagar.where((c) => c.atrasado).toList();
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // Seção: Contas a Pagar em Atraso (se houver)
+        if (contasEmAtraso.isNotEmpty) ...[
+          _buildTituloSecaoAlerta('Contas a Pagar em Atraso (${contasEmAtraso.length})',
+              Icons.receipt_long, GridColors.error),
+          ...contasEmAtraso.map((c) => _buildCardAlertaItem(
+                titulo: c.descricao,
+                subtitulo:
+                    'Despesa de R\$ ${c.valor.toStringAsFixed(2)} (${c.categoria}) vencida em ${c.dataVencimento.day.toString().padLeft(2, '0')}/${c.dataVencimento.month.toString().padLeft(2, '0')}/${c.dataVencimento.year}.',
+                botaoTexto: 'Marcar Paga',
+                icone: Icons.error_outline,
+                cor: GridColors.error,
+                onAcao: () async {
+                  await _repo.registrarPagamentoConta(c.id, pago: true);
+                  _carregarDados();
+                },
+              )),
+          const SizedBox(height: 20),
+        ],
+
         // Seção: Fichas de Treino Vencendo ou Vencidas
         _buildTituloSecaoAlerta('Fichas de Treino a Vencer / Vencidas',
             Icons.fitness_center, GridColors.secondaryDark),

@@ -9,12 +9,16 @@ import 'package:task_manager_flutter/data/services/fitness_conta_sync.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/models/fitness/personal_gestao_model.dart';
+import 'package:task_manager_flutter/data/models/fitness/personal_conta_pagar_model.dart';
+import 'package:task_manager_flutter/data/models/fitness/personal_pix_cobranca_model.dart';
 
 /// Repositório Offline-First para a Gestão do Personal Trainer (AppAcademia V003)
 /// Gerencia alunos, vigência e alertas de treinos, frequência, feedbacks, agenda de aulas e financeiro simples.
 class PersonalGestaoOfflineRepository {
   static const String _kAlunosKey = 'appacademia_personal_alunos_v1';
   static const String _kAgendasKey = 'appacademia_personal_agendas_v1';
+  static const String _kContasPagarKey = 'appacademia_personal_contas_pagar_v1';
+  static const String _kPixCobrancaKey = 'appacademia_personal_pix_cobranca_v1';
 
   static final PersonalGestaoOfflineRepository _instance =
       PersonalGestaoOfflineRepository._internal();
@@ -293,6 +297,17 @@ class PersonalGestaoOfflineRepository {
     }
   }
 
+  /// Liga/desliga a ocultacao da ficha de treino do aluno (decisao do personal).
+  Future<void> definirFichaOculta({required String alunoId, required bool oculta}) async {
+    final lista = await getAlunos();
+    final idx = lista.indexWhere((a) => a.id == alunoId);
+    if (idx >= 0) {
+      lista[idx] = lista[idx].copyWith(fichaOcultaParaAluno: oculta);
+      await _salvarAlunos(lista);
+      await _enfileirar('/alunos/${lista[idx].id}', lista[idx].toMap());
+    }
+  }
+
   // ─────────────────────────────────────────────────────────────────────────────
   // 3. Agenda de Aulas & Academias com Remarcação
   // ─────────────────────────────────────────────────────────────────────────────
@@ -365,6 +380,130 @@ class PersonalGestaoOfflineRepository {
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // 4. Seed de Dados de Demonstração (MFIT Pro Standard)
+  // 4. Gestão de Contas a Pagar do Personal
   // ─────────────────────────────────────────────────────────────────────────────
+
+  Future<List<PersonalContaPagarModel>> getContasPagar() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(FitnessContaSync.chave(_kContasPagarKey + '_real'));
+
+    List<PersonalContaPagarModel> lista = [];
+    if (raw == null || raw.isEmpty) {
+      lista = _seedContasPagarIniciais();
+      await _salvarContasPagar(lista);
+    } else {
+      try {
+        final decoded = json.decode(raw) as List<dynamic>;
+        lista = decoded
+            .map((e) =>
+                PersonalContaPagarModel.fromMap(e as Map<String, dynamic>))
+            .toList();
+      } catch (e) {
+        debugPrint('[PersonalGestaoOfflineRepository] Erro decode contas a pagar: $e');
+        lista = [];
+      }
+    }
+    // Ordena por data de vencimento
+    lista.sort((a, b) => a.dataVencimento.compareTo(b.dataVencimento));
+    return lista;
+  }
+
+  Future<void> _salvarContasPagar(List<PersonalContaPagarModel> lista) async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonStr = json.encode(lista.map((e) => e.toMap()).toList());
+    await prefs.setString(
+        FitnessContaSync.chave(_kContasPagarKey + '_real'), jsonStr);
+  }
+
+  Future<void> salvarContaPagar(PersonalContaPagarModel conta) async {
+    final lista = await getContasPagar();
+    final idx = lista.indexWhere((c) => c.id == conta.id);
+    if (idx >= 0) {
+      lista[idx] = conta;
+    } else {
+      lista.add(conta);
+    }
+    await _salvarContasPagar(lista);
+  }
+
+  Future<void> excluirContaPagar(String contaId) async {
+    final lista = await getContasPagar();
+    lista.removeWhere((c) => c.id == contaId);
+    await _salvarContasPagar(lista);
+  }
+
+  Future<void> registrarPagamentoConta(String contaId, {bool pago = true}) async {
+    final lista = await getContasPagar();
+    final idx = lista.indexWhere((c) => c.id == contaId);
+    if (idx >= 0) {
+      final atual = lista[idx];
+      lista[idx] = atual.copyWith(
+        pago: pago,
+        dataPagamento: pago ? DateTime.now() : null,
+      );
+      await _salvarContasPagar(lista);
+    }
+  }
+
+  List<PersonalContaPagarModel> _seedContasPagarIniciais() {
+    final agora = DateTime.now();
+    return [
+      PersonalContaPagarModel(
+        id: 'pagar_1',
+        descricao: 'Aluguel Espaço Academia Smart',
+        categoria: CategoriaContaPagar.espacoAcademia,
+        valor: 450.00,
+        dataVencimento: DateTime(agora.year, agora.month, 10),
+        pago: true,
+        dataPagamento: DateTime(agora.year, agora.month, 10),
+        observacao: 'Repasse fixo para atendimento presencial',
+      ),
+      PersonalContaPagarModel(
+        id: 'pagar_2',
+        descricao: 'Anuidade Conselho Regional CREF',
+        categoria: CategoriaContaPagar.cref,
+        valor: 180.00,
+        dataVencimento: DateTime(agora.year, agora.month, 25),
+        pago: false,
+        observacao: 'Parcela 03/06',
+      ),
+      PersonalContaPagarModel(
+        id: 'pagar_3',
+        descricao: 'Anúncios Instagram & Marketing Alunos',
+        categoria: CategoriaContaPagar.marketing,
+        valor: 120.00,
+        dataVencimento: DateTime(agora.year, agora.month, 28),
+        pago: false,
+        observacao: 'Campanha novos alunos consultoria',
+      ),
+    ];
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // 5. Configuração de Cobrança Pix & Mensalidade do Personal
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  Future<PersonalPixCobrancaModel> getPixCobranca() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(FitnessContaSync.chave(_kPixCobrancaKey + '_real'));
+
+    if (raw == null || raw.isEmpty) {
+      return PersonalPixCobrancaModel();
+    }
+    try {
+      final decoded = json.decode(raw) as Map<String, dynamic>;
+      return PersonalPixCobrancaModel.fromMap(decoded);
+    } catch (e) {
+      debugPrint('[PersonalGestaoOfflineRepository] Erro decode pix cobranca: $e');
+      return PersonalPixCobrancaModel();
+    }
+  }
+
+  Future<void> salvarPixCobranca(PersonalPixCobrancaModel pix) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      FitnessContaSync.chave(_kPixCobrancaKey + '_real'),
+      pix.toJson(),
+    );
+  }
 }

@@ -10,6 +10,9 @@ import '../../../data/services/perfil_conta_service.dart';
 import '../../../data/services/cadastro_inicial_service.dart';
 import '../../../data/services/fitness_push_notification_service.dart';
 import '../../../data/utils/fitness_access.dart';
+import '../../../data/models/fitness/personal_pix_cobranca_model.dart';
+import '../../../data/services/personal_gestao_offline_repository.dart';
+import '../../widgets/personal_qr_code_pix_dialog.dart';
 import '../../widgets/perfil_fitness_header.dart';
 import '../../widgets/fitness_notificacoes_sheet.dart';
 import '../editar_dados_usuario_screen.dart';
@@ -47,6 +50,13 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
       _telefone = TextEditingController(),
       _instagram = TextEditingController(),
       _bio = TextEditingController();
+  final _valorMensalidade = TextEditingController(text: '200.00');
+  String _tipoChavePix = TipoChavePix.cpfCnpj;
+  final _chavePix = TextEditingController();
+  final _nomeTitularPix = TextEditingController();
+  final _cidadePix = TextEditingController(text: 'SAO PAULO');
+  final _pixCopiaECola = TextEditingController();
+  bool get _ehPersonal => podeGerenciarAlunos(AuthUtility.userInfo);
   late final _service = widget.service ?? PerfilContaService();
   late final _conta = AuthUtility.userInfo.login?.id;
   bool _carregado = false;
@@ -110,6 +120,19 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
       _email = p['email'] as String? ?? '';
       _cpf = p['cpf'] as String? ?? '';
       _foto = p['foto'] as String?;
+      if (_ehPersonal) {
+        final pixConfig = await PersonalGestaoOfflineRepository().getPixCobranca();
+        _valorMensalidade.text = pixConfig.valorMensalidadePadrao > 0
+            ? pixConfig.valorMensalidadePadrao.toStringAsFixed(2)
+            : '200.00';
+        _tipoChavePix = pixConfig.tipoChavePix;
+        _chavePix.text = pixConfig.chavePix;
+        _nomeTitularPix.text = pixConfig.nomeTitular.isNotEmpty
+            ? pixConfig.nomeTitular
+            : (_nome.text.isNotEmpty ? _nome.text : '');
+        _cidadePix.text = pixConfig.cidade;
+        _pixCopiaECola.text = pixConfig.pixCopiaECola;
+      }
       _carregado = true;
     } catch (e) {
       if (mounted) _erro = _mensagem(e);
@@ -173,10 +196,27 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
         'linkBio': _bio.text.trim(),
         'foto': _foto ?? '',
       });
+      if (_ehPersonal) {
+        final valor = double.tryParse(_valorMensalidade.text.replaceAll(',', '.')) ?? 200.0;
+        await PersonalGestaoOfflineRepository().salvarPixCobranca(
+          PersonalPixCobrancaModel(
+            valorMensalidadePadrao: valor,
+            tipoChavePix: _tipoChavePix,
+            chavePix: _chavePix.text.trim(),
+            nomeTitular: _nomeTitularPix.text.trim().isNotEmpty
+                ? _nomeTitularPix.text.trim()
+                : _nome.text.trim(),
+            cidade: _cidadePix.text.trim().isNotEmpty
+                ? _cidadePix.text.trim()
+                : 'SAO PAULO',
+            pixCopiaECola: _pixCopiaECola.text.trim(),
+          ),
+        );
+      }
       if (mounted && _mesmaConta()) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Perfil atualizado.')));
+        ).showSnackBar(const SnackBar(content: Text('Perfil atualizado com sucesso!')));
         Navigator.pop(context, true);
       }
     } catch (e) {
@@ -186,9 +226,67 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
     }
   }
 
+  void _abrirDialogoQrCode() {
+    final valor = double.tryParse(_valorMensalidade.text.replaceAll(',', '.')) ?? 200.0;
+    final model = PersonalPixCobrancaModel(
+      valorMensalidadePadrao: valor,
+      tipoChavePix: _tipoChavePix,
+      chavePix: _chavePix.text.trim(),
+      nomeTitular: _nomeTitularPix.text.trim().isNotEmpty
+          ? _nomeTitularPix.text.trim()
+          : _nome.text.trim(),
+      cidade: _cidadePix.text.trim().isNotEmpty
+          ? _cidadePix.text.trim()
+          : 'SAO PAULO',
+      pixCopiaECola: _pixCopiaECola.text.trim(),
+    );
+    PersonalQrCodePixDialog.show(context, pixConfig: model);
+  }
+
+  void _gerarPixAutomatico() {
+    final chave = _chavePix.text.trim();
+    if (chave.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Informe uma chave Pix primeiro.')),
+      );
+      return;
+    }
+    final valor = double.tryParse(_valorMensalidade.text.replaceAll(',', '.')) ?? 200.0;
+    final titular = _nomeTitularPix.text.trim().isNotEmpty
+        ? _nomeTitularPix.text.trim()
+        : (_nome.text.trim().isNotEmpty ? _nome.text.trim() : 'PERSONAL');
+    final cidade = _cidadePix.text.trim().isNotEmpty ? _cidadePix.text.trim() : 'SAO PAULO';
+
+    final codigoGerado = PersonalPixCobrancaModel.gerarPayloadPixBacen(
+      chave: chave,
+      nome: titular,
+      cidade: cidade,
+      valor: valor,
+    );
+    setState(() {
+      _pixCopiaECola.text = codigoGerado;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Código Pix Copia e Cola padrão BACEN gerado com sucesso!'),
+        backgroundColor: CustomColors.primaryGreen,
+      ),
+    );
+  }
+
   @override
   void dispose() {
-    for (final c in [_nome, _telefone, _instagram, _bio]) {
+    for (final c in [
+      _nome,
+      _telefone,
+      _instagram,
+      _bio,
+      _valorMensalidade,
+      _chavePix,
+      _nomeTitularPix,
+      _cidadePix,
+      _pixCopiaECola,
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -343,7 +441,11 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
                                     : null;
                               },
                             ),
-                            const SizedBox(height: 12),
+                            if (_ehPersonal) ...[
+                              const SizedBox(height: 24),
+                              _buildSecaoPixPersonal(ocupado),
+                            ],
+                            const SizedBox(height: 16),
                             FilledButton.icon(
                               onPressed: ocupado ? null : _salvar,
                               icon: const Icon(Icons.check),
@@ -375,6 +477,193 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildSecaoPixPersonal(bool ocupado) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.grey.shade900
+            : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: CustomColors.primaryGreen.withOpacity(0.35),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: CustomColors.primaryGreen.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.qr_code_2,
+                  color: CustomColors.primaryGreen,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Cobrança Pix & Mensalidade',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Configure para gerar o QR Code e código Copia e Cola para seus alunos.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+
+          // Valor da Mensalidade Padrão
+          TextFormField(
+            controller: _valorMensalidade,
+            enabled: !ocupado,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              labelText: 'Valor da Mensalidade Padrão (R\$)',
+              prefixText: 'R\$ ',
+              hintText: '200,00',
+              helperText: 'Valor padrão cobrado aos seus alunos',
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 14),
+
+          // Tipo de Chave Pix
+          DropdownButtonFormField<String>(
+            value: _tipoChavePix,
+            decoration: const InputDecoration(
+              labelText: 'Tipo de Chave Pix',
+            ),
+            items: TipoChavePix.todos.map((t) {
+              return DropdownMenuItem<String>(
+                value: t,
+                child: Text(t),
+              );
+            }).toList(),
+            onChanged: ocupado
+                ? null
+                : (val) {
+                    if (val != null) {
+                      setState(() => _tipoChavePix = val);
+                    }
+                  },
+          ),
+          const SizedBox(height: 14),
+
+          // Chave Pix
+          TextFormField(
+            controller: _chavePix,
+            enabled: !ocupado,
+            maxLength: 100,
+            decoration: const InputDecoration(
+              labelText: 'Chave Pix',
+              hintText: 'CPF, telefone, e-mail ou chave aleatória',
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 14),
+
+          // Nome do Titular da Conta
+          TextFormField(
+            controller: _nomeTitularPix,
+            enabled: !ocupado,
+            maxLength: 50,
+            decoration: const InputDecoration(
+              labelText: 'Nome do Titular da Conta (para o Pix)',
+              hintText: 'Ex: Carlos Personal',
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 14),
+
+          // Cidade
+          TextFormField(
+            controller: _cidadePix,
+            enabled: !ocupado,
+            maxLength: 30,
+            decoration: const InputDecoration(
+              labelText: 'Cidade (para o Pix)',
+              hintText: 'Ex: SAO PAULO',
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 14),
+
+          // Pix Copia e Cola
+          TextFormField(
+            controller: _pixCopiaECola,
+            enabled: !ocupado,
+            maxLines: 3,
+            decoration: InputDecoration(
+              labelText: 'Pix Copia e Cola',
+              hintText: 'Cole o código Pix do seu banco ou gere automaticamente abaixo',
+              helperText: 'Código EMV / BR Code utilizado pelos apps bancários',
+              suffixIcon: _pixCopiaECola.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 20),
+                      onPressed: ocupado
+                          ? null
+                          : () => setState(() => _pixCopiaECola.clear()),
+                      tooltip: 'Limpar código',
+                    )
+                  : null,
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Ações de geração e teste
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.spaceBetween,
+            children: [
+              TextButton.icon(
+                onPressed: ocupado ? null : _gerarPixAutomatico,
+                icon: const Icon(Icons.auto_awesome, size: 18),
+                label: const Text('Gerar Pix Copia e Cola BACEN'),
+              ),
+              ElevatedButton.icon(
+                onPressed: ocupado ? null : _abrirDialogoQrCode,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: CustomColors.primaryGreen,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                icon: const Icon(Icons.qr_code, size: 20),
+                label: const Text(
+                  'Ver meu QR Code Pix',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

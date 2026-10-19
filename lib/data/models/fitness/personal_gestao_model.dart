@@ -89,6 +89,9 @@ class PersonalAlunoGestaoModel {
   /// Foto e as 7 medidas do cadastro inicial preenchidas. Default true: sem dado, nao alarma.
   final bool cadastroInicialCompleto;
 
+  /// Personal escolhe ocultar a ficha de treino deste aluno (controle manual por aluno).
+  final bool fichaOcultaParaAluno;
+
   const PersonalAlunoGestaoModel({
     required this.id,
     required this.nome,
@@ -99,6 +102,7 @@ class PersonalAlunoGestaoModel {
     this.nivel = '',
     this.ativo = true,
     this.cadastroInicialCompleto = true,
+    this.fichaOcultaParaAluno = false,
     this.treinoAtualNome,
     this.dataInicioTreino,
     this.validadeTreinoDias = 45,
@@ -177,6 +181,7 @@ class PersonalAlunoGestaoModel {
     String? dataUltimoPagamento,
     String? mesReferencia,
     bool? cadastroInicialCompleto,
+    bool? fichaOcultaParaAluno,
   }) {
     return PersonalAlunoGestaoModel(
       id: id ?? this.id,
@@ -188,6 +193,7 @@ class PersonalAlunoGestaoModel {
       nivel: nivel ?? this.nivel,
       ativo: ativo ?? this.ativo,
       cadastroInicialCompleto: cadastroInicialCompleto ?? this.cadastroInicialCompleto,
+      fichaOcultaParaAluno: fichaOcultaParaAluno ?? this.fichaOcultaParaAluno,
       treinoAtualNome: treinoAtualNome ?? this.treinoAtualNome,
       dataInicioTreino: dataInicioTreino ?? this.dataInicioTreino,
       validadeTreinoDias: validadeTreinoDias ?? this.validadeTreinoDias,
@@ -244,6 +250,7 @@ class PersonalAlunoGestaoModel {
       'statusMensalidade': statusMensalidade.name,
       'dataUltimoPagamento': dataUltimoPagamento,
       'mesReferencia': mesReferencia,
+      'fichaOcultaParaAluno': fichaOcultaParaAluno,
     };
   }
 
@@ -287,6 +294,7 @@ class PersonalAlunoGestaoModel {
       ),
       dataUltimoPagamento: map['dataUltimoPagamento']?.toString(),
       mesReferencia: map['mesReferencia']?.toString() ?? '',
+      fichaOcultaParaAluno: map['fichaOcultaParaAluno'] == true,
     );
   }
 }
