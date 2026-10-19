@@ -7,7 +7,8 @@ import 'package:task_manager_flutter/data/services/push_registration_service.dar
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   BackgroundSyncService().initialize();
-  await PushRegistrationService().inicializar();
+  // Push nao bloqueia o primeiro frame: a permissao do navegador pode ficar esperando o usuario.
+  PushRegistrationService().inicializar();
   // Tema escolhido no perfil: carregado antes do primeiro frame para nao piscar.
   await PreferenciaTema.carregar();
   runApp(const TaskManagerApp());
