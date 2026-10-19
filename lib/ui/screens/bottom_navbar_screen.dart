@@ -1,6 +1,7 @@
 import 'package:task_manager_flutter/ui/screens/fitness/meu_perfil_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/ui/widgets/fitness_graficos_hub.dart';
+import 'package:task_manager_flutter/ui/widgets/versao_app_label.dart';
 import 'package:task_manager_flutter/ui/widgets/fitness_menu_page.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/selecionar_aluno_avaliacao_screen.dart';
 import 'package:task_manager_flutter/ui/widgets/cadastro_inicial_banner.dart';
@@ -521,6 +522,8 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                     ),
                     const SizedBox(height: 18),
                   ],
+                  const SizedBox(height: 8),
+                  const Center(child: VersaoAppLabel()),
                 ],
               ),
             );

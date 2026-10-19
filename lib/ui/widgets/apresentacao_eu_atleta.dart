@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:task_manager_flutter/ui/widgets/versao_app_label.dart';
 import 'package:task_manager_flutter/data/utils/app_logger.dart';
 
 /// Apresentação pública. Capturas de demonstração são assets e não criam
@@ -591,6 +592,7 @@ class _ApresentacaoEuAtletaState extends State<ApresentacaoEuAtleta> {
                                           'App e site gratuitos • Apoio voluntário',
                                           tamanho: 12,
                                           cor: _muted),
+                                      const VersaoAppLabel(cor: _muted),
                                       TextButton(
                                           onPressed: () => _irPara(_loginKey),
                                           child: const Text(
