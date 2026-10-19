@@ -11,6 +11,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:task_manager_flutter/data/utils/app_logger.dart';
 import 'package:task_manager_flutter/ui/widgets/midias_sessao_treino.dart';
 
+import 'package:task_manager_flutter/data/models/auth_utility.dart';
+import 'package:task_manager_flutter/data/utils/fitness_access.dart';
+
 class CompartilharTreinoSheet extends StatefulWidget {
   final String treino;
   final int minutos, series, rpe;
@@ -18,10 +21,23 @@ class CompartilharTreinoSheet extends StatefulWidget {
   final VoidCallback onFechar;
   final List<String> fotosIniciais;
   final Future<void> Function(List<String>)? onFotosAlteradas;
-  const CompartilharTreinoSheet({super.key, required this.treino,
-    required this.minutos, required this.series, required this.rpe,
-    required this.tonelagemKg, required this.onFechar,
-    this.fotosIniciais = const [], this.onFotosAlteradas});
+  final String? personalNome;
+  final String? personalInstagram;
+
+  const CompartilharTreinoSheet({
+    super.key,
+    required this.treino,
+    required this.minutos,
+    required this.series,
+    required this.rpe,
+    required this.tonelagemKg,
+    required this.onFechar,
+    this.fotosIniciais = const [],
+    this.onFotosAlteradas,
+    this.personalNome,
+    this.personalInstagram,
+  });
+
   @override
   State<CompartilharTreinoSheet> createState() => _CompartilharTreinoSheetState();
 }
@@ -30,6 +46,49 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
   final _cardKey = GlobalKey();
   late final List<String> _fotos = List.of(widget.fotosIniciais.take(3));
   int _fotoSelecionada = 0;
+  late final TextEditingController _personalCtrl;
+  bool _temPersonalVinculado = false;
+
+  static const _instagramOficialUrl = 'https://www.instagram.com/euatletafitnes/';
+  static const _instagramOficialArroba = '@euatletafitnes';
+
+  @override
+  void initState() {
+    super.initState();
+    _inicializarPersonal();
+  }
+
+  @override
+  void dispose() {
+    _personalCtrl.dispose();
+    super.dispose();
+  }
+
+  void _inicializarPersonal() {
+    String nomePersonal = widget.personalNome?.trim() ?? '';
+    if (nomePersonal.isEmpty && !podeGerenciarAlunos()) {
+      final parceiro = AuthUtility.userInfo.login?.parceiro;
+      nomePersonal = parceiro?.nome?.trim() ?? parceiro?.razaoSocial?.trim() ?? '';
+    }
+
+    String arrobaPersonal = widget.personalInstagram?.trim() ?? '';
+    if (arrobaPersonal.isEmpty && nomePersonal.isNotEmpty) {
+      final limpo = nomePersonal.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]'), '_');
+      arrobaPersonal = '@$limpo';
+    } else if (arrobaPersonal.isNotEmpty && !arrobaPersonal.startsWith('@')) {
+      arrobaPersonal = '@$arrobaPersonal';
+    }
+
+    _temPersonalVinculado = nomePersonal.isNotEmpty || arrobaPersonal.isNotEmpty;
+    _personalCtrl = TextEditingController(text: arrobaPersonal);
+  }
+
+  String get _personalArrobaFormatado {
+    final texto = _personalCtrl.text.trim();
+    if (texto.isEmpty) return '';
+    return texto.startsWith('@') ? texto : '@$texto';
+  }
+
   Uint8List? get _foto {
     if (_fotos.isEmpty) return null;
     try {
@@ -51,12 +110,32 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
   }
   String get _playUrl => _linkLoja(_play, 'play.google.com');
   String get _appleUrl => _linkLoja(_apple, 'apps.apple.com');
-  String get _legenda => 'Treino concluído no Eu Atleta!\n'
-      '${widget.treino}\n${widget.minutos} min • ${widget.series} séries\n'
-      '${widget.tonelagemKg.toStringAsFixed(0)} kg de volume total\n'
-      '${_playUrl.isEmpty ? '' : '${_playUrl == 'https://play.google.com/store/apps' ? 'Android (link de teste)' : 'Baixe para Android'}: $_playUrl\n'}'
-      '${_appleUrl.isEmpty ? '' : '${_appleUrl == 'https://apps.apple.com/br/' ? 'iPhone (link de teste)' : 'Baixe para iPhone'}: $_appleUrl\n'}'
-      '#EuAtleta';
+
+  String get _legenda {
+    final sb = StringBuffer();
+    sb.writeln('Treino concluído no Eu Atleta! 💪');
+    sb.writeln(widget.treino);
+    sb.writeln('${widget.minutos} min • ${widget.series} séries • RPE ${widget.rpe}/10');
+    sb.writeln('${widget.tonelagemKg.toStringAsFixed(0)} kg de volume total');
+    sb.writeln();
+    sb.writeln(_instagramOficialArroba);
+    sb.writeln(_instagramOficialUrl);
+
+    final personalTag = _personalArrobaFormatado;
+    if (personalTag.isNotEmpty) {
+      sb.writeln('Personal: $personalTag');
+    }
+
+    sb.writeln();
+    if (_playUrl.isNotEmpty) {
+      sb.writeln('${_playUrl == 'https://play.google.com/store/apps' ? 'Android (link de teste)' : 'Baixe para Android'}: $_playUrl');
+    }
+    if (_appleUrl.isNotEmpty) {
+      sb.writeln('${_appleUrl == 'https://apps.apple.com/br/' ? 'iPhone (link de teste)' : 'Baixe para iPhone'}: $_appleUrl');
+    }
+    sb.write('#EuAtleta #euatletafitnes');
+    return sb.toString();
+  }
 
   Future<void> _alterarFotos(List<String> fotos) async {
     await widget.onFotosAlteradas?.call(fotos);
@@ -121,19 +200,19 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
       await Clipboard.setData(ClipboardData(text: _legenda));
 
       if (kIsWeb) {
-        // Na Web: baixa a imagem para a máquina e abre o Instagram no navegador
+        // Na Web: baixa a imagem para a máquina e abre o Instagram no perfil oficial
         final xFile = XFile.fromData(bytes, mimeType: 'image/png', name: 'meu-treino.png');
         try {
           await xFile.saveTo('meu-treino.png');
         } catch (_) {}
 
-        final urlInstagram = Uri.parse('https://www.instagram.com/');
+        final urlInstagram = Uri.parse(_instagramOficialUrl);
         await launchUrl(urlInstagram, mode: LaunchMode.externalApplication);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Imagem do treino baixada e legenda copiada! Abra o Instagram para publicar.'),
+              content: Text('Imagem do treino baixada e legenda copiada marcando @euatletafitnes! Abra o Instagram para publicar.'),
               duration: Duration(seconds: 4),
             ),
           );
@@ -276,7 +355,33 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
             Text('${widget.tonelagemKg.toStringAsFixed(0)} kg de volume total',
               style: const TextStyle(color: Colors.white)),
             const SizedBox(height: 12),
-            const Text('#EuAtleta', style: TextStyle(color: Colors.white)),
+            const Text('#EuAtleta', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.black26,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  FaIcon(FontAwesomeIcons.instagram, color: Colors.white, size: 12),
+                  SizedBox(width: 6),
+                  Text('@euatletafitnes',
+                    style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+            if (_personalArrobaFormatado.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Personal: $_personalArrobaFormatado',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+              ),
+            ],
+            const SizedBox(height: 6),
             if (_playUrl.isNotEmpty) Text('Android: $_playUrl',
               textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 11)),
             if (_appleUrl.isNotEmpty) Text('iPhone: $_appleUrl',
@@ -301,6 +406,24 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
           if (_foto != null) TextButton(onPressed: _ocupado ? null : _removerFoto,
             child: const Text('Remover foto')),
         ]),
+        if (_temPersonalVinculado) ...[
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: TextField(
+              controller: _personalCtrl,
+              onChanged: (_) => setState(() {}),
+              style: const TextStyle(fontSize: 13),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.person_outline, size: 18),
+                labelText: 'Marcar Personal (Instagram)',
+                hintText: '@personal',
+                isDense: true,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ),
+        ],
         // ── Botões de redes sociais ──────────────────────────────────
         const SizedBox(height: 8),
         const Text('Compartilhar em:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),

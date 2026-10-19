@@ -89,4 +89,113 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('sempre marca @euatletafitnes no card e copia legenda com perfil oficial', (tester) async {
+    tester.view.physicalSize = const Size(600, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    String? textoCopiado;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+        if (call.method == 'Clipboard.setData') {
+          textoCopiado = (call.arguments as Map)['text'] as String?;
+        }
+        return null;
+      });
+    addTearDown(() => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(SystemChannels.platform, null));
+
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CompartilharTreinoSheet(
+      treino: 'Treino Hipertrofia', minutos: 50, series: 15, rpe: 8, tonelagemKg: 1200,
+      onFechar: () {}))));
+    await tester.pumpAndSettle();
+
+    // No card visual
+    expect(find.text('@euatletafitnes'), findsOneWidget);
+
+    // Clicar em "Copiar legenda"
+    await tester.tap(find.text('Copiar legenda'));
+    await tester.pumpAndSettle();
+
+    expect(textoCopiado, isNotNull);
+    expect(textoCopiado, contains('@euatletafitnes'));
+    expect(textoCopiado, contains('https://www.instagram.com/euatletafitnes/'));
+    // Sem personal informado, não adiciona linha de personal
+    expect(textoCopiado, isNot(contains('Personal:')));
+  });
+
+  testWidgets('marca o personal no card e na legenda quando fornecido', (tester) async {
+    tester.view.physicalSize = const Size(600, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    String? textoCopiado;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+        if (call.method == 'Clipboard.setData') {
+          textoCopiado = (call.arguments as Map)['text'] as String?;
+        }
+        return null;
+      });
+    addTearDown(() => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(SystemChannels.platform, null));
+
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CompartilharTreinoSheet(
+      treino: 'Treino Pernas', minutos: 60, series: 18, rpe: 9, tonelagemKg: 2000,
+      personalNome: 'Carlos Treinador',
+      personalInstagram: '@carlos.coach',
+      onFechar: () {}))));
+    await tester.pumpAndSettle();
+
+    // No card visual
+    expect(find.text('@euatletafitnes'), findsOneWidget);
+    expect(find.text('Personal: @carlos.coach'), findsOneWidget);
+
+    // Campo de personal na UI para ajuste se desejado
+    expect(find.widgetWithText(TextField, 'Marcar Personal (Instagram)'), findsOneWidget);
+
+    // Copiar legenda e verificar que inclui ambos
+    await tester.tap(find.text('Copiar legenda'));
+    await tester.pumpAndSettle();
+
+    expect(textoCopiado, isNotNull);
+    expect(textoCopiado, contains('@euatletafitnes'));
+    expect(textoCopiado, contains('https://www.instagram.com/euatletafitnes/'));
+    expect(textoCopiado, contains('Personal: @carlos.coach'));
+  });
+
+  testWidgets('deriva arroba automaticamente do nome do personal se nao tiver arroba especifica', (tester) async {
+    tester.view.physicalSize = const Size(600, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    String? textoCopiado;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+        if (call.method == 'Clipboard.setData') {
+          textoCopiado = (call.arguments as Map)['text'] as String?;
+        }
+        return null;
+      });
+    addTearDown(() => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(SystemChannels.platform, null));
+
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CompartilharTreinoSheet(
+      treino: 'Treino Costas', minutos: 40, series: 12, rpe: 7, tonelagemKg: 950,
+      personalNome: 'Ana Paula Silva',
+      onFechar: () {}))));
+    await tester.pumpAndSettle();
+
+    // No card visual deriva @ana_paula_silva
+    expect(find.text('Personal: @ana_paula_silva'), findsOneWidget);
+
+    await tester.tap(find.text('Copiar legenda'));
+    await tester.pumpAndSettle();
+
+    expect(textoCopiado, contains('Personal: @ana_paula_silva'));
+    expect(textoCopiado, contains('@euatletafitnes'));
+  });
 }
