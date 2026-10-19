@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:task_manager_flutter/app.dart';
+import 'package:task_manager_flutter/data/models/auth_utility.dart';
+import 'package:task_manager_flutter/data/models/login_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_push_notification_service.dart';
+import 'package:task_manager_flutter/ui/widgets/authenticated_header_shell.dart';
 import 'package:task_manager_flutter/ui/widgets/fitness_notificacoes_sheet.dart';
 import 'package:task_manager_flutter/ui/widgets/perfil_fitness_header.dart';
 
@@ -143,5 +147,59 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(abriuAvaliacao, isTrue);
+  });
+
+  testWidgets('clique no ! e no sino dentro do AuthenticatedHeaderShell abre dialogo e central de notificacoes',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await AuthUtility.setUserInfo(LoginModel(
+      token: 'token_teste',
+      login: Login(id: 100, nome: 'Lis Valentine', tipoLogin: LoginEnum.APP_ALUNO),
+    ));
+
+    final notifService = FitnessPushNotificationService();
+    await notifService.agendarNotificacao(
+      FitnessNotificationItem(
+        id: 'notif_teste_1',
+        titulo: 'Complete seu cadastro inicial',
+        corpo: 'Falta cadastrar fotos e medidas corporais.',
+        dataHora: DateTime.now(),
+        tipo: 'cadastro_inicial',
+      ),
+    );
+
+    await tester.pumpWidget(MaterialApp(
+      navigatorKey: TaskManagerApp.globalKey,
+      builder: (context, child) => AuthenticatedHeaderShell(
+        onSair: () {},
+        onEditar: () {},
+        child: child ?? const SizedBox.shrink(),
+      ),
+      home: const Scaffold(
+        body: Center(child: Text('Tela Inicio')),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    // 1. Clicar no badge !
+    expect(find.byKey(const Key('cadastro_incompleto_header')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('cadastro_incompleto_header')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Avaliação Inicial Pendente'), findsOneWidget);
+    expect(find.text('Falta você fazer a sua avaliação inicial!'), findsOneWidget);
+
+    // Fechar diálogo
+    await tester.tap(find.text('Lembrar mais tarde'));
+    await tester.pumpAndSettle();
+
+    // 2. Clicar no sino de notificações
+    expect(find.byKey(const Key('abrir_notificacoes')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('abrir_notificacoes')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Notificações'), findsOneWidget);
+    expect(find.text('Complete seu cadastro inicial'), findsAtLeastNWidgets(1));
+    expect(find.text('Falta cadastrar fotos e medidas corporais.'), findsOneWidget);
   });
 }

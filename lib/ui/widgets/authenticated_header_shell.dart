@@ -10,6 +10,8 @@ import 'package:task_manager_flutter/ui/widgets/perfil_fitness_header.dart';
 import 'package:task_manager_flutter/data/services/cadastro_inicial_service.dart';
 import 'package:task_manager_flutter/data/services/fitness_push_notification_service.dart';
 import 'package:task_manager_flutter/data/services/push_registration_service.dart';
+import 'package:task_manager_flutter/app.dart';
+import 'package:task_manager_flutter/data/utils/app_logger.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/cadastro_inicial_screen.dart';
 import 'package:task_manager_flutter/ui/widgets/fitness_notificacoes_sheet.dart';
 
@@ -106,30 +108,50 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
     });
   }
 
+  BuildContext get _navContext =>
+      TaskManagerApp.globalKey.currentContext ?? context;
+
   Future<void> _abrirCadastroInicial() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const CadastroInicialScreen()),
-    );
+    final nav = TaskManagerApp.globalKey.currentState;
+    if (nav != null) {
+      await nav.push(
+        MaterialPageRoute(builder: (_) => const CadastroInicialScreen()),
+      );
+    } else {
+      await Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const CadastroInicialScreen()),
+      );
+    }
     final chave = _sessaoCarregada;
     if (chave != null) await _carregarIndicadores(chave);
   }
 
   Future<void> _avisarAvaliacaoInicialPendente() async {
-    await mostrarDialogoAvaliacaoInicialPendente(
-      context,
-      onFazerAgora: _abrirCadastroInicial,
-    );
+    final ctx = _navContext;
+    try {
+      await mostrarDialogoAvaliacaoInicialPendente(
+        ctx,
+        onFazerAgora: _abrirCadastroInicial,
+      );
+    } catch (e, stack) {
+      AppLogger.i.error('Erro ao abrir diálogo de avaliação inicial pendente: $e', stack);
+    }
   }
 
   Future<void> _abrirNotificacoes() async {
     final chave = _sessaoCarregada;
-    await mostrarCentralNotificacoes(
-      context,
-      onAtualizarIndicadores: () {
-        if (chave != null) _carregarIndicadores(chave);
-      },
-      onAbrirAvaliacaoInicial: _abrirCadastroInicial,
-    );
+    final ctx = _navContext;
+    try {
+      await mostrarCentralNotificacoes(
+        ctx,
+        onAtualizarIndicadores: () {
+          if (chave != null) _carregarIndicadores(chave);
+        },
+        onAbrirAvaliacaoInicial: _abrirCadastroInicial,
+      );
+    } catch (e, stack) {
+      AppLogger.i.error('Erro ao abrir Central de Notificações: $e', stack);
+    }
   }
 
   String? _permissoesVerificadasPara;

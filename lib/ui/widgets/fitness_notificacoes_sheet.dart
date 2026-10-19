@@ -2,14 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/constants/custom_colors.dart';
 import '../../data/services/fitness_push_notification_service.dart';
+import '../../app.dart';
 
 /// Exibe o diálogo autoexplicativo avisando que falta fazer a avaliação inicial
 Future<void> mostrarDialogoAvaliacaoInicialPendente(
   BuildContext context, {
   required VoidCallback onFazerAgora,
 }) async {
+  final targetContext = Navigator.maybeOf(context) != null
+      ? context
+      : (TaskManagerApp.globalKey.currentContext ?? context);
+
   await showDialog<void>(
-    context: context,
+    context: targetContext,
     useRootNavigator: true,
     builder: (dialogContext) => AlertDialog(
       backgroundColor: GridColors.card,
@@ -94,13 +99,17 @@ Future<void> mostrarCentralNotificacoes(
   required VoidCallback onAtualizarIndicadores,
   required VoidCallback onAbrirAvaliacaoInicial,
 }) async {
+  final targetContext = Navigator.maybeOf(context) != null
+      ? context
+      : (TaskManagerApp.globalKey.currentContext ?? context);
+
   final notifService = FitnessPushNotificationService();
   var itens = await notifService.getNotificacoes();
 
-  if (!context.mounted) return;
+  if (!targetContext.mounted) return;
 
   await showModalBottomSheet<void>(
-    context: context,
+    context: targetContext,
     useRootNavigator: true,
     isScrollControlled: true,
     showDragHandle: true,

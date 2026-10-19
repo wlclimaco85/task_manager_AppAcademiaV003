@@ -90,84 +90,98 @@ class PerfilFitnessHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: InkWell(
-              onTap: onEditar,
-              borderRadius: BorderRadius.circular(12),
-              child: Row(
-                children: [
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Semantics(
-                        label: 'Foto de $_nomeExibido',
-                        image: true,
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: context.appSurfaceAlt,
-                            shape: BoxShape.circle,
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: _foto(context),
-                        ),
+          // 1. Avatar com foto e badge de alerta desacoplados
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Semantics(
+                label: 'Foto de $_nomeExibido',
+                image: true,
+                button: onEditar != null,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: onEditar,
+                    customBorder: const CircleBorder(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: context.appSurfaceAlt,
+                        shape: BoxShape.circle,
                       ),
-                      if (cadastroIncompleto)
-                        Positioned(
-                          right: -5,
-                          bottom: -5,
-                          child: Semantics(
-                            label: 'Avaliação inicial pendente: faltam foto ou medidas',
-                            button: true,
-                            child: InkWell(
-                              key: const Key('cadastro_incompleto_header'),
-                              onTap: onCadastroIncompleto,
-                              customBorder: const CircleBorder(),
-                              child: Container(
-                                width: 22,
-                                height: 22,
-                                decoration: BoxDecoration(
-                                  color: GridColors.secondary,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: context.appSurface, width: 2),
-                                ),
-                                child: const Center(
-                                  child: Icon(Icons.priority_high, size: 14, color: Colors.white),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _nomeExibido,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: context.appText,
-                          ),
-                        ),
-                        Text(
-                          perfil,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: context.appTextSecondary,
-                          ),
-                        ),
-                      ],
+                      clipBehavior: Clip.antiAlias,
+                      child: _foto(context),
                     ),
                   ),
-                ],
+                ),
+              ),
+              if (cadastroIncompleto)
+                Positioned(
+                  right: -6,
+                  bottom: -6,
+                  child: Semantics(
+                    label: 'Avaliação inicial pendente: faltam foto ou medidas',
+                    button: true,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        key: const Key('cadastro_incompleto_header'),
+                        onTap: onCadastroIncompleto,
+                        customBorder: const CircleBorder(),
+                        child: Container(
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            color: GridColors.secondary,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: context.appSurface, width: 2),
+                          ),
+                          child: const Center(
+                            child: Icon(Icons.priority_high, size: 16, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 12),
+
+          // 2. Textos (Nome e Perfil) clicáveis para Editar Perfil
+          Expanded(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onEditar,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _nomeExibido,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: context.appText,
+                        ),
+                      ),
+                      Text(
+                        perfil,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.appTextSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
