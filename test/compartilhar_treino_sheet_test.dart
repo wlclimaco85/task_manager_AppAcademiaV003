@@ -67,5 +67,26 @@ void main() {
     expect(find.text('Fotos do treino: 2/3'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+  testWidgets('botoes Instagram e Facebook aparecem na sheet de compartilhamento', (tester) async {
+    tester.view.physicalSize = const Size(600, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CompartilharTreinoSheet(
+      treino: 'Treino C', minutos: 45, series: 12, rpe: 8, tonelagemKg: 750,
+      onFechar: () {}))));
+    await tester.pumpAndSettle();
+    expect(find.text('Compartilhar em:'), findsOneWidget);
+    expect(find.text('Instagram'), findsOneWidget);
+    expect(find.text('Facebook'), findsOneWidget);
+    // Botões devem estar habilitados (não ocupado)
+    final btnInsta = tester.widget<OutlinedButton>(
+      find.widgetWithText(OutlinedButton, 'Instagram'));
+    final btnFace = tester.widget<OutlinedButton>(
+      find.widgetWithText(OutlinedButton, 'Facebook'));
+    expect(btnInsta.onPressed, isNotNull);
+    expect(btnFace.onPressed, isNotNull);
+    expect(tester.takeException(), isNull);
+  });
 
 }

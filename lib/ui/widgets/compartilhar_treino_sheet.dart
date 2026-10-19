@@ -1,11 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:task_manager_flutter/ui/widgets/midias_sessao_treino.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:task_manager_flutter/data/utils/app_logger.dart';
 
 class CompartilharTreinoSheet extends StatefulWidget {
@@ -97,6 +101,75 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
       if (mounted) setState(() => _ocupado = false);
     }
   }
+
+  /// Renderiza o card EU ATLETA em PNG e salva em arquivo temporário.
+  Future<File> _renderizarCardPng() async {
+    await WidgetsBinding.instance.endOfFrame;
+    final boundary = _cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+    final imagem = await boundary.toImage(pixelRatio: 3);
+    final dados = await imagem.toByteData(format: ui.ImageByteFormat.png);
+    imagem.dispose();
+    final dir = await getTemporaryDirectory();
+    final arquivo = File('${dir.path}/meu-treino.png');
+    await arquivo.writeAsBytes(dados!.buffer.asUint8List());
+    return arquivo;
+  }
+
+  Future<void> _compartilharInstagram() async {
+    setState(() => _ocupado = true);
+    try {
+      final arquivo = await _renderizarCardPng();
+      if (!mounted) return;
+      // Tenta abrir Instagram Stories diretamente com a imagem
+      final uri = Uri.parse('instagram://sharesheet');
+      if (await canLaunchUrl(uri)) {
+        await Share.shareXFiles(
+          [XFile(arquivo.path, mimeType: 'image/png', name: 'meu-treino.png')],
+          text: _legenda,
+        );
+      } else {
+        // Fallback: abre o app do Instagram (feed/stories) sem imagem pré-carregada
+        final uriStore = Uri.parse('https://www.instagram.com/');
+        await Share.shareXFiles(
+          [XFile(arquivo.path, mimeType: 'image/png', name: 'meu-treino.png')],
+          text: _legenda,
+        );
+        if (await canLaunchUrl(uriStore) && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Salve a imagem e publique no Instagram.')));
+        }
+      }
+    } catch (error, stack) {
+      AppLogger.i.error('Falha ao compartilhar no Instagram.', stack);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível abrir o Instagram. Verifique se está instalado.')));
+      }
+    } finally {
+      if (mounted) setState(() => _ocupado = false);
+    }
+  }
+
+  Future<void> _compartilharFacebook() async {
+    setState(() => _ocupado = true);
+    try {
+      final arquivo = await _renderizarCardPng();
+      if (!mounted) return;
+      await Share.shareXFiles(
+        [XFile(arquivo.path, mimeType: 'image/png', name: 'meu-treino.png')],
+        text: _legenda,
+      );
+    } catch (error, stack) {
+      AppLogger.i.error('Falha ao compartilhar no Facebook.', stack);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível abrir o Facebook. Verifique se está instalado.')));
+      }
+    } finally {
+      if (mounted) setState(() => _ocupado = false);
+    }
+  }
+
   Future<void> _compartilhar() async {
     setState(() => _ocupado = true);
     try {
@@ -171,7 +244,37 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
           if (_foto != null) TextButton(onPressed: _ocupado ? null : _removerFoto,
             child: const Text('Remover foto')),
         ]),
-        const Text('Escolha Instagram ou Facebook no compartilhamento do celular.'),
+        // ── Botões de redes sociais ──────────────────────────────────
+        const SizedBox(height: 8),
+        const Text('Compartilhar em:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+        const SizedBox(height: 8),
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          // Botão Instagram
+          Expanded(child: OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFFE1306C),
+              side: const BorderSide(color: Color(0xFFE1306C)),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: _ocupado ? null : _compartilharInstagram,
+            icon: const FaIcon(FontAwesomeIcons.instagram, size: 20),
+            label: const Text('Instagram'),
+          )),
+          const SizedBox(width: 10),
+          // Botão Facebook
+          Expanded(child: OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF1877F2),
+              side: const BorderSide(color: Color(0xFF1877F2)),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: _ocupado ? null : _compartilharFacebook,
+            icon: const FaIcon(FontAwesomeIcons.facebook, size: 20),
+            label: const Text('Facebook'),
+          )),
+        ]),
         const SizedBox(height: 12),
         FilledButton.icon(onPressed: _ocupado ? null : _compartilhar,
           icon: const Icon(Icons.share), label: const Text('Compartilhar foto do treino')),
