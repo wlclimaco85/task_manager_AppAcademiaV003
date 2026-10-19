@@ -14,7 +14,7 @@ class _FitnessGraficosHubState extends State<FitnessGraficosHub> {
   late final _dados = widget.dados ?? GraficosFitnessDados.carregar();
   int _dias = 30;
   String _medida = 'Peso';
-  String? _exercicio;
+  String? _ficha;
   @override
   Widget build(BuildContext context) => FutureBuilder<GraficosFitnessDados>(
       future: _dados,
@@ -27,13 +27,13 @@ class _FitnessGraficosHubState extends State<FitnessGraficosHub> {
               padding: EdgeInsets.all(16),
               child: Text('Carregando gráficos dos registros reais...'));
         final dados = snapshot.data!;
-        final exercicio = _exercicio ??
-            (dados.exercicios.isEmpty ? null : dados.exercicios.keys.first);
+        final ficha = _ficha ??
+            (dados.fichas.isEmpty ? null : dados.fichas.keys.first);
         final series = dados.series(
             dias: _dias,
             agora: DateTime.now(),
             medida: _medida,
-            exercicioId: exercicio);
+            treinoId: ficha);
         return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('Minha evolução',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
@@ -59,22 +59,22 @@ class _FitnessGraficosHubState extends State<FitnessGraficosHub> {
             ],
             onChanged: (v) => setState(() => _medida = v!),
           ),
-          if (dados.exercicios.isNotEmpty)
+          if (dados.fichas.isNotEmpty)
             Padding(
                 padding: const EdgeInsets.only(top: 20),
                 child: DropdownButtonFormField<String>(
-                    initialValue: exercicio,
+                    initialValue: ficha,
                     isExpanded: true,
                     decoration: const InputDecoration(
-                        labelText: 'Exercício para acompanhar a carga'),
+                        labelText: 'Ficha de treino para peso e frequência'),
                     items: [
-                      for (final e in dados.exercicios.entries)
+                      for (final e in dados.fichas.entries)
                         DropdownMenuItem(
                             value: e.key,
                             child:
                                 Text(e.value, overflow: TextOverflow.ellipsis))
                     ],
-                    onChanged: (v) => setState(() => _exercicio = v))),
+                    onChanged: (v) => setState(() => _ficha = v))),
           const SizedBox(height: 12),
           LayoutBuilder(builder: (context, constraints) {
             final largura = constraints.maxWidth >= 900

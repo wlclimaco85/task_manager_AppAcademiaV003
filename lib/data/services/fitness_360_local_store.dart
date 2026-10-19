@@ -33,6 +33,8 @@ class Fitness360Summary {
     required this.lastSyncAt,
     required this.syncSource,
     this.heightCm,
+    this.strengthTrainingMinutes = 0,
+    this.strengthCalories = 0,
   });
 
   /// Hábitos diários contados: treino, passos, sono, hidratação e check-in.
@@ -60,6 +62,8 @@ class Fitness360Summary {
   final int activeDaysWeek;
   final DateTime lastSyncAt;
   final String syncSource;
+  final int strengthTrainingMinutes;
+  final int strengthCalories;
 
   double get weeklyProgress => (activeDaysWeek / 7).clamp(0.0, 1.0);
 

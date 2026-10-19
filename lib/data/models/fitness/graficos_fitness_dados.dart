@@ -8,6 +8,7 @@ import 'package:task_manager_flutter/data/utils/api_links.dart';
 import 'package:task_manager_flutter/data/utils/tenant_context.dart';
 import 'package:task_manager_flutter/data/utils/app_logger.dart';
 import 'sessao_treino_registro_model.dart';
+import 'plano_treino_model.dart';
 
 class PontoFitness {
   final DateTime data;
@@ -25,19 +26,25 @@ class GraficosFitnessDados {
   final List<SessaoTreinoRegistroModel> sessoes;
   final List<Fitness360Record> registros;
   final List<Map<String, dynamic>> diario;
+  final List<PlanoTreinoModel> planos;
   const GraficosFitnessDados(
-      {required this.sessoes, required this.registros, this.diario = const []});
+      {required this.sessoes,
+      required this.registros,
+      this.diario = const [],
+      this.planos = const []});
 
   static Future<GraficosFitnessDados> carregar() async {
     final resultados = await Future.wait<dynamic>([
       FitnessOfflineRepository().getSessoesConcluidas(),
       Fitness360LocalStore.records(),
       _carregarDiario(),
+      FitnessOfflineRepository().getPlanosTreino(),
     ]);
     return GraficosFitnessDados(
         sessoes: resultados[0],
         registros: resultados[1],
-        diario: resultados[2]);
+        diario: resultados[2],
+        planos: resultados[3]);
   }
 
   static Future<List<Map<String, dynamic>>> _carregarDiario() async {
@@ -78,9 +85,12 @@ class GraficosFitnessDados {
     }
   }
 
-  Map<String, String> get exercicios => {
+  Map<String, String> get fichas => {
         for (final s in sessoes)
-          for (final e in s.exerciciosExecutados) e.exercicioId: e.exercicioNome
+          if (s.treinoId.isNotEmpty)
+            s.treinoId: 'Ficha • ${s.divisaoNome}',
+        for (final p in planos)
+          if (p.id.isNotEmpty && !p.isTemplate) p.id: p.titulo,
       };
   Set<String> get medidas => {
         'Peso',
@@ -91,7 +101,7 @@ class GraficosFitnessDados {
       {required int dias,
       required DateTime agora,
       String medida = 'Peso',
-      String? exercicioId}) {
+      String? treinoId}) {
     final inicio = DateTime(agora.year, agora.month, agora.day)
         .subtract(Duration(days: dias - 1));
     bool noPeriodo(DateTime d) => !d.isBefore(inicio) && !d.isAfter(agora);
@@ -104,7 +114,8 @@ class GraficosFitnessDados {
         if (s.id.isNotEmpty) s.id: s
     }.values.where((s) {
       final d = DateTime.tryParse(s.dataHoraInicio);
-      return d != null && noPeriodo(d);
+      return d != null && noPeriodo(d) &&
+          (treinoId == null || s.treinoId == treinoId);
     }).toList()
       ..sort((a, b) => a.dataHoraInicio.compareTo(b.dataHoraInicio));
     final porDia = <DateTime, PontoFitness>{};
@@ -185,7 +196,7 @@ class GraficosFitnessDados {
     passos.sort((a, b) => a.data.compareTo(b.data));
     return [
       SerieFitness('Evolução de $medida', unidade, peso),
-      SerieFitness('Quantidade de treinos', 'treinos',
+      SerieFitness('Frequência da ficha', 'treinos',
           treinos.isEmpty ? [] : quantidade),
       SerieFitness(
           'Volume realizado',
@@ -220,21 +231,6 @@ class GraficosFitnessDados {
       SerieFitness('Passos registrados', 'passos', passos),
       SerieFitness('Batimentos registrados', 'bpm',
           registrosDaUnidade('batimento', RegExp(r'(\d+(?:[.,]\d+)?)\s*bpm'))),
-      if (exercicioId != null)
-        SerieFitness('Carga do exercício', 'kg', [
-          for (final s in treinos)
-            if (s.exerciciosExecutados.any((e) =>
-                e.exercicioId == exercicioId &&
-                e.series.any((s) => s.concluida)))
-              PontoFitness(
-                  DateTime.parse(s.dataHoraInicio),
-                  s.exerciciosExecutados
-                      .where((e) => e.exercicioId == exercicioId)
-                      .expand((e) => e.series)
-                      .where((s) => s.concluida)
-                      .map((s) => s.cargaRealKg)
-                      .reduce((a, b) => a > b ? a : b))
-        ]),
     ];
   }
 }

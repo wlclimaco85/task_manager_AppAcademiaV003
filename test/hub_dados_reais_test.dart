@@ -1,9 +1,17 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/models/hidratacao_model.dart';
 import 'package:task_manager_flutter/data/models/saude_diaria_model.dart';
+import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_360_local_store.dart';
+import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
+import 'package:task_manager_flutter/data/services/fitness_resumo_hoje_service.dart';
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   // Formato real de GET /api/fitness/resumo.
   ResumoSaudeDiaria resumo({
     int passos = 0,
@@ -95,5 +103,51 @@ void main() {
         hidratacaoMetaAtingida(
             const ResumoHidratacao(totalMl: 2100, metaDiariaMl: 2000)),
         isTrue);
+  });
+
+  test('resumo de hoje soma atividade e musculação e ignora dias antigos', () async {
+    final agora = DateTime.now();
+    final ontem = agora.subtract(const Duration(days: 1));
+    SharedPreferences.setMockInitialValues({
+      'fitness360.records.v1': jsonEncode([
+        Fitness360Record(
+          id: 1, type: 'atividade', title: 'Caminhada',
+          value: '3.0 km (30 min • 150 kcal)', note: '', createdAt: agora,
+        ).toJson(),
+        Fitness360Record(
+          id: 2, type: 'atividade', title: 'Caminhada antiga',
+          value: '99 km (200 min • 999 kcal)', note: '', createdAt: ontem,
+        ).toJson(),
+      ]),
+    });
+    await FitnessOfflineRepository().registrarSessaoConcluida(
+      SessaoTreinoRegistroModel(
+        id: 'hoje', treinoId: 'ficha', divisaoLetra: 'A',
+        divisaoNome: 'Treino A', alunoId: 'aluno',
+        dataHoraInicio: agora.subtract(const Duration(hours: 1)).toIso8601String(),
+        dataHoraFim: agora.toIso8601String(), duracaoSegundos: 3600,
+        rpe: 7, exerciciosExecutados: const [],
+      ),
+    );
+    await FitnessOfflineRepository().registrarSessaoConcluida(
+      SessaoTreinoRegistroModel(
+        id: 'ontem', treinoId: 'ficha', divisaoLetra: 'A',
+        divisaoNome: 'Treino A', alunoId: 'aluno',
+        dataHoraInicio: ontem.subtract(const Duration(hours: 1)).toIso8601String(),
+        dataHoraFim: ontem.toIso8601String(), duracaoSegundos: 7200,
+        rpe: 10, exerciciosExecutados: const [],
+      ),
+    );
+
+    final base = Fitness360Summary.fromApi(
+      resumo(km: 2, kcal: 100, treino: 20, peso: 70),
+    );
+    final hoje = await FitnessResumoHojeService.carregar(remoto: base);
+
+    expect(hoje.distanceKm, 3);
+    expect(hoje.strengthTrainingMinutes, 60);
+    expect(hoje.trainingMinutes, 90);
+    expect(hoje.strengthCalories, 368);
+    expect(hoje.activeCalories, 518);
   });
 }

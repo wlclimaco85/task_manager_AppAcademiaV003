@@ -6,10 +6,10 @@ import 'package:task_manager_flutter/ui/screens/fitness/selecionar_aluno_avaliac
 import 'package:task_manager_flutter/ui/widgets/cadastro_inicial_banner.dart';
 import 'package:task_manager_flutter/data/models/auth_utility.dart';
 import 'package:task_manager_flutter/data/utils/fitness_access.dart';
-import 'package:task_manager_flutter/data/utils/fitness_access.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/customization/dynamic_grid_dynamic_screen.dart';
 import 'package:task_manager_flutter/data/services/fitness_360_local_store.dart';
+import 'package:task_manager_flutter/data/services/fitness_resumo_hoje_service.dart';
 import 'package:task_manager_flutter/data/services/checkin_diario_caller.dart';
 import 'package:task_manager_flutter/data/services/hidratacao_caller.dart';
 import 'package:task_manager_flutter/data/services/saude_diaria_caller.dart';
@@ -19,7 +19,6 @@ import 'package:task_manager_flutter/ui/screens/personal_workspace_screen.dart';
 import 'package:task_manager_flutter/ui/screens/sem_acesso_screen.dart';
 import 'package:task_manager_flutter/ui/screens/alimento_grid_screen_dynamic.dart';
 import 'package:task_manager_flutter/ui/screens/objetivo_grid_screen_dynamic.dart';
-import 'package:task_manager_flutter/ui/screens/avaliacao_fisica_grid_screen_dynamic.dart';
 import 'package:task_manager_flutter/ui/screens/grupo_muscular_grid_screen_dynamic.dart';
 import 'package:task_manager_flutter/ui/screens/modalidade_grid_screen_dynamic.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/treinos_hub_screen.dart';
@@ -620,7 +619,7 @@ class _TodaySummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Fitness360Summary>(
-      future: Fitness360LocalStore.summary(),
+      future: FitnessResumoHojeService.carregar(),
       builder: (context, snapshot) {
         final summary = snapshot.data;
         return Container(
@@ -692,7 +691,7 @@ class _TodaySummaryCard extends StatelessWidget {
               Text(
                 summary == null
                     ? 'Carregando metas e habitos...'
-                    : 'Atividade ${summary.distanceKm.toStringAsFixed(1)} km • Habitos ${summary.habitsDone}/${summary.habitsTotal} • ${summary.diasAtivosTexto}',
+                    : 'Atividade hoje ${summary.distanceKm.toStringAsFixed(1)} km • Musculação ${summary.strengthTrainingMinutes}m • Habitos ${summary.habitsDone}/${summary.habitsTotal}',
                 style: const TextStyle(color: Color(0xFFEAE3FF), fontSize: 12),
               ),
             ],
@@ -1220,21 +1219,23 @@ class _EnhancedHubState {
   static Future<_EnhancedHubState> load() async {
     // Tenta a API REAL primeiro; em caso de null (offline/erro) cai no store local.
     final resumoApi = await SaudeDiariaCaller().fetchResumo();
-    final Fitness360Summary summary;
+    final Fitness360Summary baseSummary;
     if (resumoApi != null) {
       // Hidratação e check-in completam os hábitos reais do dia.
       final hidratacaoFuture = HidratacaoCaller().fetchResumo();
       final checkinFuture = CheckinDiarioCaller().fetchResumo();
       final hidratacao = await hidratacaoFuture;
       final checkin = await checkinFuture;
-      summary = Fitness360Summary.fromApi(
+      baseSummary = Fitness360Summary.fromApi(
         resumoApi,
         hidratacaoMetaAtingida: hidratacaoMetaAtingida(hidratacao),
         checkinFeito: (checkin?.humor ?? '').trim().isNotEmpty,
       );
     } else {
-      summary = await Fitness360LocalStore.summary();
+      baseSummary = await Fitness360LocalStore.summary();
     }
+    final summary =
+        await FitnessResumoHojeService.carregar(remoto: baseSummary);
 
     return _EnhancedHubState(
       summary: summary,
@@ -1402,7 +1403,7 @@ class _EnhancedSyncStatusCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Atividade ${summary.distanceKm.toStringAsFixed(1)} km | Habitos ${summary.habitsDone}/${summary.habitsTotal} | ${summary.diasAtivosTexto} | ${summary.syncSource}',
+            'Atividade hoje ${summary.distanceKm.toStringAsFixed(1)} km | Musculação ${summary.strengthTrainingMinutes}m (${summary.strengthCalories} kcal) | Habitos ${summary.habitsDone}/${summary.habitsTotal}',
             style: const TextStyle(color: Color(0xFFEAE3FF), fontSize: 12),
           ),
         ],

@@ -5,12 +5,13 @@ import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_
 import 'package:task_manager_flutter/data/services/fitness_360_local_store.dart';
 import 'package:task_manager_flutter/ui/widgets/fitness_graficos_hub.dart';
 
-SessaoTreinoRegistroModel treino(String id, DateTime data) =>
+SessaoTreinoRegistroModel treino(String id, DateTime data,
+        {String treinoId = 'ficha', String divisaoNome = 'Peito'}) =>
     SessaoTreinoRegistroModel(
         id: id,
-        treinoId: 'ficha',
+        treinoId: treinoId,
         divisaoLetra: 'A',
-        divisaoNome: 'Peito',
+        divisaoNome: divisaoNome,
         alunoId: 'aluno',
         dataHoraInicio: data.toIso8601String(),
         dataHoraFim: data.add(const Duration(minutes: 30)).toIso8601String(),
@@ -40,6 +41,8 @@ void main() {
     final dados = GraficosFitnessDados(sessoes: [
       sessao,
       sessao,
+      treino('outra-ficha', hoje.subtract(const Duration(minutes: 20)),
+          treinoId: 'ficha-2', divisaoNome: 'Costas'),
       treino('antigo', DateTime(2026, 1, 1))
     ], registros: [
       Fitness360Record(
@@ -52,20 +55,20 @@ void main() {
     ], diario: [
       {'data': '2026-10-14', 'pesoKg': 100}
     ]);
-    final series = dados.series(dias: 7, agora: hoje, exercicioId: 'supino');
+    final series = dados.series(dias: 7, agora: hoje, treinoId: 'ficha');
     SerieFitness porTitulo(String titulo) =>
         series.singleWhere((s) => s.titulo == titulo);
     expect(porTitulo('Evolução de Peso').pontos.single.valor, 100.5);
     expect(
-        porTitulo('Quantidade de treinos')
+        porTitulo('Frequência da ficha')
             .pontos
             .fold<double>(0, (v, p) => v + p.valor),
         1);
     expect(porTitulo('Volume realizado').pontos.single.valor, 200);
     expect(porTitulo('Séries concluídas').pontos.single.valor, 1);
     expect(porTitulo('Repetições realizadas').pontos.single.valor, 10);
-    expect(porTitulo('Carga do exercício').pontos.single.valor, 20);
     expect(porTitulo('Duração dos treinos').pontos.single.valor, 30);
+    expect(dados.fichas.keys, containsAll(['ficha', 'ficha-2']));
   });
   test('conta vazia nao recebe pontos inventados', () {
     const dados = GraficosFitnessDados(sessoes: [], registros: []);
@@ -98,7 +101,9 @@ void main() {
                 children: [FitnessGraficosHub(dados: Future.value(dados))]))));
     await tester.pumpAndSettle();
     expect(find.text('Minha evolução'), findsOneWidget);
-    expect(find.text('Quantidade de treinos'), findsOneWidget);
+    expect(find.text('Ficha de treino para peso e frequência'), findsOneWidget);
+    expect(find.text('Frequência da ficha'), findsOneWidget);
+    expect(find.text('Exercício para acompanhar a carga'), findsNothing);
     expect(tester.takeException(), isNull);
   });
   for (final largura in [390.0, 1920.0]) {
