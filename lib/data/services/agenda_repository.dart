@@ -140,7 +140,7 @@ class AgendaRepository {
     return atualizado;
   }
 
-  Future<void> cancelar(String id) async {
+  Future<void> cancelar(String id, {String? motivo}) async {
     try {
       await _network.deleteRequest('${ApiLinks.fitnessAgenda}/$id');
     } catch (_) {
@@ -159,7 +159,9 @@ class AgendaRepository {
         inicio: item.inicio,
         fim: item.fim,
         local: item.local,
-        observacao: item.observacao,
+        observacao: motivo != null && motivo.trim().isNotEmpty
+            ? 'Cancelado pelo aluno: ${motivo.trim()}'
+            : item.observacao,
         status: 'CANCELADO',
         compartilhado: item.compartilhado,
         lembreteMinutos: item.lembreteMinutos,

@@ -304,6 +304,15 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                 PopupMenuItem(value: 'cancelar', child: Text('Cancelar')),
               ],
             ),
+          if (!_personal &&
+              evento.compartilhado &&
+              !evento.cancelado &&
+              evento.inicio.isAfter(DateTime.now()))
+            IconButton(
+              icon: const Icon(Icons.cancel_outlined, color: Colors.red, size: 20),
+              tooltip: 'Cancelar aula',
+              onPressed: () => _cancelarComoAluno(evento),
+            ),
         ]),
       ),
     );
@@ -339,6 +348,68 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
     try {
       await _repo.cancelar(evento.id);
       await _carregar();
+    } catch (e) {
+      if (mounted) _erro('$e');
+    }
+  }
+
+  Future<void> _cancelarComoAluno(AgendaEventoModel evento) async {
+    final justificativaCtrl = TextEditingController();
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cancelar aula'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Cancelar "${evento.titulo}"?\nO personal será notificado.',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: justificativaCtrl,
+              maxLines: 3,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'Justificativa (obrigatória)',
+                hintText: 'Ex: Compromisso imprevisto...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Voltar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              if (justificativaCtrl.text.trim().isEmpty) return;
+              Navigator.pop(ctx, true);
+            },
+            child: const Text('Confirmar cancelamento'),
+          ),
+        ],
+      ),
+    );
+    if (confirmar != true) return;
+    final motivo = justificativaCtrl.text.trim();
+    if (motivo.isEmpty) return;
+    try {
+      await _repo.cancelar(evento.id, motivo: motivo);
+      await _carregar();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Aula cancelada. O personal foi notificado.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) _erro('$e');
     }

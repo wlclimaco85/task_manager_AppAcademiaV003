@@ -13,6 +13,7 @@ import 'package:task_manager_flutter/data/services/fitness_push_notification_ser
 import 'package:task_manager_flutter/ui/screens/fitness/biblioteca_exercicios_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/montador_treino_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/player_treino_ao_vivo_screen.dart';
+import 'package:task_manager_flutter/data/services/personal_gestao_offline_repository.dart';
 
 /// Central de Treinos do MFIT Personal (Fichas Ativas, Modelos, Biblioteca e Histórico)
 class TreinosHubScreen extends StatefulWidget {
@@ -30,6 +31,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
   List<PlanoTreinoModel> _planos = [];
   List<SessaoTreinoRegistroModel> _sessoes = [];
   bool _loading = true;
+  bool _fichaOcultaPeloPersonal = false;
 
   @override
   void initState() {
@@ -40,12 +42,18 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
 
   Future<void> _carregarDados() async {
     setState(() => _loading = true);
+    final isPersonal = podeGerenciarAlunos(AuthUtility.session.value);
     // Personal ve so os treinos dele; os dos alunos ficam nos perfis deles.
     final planos = await _repository.getPlanosTreino(
-        alunoId: podeGerenciarAlunos(AuthUtility.session.value)
+        alunoId: isPersonal
             ? AuthUtility.userInfo.login?.id?.toString()
             : null);
     final sessoes = await _repository.getSessoesConcluidas();
+
+    bool fichaOculta = false;
+    if (!isPersonal) {
+      fichaOculta = await PersonalGestaoOfflineRepository().isFichaOcultaParaAlunoAtual();
+    }
     
     // Dispara verificações inteligentes de lembretes e inatividade em background
     FitnessPushNotificationService().inicializarVerificacoesAutomaticas();
@@ -54,6 +62,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
       setState(() {
         _planos = planos;
         _sessoes = sessoes;
+        _fichaOcultaPeloPersonal = fichaOculta;
         _loading = false;
       });
     }
@@ -136,6 +145,38 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
   }
 
   Widget _buildListaFichas({required bool apenasTemplates}) {
+    if (!apenasTemplates && _fichaOcultaPeloPersonal) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.visibility_off_outlined, size: 48, color: Colors.amber),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Ficha de Treino Oculta',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Seu Personal Trainer configurou sua rotina de treino para ficar temporariamente oculta.\nFale com seu personal para dúvidas ou solicitar a liberação.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: GridColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final filtrados = _planos.where((p) => p.isTemplate == apenasTemplates).toList();
 
     if (filtrados.isEmpty) {

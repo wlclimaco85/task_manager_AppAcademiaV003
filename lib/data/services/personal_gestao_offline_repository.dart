@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/models/fitness/personal_gestao_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/personal_conta_pagar_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/personal_pix_cobranca_model.dart';
+import 'package:task_manager_flutter/data/models/auth_utility.dart';
 
 /// Repositório Offline-First para a Gestão do Personal Trainer (AppAcademia V003)
 /// Gerencia alunos, vigência e alertas de treinos, frequência, feedbacks, agenda de aulas e financeiro simples.
@@ -306,6 +307,23 @@ class PersonalGestaoOfflineRepository {
       await _salvarAlunos(lista);
       await _enfileirar('/alunos/${lista[idx].id}', lista[idx].toMap());
     }
+  }
+
+  /// Verifica se o aluno logado tem sua ficha de treino marcada como oculta pelo personal.
+  Future<bool> isFichaOcultaParaAlunoAtual() async {
+    final login = AuthUtility.userInfo.login;
+    final loginId = login?.id?.toString() ?? '';
+    final email = (login?.email ?? '').trim().toLowerCase();
+
+    final alunos = await getAlunos();
+    for (final a in alunos) {
+      final matchId = loginId.isNotEmpty && (a.loginId == loginId || a.id == loginId);
+      final matchEmail = email.isNotEmpty && a.email.trim().toLowerCase() == email;
+      if (matchId || matchEmail) {
+        return a.fichaOcultaParaAluno;
+      }
+    }
+    return false;
   }
 
   // ─────────────────────────────────────────────────────────────────────────────

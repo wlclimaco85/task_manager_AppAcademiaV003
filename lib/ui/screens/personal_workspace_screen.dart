@@ -475,7 +475,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.check_circle_outline, size: 14, color: GridColors.info),
+                            Icon(Icons.check_circle_outline, size: 14, color: GridColors.info),
                             const SizedBox(width: 4),
                             Text(
                               '${aluno.totalTreinosConcluidos}',
@@ -1583,9 +1583,10 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                       );
 
                       await _repo.salvarContaPagar(novaConta);
+                      if (!context.mounted) return;
                       Navigator.pop(context);
                       _carregarDados();
-                      ScaffoldMessenger.of(this.context).showSnackBar(
+                      ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('Despesa cadastrada com sucesso!'),
                           backgroundColor: CustomColors.primaryGreen,
