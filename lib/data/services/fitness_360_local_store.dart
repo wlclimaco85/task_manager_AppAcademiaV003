@@ -173,7 +173,8 @@ class Fitness360Record {
 
   factory Fitness360Record.fromJson(Map<String, dynamic> json) {
     return Fitness360Record(
-      id: json['id'] as int? ?? 0,
+      // Aceita id numerico ou em texto: um registro com id em texto nao derruba o resumo do Hub.
+      id: int.tryParse('${json['id']}') ?? 0,
       type: json['type'] as String? ?? 'atividade',
       title: json['title'] as String? ?? '',
       value: json['value'] as String? ?? '',
