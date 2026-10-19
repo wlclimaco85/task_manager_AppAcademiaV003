@@ -30,6 +30,7 @@ import 'package:task_manager_flutter/ui/screens/fitness/contratar_profissional_s
 import 'package:task_manager_flutter/ui/screens/fitness/exames_clinicos_hub_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/aviso_falta_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/agenda_compartilhada_screen.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/financeiro_academia_screen.dart';
 
 class BottomNavBarScreen extends StatefulWidget {
   const BottomNavBarScreen({super.key});
@@ -265,6 +266,14 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                   child: AgendaCompartilhadaScreen())),
         );
         break;
+      case 'Financeiro':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => const FitnessMenuPage(
+                  child: FinanceiroAcademiaScreen())),
+        );
+        break;
       case 'Dieta':
       case 'Suplementos':
       case 'Medicamentos':
@@ -410,6 +419,8 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
             const _FitnessAction(Icons.directions_run, 'Treinos'),
           const _FitnessAction(Icons.calendar_month_outlined, 'Agenda'),
           const _FitnessAction(Icons.event_busy_outlined, 'Aviso de falta'),
+          if (ehAcademia())
+            const _FitnessAction(Icons.payments_outlined, 'Financeiro'),
           if (sec.canView(AppScreen.academias))
             const _FitnessAction(Icons.fitness_center, 'Academias'),
           if (sec.canView(AppScreen.personais))
@@ -542,6 +553,8 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
         const _FitnessAction(Icons.directions_run, 'Treinos'),
       const _FitnessAction(Icons.calendar_month_outlined, 'Agenda'),
       const _FitnessAction(Icons.event_busy_outlined, 'Aviso de falta'),
+      if (ehAcademia())
+        const _FitnessAction(Icons.payments_outlined, 'Financeiro'),
       if (sec.canView(AppScreen.atividades))
         const _FitnessAction(Icons.directions_run, 'Atividade'),
       if (sec.canView(AppScreen.corpo))

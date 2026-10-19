@@ -461,6 +461,10 @@ class ApiLinks {
   static String permissoesDoAluno(String alunoId) => '$_baseUrlNew/api/fitness/permissoes/alunos/$alunoId';
   /// Cadastro inicial (foto e medidas) do aluno logado: GET le, PUT grava.
   static const String cadastroInicialMeu = '$_baseUrlNew/api/fitness/cadastro-inicial/meu';
+  /// Financeiro da academia logada: lista do mes (AAAA-MM) e baixa por aluno.
+  static String financeiroAcademia(String mes) => '$_baseUrlNew/api/fitness/academia/financeiro?mes=$mes';
+  static String financeiroAcademiaBaixa(String mes, String alunoId) =>
+      '$_baseUrlNew/api/fitness/academia/financeiro/$mes/alunos/$alunoId';
   static const String avisosFaltaAluno =
       '$_baseUrlNew/api/fitness/avisos-falta/aluno';
   static const String avisosFaltaPersonal =

@@ -9,3 +9,9 @@ bool podeGerenciarAlunos([LoginModel? sessao]) {
   return login?.tipoLogin == LoginEnum.APP_PERSONAL ||
       (login?.roles?.any((r) => r.key == 'ROLE_PERSONAL') ?? false);
 }
+
+/// Financeiro da academia (mensalidades dos alunos matriculados) e exclusivo do login de academia.
+bool ehAcademia([LoginModel? sessao]) {
+  final login = (sessao ?? AuthUtility.userInfo).login;
+  return login?.tipoLogin == LoginEnum.APP_ACADEMIA;
+}
