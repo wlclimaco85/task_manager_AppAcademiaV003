@@ -111,8 +111,6 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
   @visibleForTesting
   List<String> locaisDisponiveisTest() => _locaisDisponiveis();
 
-
-
   List<AgendaEventoModel> _doDia(DateTime dia) =>
       _eventos.where((item) => isSameDay(item.inicio, dia)).toList()
         ..sort((a, b) => a.inicio.compareTo(b.inicio));
@@ -139,8 +137,8 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
           _carregar();
         },
         calendarStyle: CalendarStyle(
-          selectedDecoration: BoxDecoration(
-              color: GridColors.primary, shape: BoxShape.circle),
+          selectedDecoration:
+              BoxDecoration(color: GridColors.primary, shape: BoxShape.circle),
           todayDecoration: BoxDecoration(
               color: GridColors.primary.withValues(alpha: .18),
               shape: BoxShape.circle),
@@ -282,12 +280,10 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
               ),
               if (evento.alunoNome?.isNotEmpty == true)
                 Text('Aluno: ${evento.alunoNome}',
-                    style: TextStyle(
-                        color: GridColors.primary, fontSize: 12)),
+                    style: TextStyle(color: GridColors.primary, fontSize: 12)),
               if (!_personal && evento.personalNome?.isNotEmpty == true)
                 Text('Personal: ${evento.personalNome}',
-                    style: TextStyle(
-                        color: GridColors.primary, fontSize: 12)),
+                    style: TextStyle(color: GridColors.primary, fontSize: 12)),
               if (evento.observacao.isNotEmpty)
                 Text(evento.observacao,
                     maxLines: 2,
@@ -393,7 +389,7 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                       style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: tipo,
+                    initialValue: tipo,
                     decoration: const InputDecoration(labelText: 'Tipo'),
                     items: _tiposPermitidos()
                         .map((item) => DropdownMenuItem(
@@ -409,13 +405,15 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                       decoration: InputDecoration(
                         labelText: 'Título',
                         hintText: tipo == 'AULA'
-                            ? (_personal ? 'Ex: Aula de musculação' : 'Ex: Treino com personal')
+                            ? (_personal
+                                ? 'Ex: Aula de musculação'
+                                : 'Ex: Treino com personal')
                             : 'Ex: Consulta de rotina',
                       )),
                   if (_personal && tipo == 'AULA') ...[
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: alunoId,
+                      initialValue: alunoId,
                       decoration:
                           const InputDecoration(labelText: 'Aluno vinculado'),
                       items: _alunos
@@ -465,7 +463,7 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                   ]),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
-                    value: duracao,
+                    initialValue: duracao,
                     decoration: const InputDecoration(labelText: 'Duração'),
                     items: const [30, 45, 60, 90, 120]
                         .map((m) => DropdownMenuItem(
@@ -477,7 +475,7 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                   const SizedBox(height: 14),
                   // ─── Local: Academias e por último Residência ───
                   DropdownButtonFormField<String>(
-                    value: localSelecionado,
+                    initialValue: localSelecionado,
                     isExpanded: true,
                     decoration: const InputDecoration(
                       labelText: 'Local',
@@ -492,7 +490,9 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                           child: Row(
                             children: [
                               Icon(
-                                isResidencia ? Icons.home_outlined : Icons.fitness_center,
+                                isResidencia
+                                    ? Icons.home_outlined
+                                    : Icons.fitness_center,
                                 size: 18,
                                 color: isResidencia
                                     ? Colors.amber[700]
@@ -544,19 +544,27 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                           child: ChoiceChip(
                             label: Text(loc),
                             avatar: Icon(
-                              isResidencia ? Icons.home_outlined : Icons.fitness_center,
+                              isResidencia
+                                  ? Icons.home_outlined
+                                  : Icons.fitness_center,
                               size: 14,
                               color: isSelected
                                   ? Colors.white
-                                  : (isResidencia ? Colors.amber[700] : GridColors.primary),
+                                  : (isResidencia
+                                      ? Colors.amber[700]
+                                      : GridColors.primary),
                             ),
                             selected: isSelected,
-                            selectedColor: isResidencia ? Colors.amber[800] : GridColors.primary,
+                            selectedColor: isResidencia
+                                ? Colors.amber[800]
+                                : GridColors.primary,
                             labelStyle: TextStyle(
-                              color: isSelected ? Colors.white : context.appText,
+                              color:
+                                  isSelected ? Colors.white : context.appText,
                               fontSize: 11,
-                              fontWeight:
-                                  isResidencia ? FontWeight.w700 : FontWeight.normal,
+                              fontWeight: isResidencia
+                                  ? FontWeight.w700
+                                  : FontWeight.normal,
                             ),
                             onSelected: (selected) {
                               if (selected) {
@@ -589,7 +597,7 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                           labelText: 'Observação (opcional)')),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
-                    value: lembrete,
+                    initialValue: lembrete,
                     decoration:
                         const InputDecoration(labelText: 'Notificar antes'),
                     items: const {
@@ -610,7 +618,7 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                   if (evento == null && _personal && tipo == 'AULA') ...[
                     const SizedBox(height: 12),
                     DropdownButtonFormField<int>(
-                      value: semanas,
+                      initialValue: semanas,
                       decoration:
                           const InputDecoration(labelText: 'Repetição semanal'),
                       items: const {
@@ -633,7 +641,9 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                     onPressed: () async {
                       if (titulo.text.trim().isEmpty) {
                         if (tipo == 'AULA') {
-                          titulo.text = _personal ? 'Aula com aluno' : 'Aula com personal';
+                          titulo.text = _personal
+                              ? 'Aula com aluno'
+                              : 'Aula com personal';
                         } else if (tipo == 'TREINO') {
                           titulo.text = 'Treino individual';
                         } else if (tipo == 'AVALIACAO') {
@@ -645,7 +655,10 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                           return;
                         }
                       }
-                      if (_personal && tipo == 'AULA' && alunoId == null && _alunos.isNotEmpty) {
+                      if (_personal &&
+                          tipo == 'AULA' &&
+                          alunoId == null &&
+                          _alunos.isNotEmpty) {
                         _erro('Selecione o aluno vinculado para a aula.');
                         return;
                       }
