@@ -236,30 +236,67 @@ class FitnessOfflineRepository {
   Future<List<PlanoTreinoModel>> getPlanosTreino({String? alunoId}) async {
     final prefs = await SharedPreferences.getInstance();
     final key = FitnessContaSync.chave(_kPlanosKey);
-    final remotos = await FitnessContaSync.carregar('planos');
-    if (remotos != null) await prefs.setString(key, jsonEncode(remotos));
-    final raw = prefs.getString(key);
 
-    List<PlanoTreinoModel> lista = [];
-    if (raw == null || raw.isEmpty) {
-      lista = [];
-      await _salvarPlanos(lista);
-    } else {
-      try {
-        final decoded = json.decode(raw) as List<dynamic>;
-        lista = decoded
-            .map((e) => PlanoTreinoModel.fromMap(e as Map<String, dynamic>))
-            .toList();
-      } catch (e) {
-        debugPrint('[FitnessOfflineRepository] Erro decode planos: $e');
-        lista = [];
+    // 1. Migração de dados legados do aparelho
+    if (FitnessContaSync.autenticado && !prefs.containsKey(key) && prefs.containsKey(_kPlanosKey)) {
+      final legados = prefs.getString(_kPlanosKey);
+      if (legados != null && legados.isNotEmpty) {
+        await prefs.setString(key, legados);
       }
     }
 
-    if (alunoId != null && alunoId.isNotEmpty) {
-      return lista.where((p) => p.alunoId == alunoId || p.isTemplate).toList();
+    // 2. Lê os planos locais já salvos
+    final rawLocal = prefs.getString(key) ?? (FitnessContaSync.autenticado ? null : prefs.getString(_kPlanosKey));
+    List<PlanoTreinoModel> locais = [];
+    if (rawLocal != null && rawLocal.isNotEmpty) {
+      try {
+        final decoded = json.decode(rawLocal) as List<dynamic>;
+        locais = decoded
+            .map((e) => PlanoTreinoModel.fromMap(e as Map<String, dynamic>))
+            .toList();
+      } catch (e) {
+        debugPrint('[FitnessOfflineRepository] Erro decode planos locais: $e');
+      }
     }
-    return lista;
+
+    // 3. Garante que planos locais existentes fiquem na fila para subir à nuvem
+    if (FitnessContaSync.autenticado && locais.isNotEmpty) {
+      final chaveFila = FitnessContaSync.chave('fitness_pendentes_planos');
+      final fila = Map<String, dynamic>.from(jsonDecode(prefs.getString(chaveFila) ?? '{}'));
+      bool filaMudou = false;
+      for (final p in locais) {
+        final idStr = p.id.toString();
+        if (!fila.containsKey(idStr)) {
+          fila[idStr] = p.toMap();
+          filaMudou = true;
+        }
+      }
+      if (filaMudou) {
+        await prefs.setString(chaveFila, jsonEncode(fila));
+      }
+    }
+
+    // 4. Carrega remotos e mescla preservando os locais
+    final remotos = await FitnessContaSync.carregar('planos');
+    if (remotos != null) {
+      final porId = <String, PlanoTreinoModel>{};
+      for (final m in remotos) {
+        final p = PlanoTreinoModel.fromMap(m);
+        porId[p.id] = p;
+      }
+      for (final l in locais) {
+        porId.putIfAbsent(l.id, () => l);
+      }
+      locais = porId.values.toList();
+      await prefs.setString(key, jsonEncode(locais.map((e) => e.toMap()).toList()));
+    } else if (locais.isEmpty && (rawLocal == null || rawLocal.isEmpty)) {
+      await _salvarPlanos([]);
+    }
+
+    if (alunoId != null && alunoId.isNotEmpty) {
+      return locais.where((p) => p.alunoId == alunoId || p.isTemplate).toList();
+    }
+    return locais;
   }
 
   Future<PlanoTreinoModel?> getPlanoAtivo({required String alunoId}) async {
@@ -297,25 +334,65 @@ class FitnessOfflineRepository {
       {String? alunoId}) async {
     final prefs = await SharedPreferences.getInstance();
     final key = FitnessContaSync.chave(_kSessoesKey);
-    final remotos = await FitnessContaSync.carregar('sessoes');
-    if (remotos != null) await prefs.setString(key, jsonEncode(remotos));
-    final raw = prefs.getString(key);
 
-    if (raw == null || raw.isEmpty) return [];
-    try {
-      final decoded = json.decode(raw) as List<dynamic>;
-      final lista = decoded
-          .map((e) =>
-              SessaoTreinoRegistroModel.fromMap(e as Map<String, dynamic>))
-          .toList();
-      if (alunoId != null && alunoId.isNotEmpty) {
-        return lista.where((s) => s.alunoId == alunoId).toList();
+    // 1. Migração de sessões legadas locais
+    if (FitnessContaSync.autenticado && !prefs.containsKey(key) && prefs.containsKey(_kSessoesKey)) {
+      final legados = prefs.getString(_kSessoesKey);
+      if (legados != null && legados.isNotEmpty) {
+        await prefs.setString(key, legados);
       }
-      return lista;
-    } catch (e) {
-      debugPrint('[FitnessOfflineRepository] Erro decode sessoes: $e');
-      return [];
     }
+
+    // 2. Lê sessões locais
+    final rawLocal = prefs.getString(key) ?? (FitnessContaSync.autenticado ? null : prefs.getString(_kSessoesKey));
+    List<SessaoTreinoRegistroModel> locais = [];
+    if (rawLocal != null && rawLocal.isNotEmpty) {
+      try {
+        final decoded = json.decode(rawLocal) as List<dynamic>;
+        locais = decoded
+            .map((e) =>
+                SessaoTreinoRegistroModel.fromMap(e as Map<String, dynamic>))
+            .toList();
+      } catch (e) {
+        debugPrint('[FitnessOfflineRepository] Erro decode sessoes: $e');
+      }
+    }
+
+    // 3. Re-enfileira sessões ainda não sincronizadas
+    if (FitnessContaSync.autenticado && locais.isNotEmpty) {
+      final chaveFila = FitnessContaSync.chave('fitness_pendentes_sessoes');
+      final fila = Map<String, dynamic>.from(jsonDecode(prefs.getString(chaveFila) ?? '{}'));
+      bool filaMudou = false;
+      for (final s in locais) {
+        if (!s.sincronizado && !fila.containsKey(s.id)) {
+          fila[s.id] = s.toMap();
+          filaMudou = true;
+        }
+      }
+      if (filaMudou) {
+        await prefs.setString(chaveFila, jsonEncode(fila));
+      }
+    }
+
+    // 4. Carrega remotos e mescla com as locais
+    final remotos = await FitnessContaSync.carregar('sessoes');
+    if (remotos != null) {
+      final porId = <String, SessaoTreinoRegistroModel>{};
+      for (final m in remotos) {
+        final s = SessaoTreinoRegistroModel.fromMap(m);
+        porId[s.id] = s;
+      }
+      for (final l in locais) {
+        porId.putIfAbsent(l.id, () => l);
+      }
+      locais = porId.values.toList();
+      await prefs.setString(key, jsonEncode(locais.map((e) => e.toMap()).toList()));
+    }
+
+    if (alunoId != null && alunoId.isNotEmpty) {
+      return locais.where((s) => s.alunoId == alunoId).toList();
+    }
+    return locais;
   }
 
   Future<void> registrarSessaoConcluida(

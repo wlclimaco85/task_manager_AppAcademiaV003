@@ -40,7 +40,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
     _carregarDados();
   }
 
-  Future<void> _carregarDados() async {
+  Future<void> _carregarDados({bool manual = false}) async {
     setState(() => _loading = true);
     final isPersonal = podeGerenciarAlunos(AuthUtility.session.value);
     // Personal ve so os treinos dele; os dos alunos ficam nos perfis deles.
@@ -65,6 +65,16 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
         _fichaOcultaPeloPersonal = fichaOculta;
         _loading = false;
       });
+      if (manual) {
+        final sincronizados = sessoes.where((s) => s.sincronizado).length;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: GridColors.success,
+            content: Text('Sincronização concluída! ${planos.length} ficha(s) e $sincronizados treino(s) na nuvem.'),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -95,9 +105,9 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
             },
           ),
           IconButton(
-            tooltip: 'Atualizar',
+            tooltip: 'Atualizar e sincronizar',
             icon: const Icon(Icons.refresh),
-            onPressed: _carregarDados,
+            onPressed: () => _carregarDados(manual: true),
           ),
         ],
         bottom: TabBar(

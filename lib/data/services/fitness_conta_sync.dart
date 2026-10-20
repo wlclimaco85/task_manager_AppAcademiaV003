@@ -12,7 +12,39 @@ class FitnessContaSync {
       (AuthUtility.userInfo.token?.isNotEmpty ?? false);
   static String chave(String base) => autenticado
       ? '${base}_conta_${AuthUtility.userInfo.login!.id}' : base;
-  static String get _url => ApiLinks.fitnessResumo.replaceFirst('/resumo', '/documentos');
+  static String get _url {
+    var base = ApiLinks.fitnessResumo.replaceFirst('/resumo', '/documentos');
+    if (base.contains('railway.app') && base.contains('/boletobancos')) {
+      base = base.replaceFirst('/boletobancos', '');
+    }
+    return base;
+  }
+
+  static Future<http.Response> _enviarComRedirect(
+    String metodo,
+    Uri uri, {
+    Map<String, String>? headers,
+    Object? body,
+  }) async {
+    var atual = uri;
+    for (int i = 0; i < 4; i++) {
+      final http.Response res;
+      if (metodo == 'DELETE') {
+        res = await http.delete(atual, headers: headers).timeout(const Duration(seconds: 12));
+      } else if (metodo == 'PUT') {
+        res = await http.put(atual, headers: headers, body: body).timeout(const Duration(seconds: 12));
+      } else {
+        res = await http.get(atual, headers: headers).timeout(const Duration(seconds: 12));
+      }
+      if ([301, 302, 307, 308].contains(res.statusCode) && res.headers.containsKey('location')) {
+        final loc = res.headers['location']!;
+        atual = atual.resolve(loc);
+        continue;
+      }
+      return res;
+    }
+    return http.Response('Excesso de redirecionamentos', 310);
+  }
 
   static Future<void> salvar(String tipo, Map<String, dynamic> documento) async {
     if (!autenticado) return;
@@ -37,12 +69,15 @@ class FitnessContaSync {
     try {
       for (final id in fila.keys.toList()) {
         final response = fila[id]['_excluir'] == true
-          ? await http.delete(Uri.parse('$_url/$tipo/$id'), headers: headers).timeout(const Duration(seconds: 10))
-          : await http.put(Uri.parse('$_url/$tipo/$id'),
-          headers: {...headers, 'Content-Type': 'application/json'}, body: jsonEncode(fila[id]))
-          .timeout(const Duration(seconds: 10));
-        if (response.statusCode == 200) { fila.remove(id); }
-        else AppLogger.i.warn('Gravação fitness pendente: $tipo HTTP ${response.statusCode}');
+          ? await _enviarComRedirect('DELETE', Uri.parse('$_url/$tipo/$id'), headers: headers)
+          : await _enviarComRedirect('PUT', Uri.parse('$_url/$tipo/$id'),
+              headers: {...headers, 'Content-Type': 'application/json'}, body: jsonEncode(fila[id]));
+        if (response.statusCode == 200) {
+          fila.remove(id);
+          AppLogger.i.info('Item sincronizado com sucesso: $tipo/$id');
+        } else {
+          AppLogger.i.warn('Gravação fitness pendente: $tipo/$id HTTP ${response.statusCode}');
+        }
       }
       final atuais = Map<String, dynamic>.from(jsonDecode(prefs.getString(chaveFila) ?? '{}'));
       for (final id in enviados.keys) {
@@ -52,8 +87,7 @@ class FitnessContaSync {
       }
       fila..clear()..addAll(atuais);
       await prefs.setString(chaveFila, jsonEncode(fila));
-      final response = await http.get(Uri.parse('$_url/$tipo'), headers: headers)
-          .timeout(const Duration(seconds: 10));
+      final response = await _enviarComRedirect('GET', Uri.parse('$_url/$tipo'), headers: headers);
       if (response.statusCode != 200) {
         AppLogger.i.warn('Leitura fitness falhou: $tipo HTTP ${response.statusCode}');
         return null;
