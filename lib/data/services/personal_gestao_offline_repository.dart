@@ -144,6 +144,31 @@ class PersonalGestaoOfflineRepository {
         .toList();
   }
 
+  Future<Map<String, dynamic>> getDesempenhoAluno(String alunoId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = FitnessContaSync.chave('personal_desempenho_$alunoId');
+    try {
+      final response = await http
+          .get(Uri.parse('$_url/alunos/$alunoId/desempenho'),
+              headers: TenantContext.headers)
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        final data = body is Map ? body['data'] : null;
+        if (data is Map) {
+          final resultado = Map<String, dynamic>.from(data);
+          await prefs.setString(key, jsonEncode(resultado));
+          return resultado;
+        }
+      }
+    } catch (e, stack) {
+      AppLogger.i.error(
+          'Desempenho do aluno indisponível; usando o último cache.', stack);
+    }
+    return Map<String, dynamic>.from(
+        jsonDecode(prefs.getString(key) ?? '{}') as Map);
+  }
+
   Future<bool> publicarTreino(String alunoId, PlanoTreinoModel plano) async {
     final caminho = '/alunos/$alunoId/planos/${plano.id}';
     await _enfileirar(caminho, plano.toMap());

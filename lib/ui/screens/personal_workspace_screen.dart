@@ -17,7 +17,7 @@ import 'package:task_manager_flutter/ui/widgets/avatar_com_indicador.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/avaliacao_fisica_pro_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/agenda_compartilhada_screen.dart';
 import 'package:task_manager_flutter/ui/widgets/personal_qr_code_pix_dialog.dart';
-import 'package:task_manager_flutter/ui/screens/fitness/meu_perfil_screen.dart';
+import 'package:task_manager_flutter/ui/widgets/personal_desempenho_dialog.dart';
 
 /// Workspace Completo do Personal Trainer (MFIT Pro Standard)
 /// 4 Abas Especializadas:
@@ -560,6 +560,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
           const SizedBox(height: 10),
           Align(alignment:Alignment.centerRight, child:Wrap(spacing:8,children:[
             OutlinedButton.icon(onPressed:()=>_modalNovoAluno(context,aluno:aluno),icon:const Icon(Icons.edit_outlined),label:const Text('Frequência e cobrança')),
+            OutlinedButton.icon(onPressed:()=>_abrirDesempenho(aluno),icon:const Icon(Icons.insights_outlined),label:const Text('Desempenho')),
             FilledButton.icon(onPressed:()=>_montarTreino(aluno),icon:const Icon(Icons.fitness_center),label:const Text('Montar treino')),
           ])),
           Align(
@@ -2553,6 +2554,13 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
       backgroundColor: CustomColors.primaryGreen,
       content: Text(mensagem, style: TextStyle(color: GridColors.textOnPrimary)),
     ));
+  }
+
+  Future<void> _abrirDesempenho(PersonalAlunoGestaoModel aluno) async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => PersonalDesempenhoDialog(aluno: aluno),
+    );
   }
 
   Future<void> _montarTreino(PersonalAlunoGestaoModel aluno) async {

@@ -31,29 +31,38 @@ void main() {
   });
   test('plano conserva quantidade mensal sem converter para semana', () {
     final a = PersonalAlunoGestaoModel.fromMap({
-      'id': 'a', 'nome': 'Ana', 'tipoCobranca': 'plano',
-      'aulasPlanoMes': 10, 'frequenciaContratada': 0,
+      'id': 'a',
+      'nome': 'Ana',
+      'tipoCobranca': 'plano',
+      'aulasPlanoMes': 10,
+      'frequenciaContratada': 0,
     });
     expect(a.resumoAulasContratadas, '10 aulas/mês');
     expect(a.copyWith(nome: 'Ana A').toMap()['aulasPlanoMes'], 10);
     expect(a.frequenciaContratada, 0);
   });
-  testWidgets('respostas de vínculo têm contraste e busca aceita e-mail', (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: PersonalAlunoSheet())));
+  testWidgets('respostas de vínculo têm contraste e busca aceita e-mail',
+      (tester) async {
+    await tester.pumpWidget(
+        const MaterialApp(home: Scaffold(body: PersonalAlunoSheet())));
     await tester.pumpAndSettle();
-    final chip = tester.widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Sim, buscar e vincular'));
+    final chip = tester.widget<ChoiceChip>(
+        find.widgetWithText(ChoiceChip, 'Sim, buscar e vincular'));
     expect(chip.labelStyle?.color, isNot(Colors.white));
     await tester.tap(find.text('Sim, buscar e vincular'));
     await tester.pumpAndSettle();
     expect(find.text('Nome, CPF, telefone ou e-mail'), findsOneWidget);
   });
-  testWidgets('plano selecionado usa quantidade mensal sem exigir frequência semanal', (tester) async {
+  testWidgets(
+      'plano selecionado usa quantidade mensal sem exigir frequência semanal',
+      (tester) async {
     tester.view.physicalSize = const Size(900, 1500);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     AuthUtility.userInfo = LoginModel(token: 'personal', login: Login(id: 901));
     await http.runWithClient(() async {
-      await tester.pumpWidget(const MaterialApp(home: Scaffold(body: PersonalAlunoSheet())));
+      await tester.pumpWidget(
+          const MaterialApp(home: Scaffold(body: PersonalAlunoSheet())));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Não, cadastrar aluno'));
       await tester.pumpAndSettle();
@@ -62,19 +71,31 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Plano cadastrado').last);
       await tester.pumpAndSettle();
-      final plano = find.widgetWithText(DropdownButtonFormField<String>, 'Plano');
+      final plano =
+          find.widgetWithText(DropdownButtonFormField<String>, 'Plano');
       await tester.tap(plano);
       await tester.pumpAndSettle();
       await tester.tap(find.text('Pacote mensal').last);
       await tester.pumpAndSettle();
       expect(find.text('10 aulas por mês incluídas no plano.'), findsOneWidget);
-      expect(find.text('Frequência contratada (aulas por semana)'), findsNothing);
+      expect(
+          find.text('Frequência contratada (aulas por semana)'), findsNothing);
       expect(tester.takeException(), isNull);
-    }, () => MockClient((r) async => http.Response(jsonEncode({
-      'data': r.url.path.endsWith('/planos') ? [
-        {'id': 1, 'nome': 'Pacote mensal', 'valor': 500, 'qtdAula': 10}
-      ] : [],
-    }), 200)));
+    },
+        () => MockClient((r) async => http.Response(
+            jsonEncode({
+              'data': r.url.path.endsWith('/planos')
+                  ? [
+                      {
+                        'id': 1,
+                        'nome': 'Pacote mensal',
+                        'valor': 500,
+                        'qtdAula': 10
+                      }
+                    ]
+                  : [],
+            }),
+            200)));
   });
   test('contrato offline persiste, sincroniza e nao mistura contas', () async {
     AuthUtility.userInfo =
@@ -177,7 +198,7 @@ void main() {
               return http.Response(jsonEncode({'data': []}), 200);
             }));
   });
-  testWidgets('card oferece montar treino e historico vazio nao cria sessoes',
+  testWidgets('card oferece desempenho e historico vazio nao cria sessoes',
       (tester) async {
     tester.view.physicalSize = const Size(600, 1100);
     tester.view.devicePixelRatio = 1;
@@ -192,6 +213,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Montar treino'), findsOneWidget);
       expect(find.text('Frequência e cobrança'), findsOneWidget);
+      expect(find.text('Desempenho'), findsOneWidget);
+      await tester.tap(find.text('Desempenho'));
+      await tester.pumpAndSettle();
+      expect(find.text('Desempenho de Aluno real'), findsOneWidget);
+      expect(find.text('Frequência de treinos'), findsOneWidget);
+      expect(find.text('Evolução de carga'), findsWidgets);
+      await tester.tap(find.byTooltip('Fechar'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Ver Histórico de Treinos e Cargas'));
       await tester.pumpAndSettle();
       expect(
@@ -199,14 +228,22 @@ void main() {
       expect(find.textContaining('Supino'), findsNothing);
       expect(tester.takeException(), isNull);
     },
-        () => MockClient((r) async => http.Response(
-            jsonEncode({
-              'data': r.url.path.endsWith('/personal/alunos')
+        () => MockClient((r) async {
+              final data = r.url.path.endsWith('/personal/alunos')
                   ? [
                       {'id': 'a', 'nome': 'Aluno real', 'telefone': ''}
                     ]
-                  : []
-            }),
-            200)));
+                  : r.url.path.endsWith('/desempenho')
+                      ? {
+                          'pesoPermitido': true,
+                          'pesos': [
+                            {'data': '2026-10-01', 'peso': 82.5},
+                            {'data': '2026-10-15', 'peso': 80.5}
+                          ],
+                          'sessoes': []
+                        }
+                      : [];
+              return http.Response(jsonEncode({'data': data}), 200);
+            }));
   });
 }
