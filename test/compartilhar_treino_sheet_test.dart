@@ -67,6 +67,20 @@ void main() {
     expect(find.text('Fotos do treino: 2/3'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+  testWidgets('foto inicial e renderizada no card antes do compartilhamento', (tester) async {
+    final foto = base64Encode(img.encodeJpg(img.Image(width: 24, height: 16)));
+    tester.view.physicalSize = const Size(600, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CompartilharTreinoSheet(
+      treino: 'Treino com foto', minutos: 35, series: 10, rpe: 7, tonelagemKg: 700,
+      fotosIniciais: [foto], onFechar: () {}))));
+    await tester.pumpAndSettle();
+    expect(find.byType(Image), findsOneWidget);
+    expect(find.text('Foto 1'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('botoes Instagram e Facebook aparecem na sheet de compartilhamento', (tester) async {
     tester.view.physicalSize = const Size(600, 1200);
     tester.view.devicePixelRatio = 1;
