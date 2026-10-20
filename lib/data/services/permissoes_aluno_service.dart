@@ -6,8 +6,17 @@ import 'package:task_manager_flutter/data/utils/app_logger.dart';
 class PermissoesAluno {
   final bool pendente;
   final Map<String, bool> permissoes;
+  final Map<String, dynamic> contrato;
+  final String contratoStatus;
+  final String personalNome;
 
-  const PermissoesAluno({required this.pendente, required this.permissoes});
+  const PermissoesAluno({
+    required this.pendente,
+    required this.permissoes,
+    this.contrato = const {},
+    this.contratoStatus = '',
+    this.personalNome = 'seu personal',
+  });
 }
 
 /// Le e responde as permissoes do aluno logado no backend (vale em todos os aparelhos).
@@ -15,7 +24,12 @@ class PermissoesAlunoService {
   PermissoesAlunoService._();
 
   /// Areas que o aluno libera ao personal. "treino" e sempre liberado e nao aparece como escolha.
-  static const List<String> areasOpcionais = ['dieta', 'suplementacao', 'avaliacoes', 'metas'];
+  static const List<String> areasOpcionais = [
+    'dieta',
+    'suplementacao',
+    'avaliacoes',
+    'metas'
+  ];
 
   /// Devolve null quando a rede falha ou o aluno nao tem vinculo: o popup nao aparece.
   static Future<PermissoesAluno?> meu() async {
@@ -35,6 +49,11 @@ class PermissoesAlunoService {
       return PermissoesAluno(
         pendente: data['pendente'] == true,
         permissoes: permissoes,
+        contrato: data['contrato'] is Map
+            ? Map<String, dynamic>.from(data['contrato'] as Map)
+            : const {},
+        contratoStatus: data['contratoStatus']?.toString() ?? '',
+        personalNome: data['personalNome']?.toString() ?? 'seu personal',
       );
     } catch (e) {
       AppLogger.i.warn('[PermissoesAluno] Falha ao consultar permissoes: $e');
@@ -45,9 +64,13 @@ class PermissoesAlunoService {
   /// Permissoes de um aluno vinculado, lidas pelo personal. Em falha ou sem resposta
   /// devolve o padrao restritivo (so treino): na duvida, bloqueia.
   static Future<Map<String, bool>> doAluno(String alunoId) async {
-    final padrao = <String, bool>{'treino': true, for (final a in areasOpcionais) a: false};
+    final padrao = <String, bool>{
+      'treino': true,
+      for (final a in areasOpcionais) a: false
+    };
     try {
-      final resposta = await NetworkCaller().getRequest(ApiLinks.permissoesDoAluno(alunoId));
+      final resposta =
+          await NetworkCaller().getRequest(ApiLinks.permissoesDoAluno(alunoId));
       if (!resposta.isSuccess) return padrao;
       final data = resposta.body?['data'];
       final brutas = data is Map ? data['permissoes'] : null;
@@ -57,18 +80,29 @@ class PermissoesAlunoService {
         for (final area in areasOpcionais) area: brutas[area] == true,
       };
     } catch (e) {
-      AppLogger.i.warn('[PermissoesAluno] Falha ao ler permissoes do aluno $alunoId: $e');
+      AppLogger.i.warn(
+          '[PermissoesAluno] Falha ao ler permissoes do aluno $alunoId: $e');
       return padrao;
     }
   }
 
   /// Grava a escolha do aluno. Devolve true somente com resposta de sucesso.
-  static Future<bool> responder(Map<String, bool> escolhas) async {
+  static Future<bool> responder(
+    Map<String, bool> escolhas, {
+    bool aceitarContrato = true,
+  }) async {
     try {
-      final corpo = {for (final area in areasOpcionais) area: escolhas[area] == true};
-      final resposta = await NetworkCaller().putRequest(ApiLinks.permissoesMeu, corpo);
+      final corpo = {
+        'aceitarContrato': aceitarContrato,
+        'permissoes': {
+          for (final area in areasOpcionais) area: escolhas[area] == true,
+        },
+      };
+      final resposta =
+          await NetworkCaller().putRequest(ApiLinks.permissoesMeu, corpo);
       if (!resposta.isSuccess) {
-        AppLogger.i.warn('[PermissoesAluno] Resposta recusada (status ${resposta.statusCode}).');
+        AppLogger.i.warn(
+            '[PermissoesAluno] Resposta recusada (status ${resposta.statusCode}).');
       }
       return resposta.isSuccess;
     } catch (e) {

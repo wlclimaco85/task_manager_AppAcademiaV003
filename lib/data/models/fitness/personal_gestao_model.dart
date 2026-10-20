@@ -1,4 +1,3 @@
-
 /// Modelo de Feedback / Comentário deixado pelo aluno em um treino
 class PersonalAlunoFeedbackModel {
   final String id;
@@ -85,6 +84,12 @@ class PersonalAlunoGestaoModel {
   final StatusMensalidadeAluno statusMensalidade;
   final String? dataUltimoPagamento;
   final String mesReferencia; // ex: "10/2026"
+  final int? academiaId;
+  final String academiaNome;
+  final int diaSemana;
+  final String horarioInicio;
+  final String horarioFim;
+  final String contratoStatus;
 
   /// Foto e as 7 medidas do cadastro inicial preenchidas. Default true: sem dado, nao alarma.
   final bool cadastroInicialCompleto;
@@ -123,11 +128,18 @@ class PersonalAlunoGestaoModel {
     this.statusMensalidade = StatusMensalidadeAluno.pendente,
     this.dataUltimoPagamento,
     this.mesReferencia = '',
+    this.academiaId,
+    this.academiaNome = '',
+    this.diaSemana = 1,
+    this.horarioInicio = '08:00',
+    this.horarioFim = '09:00',
+    this.contratoStatus = '',
   });
 
-  String get resumoAulasContratadas => tipoCobranca == 'plano' && aulasPlanoMes > 0
-      ? '$aulasPlanoMes aulas/mês'
-      : '${frequenciaContratada}x/sem';
+  String get resumoAulasContratadas =>
+      tipoCobranca == 'plano' && aulasPlanoMes > 0
+          ? '$aulasPlanoMes aulas/mês'
+          : '${frequenciaContratada}x/sem';
 
   /// Retorna quantos dias faltam para a ficha de treino vencer (negativo se já venceu)
   int get diasParaVencerTreino {
@@ -182,6 +194,12 @@ class PersonalAlunoGestaoModel {
     String? mesReferencia,
     bool? cadastroInicialCompleto,
     bool? fichaOcultaParaAluno,
+    int? academiaId,
+    String? academiaNome,
+    int? diaSemana,
+    String? horarioInicio,
+    String? horarioFim,
+    String? contratoStatus,
   }) {
     return PersonalAlunoGestaoModel(
       id: id ?? this.id,
@@ -192,7 +210,8 @@ class PersonalAlunoGestaoModel {
       objetivo: objetivo ?? this.objetivo,
       nivel: nivel ?? this.nivel,
       ativo: ativo ?? this.ativo,
-      cadastroInicialCompleto: cadastroInicialCompleto ?? this.cadastroInicialCompleto,
+      cadastroInicialCompleto:
+          cadastroInicialCompleto ?? this.cadastroInicialCompleto,
       fichaOcultaParaAluno: fichaOcultaParaAluno ?? this.fichaOcultaParaAluno,
       treinoAtualNome: treinoAtualNome ?? this.treinoAtualNome,
       dataInicioTreino: dataInicioTreino ?? this.dataInicioTreino,
@@ -216,6 +235,12 @@ class PersonalAlunoGestaoModel {
       statusMensalidade: statusMensalidade ?? this.statusMensalidade,
       dataUltimoPagamento: dataUltimoPagamento ?? this.dataUltimoPagamento,
       mesReferencia: mesReferencia ?? this.mesReferencia,
+      academiaId: academiaId ?? this.academiaId,
+      academiaNome: academiaNome ?? this.academiaNome,
+      diaSemana: diaSemana ?? this.diaSemana,
+      horarioInicio: horarioInicio ?? this.horarioInicio,
+      horarioFim: horarioFim ?? this.horarioFim,
+      contratoStatus: contratoStatus ?? this.contratoStatus,
     );
   }
 
@@ -251,10 +276,21 @@ class PersonalAlunoGestaoModel {
       'dataUltimoPagamento': dataUltimoPagamento,
       'mesReferencia': mesReferencia,
       'fichaOcultaParaAluno': fichaOcultaParaAluno,
+      'contrato': {
+        'academiaId': academiaId,
+        'academiaNome': academiaNome,
+        'diaSemana': diaSemana,
+        'horarioInicio': horarioInicio,
+        'horarioFim': horarioFim,
+      },
+      'contratoStatus': contratoStatus,
     };
   }
 
   factory PersonalAlunoGestaoModel.fromMap(Map<String, dynamic> map) {
+    final contrato = map['contrato'] is Map
+        ? Map<String, dynamic>.from(map['contrato'] as Map)
+        : const <String, dynamic>{};
     return PersonalAlunoGestaoModel(
       id: map['id']?.toString() ?? '',
       nome: map['nome']?.toString() ?? '',
@@ -295,6 +331,12 @@ class PersonalAlunoGestaoModel {
       dataUltimoPagamento: map['dataUltimoPagamento']?.toString(),
       mesReferencia: map['mesReferencia']?.toString() ?? '',
       fichaOcultaParaAluno: map['fichaOcultaParaAluno'] == true,
+      academiaId: (contrato['academiaId'] as num?)?.toInt(),
+      academiaNome: contrato['academiaNome']?.toString() ?? '',
+      diaSemana: (contrato['diaSemana'] as num?)?.toInt() ?? 1,
+      horarioInicio: contrato['horarioInicio']?.toString() ?? '08:00',
+      horarioFim: contrato['horarioFim']?.toString() ?? '09:00',
+      contratoStatus: map['contratoStatus']?.toString() ?? '',
     );
   }
 }

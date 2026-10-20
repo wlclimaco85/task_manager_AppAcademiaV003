@@ -1,5 +1,6 @@
 import 'package:task_manager_flutter/data/services/perfil_conta_service.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:task_manager_flutter/data/models/auth_utility.dart';
 import 'package:task_manager_flutter/data/models/login_model.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
@@ -36,12 +37,19 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
   String? _sessaoCarregada;
   bool _cadastroIncompleto = false;
   int _notificacoesNaoLidas = 0;
+  Timer? _atualizadorConta;
+  bool _dialogPermissoesAberto = false;
   @override
   void initState() {
     super.initState();
     AuthUtility.session.addListener(_atualizar);
     FitnessPushNotificationService().mudancas.addListener(_atualizarContador);
     _atualizar();
+    _atualizadorConta = Timer.periodic(const Duration(seconds: 15), (_) async {
+      await FitnessPushNotificationService().sincronizarRemotas();
+      await _atualizarContador();
+      await _verificarPermissoesAluno(forcar: true);
+    });
   }
 
   Future<void> _atualizarContador() async {
@@ -99,6 +107,7 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
         );
       }
     }
+    await FitnessPushNotificationService().sincronizarRemotas();
     final notificacoes =
         await FitnessPushNotificationService().getNotificacoes();
     if (!mounted || _sessaoCarregada != chaveSessao) return;
@@ -134,7 +143,8 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
         onFazerAgora: _abrirCadastroInicial,
       );
     } catch (e, stack) {
-      AppLogger.i.error('Erro ao abrir diálogo de avaliação inicial pendente: $e', stack);
+      AppLogger.i.error(
+          'Erro ao abrir diálogo de avaliação inicial pendente: $e', stack);
     }
   }
 
@@ -142,6 +152,8 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
     final chave = _sessaoCarregada;
     final ctx = _navContext;
     try {
+      await FitnessPushNotificationService().sincronizarRemotas();
+      if (!mounted || _sessaoCarregada != chave) return;
       await mostrarCentralNotificacoes(
         ctx,
         onAtualizarIndicadores: () {
@@ -158,11 +170,12 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
 
   /// Aluno vinculado por um personal que ainda nao respondeu as permissoes: mostra o popup.
   /// Personal nao ve este popup; cada login e verificado uma vez por sessao.
-  Future<void> _verificarPermissoesAluno() async {
+  Future<void> _verificarPermissoesAluno({bool forcar = false}) async {
     final sessao = AuthUtility.userInfo;
     if (podeGerenciarAlunos(sessao)) return;
     final chave = '${sessao.login?.id}';
-    if (_permissoesVerificadasPara == chave) return;
+    if (_dialogPermissoesAberto) return;
+    if (!forcar && _permissoesVerificadasPara == chave) return;
     _permissoesVerificadasPara = chave;
 
     final estado = await PermissoesAlunoService.meu();
@@ -171,18 +184,25 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
     final contaAtual = '${AuthUtility.userInfo.login?.id}';
     if (!mounted || contaAtual != chave) return;
     if (estado == null || !estado.pendente) return;
-    await showDialog<Map<String, bool>>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => PermissoesPersonalDialog(
-        nomePersonal: 'seu personal',
-        inicial: estado.permissoes,
-      ),
-    );
+    _dialogPermissoesAberto = true;
+    try {
+      await showDialog<Map<String, bool>>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => PermissoesPersonalDialog(
+          nomePersonal: estado.personalNome,
+          inicial: estado.permissoes,
+          contrato: estado.contrato,
+        ),
+      );
+    } finally {
+      _dialogPermissoesAberto = false;
+    }
   }
 
   @override
   void dispose() {
+    _atualizadorConta?.cancel();
     AuthUtility.session.removeListener(_atualizar);
     FitnessPushNotificationService()
         .mudancas

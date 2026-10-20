@@ -46,13 +46,15 @@ class PersonalGestaoOfflineRepository {
     final p = await SharedPreferences.getInstance();
     final key = _filaKey;
     final enviados = _fila(p);
-    final headers = {...TenantContext.headers, 'Content-Type': 'application/json'};
+    final headers = {
+      ...TenantContext.headers,
+      'Content-Type': 'application/json'
+    };
     try {
       for (final e in enviados.entries) {
         final response = await http
             .put(Uri.parse('$_url${e.key}'),
-                headers: headers,
-                body: jsonEncode(e.value))
+                headers: headers, body: jsonEncode(e.value))
             .timeout(const Duration(seconds: 10));
         if (response.statusCode == 200) {
           final atual =
@@ -100,14 +102,17 @@ class PersonalGestaoOfflineRepository {
     return resultado;
   }
 
-  Future<PersonalAlunoGestaoModel> vincularAluno(String alunoId) async {
+  Future<PersonalAlunoGestaoModel> vincularAluno(
+    String alunoId, {
+    required Map<String, dynamic> contrato,
+  }) async {
     final r = await http
         .post(Uri.parse('$_url/alunos/vincular'),
             headers: {
               ...TenantContext.headers,
               'Content-Type': 'application/json'
             },
-            body: jsonEncode({'alunoId': alunoId}))
+            body: jsonEncode({'alunoId': alunoId, 'contrato': contrato}))
         .timeout(const Duration(seconds: 10));
     if (r.statusCode != 200)
       throw Exception(
@@ -299,7 +304,8 @@ class PersonalGestaoOfflineRepository {
   }
 
   /// Liga/desliga a ocultacao da ficha de treino do aluno (decisao do personal).
-  Future<void> definirFichaOculta({required String alunoId, required bool oculta}) async {
+  Future<void> definirFichaOculta(
+      {required String alunoId, required bool oculta}) async {
     final lista = await getAlunos();
     final idx = lista.indexWhere((a) => a.id == alunoId);
     if (idx >= 0) {
@@ -317,8 +323,10 @@ class PersonalGestaoOfflineRepository {
 
     final alunos = await getAlunos();
     for (final a in alunos) {
-      final matchId = loginId.isNotEmpty && (a.loginId == loginId || a.id == loginId);
-      final matchEmail = email.isNotEmpty && a.email.trim().toLowerCase() == email;
+      final matchId =
+          loginId.isNotEmpty && (a.loginId == loginId || a.id == loginId);
+      final matchEmail =
+          email.isNotEmpty && a.email.trim().toLowerCase() == email;
       if (matchId || matchEmail) {
         return a.fichaOcultaParaAluno;
       }
@@ -403,7 +411,8 @@ class PersonalGestaoOfflineRepository {
 
   Future<List<PersonalContaPagarModel>> getContasPagar() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(FitnessContaSync.chave(_kContasPagarKey + '_real'));
+    final raw =
+        prefs.getString(FitnessContaSync.chave(_kContasPagarKey + '_real'));
 
     List<PersonalContaPagarModel> lista = [];
     if (raw == null || raw.isEmpty) {
@@ -417,7 +426,8 @@ class PersonalGestaoOfflineRepository {
                 PersonalContaPagarModel.fromMap(e as Map<String, dynamic>))
             .toList();
       } catch (e) {
-        debugPrint('[PersonalGestaoOfflineRepository] Erro decode contas a pagar: $e');
+        debugPrint(
+            '[PersonalGestaoOfflineRepository] Erro decode contas a pagar: $e');
         lista = [];
       }
     }
@@ -450,7 +460,8 @@ class PersonalGestaoOfflineRepository {
     await _salvarContasPagar(lista);
   }
 
-  Future<void> registrarPagamentoConta(String contaId, {bool pago = true}) async {
+  Future<void> registrarPagamentoConta(String contaId,
+      {bool pago = true}) async {
     final lista = await getContasPagar();
     final idx = lista.indexWhere((c) => c.id == contaId);
     if (idx >= 0) {
@@ -503,7 +514,8 @@ class PersonalGestaoOfflineRepository {
 
   Future<PersonalPixCobrancaModel> getPixCobranca() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(FitnessContaSync.chave(_kPixCobrancaKey + '_real'));
+    final raw =
+        prefs.getString(FitnessContaSync.chave(_kPixCobrancaKey + '_real'));
 
     if (raw == null || raw.isEmpty) {
       return PersonalPixCobrancaModel();
@@ -512,7 +524,8 @@ class PersonalGestaoOfflineRepository {
       final decoded = json.decode(raw) as Map<String, dynamic>;
       return PersonalPixCobrancaModel.fromMap(decoded);
     } catch (e) {
-      debugPrint('[PersonalGestaoOfflineRepository] Erro decode pix cobranca: $e');
+      debugPrint(
+          '[PersonalGestaoOfflineRepository] Erro decode pix cobranca: $e');
       return PersonalPixCobrancaModel();
     }
   }

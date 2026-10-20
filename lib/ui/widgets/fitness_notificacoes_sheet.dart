@@ -27,7 +27,8 @@ Future<void> mostrarDialogoAvaliacaoInicialPendente(
               color: GridColors.secondary.withValues(alpha: 0.18),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.priority_high, color: GridColors.secondary, size: 28),
+            child: Icon(Icons.priority_high,
+                color: GridColors.secondary, size: 28),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -78,7 +79,8 @@ Future<void> mostrarDialogoAvaliacaoInicialPendente(
           style: ElevatedButton.styleFrom(
             backgroundColor: GridColors.primary,
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
           onPressed: () {
@@ -141,7 +143,8 @@ Future<void> mostrarCentralNotificacoes(
                           color: GridColors.primary.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(Icons.notifications_active, color: GridColors.primary, size: 22),
+                        child: Icon(Icons.notifications_active,
+                            color: GridColors.primary, size: 22),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -172,13 +175,15 @@ Future<void> mostrarCentralNotificacoes(
                         TextButton(
                           onPressed: () async {
                             for (final item in itens) {
-                              if (!item.lida) await notifService.marcarComoLida(item.id);
+                              if (!item.lida)
+                                await notifService.marcarComoLida(item.id);
                             }
                             itens = await notifService.getNotificacoes();
                             setSheetState(() {});
                             onAtualizarIndicadores();
                           },
-                          child: const Text('Ler todas', style: TextStyle(fontSize: 12)),
+                          child: const Text('Ler todas',
+                              style: TextStyle(fontSize: 12)),
                         ),
                     ],
                   ),
@@ -194,7 +199,9 @@ Future<void> mostrarCentralNotificacoes(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.notifications_off_outlined,
-                                  size: 48, color: GridColors.textSecondary.withValues(alpha: 0.5)),
+                                  size: 48,
+                                  color: GridColors.textSecondary
+                                      .withValues(alpha: 0.5)),
                               const SizedBox(height: 12),
                               Text(
                                 'Nenhuma notificação por enquanto',
@@ -208,9 +215,11 @@ Future<void> mostrarCentralNotificacoes(
                         )
                       : ListView.separated(
                           shrinkWrap: true,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
                           itemCount: itens.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 10),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 10),
                           itemBuilder: (context, index) {
                             final item = itens[index];
                             final iconInfo = _obterIconeNotificacao(item.tipo);
@@ -225,7 +234,8 @@ Future<void> mostrarCentralNotificacoes(
                                   setSheetState(() {});
                                   onAtualizarIndicadores();
                                 }
-                                if (item.tipo == 'cadastro_inicial' && sheetContext.mounted) {
+                                if (item.tipo == 'cadastro_inicial' &&
+                                    sheetContext.mounted) {
                                   Navigator.pop(sheetContext);
                                   onAbrirAvaliacaoInicial();
                                 }
@@ -234,13 +244,16 @@ Future<void> mostrarCentralNotificacoes(
                                 padding: const EdgeInsets.all(14),
                                 decoration: BoxDecoration(
                                   color: item.lida
-                                      ? GridColors.filterBackground.withValues(alpha: 0.4)
-                                      : GridColors.primarySubtle.withValues(alpha: 0.6),
+                                      ? GridColors.filterBackground
+                                          .withValues(alpha: 0.4)
+                                      : GridColors.primarySubtle
+                                          .withValues(alpha: 0.6),
                                   borderRadius: BorderRadius.circular(14),
                                   border: Border.all(
                                     color: item.lida
                                         ? GridColors.divider
-                                        : GridColors.primary.withValues(alpha: 0.35),
+                                        : GridColors.primary
+                                            .withValues(alpha: 0.35),
                                     width: item.lida ? 1 : 1.5,
                                   ),
                                 ),
@@ -251,17 +264,20 @@ Future<void> mostrarCentralNotificacoes(
                                     Container(
                                       padding: const EdgeInsets.all(10),
                                       decoration: BoxDecoration(
-                                        color: iconInfo.cor.withValues(alpha: 0.15),
+                                        color: iconInfo.cor
+                                            .withValues(alpha: 0.15),
                                         shape: BoxShape.circle,
                                       ),
-                                      child: Icon(iconInfo.icone, color: iconInfo.cor, size: 22),
+                                      child: Icon(iconInfo.icone,
+                                          color: iconInfo.cor, size: 22),
                                     ),
                                     const SizedBox(width: 12),
 
                                     // Conteúdo completo da notificação
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Row(
                                             children: [
@@ -269,9 +285,12 @@ Future<void> mostrarCentralNotificacoes(
                                                 child: Text(
                                                   item.titulo,
                                                   style: TextStyle(
-                                                    fontWeight: item.lida ? FontWeight.w600 : FontWeight.w800,
+                                                    fontWeight: item.lida
+                                                        ? FontWeight.w600
+                                                        : FontWeight.w800,
                                                     fontSize: 14,
-                                                    color: GridColors.textPrimary,
+                                                    color:
+                                                        GridColors.textPrimary,
                                                   ),
                                                 ),
                                               ),
@@ -279,7 +298,8 @@ Future<void> mostrarCentralNotificacoes(
                                                 Container(
                                                   width: 8,
                                                   height: 8,
-                                                  margin: const EdgeInsets.only(left: 6),
+                                                  margin: const EdgeInsets.only(
+                                                      left: 6),
                                                   decoration: BoxDecoration(
                                                     color: GridColors.primary,
                                                     shape: BoxShape.circle,
@@ -298,28 +318,39 @@ Future<void> mostrarCentralNotificacoes(
                                           ),
                                           const SizedBox(height: 8),
                                           Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
                                             children: [
                                               Text(
-                                                _formatarDataHora(item.dataHora),
+                                                _formatarDataHora(
+                                                    item.dataHora),
                                                 style: TextStyle(
                                                   fontSize: 11,
-                                                  color: GridColors.textSecondary.withValues(alpha: 0.75),
+                                                  color: GridColors
+                                                      .textSecondary
+                                                      .withValues(alpha: 0.75),
                                                 ),
                                               ),
-                                              if (item.tipo == 'cadastro_inicial')
+                                              if (item.tipo ==
+                                                  'cadastro_inicial')
                                                 Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 4),
                                                   decoration: BoxDecoration(
                                                     color: GridColors.primary,
-                                                    borderRadius: BorderRadius.circular(8),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8),
                                                   ),
                                                   child: const Text(
                                                     'Fazer Avaliação →',
                                                     style: TextStyle(
                                                       color: Colors.white,
                                                       fontSize: 11,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                     ),
                                                   ),
                                                 ),
@@ -348,7 +379,9 @@ Future<void> mostrarCentralNotificacoes(
 
 String _formatarDataHora(DateTime dataHora) {
   final hoje = DateTime.now();
-  if (dataHora.year == hoje.year && dataHora.month == hoje.month && dataHora.day == hoje.day) {
+  if (dataHora.year == hoje.year &&
+      dataHora.month == hoje.month &&
+      dataHora.day == hoje.day) {
     return 'Hoje às ${DateFormat('HH:mm').format(dataHora)}';
   }
   return DateFormat('dd/MM às HH:mm').format(dataHora);
@@ -369,7 +402,10 @@ _NotifIconInfo _obterIconeNotificacao(String tipo) {
       return _NotifIconInfo(Icons.event_busy, Colors.orange);
     case 'treino_atualizado':
     case 'treino_hoje':
+    case 'nova_ficha':
       return _NotifIconInfo(Icons.fitness_center, GridColors.primary);
+    case 'contrato_personal':
+      return _NotifIconInfo(Icons.handshake_outlined, Colors.blue);
     case 'mensalidade_vencendo':
       return _NotifIconInfo(Icons.payment, Colors.blue);
     case 'meta_dia_nao_cumprida':

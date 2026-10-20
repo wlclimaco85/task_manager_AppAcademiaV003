@@ -78,8 +78,13 @@ class ApiLinks {
 
   // static String login = 'http://192.168.56.1:8088/boletobancos/rest/auth/login';
   static String login = '$_baseUrlNew/rest/auth/login';
+
   /// Tipos de conta que o V003 (Eu Atleta) aceita no login: aluno, personal e academia.
-  static const List<String> tiposLoginApp = ['APP_ALUNO', 'APP_PERSONAL', 'APP_ACADEMIA'];
+  static const List<String> tiposLoginApp = [
+    'APP_ALUNO',
+    'APP_PERSONAL',
+    'APP_ACADEMIA'
+  ];
   static String recoverVerifyEmail(String email) =>
       '$_baseUrl/RecoverVerifyEmail/$email';
   static String recoverVerifyOTP(String email, String otp) =>
@@ -455,14 +460,22 @@ class ApiLinks {
 
   static String atualizarDadosPessoais(String id) =>
       '$_baseUrlNew/api/dadospessoais/$id';
+
   /// Permissoes do aluno para o personal (GET le, PUT responde o popup).
   static const String permissoesMeu = '$_baseUrlNew/api/fitness/permissoes/meu';
+  static const String alertasMeu = '$_baseUrlNew/api/alert/me';
+
   /// Permissoes de um aluno vinculado, lidas pelo personal.
-  static String permissoesDoAluno(String alunoId) => '$_baseUrlNew/api/fitness/permissoes/alunos/$alunoId';
+  static String permissoesDoAluno(String alunoId) =>
+      '$_baseUrlNew/api/fitness/permissoes/alunos/$alunoId';
+
   /// Cadastro inicial (foto e medidas) do aluno logado: GET le, PUT grava.
-  static const String cadastroInicialMeu = '$_baseUrlNew/api/fitness/cadastro-inicial/meu';
+  static const String cadastroInicialMeu =
+      '$_baseUrlNew/api/fitness/cadastro-inicial/meu';
+
   /// Financeiro da academia logada: lista do mes (AAAA-MM) e baixa por aluno.
-  static String financeiroAcademia(String mes) => '$_baseUrlNew/api/fitness/academia/financeiro?mes=$mes';
+  static String financeiroAcademia(String mes) =>
+      '$_baseUrlNew/api/fitness/academia/financeiro?mes=$mes';
   static String financeiroAcademiaBaixa(String mes, String alunoId) =>
       '$_baseUrlNew/api/fitness/academia/financeiro/$mes/alunos/$alunoId';
   static const String avisosFaltaAluno =
@@ -487,7 +500,8 @@ class ApiLinks {
 
   // Licenças
   static String get allLicencas => '$_baseUrlNew/api/licencas';
-  static String licencaStatus(int codApp) => '$_baseUrlNew/api/licencas/status/$codApp';
+  static String licencaStatus(int codApp) =>
+      '$_baseUrlNew/api/licencas/status/$codApp';
   static String updateLicenca(int id) => '$_baseUrlNew/api/licencas/$id';
 
   // Saúde / Fitness (Home Saúde)
@@ -512,6 +526,5 @@ class ApiLinks {
       '$_baseUrlNew/api/fitness/gamificacao/conquistas';
   static String get fitnessGamificacaoRanking =>
       '$_baseUrlNew/api/fitness/gamificacao/ranking';
-  static String get fitnessMuralPosts =>
-      '$_baseUrlNew/api/fitness/mural/posts';
+  static String get fitnessMuralPosts => '$_baseUrlNew/api/fitness/mural/posts';
 }

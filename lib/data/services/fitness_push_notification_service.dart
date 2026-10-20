@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'package:task_manager_flutter/data/utils/api_links.dart';
+import 'package:task_manager_flutter/data/utils/tenant_context.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
 import 'package:task_manager_flutter/data/services/fitness_conta_sync.dart';
@@ -64,6 +67,63 @@ class FitnessPushNotificationService {
 
   final _repo = FitnessOfflineRepository();
   final ValueNotifier<int> mudancas = ValueNotifier<int>(0);
+
+  /// Traz para a central local os alertas gerados no servidor para esta conta.
+  /// Assim duas abas/dispositivos recebem vinculos e fichas mesmo sem recarregar.
+  Future<void> sincronizarRemotas() async {
+    try {
+      final response = await http
+          .get(Uri.parse(ApiLinks.alertasMeu), headers: TenantContext.headers)
+          .timeout(const Duration(seconds: 8));
+      if (response.statusCode != 200) return;
+      final body = jsonDecode(response.body);
+      final dados = body is Map ? body['data'] : null;
+      if (dados is! List) return;
+      final atuais = await getNotificacoes();
+      var alterou = false;
+      for (final bruto in dados.reversed) {
+        if (bruto is! Map) continue;
+        final idServidor = bruto['id']?.toString() ?? '';
+        if (idServidor.isEmpty) continue;
+        final id = 'remoto_$idServidor';
+        if (atuais.any((item) => item.id == id)) continue;
+        var texto = bruto['texto']?.toString() ?? '';
+        var tipo = 'geral';
+        var titulo = 'Nova notificação';
+        if (texto.startsWith('[VINCULO]')) {
+          tipo = 'contrato_personal';
+          titulo = 'Novo contrato com personal';
+          texto = texto.substring('[VINCULO]'.length).trim();
+        } else if (texto.startsWith('[TREINO]')) {
+          tipo = 'nova_ficha';
+          titulo = 'Novo treino cadastrado';
+          texto = texto.substring('[TREINO]'.length).trim();
+        }
+        atuais.insert(
+          0,
+          FitnessNotificationItem(
+            id: id,
+            titulo: titulo,
+            corpo: texto,
+            dataHora: DateTime.tryParse(bruto['data']?.toString() ?? '') ??
+                DateTime.now(),
+            tipo: tipo,
+            lida: bruto['status']?.toString() == 'LIDO',
+            payload: {'alertaId': idServidor},
+          ),
+        );
+        alterou = true;
+      }
+      if (!alterou) return;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_notificationsKey,
+          jsonEncode(atuais.map((item) => item.toMap()).toList()));
+      mudancas.value++;
+    } catch (e) {
+      debugPrint(
+          '[FitnessPushNotificationService] Falha ao sincronizar alertas remotos: $e');
+    }
+  }
 
   /// Inicializa e verifica gatilhos automáticos (ex: inatividade ou lembrete de treino do dia)
   Future<void> inicializarVerificacoesAutomaticas({String? alunoId}) async {
@@ -307,6 +367,15 @@ class FitnessPushNotificationService {
       await prefs.setString(
           _notificationsKey, json.encode(lista.map((n) => n.toMap()).toList()));
       mudancas.value++;
+      final alertaId = antiga.payload?['alertaId']?.toString();
+      if (alertaId != null && alertaId.isNotEmpty) {
+        try {
+          await http.put(
+            Uri.parse('${ApiLinks.alertasMeu}/$alertaId/lida'),
+            headers: TenantContext.headers,
+          );
+        } catch (_) {}
+      }
     }
   }
 }

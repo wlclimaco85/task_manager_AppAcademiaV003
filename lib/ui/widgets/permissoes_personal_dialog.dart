@@ -7,22 +7,27 @@ import 'package:task_manager_flutter/data/services/permissoes_aluno_service.dart
 class PermissoesPersonalDialog extends StatefulWidget {
   final String nomePersonal;
   final Map<String, bool> inicial;
+  final Map<String, dynamic> contrato;
 
   const PermissoesPersonalDialog({
     super.key,
     required this.nomePersonal,
     required this.inicial,
+    required this.contrato,
   });
 
   @override
-  State<PermissoesPersonalDialog> createState() => _PermissoesPersonalDialogState();
+  State<PermissoesPersonalDialog> createState() =>
+      _PermissoesPersonalDialogState();
 }
 
 class _PermissoesPersonalDialogState extends State<PermissoesPersonalDialog> {
   late final Map<String, bool> _escolhas = {
-    for (final area in PermissoesAlunoService.areasOpcionais) area: widget.inicial[area] == true,
+    for (final area in PermissoesAlunoService.areasOpcionais)
+      area: widget.inicial[area] == true,
   };
   bool _enviando = false;
+  bool _aceitouTermos = false;
 
   static const Map<String, String> _rotulos = {
     'dieta': 'Dieta',
@@ -31,9 +36,13 @@ class _PermissoesPersonalDialogState extends State<PermissoesPersonalDialog> {
     'metas': 'Metas e evolução do corpo',
   };
 
-  Future<void> _confirmar(Map<String, bool> escolhas) async {
+  Future<void> _confirmar(Map<String, bool> escolhas,
+      {required bool aceitarContrato}) async {
     setState(() => _enviando = true);
-    final ok = await PermissoesAlunoService.responder(escolhas);
+    final ok = await PermissoesAlunoService.responder(
+      escolhas,
+      aceitarContrato: aceitarContrato,
+    );
     if (!mounted) return;
     if (ok) {
       Navigator.pop(context, escolhas);
@@ -57,15 +66,52 @@ class _PermissoesPersonalDialogState extends State<PermissoesPersonalDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Escolha o que o seu personal pode acompanhar. Você pode mudar isso depois.',
+              'Revise a proposta antes de confirmar o vínculo.',
             ),
             const SizedBox(height: 12),
+            if (widget.contrato.isNotEmpty) ...[
+              _linhaContrato(
+                  'Plano',
+                  widget.contrato['planoNome']?.toString() ??
+                      widget.contrato['tipoCobranca']?.toString() ??
+                      'Acompanhamento'),
+              _linhaContrato('Valor',
+                  'R\$ ${((widget.contrato['valorMensalidade'] as num?)?.toDouble() ?? 0).toStringAsFixed(2).replaceAll('.', ',')}'),
+              _linhaContrato('Vencimento',
+                  'Dia ${widget.contrato['diaVencimento'] ?? '-'}'),
+              _linhaContrato('Academia',
+                  widget.contrato['academiaNome']?.toString() ?? '-'),
+              _linhaContrato('Aula semanal',
+                  '${_diaSemana(widget.contrato['diaSemana'])}, ${widget.contrato['horarioInicio'] ?? '-'} às ${widget.contrato['horarioFim'] ?? '-'}'),
+              const SizedBox(height: 8),
+              Text(
+                widget.contrato['termos']?.toString() ?? '',
+                style: TextStyle(fontSize: 12, color: GridColors.textSecondary),
+              ),
+              CheckboxListTile(
+                key: const Key('aceite_termos_contrato'),
+                contentPadding: EdgeInsets.zero,
+                value: _aceitouTermos,
+                title: const Text(
+                    'Li e aceito os termos, valores, academia e horário'),
+                onChanged: _enviando
+                    ? null
+                    : (valor) => setState(() => _aceitouTermos = valor == true),
+              ),
+              const Divider(),
+            ] else
+              const Text(
+                'A proposta está incompleta. Peça ao personal para reenviar informando academia e horário.',
+                style: TextStyle(color: Colors.redAccent),
+              ),
+            const Text('Permissões de acesso aos seus dados:'),
             // Treino: sempre liberado, nao muda.
             const SwitchListTile(
               key: Key('permissao_treino'),
               contentPadding: EdgeInsets.zero,
               title: Text('Treinos'),
-              subtitle: Text('Obrigatório: o personal monta e acompanha seus treinos.'),
+              subtitle: Text(
+                  'Obrigatório: o personal monta e acompanha seus treinos.'),
               value: true,
               onChanged: null,
             ),
@@ -87,8 +133,14 @@ class _PermissoesPersonalDialogState extends State<PermissoesPersonalDialog> {
           key: const Key('permissoes_nao_permitir'),
           onPressed: _enviando
               ? null
-              : () => _confirmar({for (final area in PermissoesAlunoService.areasOpcionais) area: false}),
-          child: const Text('Não permitir'),
+              : () => _confirmar(
+                    {
+                      for (final area in PermissoesAlunoService.areasOpcionais)
+                        area: false
+                    },
+                    aceitarContrato: false,
+                  ),
+          child: const Text('Recusar contrato'),
         ),
         ElevatedButton(
           key: const Key('permissoes_permitir'),
@@ -96,16 +148,49 @@ class _PermissoesPersonalDialogState extends State<PermissoesPersonalDialog> {
             backgroundColor: CustomColors.primaryGreen,
             foregroundColor: Colors.white,
           ),
-          onPressed: _enviando ? null : () => _confirmar(_escolhas),
+          onPressed: _enviando || !_aceitouTermos || widget.contrato.isEmpty
+              ? null
+              : () => _confirmar(_escolhas, aceitarContrato: true),
           child: _enviando
               ? const SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
                 )
               : const Text('Permitir selecionados'),
         ),
       ],
     );
+  }
+
+  Widget _linhaContrato(String rotulo, String valor) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 105,
+              child: Text(rotulo,
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
+            ),
+            Expanded(child: Text(valor)),
+          ],
+        ),
+      );
+
+  String _diaSemana(Object? valor) {
+    const dias = [
+      '',
+      'Segunda',
+      'Terça',
+      'Quarta',
+      'Quinta',
+      'Sexta',
+      'Sábado',
+      'Domingo'
+    ];
+    final numero = valor is num ? valor.toInt() : int.tryParse('$valor') ?? 0;
+    return numero >= 1 && numero <= 7 ? dias[numero] : 'Dia não informado';
   }
 }
