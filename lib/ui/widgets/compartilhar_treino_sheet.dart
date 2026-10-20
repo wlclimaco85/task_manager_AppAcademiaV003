@@ -46,6 +46,8 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
   final _cardKey = GlobalKey();
   late final List<String> _fotos = List.of(widget.fotosIniciais.take(3));
   int _fotoSelecionada = 0;
+  Uint8List? _fotoEmMemoria;
+  String? _base64DaFotoEmMemoria;
   late final TextEditingController _personalCtrl;
   bool _temPersonalVinculado = false;
 
@@ -91,9 +93,16 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
 
   Uint8List? get _foto {
     if (_fotos.isEmpty) return null;
+    final base64 = _fotos[_fotoSelecionada];
+    if (_base64DaFotoEmMemoria == base64 && _fotoEmMemoria != null) return _fotoEmMemoria;
     try {
-      return base64Decode(_fotos[_fotoSelecionada]);
+      final foto = base64Decode(base64);
+      _base64DaFotoEmMemoria = base64;
+      _fotoEmMemoria = foto;
+      return foto;
     } on FormatException {
+      _base64DaFotoEmMemoria = base64;
+      _fotoEmMemoria = null;
       return null;
     }
   }
@@ -182,6 +191,11 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
 
   /// Renderiza o card EU ATLETA em PNG (bytes em memória).
   Future<Uint8List> _renderizarCardBytes() async {
+    // A captura pode começar antes de Image.memory terminar a decodificação.
+    // Sem aguardar essa etapa, o card mantém o espaço da foto, porém sai sem
+    // os pixels dela no story compartilhado.
+    final foto = _foto;
+    if (foto != null) await precacheImage(MemoryImage(foto), context);
     await WidgetsBinding.instance.endOfFrame;
     final boundary = _cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
     final imagem = await boundary.toImage(pixelRatio: 3);

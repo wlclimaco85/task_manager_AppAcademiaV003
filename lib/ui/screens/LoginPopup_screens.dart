@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/data/utils/acesso_app_info.dart';
 import 'package:task_manager_flutter/data/models/network_response.dart';
 import 'package:task_manager_flutter/data/services/network_caller.dart';
 import 'package:task_manager_flutter/ui/screens/ForgotPasswordScreen_screens.dart';
@@ -29,6 +30,7 @@ class _LoginPopupState extends State<LoginPopup> {
     Map<String, dynamic> requestBody = {
       "email": username,
       "password": password,
+      ...dadosDeAcessoLogin(),
     };
 
     try {

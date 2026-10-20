@@ -8,6 +8,7 @@ import 'package:task_manager_flutter/data/models/login_model.dart';
 import 'package:task_manager_flutter/data/models/network_response.dart';
 import 'package:task_manager_flutter/data/services/network_caller.dart';
 import 'package:task_manager_flutter/data/utils/api_links.dart';
+import 'package:task_manager_flutter/data/utils/acesso_app_info.dart';
 import 'package:task_manager_flutter/data/utils/grid_colors.dart';
 import 'package:task_manager_flutter/ui/screens/auth_screens/email_verification_screeen.dart';
 import 'package:task_manager_flutter/ui/screens/bottom_navbar_screen.dart';
@@ -41,6 +42,7 @@ class _LoginScreenState extends State<LoginScreen>
       "password": _passwordController.text,
       // Tipos de conta aceitos por este app: impede pegar contas de outros sistemas do mesmo backend.
       "tiposLogin": ApiLinks.tiposLoginApp,
+      ...dadosDeAcessoLogin(),
     };
     final NetworkResponse response =
         await NetworkCaller().postRequest(ApiLinks.login, requestBody);
