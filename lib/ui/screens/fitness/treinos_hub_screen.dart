@@ -14,6 +14,7 @@ import 'package:task_manager_flutter/ui/screens/fitness/biblioteca_exercicios_sc
 import 'package:task_manager_flutter/ui/screens/fitness/montador_treino_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/player_treino_ao_vivo_screen.dart';
 import 'package:task_manager_flutter/data/services/personal_gestao_offline_repository.dart';
+import 'package:task_manager_flutter/data/services/background_sync_service.dart';
 
 /// Central de Treinos do MFIT Personal (Fichas Ativas, Modelos, Biblioteca e Histórico)
 class TreinosHubScreen extends StatefulWidget {
@@ -38,10 +39,19 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _carregarDados();
+    BackgroundSyncService.mudancas.addListener(_aoAtualizarSincronizacaoAutomatica);
   }
 
-  Future<void> _carregarDados({bool manual = false}) async {
-    setState(() => _loading = true);
+  void _aoAtualizarSincronizacaoAutomatica() {
+    if (mounted) {
+      _carregarDados(silencioso: true);
+    }
+  }
+
+  Future<void> _carregarDados({bool manual = false, bool silencioso = false}) async {
+    if (!silencioso) {
+      setState(() => _loading = true);
+    }
     final isPersonal = podeGerenciarAlunos(AuthUtility.session.value);
     // Personal ve so os treinos dele; os dos alunos ficam nos perfis deles.
     final planos = await _repository.getPlanosTreino(
@@ -80,6 +90,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
 
   @override
   void dispose() {
+    BackgroundSyncService.mudancas.removeListener(_aoAtualizarSincronizacaoAutomatica);
     _tabController.dispose();
     super.dispose();
   }

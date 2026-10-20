@@ -10,6 +10,7 @@ import 'package:task_manager_flutter/data/services/nutricao_farmaco_offline_repo
 import 'package:task_manager_flutter/data/services/unidade_medida_catalogo.dart';
 import 'package:task_manager_flutter/data/services/permissoes_aluno_service.dart';
 import 'package:task_manager_flutter/data/utils/fitness_access.dart';
+import 'package:task_manager_flutter/data/services/background_sync_service.dart';
 
 /// Central de Nutrição, Farmacologia, Suplementação & Timeline Fitness 360
 class NutricaoProtocolosHubScreen extends StatefulWidget {
@@ -49,6 +50,11 @@ class _NutricaoProtocolosHubScreenState
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     _carregarDados();
+    BackgroundSyncService.mudancas.addListener(_aoAtualizarSincronizacaoAutomatica);
+  }
+
+  void _aoAtualizarSincronizacaoAutomatica() {
+    if (mounted) _carregarDados(silencioso: true);
   }
 
   /// Dono dos protocolos exibidos: o aluno escolhido, ou o proprio personal.
@@ -73,8 +79,10 @@ class _NutricaoProtocolosHubScreenState
         ),
       );
 
-  Future<void> _carregarDados() async {
-    setState(() => _loading = true);
+  Future<void> _carregarDados({bool silencioso = false}) async {
+    if (!silencioso) {
+      setState(() => _loading = true);
+    }
     if (widget.alunoId != null) {
       final permissoes = await PermissoesAlunoService.doAluno(widget.alunoId!);
       if (mounted) setState(() => _permissoesAluno = permissoes);
@@ -97,6 +105,7 @@ class _NutricaoProtocolosHubScreenState
 
   @override
   void dispose() {
+    BackgroundSyncService.mudancas.removeListener(_aoAtualizarSincronizacaoAutomatica);
     _tabController.dispose();
     super.dispose();
   }
