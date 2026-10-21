@@ -133,6 +133,8 @@ class ApiLinks {
   static String fecthChats = '$_baseUrlNew/api/chat/user';
   static String fecthChatById = '$_baseUrlNew/api/chat/messages?chatId=';
   static String getCategorias = '$_baseUrlNew/api/setor';
+  /// Personais da empresa para a vitrine do aluno (dados de exibicao, sem contato pessoal).
+  static String get vitrinePersonais => '$_baseUrlNew/api/fitness/vitrine/personais';
 
   // Comunicado
   static String allComunicados = '$_baseUrlNew/api/comunicados';

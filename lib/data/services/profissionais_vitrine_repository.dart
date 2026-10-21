@@ -3,6 +3,9 @@ import 'package:task_manager_flutter/data/services/fitness_conta_sync.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/models/fitness/profissional_vitrine_model.dart';
+import 'package:task_manager_flutter/data/services/network_caller.dart';
+import 'package:task_manager_flutter/data/utils/api_links.dart';
+import 'package:task_manager_flutter/data/utils/app_logger.dart';
 
 /// Repositório Offline-First de Vitrine e Contratação de Profissionais
 /// Focado no ecossistema de Uberaba - MG e redes parceiras
@@ -69,25 +72,8 @@ class ProfissionaisVitrineRepository {
     String? academiaFiltro,
     String? buscaTexto,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(FitnessContaSync.chave(_kProfissionaisKey + '_real'));
-
-    List<ProfissionalVitrineModel> lista = [];
-    if (raw == null || raw.isEmpty) {
-      lista = [];
-      await _salvar(lista);
-    } else {
-      try {
-        final decoded = json.decode(raw) as List<dynamic>;
-        lista = decoded
-            .map((e) =>
-                ProfissionalVitrineModel.fromMap(e as Map<String, dynamic>))
-            .toList();
-      } catch (e) {
-        debugPrint('[ProfissionaisVitrineRepository] Erro decode profs: $e');
-        lista = [];
-      }
-    }
+    // Personais do servidor (empresa do aluno); sem rede cai no cache local.
+    var lista = await _buscarPersonaisDoServidor() ?? await _listaLocal();
 
     if (categoria != null) {
       lista = lista
@@ -117,6 +103,67 @@ class ProfissionaisVitrineRepository {
           .toList();
     }
 
+    return lista;
+  }
+
+  /// Busca os personais da empresa no servidor. Null se a rede ou o servidor falharem.
+  Future<List<ProfissionalVitrineModel>?> _buscarPersonaisDoServidor() async {
+    try {
+      final resposta = await NetworkCaller().getRequest(ApiLinks.vitrinePersonais);
+      final data = resposta.body?['data'];
+      if (!resposta.isSuccess || data is! List) return null;
+      return data
+          .whereType<Map>()
+          .map((m) => _doServidor(Map<String, dynamic>.from(m)))
+          .toList();
+    } catch (e) {
+      AppLogger.i.warn('[ProfissionaisVitrine] Falha ao buscar personais no servidor: $e');
+      return null;
+    }
+  }
+
+  /// Monta o profissional com o que o servidor tem. Avaliacao, preco, grade e pacotes nao existem
+  /// no servidor: ficam zerados ou vazios, para a vitrine nao mostrar dados inventados.
+  ProfissionalVitrineModel _doServidor(Map<String, dynamic> m) {
+    return ProfissionalVitrineModel(
+      id: '${m['id']}',
+      nome: '${m['nome'] ?? ''}',
+      categoria: CategoriaProfissional.personal,
+      registroProfissional: '${m['cref'] ?? ''}',
+      fotoUrl: '${m['fotoUrl'] ?? ''}',
+      especialidade: '',
+      bioResumo: '${m['bio'] ?? ''}',
+      avaliacaoMedia: 0,
+      totalAvaliacoes: 0,
+      anosExperiencia: 0,
+      whatsapp: '${m['whatsapp'] ?? ''}',
+      precoMinimoMensal: 0,
+      academiasAtendidas: const [],
+      gradeHorarios: const [],
+      pacotes: const [],
+    );
+  }
+
+  Future<List<ProfissionalVitrineModel>> _listaLocal() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(FitnessContaSync.chave(_kProfissionaisKey + '_real'));
+
+    List<ProfissionalVitrineModel> lista = [];
+    if (raw == null || raw.isEmpty) {
+      lista = [];
+      await _salvar(lista);
+    } else {
+      try {
+        final decoded = json.decode(raw) as List<dynamic>;
+        lista = decoded
+            .map((e) =>
+                ProfissionalVitrineModel.fromMap(e as Map<String, dynamic>))
+            .toList();
+      } catch (e) {
+        debugPrint('[ProfissionaisVitrineRepository] Erro decode profs: $e');
+        lista = [];
+      }
+    }
     return lista;
   }
 
