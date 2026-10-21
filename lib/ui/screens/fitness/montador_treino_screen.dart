@@ -582,8 +582,14 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
 
     await _repository.salvarPlanoTreino(plano);
     bool publicado = true;
-    if (widget.alunoId != null) {
-      publicado = await PersonalGestaoOfflineRepository().publicarTreino(widget.alunoId!,plano);
+    final destinoAlunoId = widget.alunoId ??
+        (widget.planoParaEditar?.alunoId != null &&
+         widget.planoParaEditar!.alunoId.isNotEmpty &&
+         widget.planoParaEditar!.alunoId != AuthUtility.userInfo.login?.id?.toString()
+            ? widget.planoParaEditar!.alunoId
+            : null);
+    if (destinoAlunoId != null && !plano.isTemplate) {
+      publicado = await PersonalGestaoOfflineRepository().publicarTreino(destinoAlunoId, plano);
     }
 
     if (mounted) {

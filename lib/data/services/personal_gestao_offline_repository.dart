@@ -6,6 +6,7 @@ import 'package:task_manager_flutter/data/utils/app_logger.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_conta_sync.dart';
+import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/models/fitness/personal_gestao_model.dart';
@@ -173,6 +174,26 @@ class PersonalGestaoOfflineRepository {
     final caminho = '/alunos/$alunoId/planos/${plano.id}';
     await _enfileirar(caminho, plano.toMap());
     return !_fila(await SharedPreferences.getInstance()).containsKey(caminho);
+  }
+
+  Future<List<PlanoTreinoModel>> getPlanosAluno(String alunoId) async {
+    final p = await SharedPreferences.getInstance();
+    final key = FitnessContaSync.chave('personal_planos_$alunoId');
+    final remoto = await _lerRemoto('/alunos/$alunoId/planos');
+    if (remoto != null) {
+      await p.setString(key, jsonEncode(remoto));
+      return remoto.map((e) => PlanoTreinoModel.fromMap(e)).toList();
+    }
+    final raw = p.getString(key);
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw) as List;
+        return decoded
+            .map((e) => PlanoTreinoModel.fromMap(Map<String, dynamic>.from(e)))
+            .toList();
+      } catch (_) {}
+    }
+    return await FitnessOfflineRepository().getPlanosTreino(alunoId: alunoId);
   }
 
   // ─────────────────────────────────────────────────────────────────────────────

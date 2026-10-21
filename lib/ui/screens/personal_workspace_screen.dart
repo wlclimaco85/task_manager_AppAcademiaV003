@@ -2564,7 +2564,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
   }
 
   Future<void> _montarTreino(PersonalAlunoGestaoModel aluno) async {
-    final planos = await FitnessOfflineRepository().getPlanosTreino(alunoId:aluno.id);
+    final planos = await PersonalGestaoOfflineRepository().getPlanosAluno(aluno.id);
     if (!mounted) return;
     final retorno = await Navigator.push<PlanoTreinoModel>(context,MaterialPageRoute(
       builder:(_) => MontadorTreinoScreen(alunoId:aluno.id,alunoNome:aluno.nome,
