@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/fitness/profissional_vitrine_model.dart';
 import 'package:task_manager_flutter/data/services/profissionais_vitrine_repository.dart';
@@ -18,10 +19,192 @@ class ContratarProfissionalScreen extends StatefulWidget {
       _ContratarProfissionalScreenState();
 }
 
+class _DisponibilidadePorAcademia extends StatelessWidget {
+  final ProfissionalVitrineModel prof;
+  final List<AcademiaAtendimentoModel> academias;
+  final String academiaSelecionada;
+  final ScrollController scrollController;
+  final ValueChanged<String> aoSelecionarAcademia;
+  final VoidCallback aoFechar;
+
+  const _DisponibilidadePorAcademia({
+    required this.prof,
+    required this.academias,
+    required this.academiaSelecionada,
+    required this.scrollController,
+    required this.aoSelecionarAcademia,
+    required this.aoFechar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final grade = prof.gradeHorarios.where((item) {
+      return academiaSelecionada.isEmpty ||
+          item.academiaId.isEmpty ||
+          item.academiaId == academiaSelecionada;
+    }).toList();
+    return ListView(
+      controller: scrollController,
+      padding: const EdgeInsets.all(20),
+      children: [
+        Row(children: [
+          Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                Text('Disponibilidade: ${prof.nome}',
+                    style: TextStyle(
+                        color: GridColors.textPrimary,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: 2),
+                Text('Escolha a academia para consultar os horários vagos.',
+                    style: TextStyle(
+                        color: GridColors.textSecondary, fontSize: 12)),
+              ])),
+          IconButton(
+              icon: Icon(Icons.close, color: GridColors.textSecondary),
+              onPressed: aoFechar),
+        ]),
+        const SizedBox(height: 16),
+        if (academias.isNotEmpty) ...[
+          Text('Academia do atendimento',
+              style: TextStyle(
+                  color: GridColors.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: academias
+                .map((academia) => ChoiceChip(
+                      label: Text(academia.nome),
+                      selected: academia.id == academiaSelecionada,
+                      onSelected: (_) => aoSelecionarAcademia(academia.id),
+                      selectedColor: CustomColors.primaryGreen.withOpacity(.18),
+                      labelStyle: TextStyle(
+                        color: academia.id == academiaSelecionada
+                            ? CustomColors.primaryGreen
+                            : GridColors.textPrimary,
+                        fontSize: 12,
+                      ),
+                    ))
+                .toList(),
+          ),
+          const SizedBox(height: 16),
+        ],
+        if (grade.isEmpty)
+          _VitrineEstadoVazio(
+            icone: Icons.event_busy_outlined,
+            titulo: academias.isEmpty
+                ? 'Disponibilidade ainda não cadastrada'
+                : 'Sem horários nesta academia',
+            descricao: academias.isEmpty
+                ? 'O personal ainda não cadastrou locais e horários de atendimento.'
+                : 'Escolha outra academia ou fale com o personal para combinar um horário.',
+          ),
+        ...grade.map((item) => Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: GridColors.background,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: GridColors.divider),
+              ),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(item.diaSemana,
+                              style: TextStyle(
+                                  color: CustomColors.primaryGreen,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold)),
+                          Text('${item.horarioInicio} – ${item.horarioFim}',
+                              style: TextStyle(
+                                  color: GridColors.textSecondary,
+                                  fontSize: 11)),
+                        ]),
+                    const SizedBox(height: 10),
+                    if (item.horariosDisponiveis.isEmpty)
+                      Text('Sem horários livres neste dia.',
+                          style: TextStyle(
+                              color: GridColors.textSecondary, fontSize: 12))
+                    else
+                      Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: item.horariosDisponiveis
+                              .map((horario) => Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 5),
+                                    decoration: BoxDecoration(
+                                        color: CustomColors.primaryGreen
+                                            .withOpacity(.15),
+                                        borderRadius: BorderRadius.circular(8)),
+                                    child: Text(horario,
+                                        style: TextStyle(
+                                            color: CustomColors.primaryGreen,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12)),
+                                  ))
+                              .toList()),
+                  ]),
+            )),
+      ],
+    );
+  }
+}
+
+class _DetalhePlano extends StatelessWidget {
+  final String label;
+  const _DetalhePlano({required this.label});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: GridColors.inputBackground,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(label,
+            style: TextStyle(color: GridColors.textSecondary, fontSize: 11)),
+      );
+}
+
+class _VitrineEstadoVazio extends StatelessWidget {
+  final IconData icone;
+  final String titulo;
+  final String descricao;
+  const _VitrineEstadoVazio(
+      {required this.icone, required this.titulo, required this.descricao});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+            color: GridColors.background,
+            borderRadius: BorderRadius.circular(12)),
+        child: Column(children: [
+          Icon(icone, color: GridColors.textSecondary, size: 32),
+          const SizedBox(height: 10),
+          Text(titulo,
+              style: TextStyle(
+                  color: GridColors.textPrimary, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(descricao,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: GridColors.textSecondary, fontSize: 12)),
+        ]),
+      );
+}
+
 class _ContratarProfissionalScreenState
     extends State<ContratarProfissionalScreen> {
-  final ProfissionaisVitrineRepository _repo =
-      ProfissionaisVitrineRepository();
+  final ProfissionaisVitrineRepository _repo = ProfissionaisVitrineRepository();
   final TextEditingController _buscaController = TextEditingController();
 
   CategoriaProfissional? _categoriaFiltro;
@@ -40,7 +223,8 @@ class _ContratarProfissionalScreenState
     setState(() => _loading = true);
     final lista = await _repo.getProfissionais(
       categoria: _categoriaFiltro,
-      academiaFiltro: _academiaFiltro == 'Todas de Uberaba' ? null : _academiaFiltro,
+      academiaFiltro:
+          _academiaFiltro == 'Todas de Uberaba' ? null : _academiaFiltro,
       buscaTexto: _buscaController.text,
     );
     final academias = await _repo.getAcademiasCadastradas();
@@ -75,7 +259,8 @@ class _ContratarProfissionalScreenState
                   ),
                 ),
                 SizedBox(width: 6),
-                Icon(Icons.location_on, color: CustomColors.primaryGreen, size: 16),
+                Icon(Icons.location_on,
+                    color: CustomColors.primaryGreen, size: 16),
               ],
             ),
             Text(
@@ -86,7 +271,8 @@ class _ContratarProfissionalScreenState
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.add_business_outlined, color: CustomColors.primaryGreen),
+            icon: Icon(Icons.add_business_outlined,
+                color: CustomColors.primaryGreen),
             tooltip: 'Cadastrar Academia',
             onPressed: () => _modalCadastrarAcademia(context),
           ),
@@ -111,9 +297,10 @@ class _ContratarProfissionalScreenState
                   onChanged: (_) => _carregar(),
                   style: TextStyle(color: GridColors.textPrimary, fontSize: 14),
                   decoration: InputDecoration(
-                    hintText: 'Buscar por nome, especialidade ou academia em Uberaba...',
-                    hintStyle:
-                        TextStyle(color: GridColors.textSecondary, fontSize: 12),
+                    hintText:
+                        'Buscar por nome, especialidade ou academia em Uberaba...',
+                    hintStyle: TextStyle(
+                        color: GridColors.textSecondary, fontSize: 12),
                     prefixIcon:
                         Icon(Icons.search, color: CustomColors.primaryGreen),
                     suffixIcon: _buscaController.text.isNotEmpty
@@ -139,8 +326,7 @@ class _ContratarProfissionalScreenState
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          BorderSide(color: CustomColors.primaryGreen),
+                      borderSide: BorderSide(color: CustomColors.primaryGreen),
                     ),
                   ),
                 ),
@@ -202,14 +388,15 @@ class _ContratarProfissionalScreenState
                               const DropdownMenuItem(
                                   value: 'Todas de Uberaba',
                                   child: Text('📍 Todas de Uberaba')),
-                              ..._academiasDisponiveis.map((a) => DropdownMenuItem(
-                                    value: a.nome,
-                                    child: Text(
-                                      a.nome.length > 26
-                                          ? '${a.nome.substring(0, 24)}...'
-                                          : a.nome,
-                                    ),
-                                  )),
+                              ..._academiasDisponiveis
+                                  .map((a) => DropdownMenuItem(
+                                        value: a.nome,
+                                        child: Text(
+                                          a.nome.length > 26
+                                              ? '${a.nome.substring(0, 24)}...'
+                                              : a.nome,
+                                        ),
+                                      )),
                             ],
                             onChanged: (val) {
                               if (val != null) {
@@ -253,7 +440,8 @@ class _ContratarProfissionalScreenState
                             Text(
                               'Tente alterar os filtros de academia de Uberaba.',
                               style: TextStyle(
-                                  color: GridColors.textSecondary, fontSize: 13),
+                                  color: GridColors.textSecondary,
+                                  fontSize: 13),
                             ),
                           ],
                         ),
@@ -282,20 +470,18 @@ class _ContratarProfissionalScreenState
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: selecionado
-              ? CustomColors.primaryGreen
-              : GridColors.background,
+          color:
+              selecionado ? CustomColors.primaryGreen : GridColors.background,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selecionado
-                ? CustomColors.primaryGreen
-                : GridColors.divider,
+            color: selecionado ? CustomColors.primaryGreen : GridColors.divider,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selecionado ? GridColors.textOnPrimary : GridColors.textPrimary,
+            color:
+                selecionado ? GridColors.textOnPrimary : GridColors.textPrimary,
             fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
@@ -485,15 +671,13 @@ class _ContratarProfissionalScreenState
                             decoration: BoxDecoration(
                               color: GridColors.card,
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                  color: GridColors.divider),
+                              border: Border.all(color: GridColors.divider),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(Icons.location_on,
-                                    size: 12,
-                                    color: CustomColors.primaryGreen),
+                                    size: 12, color: CustomColors.primaryGreen),
                                 const SizedBox(width: 4),
                                 Text(
                                   acad.nome,
@@ -546,8 +730,7 @@ class _ContratarProfissionalScreenState
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: GridColors.inputBackground,
-              borderRadius:
-                  BorderRadius.vertical(bottom: Radius.circular(16)),
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
               border: Border(top: BorderSide(color: GridColors.divider)),
             ),
             child: Row(
@@ -600,6 +783,9 @@ class _ContratarProfissionalScreenState
 
   void _modalDetalhesHorarios(
       BuildContext context, ProfissionalVitrineModel prof) {
+    var academiaSelecionada = prof.academiasAtendidas.isNotEmpty
+        ? prof.academiasAtendidas.first.id
+        : '';
     showModalBottomSheet(
       context: context,
       backgroundColor: GridColors.card,
@@ -612,153 +798,68 @@ class _ContratarProfissionalScreenState
         maxChildSize: 0.95,
         minChildSize: 0.5,
         expand: false,
-        builder: (_, scrollController) => Padding(
-          padding: const EdgeInsets.all(20),
-          child: ListView(
-            controller: scrollController,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Disponibilidade: ${prof.nome}',
-                        style: TextStyle(
-                          color: GridColors.textPrimary,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Consulte os horários vagos para agendamento presencial',
-                        style: TextStyle(
-                            color: GridColors.textSecondary, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.close, color: GridColors.textSecondary),
-                    onPressed: () => Navigator.pop(ctx),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              ...prof.gradeHorarios.map((grade) => Container(
-                    margin: const EdgeInsets.only(bottom: 14),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: GridColors.background,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: GridColors.divider),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              grade.diaSemana,
-                              style: TextStyle(
-                                color: CustomColors.primaryGreen,
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              'Expediente: ${grade.horarioInicio} - ${grade.horarioFim}',
-                              style: TextStyle(
-                                  color: GridColors.textSecondary, fontSize: 11),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          'Horários Livres (Disponíveis):',
-                          style: TextStyle(
-                              color: GridColors.textSecondary,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 6),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
-                          children: grade.horariosDisponiveis.isEmpty
-                              ? [
-                                  Text('Sem horários livres neste dia',
-                                      style: TextStyle(
-                                          color: GridColors.textSecondary,
-                                          fontSize: 11))
-                                ]
-                              : grade.horariosDisponiveis
-                                  .map((h) => Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 5),
-                                        decoration: BoxDecoration(
-                                          color: CustomColors.primaryGreen
-                                              .withOpacity(0.15),
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          border: Border.all(
-                                              color: CustomColors
-                                                  .primaryGreen),
-                                        ),
-                                        child: Text(
-                                          h,
-                                          style: TextStyle(
-                                            color: CustomColors.primaryGreen,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ))
-                                  .toList(),
-                        ),
-                        if (grade.horariosOcupados.isNotEmpty) ...[
-                          const SizedBox(height: 10),
-                          Text(
-                            'Horários Ocupados (Já Reservados):',
-                            style: TextStyle(
-                                color: GridColors.textSecondary, fontSize: 11),
-                          ),
-                          const SizedBox(height: 6),
-                          Wrap(
-                            spacing: 6,
-                            runSpacing: 6,
-                            children: grade.horariosOcupados
-                                .map((h) => Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: GridColors.card,
-                                        borderRadius:
-                                            BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        h,
-                                        style: TextStyle(
-                                          color: GridColors.textSecondary,
-                                          fontSize: 11,
-                                          decoration:
-                                              TextDecoration.lineThrough,
-                                        ),
-                                      ),
-                                    ))
-                                .toList(),
-                          ),
-                        ],
-                      ],
-                    ),
-                  )),
-            ],
-          ),
+        builder: (_, scrollController) => StatefulBuilder(
+          builder: (ctx, setModalState) {
+            final academias = prof.academiasAtendidas;
+            return _DisponibilidadePorAcademia(
+              prof: prof,
+              academias: academias,
+              academiaSelecionada: academiaSelecionada,
+              scrollController: scrollController,
+              aoSelecionarAcademia: (id) =>
+                  setModalState(() => academiaSelecionada = id),
+              aoFechar: () => Navigator.pop(ctx),
+            );
+          },
         ),
       ),
     );
+  }
+
+  String _nomeAcademia(ProfissionalVitrineModel prof, String academiaId) {
+    for (final academia in prof.academiasAtendidas) {
+      if (academia.id == academiaId) return academia.nome;
+    }
+    return '';
+  }
+
+  String _nomeModalidade(PacoteContratacaoModel pacote) {
+    switch (pacote.modalidade.toLowerCase()) {
+      case 'online':
+        return 'Online';
+      case 'domicilio':
+      case 'domicílio':
+        return 'A domicílio';
+      default:
+        return 'Em academia';
+    }
+  }
+
+  Future<void> _abrirWhatsApp(
+    BuildContext context,
+    ProfissionalVitrineModel prof, {
+    PacoteContratacaoModel? pacote,
+  }) async {
+    final telefone = prof.whatsapp.replaceAll(RegExp(r'\D'), '');
+    if (telefone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Este profissional ainda não informou um WhatsApp.'),
+      ));
+      return;
+    }
+    final numeroComPais = telefone.startsWith('55') ? telefone : '55$telefone';
+    final plano = pacote == null ? '' : ' no plano "${pacote.titulo}"';
+    final mensagem = 'Olá, ${prof.nome}! Tenho interesse$plano pelo Eu Atleta.';
+    final uri = Uri.parse(
+      'https://wa.me/$numeroComPais?text=${Uri.encodeComponent(mensagem)}',
+    );
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
+        context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Não foi possível abrir o WhatsApp agora.')),
+      );
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -774,43 +875,54 @@ class _ContratarProfissionalScreenState
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.82,
+        maxChildSize: 0.95,
+        minChildSize: 0.55,
+        expand: false,
+        builder: (_, scrollController) => ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(20),
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Planos & Valores: ${prof.nome}',
-                      style: TextStyle(
-                        color: GridColors.textPrimary,
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'WhatsApp Direto: ${prof.whatsapp}',
-                      style: TextStyle(
-                          color: CustomColors.primaryGreen,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
+                Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                      Text('Planos & valores: ${prof.nome}',
+                          style: TextStyle(
+                              color: GridColors.textPrimary,
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 3),
+                      Text(
+                          'Escolha o plano para contratar ou fale direto com o personal.',
+                          style: TextStyle(
+                              color: GridColors.textSecondary, fontSize: 12)),
+                    ])),
                 IconButton(
-                  icon: Icon(Icons.close, color: GridColors.textSecondary),
-                  onPressed: () => Navigator.pop(ctx),
-                ),
+                    icon: Icon(Icons.close, color: GridColors.textSecondary),
+                    onPressed: () => Navigator.pop(ctx)),
               ],
             ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => _abrirWhatsApp(context, prof),
+              icon: const Icon(Icons.chat_outlined),
+              label: Text('Fale com ${prof.nome.split(' ').first} no WhatsApp'),
+              style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF25D366)),
+            ),
             const SizedBox(height: 16),
+            if (prof.pacotes.isEmpty)
+              _VitrineEstadoVazio(
+                icone: Icons.receipt_long_outlined,
+                titulo: 'Nenhum plano publicado ainda',
+                descricao:
+                    'Você pode falar com o personal para pedir uma proposta.',
+              ),
             ...prof.pacotes.map((pacote) => Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(14),
@@ -852,11 +964,24 @@ class _ContratarProfissionalScreenState
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        pacote.descricao,
+                        pacote.descricao.isEmpty
+                            ? 'Plano sem descrição cadastrada.'
+                            : pacote.descricao,
                         style: TextStyle(
                             color: GridColors.textSecondary, fontSize: 12),
                       ),
                       const SizedBox(height: 10),
+                      Wrap(spacing: 6, runSpacing: 6, children: [
+                        _DetalhePlano(
+                            label:
+                                '${pacote.aulasPorSemana} aula${pacote.aulasPorSemana == 1 ? '' : 's'}/semana'),
+                        _DetalhePlano(label: _nomeModalidade(pacote)),
+                        if (pacote.academiaId.isNotEmpty &&
+                            _nomeAcademia(prof, pacote.academiaId).isNotEmpty)
+                          _DetalhePlano(
+                              label: _nomeAcademia(prof, pacote.academiaId)),
+                      ]),
+                      const SizedBox(height: 12),
                       Row(
                         children: [
                           Expanded(
@@ -866,7 +991,8 @@ class _ContratarProfissionalScreenState
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => CheckoutPagamentoScreen(
+                                    builder: (context) =>
+                                        CheckoutPagamentoScreen(
                                       pacote: pacote,
                                       profissional: prof,
                                     ),
@@ -881,24 +1007,17 @@ class _ContratarProfissionalScreenState
                                 ),
                               ),
                               icon: const Icon(Icons.payment, size: 16),
-                              label: const Text('Pagar com Pix/Cartão',
+                              label: const Text('Contratar este plano',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold, fontSize: 12)),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12)),
                             ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: ElevatedButton.icon(
-                              onPressed: () {
-                                Navigator.pop(ctx);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                        'Iniciando conversa no WhatsApp com ${prof.nome} (${prof.whatsapp}) para o plano "${pacote.titulo}"!'),
-                                    backgroundColor: CustomColors.primaryGreen,
-                                  ),
-                                );
-                              },
+                              onPressed: () =>
+                                  _abrirWhatsApp(context, prof, pacote: pacote),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF25D366),
                                 foregroundColor: GridColors.textOnPrimary,
@@ -907,9 +1026,10 @@ class _ContratarProfissionalScreenState
                                 ),
                               ),
                               icon: const Icon(Icons.chat, size: 16),
-                              label: const Text('Dúvidas? WhatsApp',
+                              label: const Text('Fale com personal',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold, fontSize: 12)),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12)),
                             ),
                           ),
                         ],

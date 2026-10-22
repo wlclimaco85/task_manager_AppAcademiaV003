@@ -10,7 +10,8 @@ import 'package:task_manager_flutter/data/utils/app_logger.dart';
 /// Repositório Offline-First de Vitrine e Contratação de Profissionais
 /// Focado no ecossistema de Uberaba - MG e redes parceiras
 class ProfissionaisVitrineRepository {
-  static const String _kProfissionaisKey = 'appacademia_vitrine_profissionais_v2';
+  static const String _kProfissionaisKey =
+      'appacademia_vitrine_profissionais_v2';
   static const String _kAcademiasKey = 'appacademia_lista_academias_uberaba_v1';
 
   static final ProfissionaisVitrineRepository _instance =
@@ -24,7 +25,8 @@ class ProfissionaisVitrineRepository {
 
   Future<List<AcademiaAtendimentoModel>> getAcademiasCadastradas() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(FitnessContaSync.chave(_kAcademiasKey + '_real'));
+    final raw =
+        prefs.getString(FitnessContaSync.chave(_kAcademiasKey + '_real'));
 
     List<AcademiaAtendimentoModel> lista = [];
     if (raw == null || raw.isEmpty) {
@@ -38,7 +40,8 @@ class ProfissionaisVitrineRepository {
                 AcademiaAtendimentoModel.fromMap(e as Map<String, dynamic>))
             .toList();
       } catch (e) {
-        debugPrint('[ProfissionaisVitrineRepository] Erro decode academias: $e');
+        debugPrint(
+            '[ProfissionaisVitrineRepository] Erro decode academias: $e');
         lista = [];
       }
     }
@@ -48,7 +51,8 @@ class ProfissionaisVitrineRepository {
   Future<void> _salvarAcademias(List<AcademiaAtendimentoModel> lista) async {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = json.encode(lista.map((e) => e.toMap()).toList());
-    await prefs.setString(FitnessContaSync.chave(_kAcademiasKey + '_real'), jsonStr);
+    await prefs.setString(
+        FitnessContaSync.chave(_kAcademiasKey + '_real'), jsonStr);
   }
 
   /// Permite que o personal/gestor cadastre uma nova academia no app
@@ -99,7 +103,8 @@ class ProfissionaisVitrineRepository {
           .where((p) =>
               p.nome.toLowerCase().contains(query) ||
               p.especialidade.toLowerCase().contains(query) ||
-              p.academiasAtendidas.any((a) => a.nome.toLowerCase().contains(query)))
+              p.academiasAtendidas
+                  .any((a) => a.nome.toLowerCase().contains(query)))
           .toList();
     }
 
@@ -109,7 +114,8 @@ class ProfissionaisVitrineRepository {
   /// Busca os personais da empresa no servidor. Null se a rede ou o servidor falharem.
   Future<List<ProfissionalVitrineModel>?> _buscarPersonaisDoServidor() async {
     try {
-      final resposta = await NetworkCaller().getRequest(ApiLinks.vitrinePersonais);
+      final resposta =
+          await NetworkCaller().getRequest(ApiLinks.vitrinePersonais);
       final data = resposta.body?['data'];
       if (!resposta.isSuccess || data is! List) return null;
       return data
@@ -117,13 +123,14 @@ class ProfissionaisVitrineRepository {
           .map((m) => _doServidor(Map<String, dynamic>.from(m)))
           .toList();
     } catch (e) {
-      AppLogger.i.warn('[ProfissionaisVitrine] Falha ao buscar personais no servidor: $e');
+      AppLogger.i.warn(
+          '[ProfissionaisVitrine] Falha ao buscar personais no servidor: $e');
       return null;
     }
   }
 
-  /// Monta o profissional com o que o servidor tem. Avaliacao, preco, grade e pacotes nao existem
-  /// no servidor: ficam zerados ou vazios, para a vitrine nao mostrar dados inventados.
+  /// Converte a vitrine do servidor. Os dados de academia, grade e planos são
+  /// reais: o aluno precisa deles para contratar o atendimento correto.
   ProfissionalVitrineModel _doServidor(Map<String, dynamic> m) {
     return ProfissionalVitrineModel(
       id: '${m['id']}',
@@ -137,16 +144,28 @@ class ProfissionaisVitrineRepository {
       totalAvaliacoes: 0,
       anosExperiencia: 0,
       whatsapp: '${m['whatsapp'] ?? ''}',
-      precoMinimoMensal: 0,
-      academiasAtendidas: const [],
-      gradeHorarios: const [],
-      pacotes: const [],
+      precoMinimoMensal: (m['precoMinimoMensal'] as num?)?.toDouble() ?? 0,
+      academiasAtendidas: _lista(m['academiasAtendidas'])
+          .map((a) => AcademiaAtendimentoModel.fromMap(
+              Map<String, dynamic>.from(a as Map)))
+          .toList(),
+      gradeHorarios: _lista(m['gradeHorarios'])
+          .map((h) => HorarioAtendimentoProfissional.fromMap(
+              Map<String, dynamic>.from(h as Map)))
+          .toList(),
+      pacotes: _lista(m['pacotes'])
+          .map((p) => PacoteContratacaoModel.fromMap(
+              Map<String, dynamic>.from(p as Map)))
+          .toList(),
     );
   }
 
+  List<dynamic> _lista(dynamic valor) => valor is List ? valor : const [];
+
   Future<List<ProfissionalVitrineModel>> _listaLocal() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(FitnessContaSync.chave(_kProfissionaisKey + '_real'));
+    final raw =
+        prefs.getString(FitnessContaSync.chave(_kProfissionaisKey + '_real'));
 
     List<ProfissionalVitrineModel> lista = [];
     if (raw == null || raw.isEmpty) {
@@ -196,7 +215,8 @@ class ProfissionaisVitrineRepository {
     final idx = lista.indexWhere((p) => p.id == personalId);
     if (idx >= 0) {
       final prof = lista[idx];
-      if (!prof.academiasAtendidas.any((a) => a.nome.toLowerCase() == academia.nome.toLowerCase())) {
+      if (!prof.academiasAtendidas
+          .any((a) => a.nome.toLowerCase() == academia.nome.toLowerCase())) {
         final novas = [...prof.academiasAtendidas, academia];
         lista[idx] = ProfissionalVitrineModel(
           id: prof.id,
@@ -247,6 +267,7 @@ class ProfissionaisVitrineRepository {
             ocupados.sort();
           }
           return HorarioAtendimentoProfissional(
+            academiaId: g.academiaId,
             diaSemana: g.diaSemana,
             horarioInicio: g.horarioInicio,
             horarioFim: g.horarioFim,
@@ -283,14 +304,11 @@ class ProfissionaisVitrineRepository {
   Future<void> _salvar(List<ProfissionalVitrineModel> lista) async {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = json.encode(lista.map((e) => e.toMap()).toList());
-    await prefs.setString(FitnessContaSync.chave(_kProfissionaisKey + '_real'), jsonStr);
+    await prefs.setString(
+        FitnessContaSync.chave(_kProfissionaisKey + '_real'), jsonStr);
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
   // 3. Seeds Oficiais de Uberaba - MG & Redes
   // ─────────────────────────────────────────────────────────────────────────────
-
-
-
-
 }

@@ -21,6 +21,10 @@ void main() {
     await t.pumpAndSettle();
     await t.tap(find.text('Concluir').first);
     await t.pumpAndSettle();
+    expect(find.text('Treino incompleto'), findsOneWidget);
+    expect(find.text('Você ainda não marcou 1 de 1 séries em 1 exercício(s). Deseja concluir mesmo assim?'), findsOneWidget);
+    await t.tap(find.text('Concluir mesmo assim'));
+    await t.pumpAndSettle();
     final duracao = find.widgetWithText(TextFormField, 'Duração do treino');
     expect(duracao, findsOneWidget);
     await t.enterText(duracao, '75');

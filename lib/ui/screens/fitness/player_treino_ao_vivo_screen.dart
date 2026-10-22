@@ -73,6 +73,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
 
   Future<void> _restaurarRascunho() async {
     bool prescricaoAlterada = false;
+    bool rascunhoRestaurado = false;
     try {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString(_chaveRascunho);
@@ -88,6 +89,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
           _exercicioIndexAtual = (map['indice'] as int).clamp(
               0, _biset.exercicios.length - 1);
           _inicioSessao = DateTime.parse(map['inicio']);
+          rascunhoRestaurado = true;
         } else {
           // Preserva o progresso antigo quando a ficha muda durante uma sessão.
           await prefs.setString(
@@ -99,6 +101,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     } catch (e, st) {
       AppLogger.i.error('Falha ao restaurar treino em andamento: $e', st);
     }
+    if (!rascunhoRestaurado) await _preencherCargasDaUltimaExecucao();
     if (!mounted) return;
     setState(() => _restaurando = false);
     if (prescricaoAlterada) {
@@ -224,6 +227,41 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
           concluida: false,
         ),
       );
+    }
+  }
+
+  /// Usa a última carga concluída em cada exercício como ponto de partida.
+  /// A ficha continua definindo as repetições e o aluno pode ajustar por +/-.
+  Future<void> _preencherCargasDaUltimaExecucao() async {
+    try {
+      final ultimas = await Future.wait(
+        List.generate(_biset.exercicios.length, (indice) async {
+          final exercicio = _biset.exercicios[indice];
+          final ultima = await _repository.getUltimaExecucaoExercicio(
+            exercicio.exercicioId,
+            alunoId: widget.alunoId,
+          );
+          return MapEntry(indice, ultima);
+        }),
+      );
+      if (!mounted) return;
+      for (final entrada in ultimas) {
+        final ultima = entrada.value;
+        if (ultima == null) continue;
+        final concluidas = ultima.series.where((serie) => serie.concluida).toList();
+        if (concluidas.isEmpty) continue;
+        final porNumero = {for (final serie in concluidas) serie.numero: serie.cargaRealKg};
+        final cargaPadrao = concluidas.last.cargaRealKg;
+        final atuais = _seriesPorExercicio[entrada.key] ?? const <SerieRegistroModel>[];
+        _seriesPorExercicio[entrada.key] = atuais.map((serie) => SerieRegistroModel(
+          numero: serie.numero,
+          cargaRealKg: porNumero[serie.numero] ?? cargaPadrao,
+          repeticoesRealizadas: serie.repeticoesRealizadas,
+          concluida: serie.concluida,
+        )).toList();
+      }
+    } catch (e, st) {
+      AppLogger.i.error('Falha ao carregar as últimas cargas: $e', st);
     }
   }
 
@@ -1002,6 +1040,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
         ? _descansoRestanteSegundos / _descansoTotalSegundos
         : 0.0;
 
+    final retaFinal = _descansoRestanteSegundos <= 10;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(14),
@@ -1019,8 +1058,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
       child: Row(
         children: [
           SizedBox(
-            width: 36,
-            height: 36,
+            width: retaFinal ? 72 : 36,
+            height: 40,
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -1030,13 +1069,14 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                   backgroundColor: Colors.white24,
                   color: Colors.white,
                 ),
-                Text(
-                  '$_descansoRestanteSegundos',
-                  style: const TextStyle(
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 180),
+                  style: TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    fontSize: retaFinal ? 24 : 13,
                   ),
+                  child: Text('$_descansoRestanteSegundos${retaFinal ? 's' : ''}'),
                 ),
               ],
             ),
@@ -1103,7 +1143,39 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     return proxima?.indice == ex && proxima?.serie == serieIdx;
   }
 
+  Future<bool> _confirmarConclusaoIncompleta() async {
+    final todas = _seriesPorExercicio.values.expand((series) => series).toList();
+    final pendentes = todas.where((serie) => !serie.concluida).length;
+    if (pendentes == 0) return true;
+    final exerciciosPendentes = _seriesPorExercicio.values
+        .where((series) => series.any((serie) => !serie.concluida))
+        .length;
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Treino incompleto'),
+            content: Text(
+              'Você ainda não marcou $pendentes de ${todas.length} séries em '
+              '$exerciciosPendentes exercício(s). Deseja concluir mesmo assim?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Voltar ao treino'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Concluir mesmo assim'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
   Future<void> _confirmarFinalizarTreino() async {
+    if (!await _confirmarConclusaoIncompleta()) return;
+    if (!mounted) return;
     int rpeSelecionado = 7;
     final feedbackCtrl = TextEditingController();
     final duracaoInicial = DateTime.now().difference(_inicioSessao).inMinutes.clamp(1, 1440);

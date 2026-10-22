@@ -9,13 +9,18 @@ enum CategoriaProfissional {
 
 /// Dia da semana com horários de atendimento
 class HorarioAtendimentoProfissional {
+  /// Academia em que este horário presencial está disponível. Vazio indica
+  /// atendimento sem academia definida (online/externo).
+  final String academiaId;
   final String diaSemana; // Segunda, Terça, Quarta, etc.
   final String horarioInicio; // "06:00"
   final String horarioFim; // "21:00"
-  final List<String> horariosDisponiveis; // ["07:00", "08:00", "15:00", "18:00"]
+  final List<String>
+      horariosDisponiveis; // ["07:00", "08:00", "15:00", "18:00"]
   final List<String> horariosOcupados; // ["09:00", "10:00", "19:00"]
 
   const HorarioAtendimentoProfissional({
+    this.academiaId = '',
     required this.diaSemana,
     required this.horarioInicio,
     required this.horarioFim,
@@ -25,6 +30,7 @@ class HorarioAtendimentoProfissional {
 
   Map<String, dynamic> toMap() {
     return {
+      'academiaId': academiaId,
       'diaSemana': diaSemana,
       'horarioInicio': horarioInicio,
       'horarioFim': horarioFim,
@@ -35,18 +41,24 @@ class HorarioAtendimentoProfissional {
 
   factory HorarioAtendimentoProfissional.fromMap(Map<String, dynamic> map) {
     return HorarioAtendimentoProfissional(
+      academiaId: map['academiaId']?.toString() ?? '',
       diaSemana: map['diaSemana']?.toString() ?? 'Segunda',
       horarioInicio: map['horarioInicio']?.toString() ?? '06:00',
       horarioFim: map['horarioFim']?.toString() ?? '21:00',
-      horariosDisponiveis: (map['horariosDisponiveis'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
-      horariosOcupados: (map['horariosOcupados'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
+      horariosDisponiveis: _listaDeHorarios(map['horariosDisponiveis']),
+      horariosOcupados: _listaDeHorarios(map['horariosOcupados']),
     );
+  }
+
+  static List<String> _listaDeHorarios(dynamic valor) {
+    if (valor is List) return valor.map((e) => e.toString()).toList();
+    if (valor is String) {
+      try {
+        final lista = jsonDecode(valor);
+        if (lista is List) return lista.map((e) => e.toString()).toList();
+      } catch (_) {}
+    }
+    return const [];
   }
 }
 
@@ -97,6 +109,12 @@ class PacoteContratacaoModel {
   final bool isConsultoriaOnline;
   final bool destaque;
 
+  /// online, domicilio ou academia.
+  final String modalidade;
+
+  /// Informada somente para planos presenciais em academia.
+  final String academiaId;
+
   const PacoteContratacaoModel({
     required this.id,
     required this.titulo,
@@ -105,6 +123,8 @@ class PacoteContratacaoModel {
     this.aulasPorSemana = 3,
     this.isConsultoriaOnline = false,
     this.destaque = false,
+    this.modalidade = 'academia',
+    this.academiaId = '',
   });
 
   Map<String, dynamic> toMap() {
@@ -116,6 +136,8 @@ class PacoteContratacaoModel {
       'aulasPorSemana': aulasPorSemana,
       'isConsultoriaOnline': isConsultoriaOnline,
       'destaque': destaque,
+      'modalidade': modalidade,
+      'academiaId': academiaId,
     };
   }
 
@@ -128,6 +150,9 @@ class PacoteContratacaoModel {
       aulasPorSemana: (map['aulasPorSemana'] as num?)?.toInt() ?? 3,
       isConsultoriaOnline: map['isConsultoriaOnline'] == true,
       destaque: map['destaque'] == true,
+      modalidade: map['modalidade']?.toString() ??
+          (map['isConsultoriaOnline'] == true ? 'online' : 'academia'),
+      academiaId: map['academiaId']?.toString() ?? '',
     );
   }
 }
@@ -139,7 +164,8 @@ class ProfissionalVitrineModel {
   final CategoriaProfissional categoria;
   final String registroProfissional; // CREF 123456-G/SP ou CRN 54321/SP
   final String fotoUrl;
-  final String especialidade; // Hipertrofia, Emagrecimento, Bodybuilding, Nutrição Esportiva
+  final String
+      especialidade; // Hipertrofia, Emagrecimento, Bodybuilding, Nutrição Esportiva
   final String bioResumo;
   final double avaliacaoMedia; // 4.9
   final int totalAvaliacoes; // 38
@@ -213,7 +239,8 @@ class ProfissionalVitrineModel {
       ),
       registroProfissional: map['registroProfissional']?.toString() ?? '',
       fotoUrl: map['fotoUrl']?.toString() ?? '',
-      especialidade: map['especialidade']?.toString() ?? 'Musculação e Treinamento',
+      especialidade:
+          map['especialidade']?.toString() ?? 'Musculação e Treinamento',
       bioResumo: map['bioResumo']?.toString() ?? '',
       avaliacaoMedia: (map['avaliacaoMedia'] as num?)?.toDouble() ?? 4.9,
       totalAvaliacoes: (map['totalAvaliacoes'] as num?)?.toInt() ?? 20,
