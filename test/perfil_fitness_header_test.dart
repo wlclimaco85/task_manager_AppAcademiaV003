@@ -30,6 +30,24 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Header mostra só dados do aluno, sem status do personal',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(
+        body: PerfilFitnessHeader(
+          nome: 'Aluno QA 10',
+          perfil: 'Aluno',
+        ),
+      ),
+    ));
+    expect(find.text('Aluno QA 10'), findsOneWidget);
+    expect(find.text('Aluno'), findsOneWidget);
+    expect(find.text('Online'), findsNothing);
+    expect(find.text('Offline'), findsNothing);
+    expect(find.textContaining('Personal:'), findsNothing);
+    expect(find.textContaining('Último treino'), findsNothing);
+  });
+
   testWidgets('Conta sem nome não inventa identidade', (tester) async {
     await tester.pumpWidget(const MaterialApp(
       home: Scaffold(
