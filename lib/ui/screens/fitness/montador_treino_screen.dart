@@ -204,19 +204,6 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              if (_podeRenomearDivisoes) ...[
-                                const SizedBox(width: 2),
-                                IconButton(
-                                  tooltip: 'Renomear treino',
-                                  icon: const Icon(Icons.edit_outlined, size: 15),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(
-                                    minWidth: 28,
-                                    minHeight: 28,
-                                  ),
-                                  onPressed: () => _renomearDivisao(index),
-                                ),
-                              ],
                             ],
                           ),
                         ),
@@ -328,16 +315,27 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
   Widget _buildDivisaoView(DivisaoTreinoModel divisao, int divisaoIndex) {
     return Column(
       children: [
-        // Botão de Adicionar Exercício nesta divisão
+        // Ações da divisão de treino selecionada.
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              icon: const Icon(Icons.add),
-              label: Text('Adicionar Exercício no Treino ${divisao.letra}'),
-              onPressed: () => _selecionarExercicio(divisaoIndex),
-            ),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.add),
+                  label: Text('Adicionar exercício em ${_nomeDaAba(divisao)}'),
+                  onPressed: () => _selecionarExercicio(divisaoIndex),
+                ),
+              ),
+              if (_podeRenomearDivisoes) ...[
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.drive_file_rename_outline, size: 18),
+                  label: const Text('Renomear treino'),
+                  onPressed: () => _renomearDivisao(divisaoIndex),
+                ),
+              ],
+            ],
           ),
         ),
 

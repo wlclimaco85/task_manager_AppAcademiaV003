@@ -127,6 +127,7 @@ class _BibliotecaExerciciosScreenState
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final isDesktopOrWeb = width >= 800;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: GridColors.background,
@@ -158,7 +159,12 @@ class _BibliotecaExerciciosScreenState
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text('Ficha: ${widget.tituloFicha}\nDestino: ${widget.divisaoDestino ?? ""}',
-                    style: TextStyle(color: GridColors.primaryDark, fontWeight: FontWeight.w600)),
+                    style: TextStyle(
+                      color: isDark
+                          ? GridColors.textOnPrimary
+                          : GridColors.primaryDark,
+                      fontWeight: FontWeight.w700,
+                    )),
                 ),
               // 1. Barra de Pesquisa
               Padding(
