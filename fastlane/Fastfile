@@ -10,7 +10,12 @@ def flutter_version
   version_line = pubspec.match(/^version:\s*(.+)/)
   raise "Versão não encontrada no pubspec.yaml" unless version_line
   parts = version_line[1].strip.split("+")
-  { name: parts[0], build: parts[1] || "1" }
+  # Em CI cada execução recebe um código único. Sem isso, o Play Console
+  # recusa o AAB seguinte por repetir o versionCode do pubspec.
+  ci_build = ENV.fetch("CI_BUILD_NUMBER", "").strip
+  build = ci_build.empty? ? (parts[1] || "1") : ci_build
+  raise "CI_BUILD_NUMBER inválido" unless build.match?(/\A\d+\z/)
+  { name: parts[0], build: build }
 end
 
 def flutter(args)
