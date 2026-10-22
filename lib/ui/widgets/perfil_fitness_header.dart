@@ -11,6 +11,10 @@ class PerfilFitnessHeader extends StatelessWidget {
   final String? foto;
   final bool cadastroIncompleto;
   final int notificacoesNaoLidas;
+  final String? nomePersonal;
+  final bool? personalOnline;
+  final String? ultimoTreino;
+  final DateTime? dataUltimoTreino;
   final VoidCallback? onEditar;
   final VoidCallback? onCadastroIncompleto;
   final VoidCallback? onNotificacoes;
@@ -22,12 +26,21 @@ class PerfilFitnessHeader extends StatelessWidget {
     this.foto,
     this.cadastroIncompleto = false,
     this.notificacoesNaoLidas = 0,
+    this.nomePersonal,
+    this.personalOnline,
+    this.ultimoTreino,
+    this.dataUltimoTreino,
     this.onEditar,
     this.onCadastroIncompleto,
     this.onNotificacoes,
   });
 
   String get _nomeExibido => nome.trim().isEmpty ? 'Minha conta' : nome.trim();
+  bool get _temPersonal => nomePersonal?.trim().isNotEmpty ?? false;
+  bool get _temUltimoTreino => ultimoTreino?.trim().isNotEmpty ?? false;
+
+  String _dataFormatada(DateTime data) =>
+      '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}';
 
   Widget _iniciais() {
     final partes = _nomeExibido.split(RegExp(r'\s+'));
@@ -78,6 +91,8 @@ class PerfilFitnessHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textoSecundario = context.appTextSecondary;
+    final mostrarResumo = _temPersonal || _temUltimoTreino;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
@@ -212,6 +227,81 @@ class PerfilFitnessHeader extends StatelessWidget {
               ),
             ],
           ),
+          if (mostrarResumo) ...[
+            const SizedBox(height: 9),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: context.appSurface.withValues(alpha: 0.62),
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    _temPersonal
+                        ? Icons.support_agent_outlined
+                        : Icons.fitness_center_outlined,
+                    color: GridColors.primary,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_temPersonal)
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  'Personal: ${nomePersonal!.trim()}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: context.appText),
+                                ),
+                              ),
+                              if (personalOnline != null) ...[
+                                const SizedBox(width: 7),
+                                Container(
+                                  width: 7,
+                                  height: 7,
+                                  decoration: BoxDecoration(
+                                    color: personalOnline!
+                                        ? GridColors.primary
+                                        : textoSecundario,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(personalOnline! ? 'Online' : 'Offline',
+                                    style: TextStyle(
+                                        fontSize: 10, color: textoSecundario)),
+                              ],
+                            ],
+                          ),
+                        if (_temUltimoTreino) ...[
+                          if (_temPersonal) const SizedBox(height: 3),
+                          Text(
+                            'Último treino: ${ultimoTreino!.trim()}${dataUltimoTreino == null ? '' : ' · ${_dataFormatada(dataUltimoTreino!)}'}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style:
+                                TextStyle(fontSize: 11, color: textoSecundario),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
