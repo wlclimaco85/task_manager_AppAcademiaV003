@@ -37,7 +37,10 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(
+      length: podeGerenciarAlunos(AuthUtility.session.value) ? 3 : 2,
+      vsync: this,
+    );
     _carregarDados();
     BackgroundSyncService.mudancas.addListener(_aoAtualizarSincronizacaoAutomatica);
   }
@@ -99,6 +102,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final isDesktopOrWeb = width >= 800;
+    final podePrescrever = podeGerenciarAlunos(AuthUtility.session.value);
 
     return Scaffold(
       backgroundColor: GridColors.background,
@@ -127,10 +131,10 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
           labelColor: GridColors.primary,
           unselectedLabelColor: GridColors.textSecondary,
           labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-          tabs: const [
-            Tab(text: 'Fichas Ativas'),
-            Tab(text: 'Modelos / Templates'),
-            Tab(text: 'Histórico Offline'),
+          tabs: [
+            const Tab(text: 'Fichas Ativas'),
+            if (podePrescrever) const Tab(text: 'Modelos / Templates'),
+            const Tab(text: 'Histórico Offline'),
           ],
         ),
       ),
@@ -143,13 +147,13 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                   controller: _tabController,
                   children: [
                     _buildListaFichas(apenasTemplates: false),
-                    _buildListaFichas(apenasTemplates: true),
+                    if (podePrescrever) _buildListaFichas(apenasTemplates: true),
                     _buildHistoricoOffline(),
                   ],
                 ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: !podePrescrever ? null : FloatingActionButton.extended(
         backgroundColor: GridColors.buttonBackground,
         foregroundColor: GridColors.buttonText,
         icon: const Icon(Icons.add),
@@ -215,7 +219,9 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
               ),
               const SizedBox(height: 6),
               Text(
-                'Toque em "Prescrever Treino" para criar uma nova rotina.',
+                apenasTemplates
+                    ? 'Salve uma ficha como modelo para reutilizá-la com outros alunos.'
+                    : 'Toque em "Prescrever Treino" para criar uma nova rotina.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 13, color: GridColors.textSecondary),
               ),
