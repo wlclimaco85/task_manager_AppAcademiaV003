@@ -13,6 +13,7 @@ class FechamentoModalSeguro extends StatefulWidget {
 class _FechamentoModalSeguroState extends State<FechamentoModalSeguro> {
   final _focoDeFechamento = FocusNode(skipTraversal: true);
   bool _fechando = false;
+
   @override
   void dispose() {
     _focoDeFechamento.dispose();
@@ -24,10 +25,12 @@ class _FechamentoModalSeguroState extends State<FechamentoModalSeguro> {
     if (_fechando || route?.isCurrent != true) return;
     _fechando = true;
     _focoDeFechamento.requestFocus();
-    // Aguarda o frame que encerra a edição; não descarta campos dentro do
-    // processamento do próprio evento de teclado do navegador.
+    // Mantém Esc preso a este popup enquanto encerra o campo ativo. O segundo
+    // frame deixa o Focus/Actions atualizar as dependências antes do pop.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && route!.isCurrent) Navigator.of(context).pop();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && route!.isCurrent) Navigator.of(context).maybePop();
+      });
     });
     WidgetsBinding.instance.scheduleFrame();
   }
