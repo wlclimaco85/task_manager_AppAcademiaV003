@@ -15,7 +15,7 @@ on:
         description: Destino (beta = teste interno; teste_fechado = Teste fechado - TESTE; release = produção)
         type: choice
         options: [beta, teste_fechado, release]
-        default: beta
+        default: teste_fechado
 
 permissions:
   contents: read
@@ -92,7 +92,7 @@ jobs:
           echo "CI_BUILD_NUMBER=$code" >> "$GITHUB_ENV"
       - name: Run Fastlane Android
         env:
-          DEPLOY_LANE: ${{ inputs.lane || 'beta' }}
+          DEPLOY_LANE: ${{ inputs.lane || 'teste_fechado' }}
         run: bundle exec fastlane android "$DEPLOY_LANE"
       - name: Save Android bundle
         if: always()
