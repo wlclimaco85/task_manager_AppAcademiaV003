@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:task_manager_flutter/ui/widgets/registro_medida_sheet.dart';
 import 'package:intl/intl.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
@@ -24,6 +26,8 @@ import 'package:task_manager_flutter/data/services/saude_diaria_caller.dart';
 import 'package:task_manager_flutter/data/services/health_connect_service.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
 import 'package:task_manager_flutter/data/utils/calorias_treino_forca.dart';
+import 'package:task_manager_flutter/data/utils/midias_treino.dart';
+import 'package:task_manager_flutter/ui/widgets/compartilhar_treino_sheet.dart';
 
 class _ModalidadeAerobicaInfo {
   final String nome;
@@ -42,20 +46,175 @@ class _ModalidadeAerobicaInfo {
 }
 
 const _kModalidadesAerobicas = <_ModalidadeAerobicaInfo>[
-  _ModalidadeAerobicaInfo(nome: 'Caminhada', icone: Icons.directions_walk, kcalPorMinuto: 4.8, usaDistanciaKm: true, kmEstimadoPorMinuto: 0.08),
-  _ModalidadeAerobicaInfo(nome: 'Corrida', icone: Icons.directions_run, kcalPorMinuto: 11.0, usaDistanciaKm: true, kmEstimadoPorMinuto: 0.16),
-  _ModalidadeAerobicaInfo(nome: 'HIIT', icone: Icons.flash_on, kcalPorMinuto: 12.0),
-  _ModalidadeAerobicaInfo(nome: 'Vôlei', icone: Icons.sports_volleyball, kcalPorMinuto: 6.8),
-  _ModalidadeAerobicaInfo(nome: 'Tênis', icone: Icons.sports_tennis, kcalPorMinuto: 8.2),
-  _ModalidadeAerobicaInfo(nome: 'Beach Tennis', icone: Icons.beach_access, kcalPorMinuto: 8.8),
-  _ModalidadeAerobicaInfo(nome: 'Futebol', icone: Icons.sports_soccer, kcalPorMinuto: 9.8, usaDistanciaKm: true, kmEstimadoPorMinuto: 0.12),
-  _ModalidadeAerobicaInfo(nome: 'Basquete', icone: Icons.sports_basketball, kcalPorMinuto: 8.6),
-  _ModalidadeAerobicaInfo(nome: 'Ciclismo / Bike', icone: Icons.directions_bike, kcalPorMinuto: 8.5, usaDistanciaKm: true, kmEstimadoPorMinuto: 0.35),
-  _ModalidadeAerobicaInfo(nome: 'Natação', icone: Icons.pool, kcalPorMinuto: 9.2, usaDistanciaKm: true, kmEstimadoPorMinuto: 0.035),
-  _ModalidadeAerobicaInfo(nome: 'Pular Corda', icone: Icons.replay, kcalPorMinuto: 11.5),
-  _ModalidadeAerobicaInfo(nome: 'Treino Funcional', icone: Icons.fitness_center, kcalPorMinuto: 7.8),
-  _ModalidadeAerobicaInfo(nome: 'Lutas / Artes Marciais', icone: Icons.sports_kabaddi, kcalPorMinuto: 10.2),
+  _ModalidadeAerobicaInfo(
+      nome: 'Caminhada',
+      icone: Icons.directions_walk,
+      kcalPorMinuto: 4.8,
+      usaDistanciaKm: true,
+      kmEstimadoPorMinuto: 0.08),
+  _ModalidadeAerobicaInfo(
+      nome: 'Corrida',
+      icone: Icons.directions_run,
+      kcalPorMinuto: 11.0,
+      usaDistanciaKm: true,
+      kmEstimadoPorMinuto: 0.16),
+  _ModalidadeAerobicaInfo(
+      nome: 'HIIT', icone: Icons.flash_on, kcalPorMinuto: 12.0),
+  _ModalidadeAerobicaInfo(
+      nome: 'Vôlei', icone: Icons.sports_volleyball, kcalPorMinuto: 6.8),
+  _ModalidadeAerobicaInfo(
+      nome: 'Tênis', icone: Icons.sports_tennis, kcalPorMinuto: 8.2),
+  _ModalidadeAerobicaInfo(
+      nome: 'Beach Tennis', icone: Icons.beach_access, kcalPorMinuto: 8.8),
+  _ModalidadeAerobicaInfo(
+      nome: 'Futebol',
+      icone: Icons.sports_soccer,
+      kcalPorMinuto: 9.8,
+      usaDistanciaKm: true,
+      kmEstimadoPorMinuto: 0.12),
+  _ModalidadeAerobicaInfo(
+      nome: 'Basquete', icone: Icons.sports_basketball, kcalPorMinuto: 8.6),
+  _ModalidadeAerobicaInfo(
+      nome: 'Ciclismo / Bike',
+      icone: Icons.directions_bike,
+      kcalPorMinuto: 8.5,
+      usaDistanciaKm: true,
+      kmEstimadoPorMinuto: 0.35),
+  _ModalidadeAerobicaInfo(
+      nome: 'Natação',
+      icone: Icons.pool,
+      kcalPorMinuto: 9.2,
+      usaDistanciaKm: true,
+      kmEstimadoPorMinuto: 0.035),
+  _ModalidadeAerobicaInfo(
+      nome: 'Pular Corda', icone: Icons.replay, kcalPorMinuto: 11.5),
+  _ModalidadeAerobicaInfo(
+      nome: 'Treino Funcional',
+      icone: Icons.fitness_center,
+      kcalPorMinuto: 7.8),
+  _ModalidadeAerobicaInfo(
+      nome: 'Lutas / Artes Marciais',
+      icone: Icons.sports_kabaddi,
+      kcalPorMinuto: 10.2),
 ];
+
+class _AtividadeCompartilhavel {
+  const _AtividadeCompartilhavel({
+    required this.registro,
+    required this.minutos,
+    required this.calorias,
+    required this.distanciaKm,
+  });
+
+  final Fitness360Record registro;
+  final int minutos;
+  final int calorias;
+  final double distanciaKm;
+}
+
+class _FotosAtividadeEditor extends StatefulWidget {
+  const _FotosAtividadeEditor({required this.onChanged});
+  final ValueChanged<List<String>> onChanged;
+
+  @override
+  State<_FotosAtividadeEditor> createState() => _FotosAtividadeEditorState();
+}
+
+class _FotosAtividadeEditorState extends State<_FotosAtividadeEditor> {
+  final List<String> _fotos = [];
+  bool _carregando = false;
+
+  Future<void> _adicionar(ImageSource source) async {
+    if (_carregando || _fotos.length >= 3) return;
+    setState(() => _carregando = true);
+    try {
+      final arquivo = await ImagePicker().pickImage(
+        source: source,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 88,
+      );
+      if (arquivo == null) return;
+      final foto = await prepararFotoTreino(await arquivo.readAsBytes());
+      if (!mounted) return;
+      setState(() => _fotos.add(foto));
+      widget.onChanged(List.of(_fotos));
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível adicionar a foto.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _carregando = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Fotos da atividade (${_fotos.length}/3)',
+              style: TextStyle(
+                  color: context.appText,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13)),
+          const SizedBox(height: 4),
+          Text('Opcional: use as fotos no card de publicação.',
+              style: TextStyle(color: context.appTextSecondary, fontSize: 12)),
+          if (_fotos.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: List.generate(_fotos.length, (index) {
+                return Stack(children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.memory(base64Decode(_fotos[index]),
+                        width: 82, height: 82, fit: BoxFit.cover),
+                  ),
+                  Positioned(
+                    right: -6,
+                    top: -6,
+                    child: IconButton.filledTonal(
+                      visualDensity: VisualDensity.compact,
+                      iconSize: 16,
+                      tooltip: 'Remover foto ${index + 1}',
+                      onPressed: _carregando
+                          ? null
+                          : () {
+                              setState(() => _fotos.removeAt(index));
+                              widget.onChanged(List.of(_fotos));
+                            },
+                      icon: const Icon(Icons.close),
+                    ),
+                  ),
+                ]);
+              }),
+            ),
+          ],
+          const SizedBox(height: 8),
+          Wrap(spacing: 8, children: [
+            OutlinedButton.icon(
+              onPressed: _carregando || _fotos.length >= 3
+                  ? null
+                  : () => _adicionar(ImageSource.gallery),
+              icon: const Icon(Icons.photo_library_outlined),
+              label: const Text('Adicionar foto'),
+            ),
+            OutlinedButton.icon(
+              onPressed: _carregando || _fotos.length >= 3
+                  ? null
+                  : () => _adicionar(ImageSource.camera),
+              icon: const Icon(Icons.camera_alt_outlined),
+              label: const Text('Câmera'),
+            ),
+          ]),
+          if (_carregando) const LinearProgressIndicator(),
+        ],
+      );
+}
 
 class ExerciciosScreen extends StatelessWidget {
   const ExerciciosScreen({super.key});
@@ -187,17 +346,18 @@ class _SonoScreenState extends State<SonoScreen> {
         }
 
         final data = snapshot.data ??
-            const _SonoScreenData(resumo: null, lembretes: <Lembrete>[], healthData: {});
+            const _SonoScreenData(
+                resumo: null, lembretes: <Lembrete>[], healthData: {});
 
         final healthSonoMinutos = data.healthData['sleepMinutes'] as int? ?? 0;
         final isRealHealth = data.healthData['isRealData'] == true;
 
-        final sonoMinutos = data.resumo?.sonoMinutos ?? (healthSonoMinutos > 0 ? healthSonoMinutos : 0);
+        final sonoMinutos = data.resumo?.sonoMinutos ??
+            (healthSonoMinutos > 0 ? healthSonoMinutos : 0);
         // Fallback gracioso para o mock se a API falhar ou sonoMinutos
         // vier 0/null.
-        final sonoLabel = (sonoMinutos > 0)
-            ? _formatarMinutos(sonoMinutos)
-            : '--';
+        final sonoLabel =
+            (sonoMinutos > 0) ? _formatarMinutos(sonoMinutos) : '--';
 
         final lembretesOrdenados = [...data.lembretes]
           ..sort((a, b) => (a.horario ?? '99:99').compareTo(
@@ -213,7 +373,9 @@ class _SonoScreenState extends State<SonoScreen> {
           emptyLabel: 'Nenhum registro de sono ainda.',
           defaultTitle: 'Sono principal',
           defaultValue: sonoLabel,
-          defaultNote: isRealHealth ? 'Dados sincronizados do Smartwatch' : 'Qualidade, despertares e recuperacao',
+          defaultNote: isRealHealth
+              ? 'Dados sincronizados do Smartwatch'
+              : 'Qualidade, despertares e recuperacao',
           metricCards: const [
             FitnessMetricSpec('Score', '84/100', Icons.stars_outlined),
             FitnessMetricSpec('Profundo', '2h 04m', Icons.nightlight_round),
@@ -269,7 +431,9 @@ class _BatimentosScreenState extends State<BatimentosScreen> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
             backgroundColor: context.appBackground,
-            appBar: AppBar(title: const Text('Sinais Vitais'), backgroundColor: context.appBackground),
+            appBar: AppBar(
+                title: const Text('Sinais Vitais'),
+                backgroundColor: context.appBackground),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
@@ -287,12 +451,16 @@ class _BatimentosScreenState extends State<BatimentosScreen> {
           emptyLabel: 'Nenhuma leitura cardiaca registrada.',
           defaultTitle: 'Frequencia em repouso',
           defaultValue: bpm == null ? '--' : '$bpm bpm',
-          defaultNote: isReal ? 'Sincronizado via Health Connect / HealthKit' : 'Importacao manual ate aprovacao do spike',
+          defaultNote: isReal
+              ? 'Sincronizado via Health Connect / HealthKit'
+              : 'Importacao manual ate aprovacao do spike',
           metricCards: [
-            FitnessMetricSpec('Repouso', bpm == null ? '--' : '$bpm bpm', Icons.favorite_border),
+            FitnessMetricSpec('Repouso', bpm == null ? '--' : '$bpm bpm',
+                Icons.favorite_border),
             const FitnessMetricSpec('Maximo', '148 bpm', Icons.north_east),
             const FitnessMetricSpec('SpO2', '97%', Icons.air_outlined),
-            const FitnessMetricSpec('Stress', '31 baixo', Icons.psychology_outlined),
+            const FitnessMetricSpec(
+                'Stress', '31 baixo', Icons.psychology_outlined),
           ],
           extraCards: const [
             _HeartZonesCard(),
@@ -397,8 +565,7 @@ class _CorpoScreenState extends State<CorpoScreen> {
           primaryActionLabel: 'Registrar medida',
           emptyLabel: 'Nenhuma medida corporal registrada.',
           defaultTitle: 'Peso',
-          defaultValue:
-              pesoKg != null ? '${_formatarNumero(pesoKg)} kg' : '--',
+          defaultValue: pesoKg != null ? '${_formatarNumero(pesoKg)} kg' : '--',
           defaultNote: 'IMC, gordura, musculo ou observacao de exame',
           metricCards: [
             FitnessMetricSpec(
@@ -610,12 +777,14 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
       );
       final intensidade = intensidadeTreinoForca(sessao.rpe);
       final data = DateTime.tryParse(sessao.dataHoraFim) ??
-          DateTime.tryParse(sessao.dataHoraInicio) ?? DateTime.now();
+          DateTime.tryParse(sessao.dataHoraInicio) ??
+          DateTime.now();
       return Fitness360Record(
         id: data.microsecondsSinceEpoch,
         type: 'musculacao',
         title: 'Musculação • ${sessao.divisaoNome}',
-        value: calorias == null ? '$minutos min' : '$minutos min • $calorias kcal',
+        value:
+            calorias == null ? '$minutos min' : '$minutos min • $calorias kcal',
         note: calorias == null
             ? 'Treino de força • RPE ${sessao.rpe}/10 • $intensidade • Cadastre seu peso em Corpo para calcular calorias.'
             : 'Treino de força • RPE ${sessao.rpe}/10 • Intensidade $intensidade',
@@ -631,19 +800,25 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
     final hoje = DateTime.now();
     double somar(String unidade) {
       double total = 0;
-      for (final r in records.where((r) => r.createdAt.year == hoje.year &&
-          r.createdAt.month == hoje.month && r.createdAt.day == hoje.day)) {
-        final match = RegExp(r'(\d+(?:[.,]\d+)?)\s*' + unidade).firstMatch(r.value);
-        if (match != null) total += double.tryParse(match.group(1)!.replaceAll(',', '.')) ?? 0;
+      for (final r in records.where((r) =>
+          r.createdAt.year == hoje.year &&
+          r.createdAt.month == hoje.month &&
+          r.createdAt.day == hoje.day)) {
+        final match =
+            RegExp(r'(\d+(?:[.,]\d+)?)\s*' + unidade).firstMatch(r.value);
+        if (match != null)
+          total += double.tryParse(match.group(1)!.replaceAll(',', '.')) ?? 0;
       }
       return total;
     }
+
     return widget.metricCards.map((m) {
       String valor = widget.type == 'corpo' ? m.value : '--';
       if (widget.type == 'atividade') {
         if (m.label == 'Calorias') valor = '${somar('kcal').round()} kcal';
         if (m.label == 'Tempo ativo') valor = '${somar('min').round()} min';
-        if (m.label == 'Distancia') valor = '${somar('km').toStringAsFixed(1)} km';
+        if (m.label == 'Distancia')
+          valor = '${somar('km').toStringAsFixed(1)} km';
       }
       return FitnessMetricSpec(m.label, valor, m.icon);
     }).toList();
@@ -680,7 +855,9 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
               children: [
                 _HeroCard(
                   title: widget.subtitle,
-                  value: records.isEmpty ? (widget.type == 'corpo' ? widget.defaultValue : '--') : records.first.value,
+                  value: records.isEmpty
+                      ? (widget.type == 'corpo' ? widget.defaultValue : '--')
+                      : records.first.value,
                   label:
                       records.isEmpty ? widget.emptyLabel : records.first.title,
                   icon: widget.icon,
@@ -723,8 +900,10 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
 
   Future<void> _showRecordSheet() async {
     if (widget.type == 'corpo') {
-      final salvo = await showModalBottomSheet<bool>(context: context,
-        isScrollControlled: true, builder: (_) => const RegistroMedidaSheet());
+      final salvo = await showModalBottomSheet<bool>(
+          context: context,
+          isScrollControlled: true,
+          builder: (_) => const RegistroMedidaSheet());
       if (salvo == true && mounted) setState(_reload);
       return;
     }
@@ -748,7 +927,8 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: context.appSurface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: SingleChildScrollView(
               child: Padding(
@@ -776,7 +956,7 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                           backgroundColor: GridColors.secondary,
+                          backgroundColor: GridColors.secondary,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
@@ -816,9 +996,11 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
     var modalidade = _kModalidadesAerobicas.first;
     final tempoController = TextEditingController(text: '45');
     final distanciaController = TextEditingController(text: '4.0');
-    final noteController = TextEditingController(text: 'Treino aeróbico diário');
+    final noteController =
+        TextEditingController(text: 'Treino aeróbico diário');
+    var fotos = <String>[];
 
-    final saved = await showModalBottomSheet<bool>(
+    final saved = await showModalBottomSheet<_AtividadeCompartilhavel>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -826,10 +1008,16 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
         return StatefulBuilder(
           builder: (context, setModalState) {
             final minutos = int.tryParse(tempoController.text.trim()) ?? 0;
-            final double distanciaInformada = double.tryParse(distanciaController.text.replaceAll(',', '.').trim()) ?? 0.0;
-            final caloriasCalculadas = (minutos * modalidade.kcalPorMinuto).round();
+            final double distanciaInformada = double.tryParse(
+                    distanciaController.text.replaceAll(',', '.').trim()) ??
+                0.0;
+            final caloriasCalculadas =
+                (minutos * modalidade.kcalPorMinuto).round();
             final distanciaFinalKm = modalidade.usaDistanciaKm
-                ? (distanciaInformada > 0 ? distanciaInformada : double.parse((minutos * modalidade.kmEstimadoPorMinuto).toStringAsFixed(1)))
+                ? (distanciaInformada > 0
+                    ? distanciaInformada
+                    : double.parse((minutos * modalidade.kmEstimadoPorMinuto)
+                        .toStringAsFixed(1)))
                 : 0.0;
 
             return Padding(
@@ -839,7 +1027,8 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: context.appSurface,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(24)),
                 ),
                 child: SingleChildScrollView(
                   child: Padding(
@@ -870,7 +1059,8 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                                   ),
                                   Text(
                                     'Calcule calorias por tempo e registre distância em km',
-                                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                                    style: TextStyle(
+                                        fontSize: 12, color: Colors.grey),
                                   ),
                                 ],
                               ),
@@ -879,7 +1069,11 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                         ),
                         const SizedBox(height: 16),
                         // Dropdown de Modalidade
-                        Text('Modalidade Aeróbica', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: context.appTextSecondary)),
+                        Text('Modalidade Aeróbica',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                                color: context.appTextSecondary)),
                         const SizedBox(height: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -892,15 +1086,23 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                               value: modalidade,
                               isExpanded: true,
                               items: _kModalidadesAerobicas.map((m) {
-                                return DropdownMenuItem<_ModalidadeAerobicaInfo>(
+                                return DropdownMenuItem<
+                                    _ModalidadeAerobicaInfo>(
                                   value: m,
                                   child: Row(
                                     children: [
-                                      Icon(m.icone, size: 20, color: GridColors.primary),
+                                      Icon(m.icone,
+                                          size: 20, color: GridColors.primary),
                                       const SizedBox(width: 10),
-                                      Text(m.nome, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                                      Text(m.nome,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 14)),
                                       const Spacer(),
-                                      Text('~${m.kcalPorMinuto} kcal/min', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                                      Text('~${m.kcalPorMinuto} kcal/min',
+                                          style: const TextStyle(
+                                              fontSize: 11,
+                                              color: Colors.grey)),
                                     ],
                                   ),
                                 );
@@ -910,8 +1112,12 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                                   setModalState(() {
                                     modalidade = novo;
                                     if (modalidade.usaDistanciaKm) {
-                                      final m = int.tryParse(tempoController.text.trim()) ?? 0;
-                                      distanciaController.text = (m * modalidade.kmEstimadoPorMinuto).toStringAsFixed(1);
+                                      final m = int.tryParse(
+                                              tempoController.text.trim()) ??
+                                          0;
+                                      distanciaController.text =
+                                          (m * modalidade.kmEstimadoPorMinuto)
+                                              .toStringAsFixed(1);
                                     }
                                   });
                                 }
@@ -929,7 +1135,8 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                                 keyboardType: TextInputType.number,
                                 decoration: InputDecoration(
                                   labelText: 'Duração (minutos)',
-                                  prefixIcon: Icon(Icons.timer_outlined, color: GridColors.primary),
+                                  prefixIcon: Icon(Icons.timer_outlined,
+                                      color: GridColors.primary),
                                   filled: true,
                                   fillColor: context.appSurfaceAlt,
                                   border: OutlineInputBorder(
@@ -945,10 +1152,13 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                               Expanded(
                                 child: TextField(
                                   controller: distanciaController,
-                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                          decimal: true),
                                   decoration: InputDecoration(
                                     labelText: 'Distância (km)',
-                                    prefixIcon: Icon(Icons.route_outlined, color: GridColors.primary),
+                                    prefixIcon: Icon(Icons.route_outlined,
+                                        color: GridColors.primary),
                                     filled: true,
                                     fillColor: context.appSurfaceAlt,
                                     border: OutlineInputBorder(
@@ -968,19 +1178,26 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                           spacing: 8,
                           children: [20, 30, 45, 60, 90].map((t) {
                             return ActionChip(
-                              label: Text('$t min', style: const TextStyle(fontSize: 12)),
+                              label: Text('$t min',
+                                  style: const TextStyle(fontSize: 12)),
                               backgroundColor: minutos == t
                                   ? GridColors.primary.withValues(alpha: .18)
                                   : context.appSurfaceAlt,
                               labelStyle: TextStyle(
-                                color: minutos == t ? GridColors.primaryLight : context.appTextSecondary,
-                                fontWeight: minutos == t ? FontWeight.w800 : FontWeight.normal,
+                                color: minutos == t
+                                    ? GridColors.primaryLight
+                                    : context.appTextSecondary,
+                                fontWeight: minutos == t
+                                    ? FontWeight.w800
+                                    : FontWeight.normal,
                               ),
                               onPressed: () {
                                 setModalState(() {
                                   tempoController.text = '$t';
                                   if (modalidade.usaDistanciaKm) {
-                                    distanciaController.text = (t * modalidade.kmEstimadoPorMinuto).toStringAsFixed(1);
+                                    distanciaController.text =
+                                        (t * modalidade.kmEstimadoPorMinuto)
+                                            .toStringAsFixed(1);
                                   }
                                 });
                               },
@@ -994,7 +1211,8 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                           decoration: BoxDecoration(
                             color: GridColors.primarySubtle.withOpacity(0.35),
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: GridColors.primary.withOpacity(0.3)),
+                            border: Border.all(
+                                color: GridColors.primary.withOpacity(0.3)),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -1003,15 +1221,22 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                                 children: [
                                   const Row(
                                     children: [
-                                      Icon(Icons.local_fire_department, color: Colors.orange, size: 18),
+                                      Icon(Icons.local_fire_department,
+                                          color: Colors.orange, size: 18),
                                       SizedBox(width: 4),
-                                      Text('Calorias', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                      Text('Calorias',
+                                          style: TextStyle(
+                                              fontSize: 11,
+                                              color: Colors.grey)),
                                     ],
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
                                     '$caloriasCalculadas kcal',
-                                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: context.appText),
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 16,
+                                        color: context.appText),
                                   ),
                                 ],
                               ),
@@ -1020,15 +1245,22 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                                   children: [
                                     const Row(
                                       children: [
-                                        Icon(Icons.route_outlined, color: Colors.blue, size: 18),
+                                        Icon(Icons.route_outlined,
+                                            color: Colors.blue, size: 18),
                                         SizedBox(width: 4),
-                                        Text('Distância', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                        Text('Distância',
+                                            style: TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.grey)),
                                       ],
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       '${distanciaFinalKm.toStringAsFixed(1)} km',
-                                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: context.appText),
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 16,
+                                          color: context.appText),
                                     ),
                                   ],
                                 ),
@@ -1036,15 +1268,22 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                                 children: [
                                   const Row(
                                     children: [
-                                      Icon(Icons.timer_outlined, color: Colors.green, size: 18),
+                                      Icon(Icons.timer_outlined,
+                                          color: Colors.green, size: 18),
                                       SizedBox(width: 4),
-                                      Text('Tempo Ativo', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                      Text('Tempo Ativo',
+                                          style: TextStyle(
+                                              fontSize: 11,
+                                              color: Colors.grey)),
                                     ],
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
                                     '$minutos min',
-                                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: context.appText),
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 16,
+                                        color: context.appText),
                                   ),
                                 ],
                               ),
@@ -1052,7 +1291,13 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        _TextField(controller: noteController, label: 'Observação (Ex: intensidade, local)'),
+                        _TextField(
+                            controller: noteController,
+                            label: 'Observação (Ex: intensidade, local)'),
+                        const SizedBox(height: 14),
+                        _FotosAtividadeEditor(
+                          onChanged: (novasFotos) => fotos = novasFotos,
+                        ),
                         const SizedBox(height: 18),
                         SizedBox(
                           width: double.infinity,
@@ -1061,24 +1306,41 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                               backgroundColor: GridColors.secondary,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14)),
                             ),
                             onPressed: () async {
-                              final String valorFinal = modalidade.usaDistanciaKm && distanciaFinalKm > 0
+                              final String valorFinal = modalidade
+                                          .usaDistanciaKm &&
+                                      distanciaFinalKm > 0
                                   ? '${distanciaFinalKm.toStringAsFixed(1)} km ($minutos min • $caloriasCalculadas kcal)'
                                   : '$minutos min ($caloriasCalculadas kcal)';
 
-                              await Fitness360LocalStore.addRecord(
+                              final registro =
+                                  await Fitness360LocalStore.addRecord(
                                 type: 'atividade',
                                 title: modalidade.nome,
                                 value: valorFinal,
                                 note: noteController.text.trim().isNotEmpty
                                     ? noteController.text.trim()
                                     : 'Atividade aeróbica • $caloriasCalculadas kcal calculadas',
+                                fotosBase64: fotos,
                               );
-                              if (context.mounted) Navigator.pop(context, true);
+                              if (context.mounted) {
+                                Navigator.pop(
+                                  context,
+                                  _AtividadeCompartilhavel(
+                                    registro: registro,
+                                    minutos: minutos,
+                                    calorias: caloriasCalculadas,
+                                    distanciaKm: distanciaFinalKm,
+                                  ),
+                                );
+                              }
                             },
-                            child: const Text('Salvar Atividade', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                            child: const Text('Salvar Atividade',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w800, fontSize: 15)),
                           ),
                         ),
                       ],
@@ -1092,8 +1354,30 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
       },
     );
 
-    if (saved == true && mounted) {
+    if (saved is _AtividadeCompartilhavel && mounted) {
       setState(_reload);
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (sheetContext) => CompartilharTreinoSheet(
+          treino: saved.registro.title,
+          minutos: saved.minutos,
+          series: 0,
+          rpe: 0,
+          tonelagemKg: 0,
+          tituloCompartilhamento: 'Atividade salva! Compartilhar?',
+          resumoPrincipal: '${saved.minutos} min • ${saved.calorias} kcal',
+          resumoSecundario: saved.distanciaKm > 0
+              ? '${saved.distanciaKm.toStringAsFixed(1)} km percorridos'
+              : 'Atividade registrada no Eu Atleta',
+          fotosIniciais: saved.registro.fotosBase64,
+          onFotosAlteradas: (novasFotos) =>
+              Fitness360LocalStore.atualizarFotosRegistro(
+                  saved.registro.id, novasFotos),
+          onFechar: () => Navigator.pop(sheetContext),
+        ),
+      );
     }
 
     // Delay disposal to wait for the bottom sheet closing animation to finish.
@@ -1246,8 +1530,10 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
         final semMusculacao =
             musculacao.isEmpty || musculacao.every((v) => v == 0);
         if (semAerobico && semMusculacao) {
-          return _Panel(child: Text(snapshot.connectionState == ConnectionState.waiting
-            ? 'Carregando evolução...' : 'Ainda não há registros para mostrar a evolução.'));
+          return _Panel(
+              child: Text(snapshot.connectionState == ConnectionState.waiting
+                  ? 'Carregando evolução...'
+                  : 'Ainda não há registros para mostrar a evolução.'));
         }
         final maxAerobico = _maximo(values);
         final maxMusculacao = _maximo(musculacao);
@@ -1278,7 +1564,7 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
                           _future = _loadSeries();
                         });
                       },
-                  ),
+                    ),
                 ],
               ),
               const SizedBox(height: 6),
@@ -1295,7 +1581,8 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
                   spacing: 16,
                   runSpacing: 6,
                   children: [
-                    _ChartLegend(color: GridColors.primary, label: 'Atividades'),
+                    _ChartLegend(
+                        color: GridColors.primary, label: 'Atividades'),
                     _ChartLegend(color: Color(0xFFDC2626), label: 'Musculação'),
                   ],
                 ),
@@ -1316,7 +1603,8 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
                               Expanded(
                                 child: _InsightBar(
                                   key: ValueKey('grafico_atividade_$index'),
-                                  value: index < values.length ? values[index] : 0,
+                                  value:
+                                      index < values.length ? values[index] : 0,
                                   max: maxAerobico,
                                   color: GridColors.primary,
                                 ),
@@ -1371,7 +1659,8 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
   }
 
   Future<_InsightChartData> _loadSeries() async {
-    final aerobico = await Fitness360LocalStore.insightSeries(widget.type, _range);
+    final aerobico =
+        await Fitness360LocalStore.insightSeries(widget.type, _range);
     if (!widget.includeStrengthWorkouts) {
       return _InsightChartData(aerobico, const []);
     }
@@ -1381,24 +1670,39 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
 
   List<int> _agruparMusculacao(List<SessaoTreinoRegistroModel> sessoes) {
     final agora = DateTime.now();
-    final datas = sessoes.map<DateTime?>((sessao) =>
-      DateTime.tryParse(sessao.dataHoraFim) ??
-      DateTime.tryParse(sessao.dataHoraInicio)).whereType<DateTime>().toList();
+    final datas = sessoes
+        .map<DateTime?>((sessao) =>
+            DateTime.tryParse(sessao.dataHoraFim) ??
+            DateTime.tryParse(sessao.dataHoraInicio))
+        .whereType<DateTime>()
+        .toList();
     if (_range == 'Dia') {
-      return [for (var i = 0; i < 6; i++)
-        datas.where((data) =>
-          _mesmoDia(data, agora) &&
-          data.hour >= i * 4 && data.hour < (i + 1) * 4).length];
+      return [
+        for (var i = 0; i < 6; i++)
+          datas
+              .where((data) =>
+                  _mesmoDia(data, agora) &&
+                  data.hour >= i * 4 &&
+                  data.hour < (i + 1) * 4)
+              .length
+      ];
     }
     if (_range == 'Mes') {
-      return [for (var i = 0; i < 4; i++)
-        datas.where((data) =>
-          data.isAfter(agora.subtract(Duration(days: (4 - i) * 7))) &&
-          !data.isAfter(agora.subtract(Duration(days: (3 - i) * 7)))).length];
+      return [
+        for (var i = 0; i < 4; i++)
+          datas
+              .where((data) =>
+                  data.isAfter(agora.subtract(Duration(days: (4 - i) * 7))) &&
+                  !data.isAfter(agora.subtract(Duration(days: (3 - i) * 7))))
+              .length
+      ];
     }
-    return [for (var i = 6; i >= 0; i--)
-      datas.where((data) =>
-        _mesmoDia(data, agora.subtract(Duration(days: i)))).length];
+    return [
+      for (var i = 6; i >= 0; i--)
+        datas
+            .where((data) => _mesmoDia(data, agora.subtract(Duration(days: i))))
+            .length
+    ];
   }
 
   bool _mesmoDia(DateTime a, DateTime b) =>
@@ -1423,8 +1727,10 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
 
   String get _rangeSubtitle {
     return switch (_range) {
-      'Dia' => 'Visao em blocos do dia para atacar picos e quedas no horario certo.',
-      'Mes' => 'Visao mensal por semana para enxergar consistencia e regressao.',
+      'Dia' =>
+        'Visao em blocos do dia para atacar picos e quedas no horario certo.',
+      'Mes' =>
+        'Visao mensal por semana para enxergar consistencia e regressao.',
       _ => 'Visao semanal para comparar constancia, volume e recuperacao.',
     };
   }
@@ -1433,14 +1739,18 @@ class _WeeklyInsightCardState extends State<_WeeklyInsightCard> {
     if (_range == 'Semana') {
       const dias = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'];
       final hoje = DateTime.now();
-      return [for (var i = count - 1; i >= 0; i--)
-        dias[hoje.subtract(Duration(days: i)).weekday - 1]];
+      return [
+        for (var i = count - 1; i >= 0; i--)
+          dias[hoje.subtract(Duration(days: i)).weekday - 1]
+      ];
     }
     return switch (_range) {
       'Dia' => const ['00h', '04h', '08h', '12h', '16h', '20h'],
       'Mes' => const ['S1', 'S2', 'S3', 'S4'],
       _ => const <String>[],
-    }.take(count).toList();
+    }
+        .take(count)
+        .toList();
   }
 }
 
@@ -1487,17 +1797,18 @@ class _ChartLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Container(
-        width: 10,
-        height: 10,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      ),
-      const SizedBox(width: 5),
-      Text(label, style: TextStyle(color: context.appTextSecondary, fontSize: 11)),
-    ],
-  );
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 5),
+          Text(label,
+              style: TextStyle(color: context.appTextSecondary, fontSize: 11)),
+        ],
+      );
 }
 
 class _MetricGrid extends StatelessWidget {
@@ -1557,7 +1868,8 @@ class _MetricTile extends StatelessWidget {
                     Text(
                       spec.label,
                       maxLines: 1,
-                      style: TextStyle(color: context.appTextSecondary, fontSize: 11),
+                      style: TextStyle(
+                          color: context.appTextSecondary, fontSize: 11),
                     ),
                   ],
                 ),
@@ -1665,7 +1977,8 @@ class _RecordTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.appSurface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: accent.withValues(alpha: musculacao ? 0.35 : 0.10)),
+        border: Border.all(
+            color: accent.withValues(alpha: musculacao ? 0.35 : 0.10)),
       ),
       child: Row(
         children: [
@@ -1729,13 +2042,16 @@ class _SleepPhasesCard extends StatelessWidget {
   final int? sonoMinutosTotal;
   @override
   Widget build(BuildContext context) => const _Panel(
-    child: Text('Fases do sono indisponíveis: não há registros detalhados do dispositivo.'));
+      child: Text(
+          'Fases do sono indisponíveis: não há registros detalhados do dispositivo.'));
 }
+
 class _HeartZonesCard extends StatelessWidget {
   const _HeartZonesCard();
   @override
   Widget build(BuildContext context) => const _Panel(
-    child: Text('Zonas cardíacas indisponíveis: não há registros detalhados do dispositivo.'));
+      child: Text(
+          'Zonas cardíacas indisponíveis: não há registros detalhados do dispositivo.'));
 }
 
 class _BodyCompositionCard extends StatelessWidget {
@@ -1862,8 +2178,7 @@ class _CorpoActionsCardState extends State<_CorpoActionsCard> {
               historicoSemanal: const [],
             );
         final atualizado = base.copyWith(alturaCm: alturaCm);
-        final resultado =
-            await SaudeDiariaCaller().salvarResumo(atualizado);
+        final resultado = await SaudeDiariaCaller().salvarResumo(atualizado);
         return resultado != null;
       },
     );
@@ -1915,8 +2230,7 @@ class _CorpoActionsCardState extends State<_CorpoActionsCard> {
           percentualAgua: _parseDouble(agua.text),
           circunferencias: circunferencias,
         );
-        final resultado =
-            await MedidaCorporalCaller().registrarMedida(medida);
+        final resultado = await MedidaCorporalCaller().registrarMedida(medida);
         return resultado != null;
       },
     );
@@ -1984,7 +2298,8 @@ Future<bool?> _showBottomSheet({
 }) async {
   final route = ModalBottomSheetRoute<bool>(
     isScrollControlled: true,
-    capturedThemes: InheritedTheme.capture(from:context,to:Navigator.of(context).context),
+    capturedThemes: InheritedTheme.capture(
+        from: context, to: Navigator.of(context).context),
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
     backgroundColor: Colors.transparent,
     builder: (context) {
@@ -1998,7 +2313,8 @@ Future<bool?> _showBottomSheet({
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: context.appSurface,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: SingleChildScrollView(
                 child: Padding(
@@ -2225,7 +2541,8 @@ class _CorpoEvolutionChartCardState extends State<_CorpoEvolutionChartCard> {
                       sideTitles: SideTitles(showTitles: false),
                     ),
                     leftTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: true, reservedSize: 36),
+                      sideTitles:
+                          SideTitles(showTitles: true, reservedSize: 36),
                     ),
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
@@ -2638,7 +2955,8 @@ IconData _iconeConquista(String codigo) {
   if (chave.contains('sono') || chave.contains('dormir')) {
     return Icons.bedtime_outlined;
   }
-  if (chave.contains('streak') || chave.contains('dias') ||
+  if (chave.contains('streak') ||
+      chave.contains('dias') ||
       chave.contains('sequencia')) {
     return Icons.local_fire_department;
   }
@@ -2685,10 +3003,9 @@ class _GamificationCardState extends State<_GamificationCard> {
         }
 
         final conquistas = snapshot.data;
-        final obtidas =
-            (conquistas ?? const <ConquistaItem>[])
-                .where((item) => item.obtida)
-                .toList();
+        final obtidas = (conquistas ?? const <ConquistaItem>[])
+            .where((item) => item.obtida)
+            .toList();
 
         // Fallback gracioso: chamada falhou (null) ou lista vazia -> badges
         // mockados, mesma UX anterior a integracao.
@@ -3030,7 +3347,8 @@ class _MuralCardState extends State<_MuralCard> {
       _controller.clear();
       _reload();
     } else {
-      setState(() => _erro = 'Nao foi possivel publicar agora. Tente novamente.');
+      setState(
+          () => _erro = 'Nao foi possivel publicar agora. Tente novamente.');
     }
   }
 
@@ -3064,7 +3382,8 @@ class _MuralCardState extends State<_MuralCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _SectionTitle(title: 'Mural da comunidade', trailing: 'Opt-in'),
+              const _SectionTitle(
+                  title: 'Mural da comunidade', trailing: 'Opt-in'),
               const SizedBox(height: 10),
               if (posts == null)
                 const _EmptyState(label: 'Mural indisponivel no momento.')
@@ -3109,7 +3428,8 @@ class _MuralCardState extends State<_MuralCard> {
               if (!podePostar)
                 Text(
                   'Ative a participacao na comunidade para poder postar no mural.',
-                  style: TextStyle(color: context.appTextSecondary, fontSize: 12),
+                  style:
+                      TextStyle(color: context.appTextSecondary, fontSize: 12),
                 )
               else ...[
                 TextField(

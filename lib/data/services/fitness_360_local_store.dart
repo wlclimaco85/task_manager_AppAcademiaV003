@@ -162,6 +162,7 @@ class Fitness360Record {
     required this.value,
     required this.note,
     required this.createdAt,
+    this.fotosBase64 = const [],
   });
 
   final int id;
@@ -170,6 +171,7 @@ class Fitness360Record {
   final String value;
   final String note;
   final DateTime createdAt;
+  final List<String> fotosBase64;
 
   factory Fitness360Record.fromJson(Map<String, dynamic> json) {
     return Fitness360Record(
@@ -181,6 +183,11 @@ class Fitness360Record {
       note: json['note'] as String? ?? '',
       createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
           DateTime.now(),
+      fotosBase64: (json['fotosBase64'] as List?)
+              ?.whereType<String>()
+              .take(3)
+              .toList() ??
+          const [],
     );
   }
 
@@ -191,6 +198,7 @@ class Fitness360Record {
         'value': value,
         'note': note,
         'createdAt': createdAt.toIso8601String(),
+        'fotosBase64': fotosBase64,
       };
 }
 
@@ -234,30 +242,35 @@ class Fitness360LocalStore {
       final decoded = jsonDecode(raw);
       if (decoded is List<dynamic>) return decoded;
     } catch (error) {
-      AppLogger.i.warn("Falha ao ler registros reais do cache; dados originais preservados: $error");
+      AppLogger.i.warn(
+          "Falha ao ler registros reais do cache; dados originais preservados: $error");
       return [];
     }
     return [];
   }
 
-  static Future<void> addRecord({
+  static Future<Fitness360Record> addRecord({
     required String type,
     required String title,
     required String value,
     String note = '',
+    List<String> fotosBase64 = const [],
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final current = await records();
     final nextId = DateTime.now().microsecondsSinceEpoch;
+    final novo = Fitness360Record(
+      id: nextId,
+      type: type,
+      title: title,
+      value: value,
+      note: note,
+      createdAt: DateTime.now(),
+      fotosBase64:
+          fotosBase64.where((foto) => foto.trim().isNotEmpty).take(3).toList(),
+    );
     final updated = [
-      Fitness360Record(
-        id: nextId,
-        type: type,
-        title: title,
-        value: value,
-        note: note,
-        createdAt: DateTime.now(),
-      ),
+      novo,
       ...current,
     ];
     await prefs.setString(
@@ -265,7 +278,36 @@ class Fitness360LocalStore {
       jsonEncode(updated.map((item) => item.toJson()).toList()),
     );
 
-    await FitnessContaSync.salvar('registros', updated.first.toJson());
+    await FitnessContaSync.salvar('registros', novo.toJson());
+    return novo;
+  }
+
+  static Future<void> atualizarFotosRegistro(
+      int id, List<String> fotosBase64) async {
+    final prefs = await SharedPreferences.getInstance();
+    final atuais = await records();
+    final fotos =
+        fotosBase64.where((foto) => foto.trim().isNotEmpty).take(3).toList();
+    Fitness360Record? atualizado;
+    final registros = atuais.map((registro) {
+      if (registro.id != id) return registro;
+      atualizado = Fitness360Record(
+        id: registro.id,
+        type: registro.type,
+        title: registro.title,
+        value: registro.value,
+        note: registro.note,
+        createdAt: registro.createdAt,
+        fotosBase64: fotos,
+      );
+      return atualizado!;
+    }).toList();
+    if (atualizado == null) return;
+    await prefs.setString(
+      FitnessContaSync.chave(_recordsKey),
+      jsonEncode(registros.map((item) => item.toJson()).toList()),
+    );
+    await FitnessContaSync.salvar('registros', atualizado!.toJson());
   }
 
   static Future<List<String>> homeCardOrder() async {
@@ -363,7 +405,10 @@ class Fitness360LocalStore {
     final prefs = await SharedPreferences.getInstance();
     final all = await records();
     final activity = all.where((item) => item.type == 'atividade').toList();
-    final body = all.where((item) => item.type == 'corpo' && item.title.toLowerCase() == 'peso').toList();
+    final body = all
+        .where((item) =>
+            item.type == 'corpo' && item.title.toLowerCase() == 'peso')
+        .toList();
     final habits = all.where((item) => item.type == 'habito').toList();
     final sleep = all.where((item) => item.type == 'sono').toList();
     final heart = all.where((item) => item.type == 'batimento').toList();
@@ -394,10 +439,12 @@ class Fitness360LocalStore {
     );
   }
 
-  static double _sumKm(List<Fitness360Record> items, {required double fallback}) {
+  static double _sumKm(List<Fitness360Record> items,
+      {required double fallback}) {
     double total = 0.0;
     for (final item in items) {
-      final match = RegExp(r'(\d+(?:[.,]\d+)?)\s*km', caseSensitive: false).firstMatch(item.value);
+      final match = RegExp(r'(\d+(?:[.,]\d+)?)\s*km', caseSensitive: false)
+          .firstMatch(item.value);
       if (match != null) {
         total += double.tryParse(match.group(1)!.replaceAll(',', '.')) ?? 0.0;
       }
@@ -405,10 +452,12 @@ class Fitness360LocalStore {
     return total == 0.0 ? fallback : double.parse(total.toStringAsFixed(1));
   }
 
-  static int _sumCalories(List<Fitness360Record> items, {required int fallback}) {
+  static int _sumCalories(List<Fitness360Record> items,
+      {required int fallback}) {
     int total = 0;
     for (final item in items) {
-      final match = RegExp(r'(\d+)\s*kcal', caseSensitive: false).firstMatch(item.value);
+      final match =
+          RegExp(r'(\d+)\s*kcal', caseSensitive: false).firstMatch(item.value);
       if (match != null) {
         total += int.tryParse(match.group(1)!) ?? 0;
       }
@@ -425,8 +474,14 @@ class Fitness360LocalStore {
     }
     final all = await records(type: type);
     final hoje = DateTime.now();
-    return [for (var i = 6; i >= 0; i--)
-      all.where((r) => _chaveData(r.createdAt) == _chaveData(hoje.subtract(Duration(days: i)))).length];
+    return [
+      for (var i = 6; i >= 0; i--)
+        all
+            .where((r) =>
+                _chaveData(r.createdAt) ==
+                _chaveData(hoje.subtract(Duration(days: i))))
+            .length
+    ];
   }
 
   /// Serie real de passos dos ultimos 7 dias via GET /api/fitness/resumo
@@ -435,7 +490,8 @@ class Fitness360LocalStore {
     final resumo = await SaudeDiariaCaller().fetchResumo();
     if (resumo == null) return null;
     final passosPorDia = <String, int>{
-      for (final dia in resumo.historicoSemanal) _chaveData(dia.data): dia.passos,
+      for (final dia in resumo.historicoSemanal)
+        _chaveData(dia.data): dia.passos,
     };
     final hoje = DateTime.now();
     return [
@@ -451,13 +507,26 @@ class Fitness360LocalStore {
     final all = await records(type: type);
     final hoje = DateTime.now();
     if (range == 'Dia') {
-      return [for (var i = 0; i < 6; i++)
-        all.where((r) => _chaveData(r.createdAt) == _chaveData(hoje) &&
-          r.createdAt.hour >= i * 4 && r.createdAt.hour < (i + 1) * 4).length];
+      return [
+        for (var i = 0; i < 6; i++)
+          all
+              .where((r) =>
+                  _chaveData(r.createdAt) == _chaveData(hoje) &&
+                  r.createdAt.hour >= i * 4 &&
+                  r.createdAt.hour < (i + 1) * 4)
+              .length
+      ];
     }
-    return [for (var i = 0; i < 4; i++)
-      all.where((r) => r.createdAt.isAfter(hoje.subtract(Duration(days: (4 - i) * 7))) &&
-        !r.createdAt.isAfter(hoje.subtract(Duration(days: (3 - i) * 7)))).length];
+    return [
+      for (var i = 0; i < 4; i++)
+        all
+            .where((r) =>
+                r.createdAt
+                    .isAfter(hoje.subtract(Duration(days: (4 - i) * 7))) &&
+                !r.createdAt
+                    .isAfter(hoje.subtract(Duration(days: (3 - i) * 7))))
+            .length
+    ];
   }
 
   static int _firstInt(List<Fitness360Record> items, {required int fallback}) {
@@ -503,5 +572,4 @@ class Fitness360LocalStore {
     }
     return fallback;
   }
-
 }
