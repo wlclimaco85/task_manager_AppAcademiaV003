@@ -804,7 +804,9 @@ class _FitnessModuleTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = action.danger ? GridColors.error : GridColors.primary;
+    final visual = _ShortcutVisual.forAction(action);
+    final color = visual.accent;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return InkWell(
       borderRadius: BorderRadius.circular(18),
@@ -813,27 +815,91 @@ class _FitnessModuleTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: context.appSurface,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: color.withValues(alpha: 0.12)),
+          border: Border.all(color: color.withValues(alpha: 0.22)),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: isDark ? 0.10 : 0.06),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                width: 42,
-                height: 42,
+        child: Stack(
+          children: [
+            Positioned(
+              right: -22,
+              top: -26,
+              child: Container(
+                width: 122,
+                height: 122,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.11),
-                  borderRadius: BorderRadius.circular(14),
+                  shape: BoxShape.circle,
+                  color: color.withValues(alpha: isDark ? 0.13 : 0.08),
                 ),
-                child: Icon(action.icon, color: color, size: 23),
               ),
-              Expanded(
-                child: Container(
-                  alignment: Alignment.bottomLeft,
-                  child: Text(
+            ),
+            Positioned(
+              right: 18,
+              top: 17,
+              child: Icon(
+                visual.motif,
+                color: color.withValues(alpha: isDark ? 0.34 : 0.22),
+                size: 58,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    width: 58,
+                    height: 58,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          color.withValues(alpha: isDark ? 0.92 : 0.18),
+                          visual.secondary.withValues(
+                            alpha: isDark ? 0.70 : 0.11,
+                          ),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: color.withValues(alpha: isDark ? 0.42 : 0.25),
+                      ),
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Icon(
+                          visual.icon,
+                          color: isDark ? Colors.white : color,
+                          size: 30,
+                        ),
+                        Positioned(
+                          right: 8,
+                          bottom: 8,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: visual.secondary,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: context.appSurface,
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
                     action.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -844,13 +910,167 @@ class _FitnessModuleTile extends StatelessWidget {
                       height: 1.15,
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
+  }
+}
+
+class _ShortcutVisual {
+  const _ShortcutVisual({
+    required this.icon,
+    required this.motif,
+    required this.accent,
+    required this.secondary,
+  });
+
+  final IconData icon;
+  final IconData motif;
+  final Color accent;
+  final Color secondary;
+
+  factory _ShortcutVisual.forAction(_FitnessAction action) {
+    if (action.danger) {
+      return const _ShortcutVisual(
+        icon: Icons.logout_rounded,
+        motif: Icons.waving_hand_outlined,
+        accent: Color(0xFFE05263),
+        secondary: Color(0xFFFFB74D),
+      );
+    }
+
+    return switch (action.title) {
+      'Meu perfil' => const _ShortcutVisual(
+          icon: Icons.account_circle_rounded,
+          motif: Icons.badge_outlined,
+          accent: Color(0xFF7C4DFF),
+          secondary: Color(0xFFB388FF),
+        ),
+      'Alunos do personal' => const _ShortcutVisual(
+          icon: Icons.diversity_1_rounded,
+          motif: Icons.groups_2_outlined,
+          accent: Color(0xFF00897B),
+          secondary: Color(0xFF4DB6AC),
+        ),
+      'Treinos' => const _ShortcutVisual(
+          icon: Icons.fitness_center_rounded,
+          motif: Icons.bolt_rounded,
+          accent: Color(0xFFE65100),
+          secondary: Color(0xFFFFB300),
+        ),
+      'Agenda' => const _ShortcutVisual(
+          icon: Icons.calendar_month_rounded,
+          motif: Icons.access_time_filled_rounded,
+          accent: Color(0xFF1565C0),
+          secondary: Color(0xFF42A5F5),
+        ),
+      'Aviso de falta' => const _ShortcutVisual(
+          icon: Icons.event_busy_rounded,
+          motif: Icons.notifications_paused_outlined,
+          accent: Color(0xFFE53935),
+          secondary: Color(0xFFFF8A80),
+        ),
+      'Atividade' => const _ShortcutVisual(
+          icon: Icons.directions_run_rounded,
+          motif: Icons.insights_rounded,
+          accent: Color(0xFF00A77A),
+          secondary: Color(0xFF80CBC4),
+        ),
+      'Corpo' => const _ShortcutVisual(
+          icon: Icons.monitor_heart_rounded,
+          motif: Icons.favorite_border_rounded,
+          accent: Color(0xFFD81B60),
+          secondary: Color(0xFFF48FB1),
+        ),
+      'Metas' => const _ShortcutVisual(
+          icon: Icons.flag_circle_rounded,
+          motif: Icons.emoji_events_outlined,
+          accent: Color(0xFFFF8F00),
+          secondary: Color(0xFFFFD54F),
+        ),
+      'Dieta' => const _ShortcutVisual(
+          icon: Icons.restaurant_menu_rounded,
+          motif: Icons.eco_outlined,
+          accent: Color(0xFF43A047),
+          secondary: Color(0xFFAED581),
+        ),
+      'Alimentos' => const _ShortcutVisual(
+          icon: Icons.set_meal_rounded,
+          motif: Icons.spa_outlined,
+          accent: Color(0xFF689F38),
+          secondary: Color(0xFFCDDC39),
+        ),
+      'Objetivos' => const _ShortcutVisual(
+          icon: Icons.track_changes_rounded,
+          motif: Icons.ads_click_rounded,
+          accent: Color(0xFF5E35B1),
+          secondary: Color(0xFFB39DDB),
+        ),
+      'Suplementos' => const _ShortcutVisual(
+          icon: Icons.medication_liquid_rounded,
+          motif: Icons.water_drop_outlined,
+          accent: Color(0xFF00ACC1),
+          secondary: Color(0xFF80DEEA),
+        ),
+      'Medicamentos' => const _ShortcutVisual(
+          icon: Icons.medical_services_rounded,
+          motif: Icons.health_and_safety_outlined,
+          accent: Color(0xFFEF6C00),
+          secondary: Color(0xFFFFCC80),
+        ),
+      'Exames' => const _ShortcutVisual(
+          icon: Icons.biotech_rounded,
+          motif: Icons.science_outlined,
+          accent: Color(0xFF00838F),
+          secondary: Color(0xFF80CBC4),
+        ),
+      'Avaliacao fisica' => const _ShortcutVisual(
+          icon: Icons.fact_check_rounded,
+          motif: Icons.query_stats_rounded,
+          accent: Color(0xFF3949AB),
+          secondary: Color(0xFF9FA8DA),
+        ),
+      'Grupo muscular' => const _ShortcutVisual(
+          icon: Icons.accessibility_new_rounded,
+          motif: Icons.fitness_center_outlined,
+          accent: Color(0xFF00897B),
+          secondary: Color(0xFF80CBC4),
+        ),
+      'Modalidades' => const _ShortcutVisual(
+          icon: Icons.sports_handball_rounded,
+          motif: Icons.sports_score_outlined,
+          accent: Color(0xFF6D4C41),
+          secondary: Color(0xFFFFCC80),
+        ),
+      'Academias' => const _ShortcutVisual(
+          icon: Icons.apartment_rounded,
+          motif: Icons.location_city_outlined,
+          accent: Color(0xFF455A64),
+          secondary: Color(0xFF90A4AE),
+        ),
+      'Personal' => const _ShortcutVisual(
+          icon: Icons.person_search_rounded,
+          motif: Icons.stars_rounded,
+          accent: Color(0xFF8E24AA),
+          secondary: Color(0xFFE1BEE7),
+        ),
+      'Financeiro' => const _ShortcutVisual(
+          icon: Icons.account_balance_wallet_rounded,
+          motif: Icons.payments_outlined,
+          accent: Color(0xFF2E7D32),
+          secondary: Color(0xFFA5D6A7),
+        ),
+      _ => _ShortcutVisual(
+          icon: action.icon,
+          motif: Icons.auto_awesome_outlined,
+          accent: GridColors.primary,
+          secondary: const Color(0xFF80CBC4),
+        ),
+    };
   }
 }
 
