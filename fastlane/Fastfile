@@ -5,7 +5,7 @@ require "shellwords"
 # Nome interno da faixa na API do Google Play (o ID numerico da URL nao e aceito: "Track not found").
 PLAY_TRILHA_TESTE_FECHADO = "alpha"
 
-def flutter_version
+def flutter_version(android: false)
   pubspec = File.read("../pubspec.yaml")
   version_line = pubspec.match(/^version:\s*(.+)/)
   raise "Versão não encontrada no pubspec.yaml" unless version_line
@@ -15,7 +15,11 @@ def flutter_version
   ci_build = ENV.fetch("CI_BUILD_NUMBER", "").strip
   build = ci_build.empty? ? (parts[1] || "1") : ci_build
   raise "CI_BUILD_NUMBER inválido" unless build.match?(/\A\d+\z/)
-  { name: parts[0], build: build }
+  ci_run = ENV.fetch("GITHUB_RUN_NUMBER", "").strip
+  # O código de versão é o identificador técnico. No Android, o nome também
+  # recebe o número da execução para ficar distinguível diretamente no Play Console.
+  name = android && !ci_build.empty? && ci_run.match?(/\A\d+\z/) ? "#{parts[0]}.#{ci_run}" : parts[0]
+  { name: name, build: build }
 end
 
 def flutter(args)
@@ -164,7 +168,7 @@ platform :android do
 
   desc "Build e upload para Google Play (internal track)"
   lane :beta do
-    ver = flutter_version
+    ver = flutter_version(android: true)
     flutter("build appbundle --release --build-name=#{ver[:name]} --build-number=#{ver[:build]}")
     upload_to_play_store(
       track:                   "internal",
@@ -178,7 +182,7 @@ platform :android do
 
   desc "Build e publicação no Google Play (production)"
   lane :release do
-    ver = flutter_version
+    ver = flutter_version(android: true)
     flutter("build appbundle --release --build-name=#{ver[:name]} --build-number=#{ver[:build]}")
     upload_to_play_store(
       track:                   "production",
@@ -192,7 +196,7 @@ platform :android do
 
   desc "Build e publicação na faixa Teste fechado - TESTE (testadores)"
   lane :teste_fechado do
-    ver = flutter_version
+    ver = flutter_version(android: true)
     flutter("build appbundle --release --build-name=#{ver[:name]} --build-number=#{ver[:build]}")
     upload_to_play_store(
       track:                   PLAY_TRILHA_TESTE_FECHADO,
