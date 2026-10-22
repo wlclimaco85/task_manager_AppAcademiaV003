@@ -672,6 +672,8 @@ class _GridListScreenState extends State<GridListScreen> {
   Widget _card(BuildContext context, Map<String, dynamic> item, int index) {
     final id = getNestedValue(item, widget.idFieldName)?.toString() ?? '';
     final isSelected = _sel[id] ?? false;
+    if (_isCatalogoAcademia) return _cardAcademia(item, id, isSelected);
+    if (_isCatalogoObjetivo) return _cardObjetivo(item, id, isSelected);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -732,6 +734,146 @@ class _GridListScreenState extends State<GridListScreen> {
             ]),
           ),
         ),
+      ),
+    );
+  }
+
+  bool get _isCatalogoAcademia =>
+      const {'academia', 'academias'}.contains(widget.title.trim().toLowerCase());
+
+  bool get _isCatalogoObjetivo =>
+      const {'objetivo', 'objetivos'}.contains(widget.title.trim().toLowerCase());
+
+  String _texto(Map<String, dynamic> item, List<String> chaves,
+      [String padrao = '']) {
+    for (final chave in chaves) {
+      final valor = _readableValue(getNestedValue(item, chave));
+      if (valor.isNotEmpty) return valor;
+    }
+    return padrao;
+  }
+
+  Widget _catalogoCard({
+    required Map<String, dynamic> item,
+    required String id,
+    required bool selected,
+    required Widget child,
+  }) => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        child: Card(
+          clipBehavior: Clip.antiAlias,
+          elevation: selected ? 4 : 1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: BorderSide(
+              color: selected
+                  ? GridColors.primary
+                  : GridColors.primary.withOpacity(.16),
+            ),
+          ),
+          child: InkWell(
+            onTap: _selectionMode
+                ? () => _toggleSel(id, !selected)
+                : () => widget.onItemTap?.call(item, context),
+            onLongPress: () {
+              if (!_selectionMode) {
+                _toggleSelectionMode();
+                _toggleSel(id, true);
+              }
+            },
+            child: child,
+          ),
+        ),
+      );
+
+  Widget _cardAcademia(Map<String, dynamic> item, String id, bool selected) {
+    final nome = _texto(item,
+        const ['nome', 'fantasia', 'razaoSocial', 'descricao', 'titulo'],
+        'Academia #$id');
+    final descricao = _texto(item, const ['observacao', 'descricao', 'endereco'],
+        'Academia parceira da sua jornada fitness');
+    final local = _texto(item,
+        const ['cidade', 'endereco.cidade', 'bairro', 'endereco.bairro'], 'Uberaba');
+    final foto = _texto(item, const ['foto', 'photo', 'imagem', 'image', 'urlFoto']);
+    return _catalogoCard(
+      item: item, id: id, selected: selected,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        SizedBox(
+          height: 128,
+          width: double.infinity,
+          child: Stack(fit: StackFit.expand, children: [
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF351062), Color(0xFF7928B8), Color(0xFF08A078)],
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                ),
+              ),
+              child: Center(child: Icon(Icons.fitness_center_rounded, size: 52, color: Colors.white54)),
+            ),
+            if (foto.startsWith('http'))
+              Image.network(foto, fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+            DecoratedBox(decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [Colors.transparent, Colors.black.withOpacity(.52)], begin: Alignment.topCenter, end: Alignment.bottomCenter),
+            )),
+            Positioned(left: 14, bottom: 12, child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+              decoration: BoxDecoration(color: Colors.white.withOpacity(.92), borderRadius: BorderRadius.circular(20)),
+              child: const Text('ACADEMIA', style: TextStyle(color: GridColors.primary, fontSize: 10, fontWeight: FontWeight.w800)),
+            )),
+          ]),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(15, 13, 10, 8),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Expanded(child: Text(nome, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800))),
+              if (_hasStatusField(item)) _statusBadge(item),
+            ]),
+            const SizedBox(height: 5),
+            Row(children: [
+              const Icon(Icons.location_on_outlined, size: 15, color: GridColors.primary),
+              const SizedBox(width: 4),
+              Expanded(child: Text(local, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: Colors.black.withOpacity(.62)))),
+            ]),
+            const SizedBox(height: 7),
+            Text(descricao, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: Colors.black.withOpacity(.64))),
+            _cardActions(item),
+          ]),
+        ),
+      ]),
+    );
+  }
+
+  Widget _cardObjetivo(Map<String, dynamic> item, String id, bool selected) {
+    final descricao = _texto(item, const ['descricao', 'nome', 'titulo'], 'Meu objetivo');
+    final status = _texto(item, const ['status', 'situacao'], 'Ativo');
+    final data = DateTime.tryParse(_texto(item, const ['data', 'datas', 'createdAt', 'dataCadastro']));
+    final texto = descricao.toLowerCase();
+    final perda = texto.contains('perd') || texto.contains('emagrec');
+    final cor = perda ? const Color(0xFFE85D75) : GridColors.primary;
+    final icone = perda ? Icons.trending_down_rounded : texto.contains('massa') || texto.contains('muscul') ? Icons.fitness_center_rounded : Icons.bolt_rounded;
+    final desde = data == null ? 'Definido por você' : '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}';
+    return _catalogoCard(
+      item: item, id: id, selected: selected,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(15, 15, 10, 8),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(width: 50, height: 50, decoration: BoxDecoration(color: cor.withOpacity(.12), borderRadius: BorderRadius.circular(16)), child: Icon(icone, color: cor)),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Expanded(child: Text(descricao, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800))),
+              Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: GridColors.success.withOpacity(.1), borderRadius: BorderRadius.circular(20)), child: Text(status.toUpperCase(), style: const TextStyle(color: GridColors.success, fontSize: 10, fontWeight: FontWeight.w800))),
+            ]),
+            const SizedBox(height: 6),
+            Text('Em foco desde $desde', style: TextStyle(fontSize: 12, color: Colors.black.withOpacity(.62))),
+            const SizedBox(height: 10),
+            ClipRRect(borderRadius: BorderRadius.circular(20), child: const LinearProgressIndicator(value: .18, minHeight: 6, color: GridColors.primary, backgroundColor: Color(0x1A7B2CBF))),
+            _cardActions(item),
+          ])),
+        ]),
       ),
     );
   }

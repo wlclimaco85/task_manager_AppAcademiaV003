@@ -11,6 +11,10 @@ class PerfilFitnessHeader extends StatelessWidget {
   final String? foto;
   final bool cadastroIncompleto;
   final int notificacoesNaoLidas;
+  final String? nomePersonal;
+  final bool? personalOnline;
+  final String? ultimoTreino;
+  final DateTime? dataUltimoTreino;
   final VoidCallback? onEditar;
   final VoidCallback? onCadastroIncompleto;
   final VoidCallback? onNotificacoes;
@@ -22,12 +26,21 @@ class PerfilFitnessHeader extends StatelessWidget {
     this.foto,
     this.cadastroIncompleto = false,
     this.notificacoesNaoLidas = 0,
+    this.nomePersonal,
+    this.personalOnline,
+    this.ultimoTreino,
+    this.dataUltimoTreino,
     this.onEditar,
     this.onCadastroIncompleto,
     this.onNotificacoes,
   });
 
   String get _nomeExibido => nome.trim().isEmpty ? 'Minha conta' : nome.trim();
+  bool get _temPersonal => nomePersonal?.trim().isNotEmpty ?? false;
+  bool get _temUltimoTreino => ultimoTreino?.trim().isNotEmpty ?? false;
+
+  String _dataFormatada(DateTime data) =>
+      '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}';
 
   Widget _iniciais() {
     final partes = _nomeExibido.split(RegExp(r'\s+'));
@@ -78,9 +91,11 @@ class PerfilFitnessHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textoSecundario = context.appTextSecondary;
+    final mostrarResumo = _temPersonal || _temUltimoTreino;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
       decoration: BoxDecoration(
         color: Theme.of(context).brightness == Brightness.dark
             ? context.appSurfaceAlt
@@ -88,121 +103,206 @@ class PerfilFitnessHeader extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: GridColors.primary.withValues(alpha: 0.25)),
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // 1. Avatar com foto e badge de alerta desacoplados
-          Stack(
-            clipBehavior: Clip.none,
+          Row(
             children: [
-              Semantics(
-                label: 'Foto de $_nomeExibido',
-                image: true,
-                button: onEditar != null,
+              // 1. Avatar com foto e badge de alerta desacoplados
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Semantics(
+                    label: 'Foto de $_nomeExibido',
+                    image: true,
+                    button: onEditar != null,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: onEditar,
+                        customBorder: const CircleBorder(),
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: context.appSurfaceAlt,
+                            shape: BoxShape.circle,
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: _foto(context),
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (cadastroIncompleto)
+                    Positioned(
+                      right: -6,
+                      bottom: -6,
+                      child: Semantics(
+                        label:
+                            'Avaliação inicial pendente: faltam foto ou medidas',
+                        button: true,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            key: const Key('cadastro_incompleto_header'),
+                            onTap: onCadastroIncompleto,
+                            customBorder: const CircleBorder(),
+                            child: Container(
+                              width: 26,
+                              height: 26,
+                              decoration: BoxDecoration(
+                                color: GridColors.secondary,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                    color: context.appSurface, width: 2),
+                              ),
+                              child: const Center(
+                                child: Icon(Icons.priority_high,
+                                    size: 16, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(width: 12),
+
+              // 2. Textos (Nome e Perfil) clicáveis para Editar Perfil
+              Expanded(
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: onEditar,
-                    customBorder: const CircleBorder(),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: context.appSurfaceAlt,
-                        shape: BoxShape.circle,
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _nomeExibido,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: context.appText,
+                            ),
+                          ),
+                          Text(
+                            perfil,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: context.appTextSecondary,
+                            ),
+                          ),
+                        ],
                       ),
-                      clipBehavior: Clip.antiAlias,
-                      child: _foto(context),
                     ),
                   ),
                 ),
               ),
-              if (cadastroIncompleto)
-                Positioned(
-                  right: -6,
-                  bottom: -6,
-                  child: Semantics(
-                    label: 'Avaliação inicial pendente: faltam foto ou medidas',
-                    button: true,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        key: const Key('cadastro_incompleto_header'),
-                        onTap: onCadastroIncompleto,
-                        customBorder: const CircleBorder(),
-                        child: Container(
-                          width: 26,
-                          height: 26,
-                          decoration: BoxDecoration(
-                            color: GridColors.secondary,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: context.appSurface, width: 2),
-                          ),
-                          child: const Center(
-                            child: Icon(Icons.priority_high, size: 16, color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ),
+              const SizedBox(width: 8),
+              Badge(
+                isLabelVisible: notificacoesNaoLidas > 0,
+                label: Text(notificacoesNaoLidas > 99
+                    ? '99+'
+                    : '$notificacoesNaoLidas'),
+                child: Semantics(
+                  label: notificacoesNaoLidas == 0
+                      ? 'Notificações'
+                      : 'Notificações, $notificacoesNaoLidas não lidas',
+                  button: true,
+                  child: IconButton(
+                    key: const Key('abrir_notificacoes'),
+                    onPressed: onNotificacoes,
+                    icon: const Icon(Icons.notifications_outlined),
+                    color: context.appText,
                   ),
                 ),
+              ),
             ],
           ),
-          const SizedBox(width: 12),
-
-          // 2. Textos (Nome e Perfil) clicáveis para Editar Perfil
-          Expanded(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onEditar,
-                borderRadius: BorderRadius.circular(8),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _nomeExibido,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: context.appText,
-                        ),
-                      ),
-                      Text(
-                        perfil,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: context.appTextSecondary,
-                        ),
-                      ),
-                    ],
+          if (mostrarResumo) ...[
+            const SizedBox(height: 9),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: context.appSurface.withValues(alpha: 0.62),
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    _temPersonal
+                        ? Icons.support_agent_outlined
+                        : Icons.fitness_center_outlined,
+                    color: GridColors.primary,
+                    size: 18,
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_temPersonal)
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  'Personal: ${nomePersonal!.trim()}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: context.appText),
+                                ),
+                              ),
+                              if (personalOnline != null) ...[
+                                const SizedBox(width: 7),
+                                Container(
+                                  width: 7,
+                                  height: 7,
+                                  decoration: BoxDecoration(
+                                    color: personalOnline!
+                                        ? GridColors.primary
+                                        : textoSecundario,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(personalOnline! ? 'Online' : 'Offline',
+                                    style: TextStyle(
+                                        fontSize: 10, color: textoSecundario)),
+                              ],
+                            ],
+                          ),
+                        if (_temUltimoTreino) ...[
+                          if (_temPersonal) const SizedBox(height: 3),
+                          Text(
+                            'Último treino: ${ultimoTreino!.trim()}${dataUltimoTreino == null ? '' : ' · ${_dataFormatada(dataUltimoTreino!)}'}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style:
+                                TextStyle(fontSize: 11, color: textoSecundario),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-        Badge(
-          isLabelVisible: notificacoesNaoLidas > 0,
-          label: Text(notificacoesNaoLidas > 99 ? '99+' : '$notificacoesNaoLidas'),
-          child: Semantics(
-            label: notificacoesNaoLidas == 0
-                ? 'Notificações'
-                : 'Notificações, $notificacoesNaoLidas não lidas',
-            button: true,
-            child: IconButton(
-              key: const Key('abrir_notificacoes'),
-              onPressed: onNotificacoes,
-              icon: const Icon(Icons.notifications_outlined),
-              color: context.appText,
-            ),
-          ),
-        ),
-      ],
+          ],
+        ],
       ),
     );
   }

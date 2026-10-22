@@ -39,6 +39,40 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
   int _notificacoesNaoLidas = 0;
   Timer? _atualizadorConta;
   bool _dialogPermissoesAberto = false;
+
+  String? _textoPerfil(Map<String, dynamic>? perfil, List<String> chaves) {
+    if (perfil == null) return null;
+    for (final chave in chaves) {
+      final valor = perfil[chave]?.toString().trim();
+      if (valor != null && valor.isNotEmpty) return valor;
+    }
+    return null;
+  }
+
+  bool? _boolPerfil(Map<String, dynamic>? perfil, List<String> chaves) {
+    if (perfil == null) return null;
+    for (final chave in chaves) {
+      final valor = perfil[chave];
+      if (valor is bool) return valor;
+      if (valor is num) return valor != 0;
+      if (valor is String) {
+        final normalizado = valor.trim().toLowerCase();
+        if (normalizado == 'true' ||
+            normalizado == 'online' ||
+            normalizado == '1') return true;
+        if (normalizado == 'false' ||
+            normalizado == 'offline' ||
+            normalizado == '0') return false;
+      }
+    }
+    return null;
+  }
+
+  DateTime? _dataPerfil(Map<String, dynamic>? perfil, List<String> chaves) {
+    final texto = _textoPerfil(perfil, chaves);
+    return texto == null ? null : DateTime.tryParse(texto);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -214,6 +248,7 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
   Widget build(BuildContext context) => ValueListenableBuilder<LoginModel>(
         valueListenable: AuthUtility.session,
         builder: (context, sessao, _) {
+          final perfilConta = sessao.perfilConta;
           final temUsuario = sessao.login != null ||
               sessao.data != null ||
               sessao.perfilConta != null ||
@@ -231,14 +266,14 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
                       children: [
                         Expanded(
                           child: PerfilFitnessHeader(
-                            nome: sessao.perfilConta?['nome'] as String? ??
+                            nome: perfilConta?['nome'] as String? ??
                                 sessao.login?.nome ??
                                 sessao.data?.codDadosPessoal?.nome ??
                                 [
                                   sessao.data?.firstName,
                                   sessao.data?.lastName,
                                 ].whereType<String>().join(' '),
-                            foto: sessao.perfilConta?['foto'] as String? ??
+                            foto: perfilConta?['foto'] as String? ??
                                 sessao.login?.foto ??
                                 sessao.data?.codDadosPessoal?.photo ??
                                 sessao.data?.photo,
@@ -249,6 +284,26 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
                                     : 'Minha conta',
                             cadastroIncompleto: _cadastroIncompleto,
                             notificacoesNaoLidas: _notificacoesNaoLidas,
+                            nomePersonal: _textoPerfil(perfilConta, const [
+                              'personalNome',
+                              'nomePersonal',
+                              'personal_name',
+                            ]),
+                            personalOnline: _boolPerfil(perfilConta, const [
+                              'personalOnline',
+                              'personalEstaOnline',
+                              'personal_online',
+                            ]),
+                            ultimoTreino: _textoPerfil(perfilConta, const [
+                              'ultimoTreino',
+                              'ultimoTreinoNome',
+                              'lastWorkout',
+                            ]),
+                            dataUltimoTreino: _dataPerfil(perfilConta, const [
+                              'dataUltimoTreino',
+                              'ultimoTreinoEm',
+                              'lastWorkoutAt',
+                            ]),
                             onEditar: widget.onEditar,
                             onCadastroIncompleto:
                                 _avisarAvaliacaoInicialPendente,

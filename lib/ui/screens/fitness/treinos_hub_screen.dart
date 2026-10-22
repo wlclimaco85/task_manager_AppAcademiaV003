@@ -42,7 +42,8 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
       vsync: this,
     );
     _carregarDados();
-    BackgroundSyncService.mudancas.addListener(_aoAtualizarSincronizacaoAutomatica);
+    BackgroundSyncService.mudancas
+        .addListener(_aoAtualizarSincronizacaoAutomatica);
   }
 
   void _aoAtualizarSincronizacaoAutomatica() {
@@ -51,23 +52,24 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
     }
   }
 
-  Future<void> _carregarDados({bool manual = false, bool silencioso = false}) async {
+  Future<void> _carregarDados(
+      {bool manual = false, bool silencioso = false}) async {
     if (!silencioso) {
       setState(() => _loading = true);
     }
     final isPersonal = podeGerenciarAlunos(AuthUtility.session.value);
     // Personal ve so os treinos dele; os dos alunos ficam nos perfis deles.
     final planos = await _repository.getPlanosTreino(
-        alunoId: isPersonal
-            ? AuthUtility.userInfo.login?.id?.toString()
-            : null);
+        alunoId:
+            isPersonal ? AuthUtility.userInfo.login?.id?.toString() : null);
     final sessoes = await _repository.getSessoesConcluidas();
 
     bool fichaOculta = false;
     if (!isPersonal) {
-      fichaOculta = await PersonalGestaoOfflineRepository().isFichaOcultaParaAlunoAtual();
+      fichaOculta =
+          await PersonalGestaoOfflineRepository().isFichaOcultaParaAlunoAtual();
     }
-    
+
     // Dispara verificações inteligentes de lembretes e inatividade em background
     FitnessPushNotificationService().inicializarVerificacoesAutomaticas();
 
@@ -83,7 +85,8 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: GridColors.success,
-            content: Text('Sincronização concluída! ${planos.length} ficha(s) e $sincronizados treino(s) na nuvem.'),
+            content: Text(
+                'Sincronização concluída! ${planos.length} ficha(s) e $sincronizados treino(s) na nuvem.'),
             duration: const Duration(seconds: 3),
           ),
         );
@@ -93,7 +96,8 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
 
   @override
   void dispose() {
-    BackgroundSyncService.mudancas.removeListener(_aoAtualizarSincronizacaoAutomatica);
+    BackgroundSyncService.mudancas
+        .removeListener(_aoAtualizarSincronizacaoAutomatica);
     _tabController.dispose();
     super.dispose();
   }
@@ -107,7 +111,8 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
     return Scaffold(
       backgroundColor: GridColors.background,
       appBar: AppBar(
-        title: const Text('Treinos & Prescrição', style: TextStyle(fontWeight: FontWeight.w700)),
+        title: const Text('Treinos & Prescrição',
+            style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [
           IconButton(
             tooltip: 'Biblioteca de Exercícios',
@@ -115,7 +120,8 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const BibliotecaExerciciosScreen()),
+                MaterialPageRoute(
+                    builder: (_) => const BibliotecaExerciciosScreen()),
               );
             },
           ),
@@ -130,7 +136,8 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
           indicatorColor: GridColors.primary,
           labelColor: GridColors.primary,
           unselectedLabelColor: GridColors.textSecondary,
-          labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          labelStyle:
+              const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
           tabs: [
             const Tab(text: 'Fichas Ativas'),
             if (podePrescrever) const Tab(text: 'Modelos / Templates'),
@@ -140,32 +147,39 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
       ),
       body: Center(
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: isDesktopOrWeb ? 1100 : double.infinity),
+          constraints:
+              BoxConstraints(maxWidth: isDesktopOrWeb ? 1100 : double.infinity),
           child: _loading
-              ? Center(child: CircularProgressIndicator(color: GridColors.primary))
+              ? Center(
+                  child: CircularProgressIndicator(color: GridColors.primary))
               : TabBarView(
                   controller: _tabController,
                   children: [
                     _buildListaFichas(apenasTemplates: false),
-                    if (podePrescrever) _buildListaFichas(apenasTemplates: true),
+                    if (podePrescrever)
+                      _buildListaFichas(apenasTemplates: true),
                     _buildHistoricoOffline(),
                   ],
                 ),
         ),
       ),
-      floatingActionButton: !podePrescrever ? null : FloatingActionButton.extended(
-        backgroundColor: GridColors.buttonBackground,
-        foregroundColor: GridColors.buttonText,
-        icon: const Icon(Icons.add),
-        label: const Text('Prescrever Treino', style: TextStyle(fontWeight: FontWeight.w600)),
-        onPressed: () async {
-          final res = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const MontadorTreinoScreen()),
-          );
-          if (res != null) _carregarDados();
-        },
-      ),
+      floatingActionButton: !podePrescrever
+          ? null
+          : FloatingActionButton.extended(
+              backgroundColor: GridColors.buttonBackground,
+              foregroundColor: GridColors.buttonText,
+              icon: const Icon(Icons.add),
+              label: const Text('Prescrever Treino',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
+              onPressed: () async {
+                final res = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const MontadorTreinoScreen()),
+                );
+                if (res != null) _carregarDados();
+              },
+            ),
     );
   }
 
@@ -183,7 +197,8 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                   color: Colors.amber.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.visibility_off_outlined, size: 48, color: Colors.amber),
+                child: const Icon(Icons.visibility_off_outlined,
+                    size: 48, color: Colors.amber),
               ),
               const SizedBox(height: 16),
               const Text(
@@ -202,7 +217,8 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
       );
     }
 
-    final filtrados = _planos.where((p) => p.isTemplate == apenasTemplates).toList();
+    final filtrados =
+        _planos.where((p) => p.isTemplate == apenasTemplates).toList();
 
     if (filtrados.isEmpty) {
       return Center(
@@ -211,11 +227,15 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.assignment_outlined, size: 54, color: GridColors.textMuted),
+              Icon(Icons.assignment_outlined,
+                  size: 54, color: GridColors.textMuted),
               const SizedBox(height: 14),
               Text(
-                apenasTemplates ? 'Nenhum template salvo' : 'Nenhuma ficha de treino ativa',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                apenasTemplates
+                    ? 'Nenhum template salvo'
+                    : 'Nenhuma ficha de treino ativa',
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 6),
               Text(
@@ -243,6 +263,11 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
   }
 
   Widget _buildCardFicha(PlanoTreinoModel plano) {
+    final ultimaSessao = _ultimaSessaoDoPlano(plano);
+    final podeEditarPrescricao =
+        podeGerenciarAlunos(AuthUtility.session.value) ||
+            plano.personalId.trim().isEmpty;
+
     return Card(
       elevation: 0,
       color: GridColors.card,
@@ -264,18 +289,42 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                     children: [
                       Text(
                         plano.titulo,
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w800, fontSize: 16),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Aluno: ${plano.alunoNome} • Objetivo: ${plano.objetivo}',
-                        style: TextStyle(color: GridColors.textSecondary, fontSize: 13),
+                        style: TextStyle(
+                            color: GridColors.textSecondary, fontSize: 13),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.history_rounded,
+                            size: 14,
+                            color: GridColors.textSecondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            ultimaSessao == null
+                                ? 'Ainda não treinada'
+                                : 'Último treino: ${_formatarData(ultimaSessao.dataHoraFim)}',
+                            style: TextStyle(
+                              color: GridColors.textSecondary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: GridColors.primarySubtle,
                     borderRadius: BorderRadius.circular(8),
@@ -296,13 +345,17 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
             // Divisões da Ficha (Treino A, Treino B, Treino C)
             Text(
               'Divisões de Treino:',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: GridColors.textSecondary),
+              style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  color: GridColors.textSecondary),
             ),
             const SizedBox(height: 8),
             for (final div in plano.divisoes)
               Container(
                 margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: GridColors.filterBackground,
                   borderRadius: BorderRadius.circular(12),
@@ -313,22 +366,35 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                       radius: 12,
                       backgroundColor: GridColors.primary,
                       foregroundColor: Colors.white,
-                      child: Text(div.letra, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11)),
+                      child: Text(div.letra,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w800, fontSize: 11)),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: InkWell(
-                        onTap: () => _modalVisualizarFichaDivisao(context, div, plano),
+                        onTap: () =>
+                            _modalVisualizarFichaDivisao(context, div, plano),
                         borderRadius: BorderRadius.circular(8),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(div.nome, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                            Text(div.nome,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w700, fontSize: 13)),
                             Wrap(
-                              spacing: 6, runSpacing: 2,
+                              spacing: 6,
+                              runSpacing: 2,
                               children: [
-                                Text('${div.exercicios.length} exercícios', style: TextStyle(fontSize: 11, color: GridColors.textSecondary)),
-                                Text('• Toque p/ ver ficha', style: TextStyle(fontSize: 11, color: GridColors.primary, fontWeight: FontWeight.bold)),
+                                Text('${div.exercicios.length} exercícios',
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        color: GridColors.textSecondary)),
+                                Text('• Toque p/ ver ficha',
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        color: GridColors.primary,
+                                        fontWeight: FontWeight.bold)),
                               ],
                             ),
                           ],
@@ -339,20 +405,25 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                       style: OutlinedButton.styleFrom(
                         foregroundColor: GridColors.primary,
                         side: BorderSide(color: GridColors.primary),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 8),
+                        textStyle: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w700),
                       ),
                       icon: const Icon(Icons.visibility_outlined, size: 16),
                       label: const Text('Ver Ficha'),
-                      onPressed: () => _modalVisualizarFichaDivisao(context, div, plano),
+                      onPressed: () =>
+                          _modalVisualizarFichaDivisao(context, div, plano),
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: GridColors.primary,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        textStyle: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w700),
                       ),
                       icon: const Icon(Icons.play_arrow, size: 16),
                       label: const Text('Treinar'),
@@ -388,31 +459,117 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                     nomeArquivo: nomeArquivoPdf('Ficha', plano.titulo),
                     gerar: () async {
                       final catalogo = {
-                        for (final e in await FitnessOfflineRepository().getExercicios()) e.id: e,
+                        for (final e
+                            in await FitnessOfflineRepository().getExercicios())
+                          e.id: e,
                       };
-                      return FichaDietaPdf.fichaTreino(plano, catalogo: catalogo);
+                      return FichaDietaPdf.fichaTreino(plano,
+                          catalogo: catalogo);
                     },
                   ),
                 ),
-                TextButton.icon(
-                  icon: const Icon(Icons.edit, size: 16),
-                  label: const Text('Editar Prescrição'),
-                  onPressed: () async {
-                    final res = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => MontadorTreinoScreen(planoParaEditar: plano),
-                      ),
-                    );
-                    if (res != null) _carregarDados();
-                  },
-                ),
+                if (podeEditarPrescricao)
+                  TextButton.icon(
+                    icon: const Icon(Icons.drive_file_rename_outline, size: 16),
+                    label: const Text('Renomear ficha'),
+                    onPressed: () => _renomearFicha(plano),
+                  ),
+                if (podeEditarPrescricao)
+                  TextButton.icon(
+                    icon: const Icon(Icons.edit, size: 16),
+                    label: const Text('Editar Prescrição'),
+                    onPressed: () async {
+                      final res = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              MontadorTreinoScreen(planoParaEditar: plano),
+                        ),
+                      );
+                      if (res != null) _carregarDados();
+                    },
+                  ),
               ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _renomearFicha(PlanoTreinoModel plano) async {
+    final controller = TextEditingController(text: plano.titulo);
+    final novoTitulo = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Renomear ficha'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 70,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: const InputDecoration(
+            labelText: 'Nome da ficha',
+            hintText: 'Ex.: Plano ABC - Hipertrofia',
+          ),
+          onSubmitted: (valor) => Navigator.pop(dialogContext, valor.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, controller.text.trim()),
+            child: const Text('Salvar'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (novoTitulo == null ||
+        novoTitulo.isEmpty ||
+        novoTitulo == plano.titulo) {
+      return;
+    }
+    await _repository.salvarPlanoTreino(
+      PlanoTreinoModel.fromMap({...plano.toMap(), 'titulo': novoTitulo}),
+    );
+    await _carregarDados(silencioso: true);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ficha renomeada.')),
+      );
+    }
+  }
+
+  SessaoTreinoRegistroModel? _ultimaSessaoDoPlano(PlanoTreinoModel plano) {
+    final sessoesDoPlano = _sessoes.where((sessao) {
+      final alunoCorresponde = plano.alunoId.isEmpty ||
+          sessao.alunoId.isEmpty ||
+          sessao.alunoId == plano.alunoId;
+      return sessao.treinoId == plano.id && alunoCorresponde;
+    }).toList();
+    if (sessoesDoPlano.isEmpty) return null;
+
+    sessoesDoPlano.sort((a, b) {
+      final dataA = DateTime.tryParse(a.dataHoraFim) ??
+          DateTime.tryParse(a.dataHoraInicio) ??
+          DateTime.fromMillisecondsSinceEpoch(0);
+      final dataB = DateTime.tryParse(b.dataHoraFim) ??
+          DateTime.tryParse(b.dataHoraInicio) ??
+          DateTime.fromMillisecondsSinceEpoch(0);
+      return dataB.compareTo(dataA);
+    });
+    return sessoesDoPlano.first;
+  }
+
+  String _formatarData(String valor) {
+    final data = DateTime.tryParse(valor);
+    if (data == null) return 'data indisponível';
+    return '${data.day.toString().padLeft(2, '0')}/'
+        '${data.month.toString().padLeft(2, '0')}/${data.year}';
   }
 
   Widget _buildHistoricoOffline() {
@@ -423,7 +580,8 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.history_toggle_off, size: 54, color: GridColors.textMuted),
+              Icon(Icons.history_toggle_off,
+                  size: 54, color: GridColors.textMuted),
               const SizedBox(height: 14),
               const Text(
                 'Nenhum treino concluído ainda',
@@ -472,48 +630,64 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 4),
-                Text('Data: $data • Duração: $duracaoMin min • RPE ${sessao.rpe}/10'),
+                Text(
+                    'Data: $data • Duração: $duracaoMin min • RPE ${sessao.rpe}/10'),
                 TextButton.icon(
                   icon: const Icon(Icons.visibility_outlined),
                   label: const Text('Ver detalhes'),
                   onPressed: () async {
-                    await showDialog(context: context,
-                      builder: (_) => DetalhesSessaoTreino(sessao: sessao));
+                    await showDialog(
+                        context: context,
+                        builder: (_) => DetalhesSessaoTreino(sessao: sessao));
                     if (mounted) await _carregarDados();
                   },
                 ),
-                Text('${sessao.fotosDoTreino.length} fotos • ${sessao.videosDoTreino.length} vídeos'),
+                Text(
+                    '${sessao.fotosDoTreino.length} fotos • ${sessao.videosDoTreino.length} vídeos'),
                 if (sessao.fotosDoTreino.isNotEmpty)
-                  MidiasSessaoTreinoGaleria(fotosBase64: sessao.fotosDoTreino,
-                    videosUrls: const [], compacta: true),
+                  MidiasSessaoTreinoGaleria(
+                      fotosBase64: sessao.fotosDoTreino,
+                      videosUrls: const [],
+                      compacta: true),
                 TextButton.icon(
                   icon: const Icon(Icons.photo_library_outlined),
                   label: const Text('Fotos e vídeos'),
                   onPressed: () async {
-                    final atualizada = await editarMidiasSessaoTreino(context, sessao);
+                    final atualizada =
+                        await editarMidiasSessaoTreino(context, sessao);
                     if (atualizada != null && mounted) await _carregarDados();
                   },
                 ),
                 if (sessao.feedbackAluno != null)
                   Text(
                     '"${sessao.feedbackAluno}"',
-                    style: TextStyle(fontStyle: FontStyle.italic, color: GridColors.primaryDark),
+                    style: TextStyle(
+                        fontStyle: FontStyle.italic,
+                        color: GridColors.primaryDark),
                   ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
                     Icon(
-                      sessao.sincronizado ? Icons.cloud_done : Icons.cloud_queue,
+                      sessao.sincronizado
+                          ? Icons.cloud_done
+                          : Icons.cloud_queue,
                       size: 14,
-                      color: sessao.sincronizado ? GridColors.success : GridColors.warning,
+                      color: sessao.sincronizado
+                          ? GridColors.success
+                          : GridColors.warning,
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      sessao.sincronizado ? 'Sincronizado na Nuvem' : 'Salvo no Celular (Offline)',
+                      sessao.sincronizado
+                          ? 'Sincronizado na Nuvem'
+                          : 'Salvo no Celular (Offline)',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: sessao.sincronizado ? GridColors.success : GridColors.warning,
+                        color: sessao.sincronizado
+                            ? GridColors.success
+                            : GridColors.warning,
                       ),
                     ),
                   ],
@@ -561,7 +735,8 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                     foregroundColor: Colors.white,
                     child: Text(
                       div.letra,
-                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w900, fontSize: 16),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -571,11 +746,13 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                       children: [
                         Text(
                           div.nome,
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w800, fontSize: 17),
                         ),
                         Text(
                           '${plano.titulo} • Aluno: ${plano.alunoNome}',
-                          style: TextStyle(color: GridColors.textSecondary, fontSize: 12),
+                          style: TextStyle(
+                              color: GridColors.textSecondary, fontSize: 12),
                         ),
                       ],
                     ),
@@ -589,42 +766,56 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
               const SizedBox(height: 12),
               // Resumo didático da divisão
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: GridColors.primarySubtle.withOpacity(0.4),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: GridColors.primary.withOpacity(0.2)),
+                  border:
+                      Border.all(color: GridColors.primary.withOpacity(0.2)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.fitness_center, size: 16, color: GridColors.primaryDark),
+                        Icon(Icons.fitness_center,
+                            size: 16, color: GridColors.primaryDark),
                         const SizedBox(width: 6),
                         Text(
                           '${div.exercicios.length} exercícios',
-                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: GridColors.primaryDark),
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                              color: GridColors.primaryDark),
                         ),
                       ],
                     ),
                     Row(
                       children: [
-                        Icon(Icons.timer_outlined, size: 16, color: GridColors.primaryDark),
+                        Icon(Icons.timer_outlined,
+                            size: 16, color: GridColors.primaryDark),
                         const SizedBox(width: 6),
                         Text(
                           '~45-60 min',
-                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: GridColors.primaryDark),
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                              color: GridColors.primaryDark),
                         ),
                       ],
                     ),
                     Row(
                       children: [
-                        Icon(Icons.flag_outlined, size: 16, color: GridColors.primaryDark),
+                        Icon(Icons.flag_outlined,
+                            size: 16, color: GridColors.primaryDark),
                         const SizedBox(width: 6),
                         Text(
                           plano.objetivo,
-                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: GridColors.primaryDark),
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                              color: GridColors.primaryDark),
                         ),
                       ],
                     ),
@@ -634,7 +825,10 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
               const SizedBox(height: 14),
               Text(
                 'Ficha Completa de Exercícios:',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: GridColors.textSecondary),
+                style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: GridColors.textSecondary),
               ),
               const SizedBox(height: 10),
               // Lista didática e autoexplicativa dos exercícios
@@ -670,18 +864,23 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                                       foregroundColor: GridColors.primaryDark,
                                       child: Text(
                                         '${idx + 1}',
-                                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11),
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 11),
                                       ),
                                     ),
                                     const SizedBox(width: 10),
                                     Expanded(
                                       child: Text(
                                         ex.exercicioNome,
-                                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 14),
                                       ),
                                     ),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 3),
                                       decoration: BoxDecoration(
                                         color: GridColors.primarySubtle,
                                         borderRadius: BorderRadius.circular(6),
@@ -737,17 +936,22 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                                       ),
                                   ],
                                 ),
-                                if (ex.observacoes != null && ex.observacoes!.isNotEmpty) ...[
+                                if (ex.observacoes != null &&
+                                    ex.observacoes!.isNotEmpty) ...[
                                   const SizedBox(height: 8),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 6),
                                     decoration: BoxDecoration(
                                       color: Colors.black.withOpacity(0.04),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Row(
                                       children: [
-                                        const Icon(Icons.tips_and_updates_outlined, size: 14, color: Colors.amber),
+                                        const Icon(
+                                            Icons.tips_and_updates_outlined,
+                                            size: 14,
+                                            color: Colors.amber),
                                         const SizedBox(width: 6),
                                         Expanded(
                                           child: Text(
@@ -764,14 +968,18 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                                   ),
                                 ],
                                 if (ex.exercicioBiset != null)
-                                  Text('Biset com ${ex.exercicioBiset!.exercicioNome} • '
-                                    '${ex.exercicioBiset!.repeticoes} reps • '
-                                    '${ex.exercicioBiset!.cargaSugeridaKg} kg',
-                                    style: TextStyle(color: GridColors.primaryDark,
-                                      fontWeight: FontWeight.w600)),
+                                  Text(
+                                      'Biset com ${ex.exercicioBiset!.exercicioNome} • '
+                                      '${ex.exercicioBiset!.repeticoes} reps • '
+                                      '${ex.exercicioBiset!.cargaSugeridaKg} kg',
+                                      style: TextStyle(
+                                          color: GridColors.primaryDark,
+                                          fontWeight: FontWeight.w600)),
                                 if (ex.exerciciosAlternativos.isNotEmpty)
-                                  Text('Máquina ocupada? ${ex.exerciciosAlternativos.join(' ou ')}',
-                                    style: TextStyle(color: GridColors.textSecondary)),
+                                  Text(
+                                      'Máquina ocupada? ${ex.exerciciosAlternativos.join(' ou ')}',
+                                      style: TextStyle(
+                                          color: GridColors.textSecondary)),
                               ],
                             ),
                           );
@@ -787,7 +995,8 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                     backgroundColor: GridColors.primary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
                   ),
                   icon: const Icon(Icons.play_arrow, size: 20),
                   label: const Text(
@@ -817,7 +1026,8 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
     );
   }
 
-  Widget _buildTagPrescricao(IconData icon, String texto, Color corTexto, Color corFundo) {
+  Widget _buildTagPrescricao(
+      IconData icon, String texto, Color corTexto, Color corFundo) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -831,7 +1041,8 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
           const SizedBox(width: 4),
           Text(
             texto,
-            style: TextStyle(color: corTexto, fontSize: 11, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: corTexto, fontSize: 11, fontWeight: FontWeight.bold),
           ),
         ],
       ),
