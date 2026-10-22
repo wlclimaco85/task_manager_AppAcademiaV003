@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/services/personal_gestao_offline_repository.dart';
 import 'package:task_manager_flutter/data/models/auth_utility.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
+import 'package:task_manager_flutter/data/utils/fitness_access.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/biblioteca_exercicios_screen.dart';
@@ -89,6 +90,67 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
     _atualizarTabController((indexAtual - 1).clamp(0, _divisoes.length - 1));
   }
 
+  bool get _podeRenomearDivisoes {
+    final plano = widget.planoParaEditar;
+    return plano == null ||
+        plano.personalId.trim().isEmpty ||
+        podeGerenciarAlunos(AuthUtility.session.value);
+  }
+
+  String _nomeDaAba(DivisaoTreinoModel divisao) {
+    final nome = divisao.nome.trim();
+    return nome.isEmpty ? 'Treino ${divisao.letra}' : nome;
+  }
+
+  Future<void> _renomearDivisao(int divisaoIndex) async {
+    if (!_podeRenomearDivisoes) return;
+
+    final divisao = _divisoes[divisaoIndex];
+    final controller = TextEditingController(text: _nomeDaAba(divisao));
+    final novoNome = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Renomear treino'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 42,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (value) => Navigator.pop(dialogContext, value),
+          decoration: InputDecoration(
+            labelText: 'Nome da aba',
+            hintText: 'Ex: Peitoral e tríceps',
+            prefixIcon: Icon(Icons.drive_file_rename_outline,
+                color: GridColors.primary),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text),
+            child: const Text('Salvar nome'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+
+    final nome = novoNome?.trim();
+    if (nome == null || nome.isEmpty || nome == divisao.nome) return;
+
+    setState(() {
+      _divisoes[divisaoIndex] = DivisaoTreinoModel(
+        id: divisao.id,
+        letra: divisao.letra,
+        nome: nome,
+        exercicios: divisao.exercicios,
+      );
+    });
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -129,8 +191,35 @@ class _MontadorTreinoScreenState extends State<MontadorTreinoScreen>
                     unselectedLabelColor: context.appTextSecondary,
                     labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                     tabs: [
-                      for (final div in _divisoes)
-                        Tab(text: 'Treino ${div.letra} (${div.exercicios.length})'),
+                      for (var index = 0; index < _divisoes.length; index++)
+                        Tab(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 190),
+                                child: Text(
+                                  '${_nomeDaAba(_divisoes[index])} (${_divisoes[index].exercicios.length})',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (_podeRenomearDivisoes) ...[
+                                const SizedBox(width: 2),
+                                IconButton(
+                                  tooltip: 'Renomear treino',
+                                  icon: const Icon(Icons.edit_outlined, size: 15),
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(
+                                    minWidth: 28,
+                                    minHeight: 28,
+                                  ),
+                                  onPressed: () => _renomearDivisao(index),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                 ),
