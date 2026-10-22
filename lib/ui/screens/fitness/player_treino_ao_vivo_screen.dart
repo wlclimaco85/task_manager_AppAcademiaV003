@@ -510,7 +510,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                             Text('Alternativa de ${_biset.exercicios[_exercicioIndexAtual].exercicioNome}',
                               style: const TextStyle(fontSize: 12, color: Color(0xFF6EE7B7))),
                           InkWell(
-                            onTap: () => _mostrarDemonstracao(exAtual.exercicioId),
+                            onTap: () => _mostrarDemonstracao(
+                                exAtual.exercicioId, exAtual.exercicioNome),
                             borderRadius: BorderRadius.circular(8),
                             child: const Padding(
                               padding: EdgeInsets.symmetric(vertical: 4),
@@ -650,12 +651,18 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     );
   }
 
-  Future<void> _mostrarDemonstracao(String exercicioId) async {
+  Future<void> _mostrarDemonstracao(String exercicioId, String exercicioNome) async {
     final todosExercicios = await _repository.getExercicios();
+    // A ficha pode guardar o ID do servidor, que difere do ID do catálogo do app.
+    // Nesse caso o nome identifica o exercício.
+    final nomeNormalizado = exercicioNome.trim().toLowerCase();
     final exercicio = todosExercicios.firstWhere(
       (e) => e.id == exercicioId,
-      orElse: () => const task_manager_flutter_models.ExercicioModel(
-        id: '', nome: 'Não encontrado', grupoMuscular: '', instrucoes: 'Sem instruções disponíveis.',
+      orElse: () => todosExercicios.firstWhere(
+        (e) => e.nome.trim().toLowerCase() == nomeNormalizado,
+        orElse: () => const task_manager_flutter_models.ExercicioModel(
+          id: '', nome: 'Não encontrado', grupoMuscular: '', instrucoes: 'Sem instruções disponíveis.',
+        ),
       ),
     );
 
