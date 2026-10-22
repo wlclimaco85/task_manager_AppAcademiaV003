@@ -86,7 +86,10 @@ class _MidiasSessaoTreinoEditorState extends State<MidiasSessaoTreinoEditor> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text('Fotos do treino (${_fotos.length}/3)',
-              style: const TextStyle(fontWeight: FontWeight.w700)),
+              style: const TextStyle(
+                color: Color(0xFF0F172A),
+                fontWeight: FontWeight.w800,
+              )),
           const SizedBox(height: 8),
           if (_fotos.isNotEmpty)
             Wrap(spacing: 8, runSpacing: 8, children: [
@@ -124,12 +127,20 @@ class _MidiasSessaoTreinoEditorState extends State<MidiasSessaoTreinoEditor> {
             ]),
           Wrap(spacing: 8, children: [
             OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF047857),
+                  side: const BorderSide(color: Color(0xFF047857)),
+                ),
                 onPressed: _carregando || _fotos.length >= 3
                     ? null
                     : () => _foto(ImageSource.gallery),
                 icon: const Icon(Icons.photo_library_outlined),
                 label: const Text('Adicionar foto')),
             OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF047857),
+                  side: const BorderSide(color: Color(0xFF047857)),
+                ),
                 onPressed: _carregando || _fotos.length >= 3
                     ? null
                     : () => _foto(ImageSource.camera),
@@ -139,9 +150,12 @@ class _MidiasSessaoTreinoEditorState extends State<MidiasSessaoTreinoEditor> {
           if (_carregando) const LinearProgressIndicator(),
           const SizedBox(height: 16),
           const Text('Vídeos do treino (até 3)',
-              style: TextStyle(fontWeight: FontWeight.w700)),
+              style: TextStyle(
+                color: Color(0xFF0F172A),
+                fontWeight: FontWeight.w800,
+              )),
           const Text('Cole links do YouTube ou de arquivos do Google Drive.',
-              style: TextStyle(fontSize: 12)),
+              style: TextStyle(color: Color(0xFF475569), fontSize: 12)),
           for (var i = 0; i < _links.length; i++)
             Padding(
                 padding: const EdgeInsets.only(top: 10),
