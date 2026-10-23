@@ -15,7 +15,8 @@ import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart
 import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
 import 'package:task_manager_flutter/data/services/fitness_push_notification_service.dart';
-import 'package:task_manager_flutter/data/models/fitness/exercicio_model.dart' as task_manager_flutter_models;
+import 'package:task_manager_flutter/data/models/fitness/exercicio_model.dart'
+    as task_manager_flutter_models;
 
 /// Player de Treino Interativo ao Vivo (Padrão MyFitCoach / MFIT Aluno)
 /// Interface escura esportiva, algoritmo de sobrecarga progressiva, cronômetro automático de descanso e card de compartilhamento Stories.
@@ -59,9 +60,11 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
 
   // Cronômetro de descanso
   Timer? _descansoTimer;
+  Timer? _encerramentoDescansoTimer;
   int _descansoRestanteSegundos = 0;
   int _descansoTotalSegundos = 60;
   bool _descansoAtivo = false;
+  bool _descansoFinalizado = false;
 
   @override
   void initState() {
@@ -83,11 +86,12 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
           final salvas = Map<String, dynamic>.from(map['series']);
           for (final e in salvas.entries) {
             _seriesPorExercicio[int.parse(e.key)] = (e.value as List)
-                .map((v) => SerieRegistroModel.fromMap(
-                    Map<String, dynamic>.from(v))).toList();
+                .map((v) =>
+                    SerieRegistroModel.fromMap(Map<String, dynamic>.from(v)))
+                .toList();
           }
-          _exercicioIndexAtual = (map['indice'] as int).clamp(
-              0, _biset.exercicios.length - 1);
+          _exercicioIndexAtual =
+              (map['indice'] as int).clamp(0, _biset.exercicios.length - 1);
           _inicioSessao = DateTime.parse(map['inicio']);
           rascunhoRestaurado = true;
         } else {
@@ -106,7 +110,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     setState(() => _restaurando = false);
     if (prescricaoAlterada) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('A ficha mudou. O progresso anterior foi preservado no aparelho; esta sessão usa a ficha atual.')));
+          content: Text(
+              'A ficha mudou. O progresso anterior foi preservado no aparelho; esta sessão usa a ficha atual.')));
     }
     _carregarSugestaoParaExercicioAtual();
   }
@@ -115,8 +120,10 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     if (_restaurando || _concluido) return;
     final json = jsonEncode({
       'execucao': _execucao.toMap(),
-      'series': {for (final e in _seriesPorExercicio.entries)
-        e.key.toString(): e.value.map((s) => s.toMap()).toList()},
+      'series': {
+        for (final e in _seriesPorExercicio.entries)
+          e.key.toString(): e.value.map((s) => s.toMap()).toList()
+      },
       'indice': _exercicioIndexAtual,
       'inicio': _inicioSessao.toIso8601String(),
     });
@@ -130,7 +137,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
         AppLogger.i.error('Falha ao salvar treino em andamento: $e', st);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Não foi possível salvar o progresso neste aparelho.')));
+              content:
+                  Text('Não foi possível salvar o progresso neste aparelho.')));
         }
       }
     });
@@ -142,74 +150,97 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     try {
       final catalogo = await _repository.getExercicios();
       if (!mounted) return;
-      final alternativas = catalogo.where((ex) =>
-          original.exerciciosAlternativos.contains(ex.nome) &&
-          ex.id != original.exercicioId).toList();
+      final alternativas = catalogo
+          .where((ex) =>
+              original.exerciciosAlternativos.contains(ex.nome) &&
+              ex.id != original.exercicioId)
+          .toList();
       final escolha = await showModalBottomSheet<String>(
-        context: context, isScrollControlled: true,
+        context: context,
+        isScrollControlled: true,
         backgroundColor: const Color(0xFF1E293B),
         builder: (context) => SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
-            child: Column(mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('Máquina ocupada? Troque o exercício',
-                  style: TextStyle(color: Colors.white, fontSize: 18,
-                    fontWeight: FontWeight.w700)),
-                const SizedBox(height: 8),
-                const Text('A troca vale para as séries restantes. As séries já feitas continuam no exercício realizado.',
-                  style: TextStyle(color: Color(0xFFCBD5E1))),
-                const SizedBox(height: 12),
-                for (final opcao in [
-                  task_manager_flutter_models.ExercicioModel(
-                    id: original.exercicioId, nome: original.exercicioNome,
-                    grupoMuscular: original.grupoMuscular),
-                  ...alternativas,
-                ])
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(opcao.nome,
-                      style: const TextStyle(color: Colors.white)),
-                    subtitle: Text(opcao.id == original.exercicioId
-                      ? 'Exercício original' : 'Alternativa cadastrada',
-                      style: const TextStyle(color: Color(0xFF94A3B8))),
-                    trailing: _execucao.atual(indice).exercicioId == opcao.id
-                      ? const Icon(Icons.check_circle, color: Color(0xFF10B981))
-                      : const Icon(Icons.swap_horiz, color: Color(0xFF10B981)),
-                    onTap: () => Navigator.pop(context, opcao.id),
-                  ),
-                if (alternativas.isEmpty)
-                  const Text('Nenhuma alternativa disponível no catálogo deste aparelho.',
-                    style: TextStyle(color: Color(0xFFCBD5E1))),
-              ]),
+            child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Máquina ocupada? Troque o exercício',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 8),
+                  const Text(
+                      'A troca vale para as séries restantes. As séries já feitas continuam no exercício realizado.',
+                      style: TextStyle(color: Color(0xFFCBD5E1))),
+                  const SizedBox(height: 12),
+                  for (final opcao in [
+                    task_manager_flutter_models.ExercicioModel(
+                        id: original.exercicioId,
+                        nome: original.exercicioNome,
+                        grupoMuscular: original.grupoMuscular),
+                    ...alternativas,
+                  ])
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(opcao.nome,
+                          style: const TextStyle(color: Colors.white)),
+                      subtitle: Text(
+                          opcao.id == original.exercicioId
+                              ? 'Exercício original'
+                              : 'Alternativa cadastrada',
+                          style: const TextStyle(color: Color(0xFF94A3B8))),
+                      trailing: _execucao.atual(indice).exercicioId == opcao.id
+                          ? const Icon(Icons.check_circle,
+                              color: Color(0xFF10B981))
+                          : const Icon(Icons.swap_horiz,
+                              color: Color(0xFF10B981)),
+                      onTap: () => Navigator.pop(context, opcao.id),
+                    ),
+                  if (alternativas.isEmpty)
+                    const Text(
+                        'Nenhuma alternativa disponível no catálogo deste aparelho.',
+                        style: TextStyle(color: Color(0xFFCBD5E1))),
+                ]),
           ),
         ),
       );
-      if (escolha == null || !mounted ||
+      if (escolha == null ||
+          !mounted ||
           escolha == _execucao.atual(indice).exercicioId) {
         return;
       }
-      final alternativa = escolha == original.exercicioId ? null
+      final alternativa = escolha == original.exercicioId
+          ? null
           : alternativas.firstWhere((e) => e.id == escolha);
       setState(() {
         _execucao.selecionar(indice, alternativa);
         // Máquinas diferentes não recebem automaticamente a mesma carga.
-        _seriesPorExercicio[indice] = _seriesPorExercicio[indice]!.map((s) =>
-          s.concluida ? s : SerieRegistroModel(numero: s.numero,
-            cargaRealKg: 0, repeticoesRealizadas: s.repeticoesRealizadas,
-            concluida: false)).toList();
+        _seriesPorExercicio[indice] = _seriesPorExercicio[indice]!
+            .map((s) => s.concluida
+                ? s
+                : SerieRegistroModel(
+                    numero: s.numero,
+                    cargaRealKg: 0,
+                    repeticoesRealizadas: s.repeticoesRealizadas,
+                    concluida: false))
+            .toList();
         _sugestaoSobrecargaAtual = null;
       });
       _salvarRascunho();
       _carregarSugestaoParaExercicioAtual();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Selecionado: ${_execucao.atual(indice).exercicioNome}. Ajuste a carga.'),
-        backgroundColor: const Color(0xFF059669)));
+          content: Text(
+              'Selecionado: ${_execucao.atual(indice).exercicioNome}. Ajuste a carga.'),
+          backgroundColor: const Color(0xFF059669)));
     } catch (e, st) {
       AppLogger.i.error('Falha ao carregar alternativas do exercício: $e', st);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Não foi possível abrir as alternativas. Tente novamente.')));
+            content: Text(
+                'Não foi possível abrir as alternativas. Tente novamente.')));
       }
     }
   }
@@ -248,17 +279,23 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
       for (final entrada in ultimas) {
         final ultima = entrada.value;
         if (ultima == null) continue;
-        final concluidas = ultima.series.where((serie) => serie.concluida).toList();
+        final concluidas =
+            ultima.series.where((serie) => serie.concluida).toList();
         if (concluidas.isEmpty) continue;
-        final porNumero = {for (final serie in concluidas) serie.numero: serie.cargaRealKg};
+        final porNumero = {
+          for (final serie in concluidas) serie.numero: serie.cargaRealKg
+        };
         final cargaPadrao = concluidas.last.cargaRealKg;
-        final atuais = _seriesPorExercicio[entrada.key] ?? const <SerieRegistroModel>[];
-        _seriesPorExercicio[entrada.key] = atuais.map((serie) => SerieRegistroModel(
-          numero: serie.numero,
-          cargaRealKg: porNumero[serie.numero] ?? cargaPadrao,
-          repeticoesRealizadas: serie.repeticoesRealizadas,
-          concluida: serie.concluida,
-        )).toList();
+        final atuais =
+            _seriesPorExercicio[entrada.key] ?? const <SerieRegistroModel>[];
+        _seriesPorExercicio[entrada.key] = atuais
+            .map((serie) => SerieRegistroModel(
+                  numero: serie.numero,
+                  cargaRealKg: porNumero[serie.numero] ?? cargaPadrao,
+                  repeticoesRealizadas: serie.repeticoesRealizadas,
+                  concluida: serie.concluida,
+                ))
+            .toList();
       }
     } catch (e, st) {
       AppLogger.i.error('Falha ao carregar as últimas cargas: $e', st);
@@ -279,7 +316,9 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
         repsPrescritas: repsPrescritas,
         alunoId: widget.alunoId,
       );
-      if (mounted && exAtual.exercicioId == _execucao.atual(_exercicioIndexAtual).exercicioId) {
+      if (mounted &&
+          exAtual.exercicioId ==
+              _execucao.atual(_exercicioIndexAtual).exercicioId) {
         setState(() {
           _sugestaoSobrecargaAtual = sugestao;
           _carregandoSugestao = false;
@@ -301,12 +340,14 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     setState(() {
       final series = _seriesPorExercicio[_exercicioIndexAtual] ?? [];
       _seriesPorExercicio[_exercicioIndexAtual] = series
-          .map((s) => s.concluida ? s : SerieRegistroModel(
-                numero: s.numero,
-                cargaRealKg: novaCarga,
-                repeticoesRealizadas: s.repeticoesRealizadas,
-                concluida: s.concluida,
-              ))
+          .map((s) => s.concluida
+              ? s
+              : SerieRegistroModel(
+                  numero: s.numero,
+                  cargaRealKg: novaCarga,
+                  repeticoesRealizadas: s.repeticoesRealizadas,
+                  concluida: s.concluida,
+                ))
           .toList();
     });
 
@@ -324,33 +365,55 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
 
   void _iniciarCronometroDescanso(int segundos) {
     _descansoTimer?.cancel();
+    _encerramentoDescansoTimer?.cancel();
     HapticFeedback.mediumImpact();
 
     setState(() {
       _descansoTotalSegundos = segundos;
       _descansoRestanteSegundos = segundos;
       _descansoAtivo = true;
+      _descansoFinalizado = false;
     });
 
     _descansoTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_descansoRestanteSegundos > 1) {
-        setState(() => _descansoRestanteSegundos--);
+        final restante = _descansoRestanteSegundos - 1;
+        setState(() => _descansoRestanteSegundos = restante);
+        if (restante == 10 || restante == 5) {
+          _tocarAlertaDescanso();
+        }
       } else {
         timer.cancel();
-        HapticFeedback.heavyImpact();
+        _tocarFimDescanso();
         setState(() {
           _descansoRestanteSegundos = 0;
-          _descansoAtivo = false;
+          _descansoFinalizado = true;
+        });
+        // Deixa o estado de término visível antes de recolher a barra.
+        _encerramentoDescansoTimer = Timer(const Duration(seconds: 2), () {
+          if (mounted) setState(() => _descansoAtivo = false);
         });
       }
     });
   }
 
+  void _tocarAlertaDescanso() {
+    HapticFeedback.selectionClick();
+    SystemSound.play(SystemSoundType.alert);
+  }
+
+  void _tocarFimDescanso() {
+    HapticFeedback.heavyImpact();
+    SystemSound.play(SystemSoundType.alert);
+  }
+
   void _pularDescanso() {
     _descansoTimer?.cancel();
+    _encerramentoDescansoTimer?.cancel();
     setState(() {
       _descansoRestanteSegundos = 0;
       _descansoAtivo = false;
+      _descansoFinalizado = false;
     });
   }
 
@@ -364,6 +427,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
   @override
   void dispose() {
     _descansoTimer?.cancel();
+    _encerramentoDescansoTimer?.cancel();
     TelaAtivaService.liberar();
     super.dispose();
   }
@@ -391,8 +455,10 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     }
 
     if (_restaurando) {
-      return const Scaffold(backgroundColor: Color(0xFF0B1120),
-        body: Center(child: CircularProgressIndicator(color: Color(0xFF10B981))));
+      return const Scaffold(
+          backgroundColor: Color(0xFF0B1120),
+          body: Center(
+              child: CircularProgressIndicator(color: Color(0xFF10B981))));
     }
     final exAtual = _execucao.atual(_exercicioIndexAtual);
     final seriesAtuais = _seriesPorExercicio[_exercicioIndexAtual] ?? [];
@@ -440,8 +506,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
             children: [
               // 1. Barra de Progresso Geral do Treino
               LinearProgressIndicator(
-                value: (_exercicioIndexAtual + 1) /
-                    _biset.exercicios.length,
+                value: (_exercicioIndexAtual + 1) / _biset.exercicios.length,
                 backgroundColor: const Color(0xFF1E293B),
                 color: const Color(0xFF10B981),
                 minHeight: 4,
@@ -488,27 +553,36 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                                 color: Color(0xFF94A3B8), fontSize: 13),
                           ),
                           const SizedBox(height: 8),
-                          if (_biset.parceiros.containsKey(_exercicioIndexAtual))
+                          if (_biset.parceiros
+                              .containsKey(_exercicioIndexAtual))
                             Text(
-                              'BI-SET • ${_biset.segundos.contains(_exercicioIndexAtual) ? "2/2" : "1/2"}\n'
-                              'Par: ${_execucao.atual(_biset.parceiros[_exercicioIndexAtual]!).exercicioNome}\n'
-                              'Faça os dois exercícios em sequência; descanse após o segundo.',
-                              style: const TextStyle(color: Color(0xFF6EE7B7), fontSize: 12)),
+                                'BI-SET • ${_biset.segundos.contains(_exercicioIndexAtual) ? "2/2" : "1/2"}\n'
+                                'Par: ${_execucao.atual(_biset.parceiros[_exercicioIndexAtual]!).exercicioNome}\n'
+                                'Faça os dois exercícios em sequência; descanse após o segundo.',
+                                style: const TextStyle(
+                                    color: Color(0xFF6EE7B7), fontSize: 12)),
                           if (exAtual.observacoes?.isNotEmpty ?? false)
                             Text('Observação: ${exAtual.observacoes}',
-                              style: const TextStyle(color: Colors.white)),
-                          if (_biset.exercicios[_exercicioIndexAtual].exerciciosAlternativos.isNotEmpty)
+                                style: const TextStyle(color: Colors.white)),
+                          if (_biset.exercicios[_exercicioIndexAtual]
+                              .exerciciosAlternativos.isNotEmpty)
                             OutlinedButton.icon(
                               onPressed: _escolherAlternativa,
                               icon: const Icon(Icons.swap_horiz, size: 18),
-                              label: const Text('Máquina ocupada? Trocar exercício'),
+                              label: const Text(
+                                  'Máquina ocupada? Trocar exercício'),
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: const Color(0xFF6EE7B7),
-                                side: const BorderSide(color: Color(0xFF10B981))),
+                                  foregroundColor: const Color(0xFF6EE7B7),
+                                  side: const BorderSide(
+                                      color: Color(0xFF10B981))),
                             ),
-                          if (exAtual.exercicioId != _biset.exercicios[_exercicioIndexAtual].exercicioId)
-                            Text('Alternativa de ${_biset.exercicios[_exercicioIndexAtual].exercicioNome}',
-                              style: const TextStyle(fontSize: 12, color: Color(0xFF6EE7B7))),
+                          if (exAtual.exercicioId !=
+                              _biset
+                                  .exercicios[_exercicioIndexAtual].exercicioId)
+                            Text(
+                                'Alternativa de ${_biset.exercicios[_exercicioIndexAtual].exercicioNome}',
+                                style: const TextStyle(
+                                    fontSize: 12, color: Color(0xFF6EE7B7))),
                           InkWell(
                             onTap: () => _mostrarDemonstracao(
                                 exAtual.exercicioId, exAtual.exercicioNome),
@@ -518,9 +592,11 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.play_circle_fill, color: Color(0xFF3B82F6), size: 18),
+                                  Icon(Icons.play_circle_fill,
+                                      color: Color(0xFF3B82F6), size: 18),
                                   SizedBox(width: 6),
-                                  Flexible(child: Text(
+                                  Flexible(
+                                      child: Text(
                                     'Ver Demonstração e Instruções',
                                     style: TextStyle(
                                       color: Color(0xFF3B82F6),
@@ -617,9 +693,11 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
                         onPressed: () {
-                          final proxima = _biset.proximaSerie(_exercicioIndexAtual, _seriesPorExercicio);
+                          final proxima = _biset.proximaSerie(
+                              _exercicioIndexAtual, _seriesPorExercicio);
                           if (proxima != null) {
-                            setState(() => _exercicioIndexAtual = proxima.indice);
+                            setState(
+                                () => _exercicioIndexAtual = proxima.indice);
                             _salvarRascunho();
                             _carregarSugestaoParaExercicioAtual();
                           } else if (_exercicioIndexAtual <
@@ -632,9 +710,12 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                           }
                         },
                         child: Text(
-                          _biset.proximaSerie(_exercicioIndexAtual, _seriesPorExercicio) != null
+                          _biset.proximaSerie(_exercicioIndexAtual,
+                                      _seriesPorExercicio) !=
+                                  null
                               ? 'Continuar bi-set'
-                              : _exercicioIndexAtual < _biset.exercicios.length - 1
+                              : _exercicioIndexAtual <
+                                      _biset.exercicios.length - 1
                                   ? 'Próximo Exercício'
                                   : 'Concluir Treino',
                           style: const TextStyle(fontWeight: FontWeight.w700),
@@ -651,7 +732,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     );
   }
 
-  Future<void> _mostrarDemonstracao(String exercicioId, String exercicioNome) async {
+  Future<void> _mostrarDemonstracao(
+      String exercicioId, String exercicioNome) async {
     final todosExercicios = await _repository.getExercicios();
     // A ficha pode guardar o ID do servidor, que difere do ID do catálogo do app.
     // Nesse caso o nome identifica o exercício.
@@ -661,7 +743,10 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
       orElse: () => todosExercicios.firstWhere(
         (e) => e.nome.trim().toLowerCase() == nomeNormalizado,
         orElse: () => const task_manager_flutter_models.ExercicioModel(
-          id: '', nome: 'Não encontrado', grupoMuscular: '', instrucoes: 'Sem instruções disponíveis.',
+          id: '',
+          nome: 'Não encontrado',
+          grupoMuscular: '',
+          instrucoes: 'Sem instruções disponíveis.',
         ),
       ),
     );
@@ -718,7 +803,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: ExercicioMidia(
-                        url: exercicio.midiaUrl!, abrirAoExibir: true,
+                        url: exercicio.midiaUrl!,
+                        abrirAoExibir: true,
                       ),
                     )
                   else
@@ -732,35 +818,55 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                       child: const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.ondemand_video, color: Color(0xFF475569), size: 48),
+                          Icon(Icons.ondemand_video,
+                              color: Color(0xFF475569), size: 48),
                           SizedBox(height: 8),
-                          Text('Nenhuma demonstração visual', style: TextStyle(color: Color(0xFF94A3B8))),
+                          Text('Nenhuma demonstração visual',
+                              style: TextStyle(color: Color(0xFF94A3B8))),
                         ],
                       ),
                     ),
                   const SizedBox(height: 24),
-                  const Text('Instruções de Execução', style: TextStyle(color: Color(0xFF3B82F6), fontSize: 16, fontWeight: FontWeight.w700)),
+                  const Text('Instruções de Execução',
+                      style: TextStyle(
+                          color: Color(0xFF3B82F6),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700)),
                   const SizedBox(height: 8),
                   Text(
-                    exercicio.instrucoes.isNotEmpty ? exercicio.instrucoes : 'Não há instruções para este exercício.',
-                    style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
+                    exercicio.instrucoes.isNotEmpty
+                        ? exercicio.instrucoes
+                        : 'Não há instruções para este exercício.',
+                    style: const TextStyle(
+                        color: Colors.white70, fontSize: 14, height: 1.5),
                   ),
                   if (exercicio.descricao.isNotEmpty) ...[
                     const SizedBox(height: 16),
-                    const Text('Passo a Passo', style: TextStyle(color: Color(0xFF3B82F6), fontSize: 16, fontWeight: FontWeight.w700)),
+                    const Text('Passo a Passo',
+                        style: TextStyle(
+                            color: Color(0xFF3B82F6),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700)),
                     const SizedBox(height: 8),
                     Text(
                       exercicio.descricao,
-                      style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
+                      style: const TextStyle(
+                          color: Colors.white70, fontSize: 14, height: 1.5),
                     ),
                   ],
-                  if (exercicio.errosComuns != null && exercicio.errosComuns!.isNotEmpty) ...[
+                  if (exercicio.errosComuns != null &&
+                      exercicio.errosComuns!.isNotEmpty) ...[
                     const SizedBox(height: 16),
-                    const Text('Erros Comuns', style: TextStyle(color: Color(0xFFEF4444), fontSize: 14, fontWeight: FontWeight.w700)),
+                    const Text('Erros Comuns',
+                        style: TextStyle(
+                            color: Color(0xFFEF4444),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700)),
                     const SizedBox(height: 4),
                     Text(
                       exercicio.errosComuns!,
-                      style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
+                      style: const TextStyle(
+                          color: Colors.white70, fontSize: 14, height: 1.5),
                     ),
                   ],
                 ],
@@ -777,7 +883,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     final sugestao = _sugestaoSobrecargaAtual!;
     final temSugestao = sugestao['temSugestao'] == true;
     final motivo = sugestao['motivo']?.toString() ?? '';
-    final cargaSugerida = (sugestao['cargaSugeridaKg'] as num?)?.toDouble() ?? 0.0;
+    final cargaSugerida =
+        (sugestao['cargaSugeridaKg'] as num?)?.toDouble() ?? 0.0;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -788,16 +895,16 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
             : const Color(0xFF1E293B),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: temSugestao
-              ? const Color(0xFF10B981)
-              : const Color(0xFF334155),
+          color:
+              temSugestao ? const Color(0xFF10B981) : const Color(0xFF334155),
         ),
       ),
       child: Row(
         children: [
           Icon(
             temSugestao ? Icons.bolt : Icons.insights,
-            color: temSugestao ? const Color(0xFF34D399) : const Color(0xFF94A3B8),
+            color:
+                temSugestao ? const Color(0xFF34D399) : const Color(0xFF94A3B8),
             size: 22,
           ),
           const SizedBox(width: 10),
@@ -819,7 +926,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                 ),
                 Text(
                   motivo,
-                  style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+                  style:
+                      const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
                 ),
               ],
             ),
@@ -829,14 +937,16 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF10B981),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               onPressed: _aplicarSugestaoSobrecarga,
               child: Text(
                 'Aplicar ${cargaSugerida.toStringAsFixed(1)}kg',
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+                style:
+                    const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
               ),
             ),
         ],
@@ -887,9 +997,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
             height: 28,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: concluida
-                  ? const Color(0xFF10B981)
-                  : const Color(0xFF334155),
+              color:
+                  concluida ? const Color(0xFF10B981) : const Color(0xFF334155),
               shape: BoxShape.circle,
             ),
             child: Text(
@@ -909,10 +1018,14 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (concluida)
-                  Text((_execucao.realizados[ex]?[serieIdx]
-                      ?? _biset.exercicios[ex]).exercicioNome,
-                    maxLines: 2, overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Color(0xFF6EE7B7), fontSize: 10)),
+                  Text(
+                      (_execucao.realizados[ex]?[serieIdx] ??
+                              _biset.exercicios[ex])
+                          .exercicioNome,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          color: Color(0xFF6EE7B7), fontSize: 10)),
                 const Text('Carga (kg)',
                     style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11)),
                 Wrap(
@@ -930,7 +1043,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                     _botaoAjusteSerie(
                       icone: Icons.remove_circle_outline,
                       cor: const Color(0xFF94A3B8),
-                      onTap: () => _ajustarCargaSerie(serieIdx, -1.0, exIdx: ex),
+                      onTap: () =>
+                          _ajustarCargaSerie(serieIdx, -1.0, exIdx: ex),
                     ),
                     const SizedBox(width: 4),
                     _botaoAjusteSerie(
@@ -983,45 +1097,47 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
           // Botão de Check da Série
           InkWell(
             borderRadius: BorderRadius.circular(12),
-            onTap: !concluida && !_podeConcluirSerie(serieIdx, exIdx: ex) ? null : () {
-              final novoEstado = !concluida;
-              setState(() {
-                _seriesPorExercicio[ex]![serieIdx] =
-                    SerieRegistroModel(
-                  numero: serie.numero,
-                  cargaRealKg: serie.cargaRealKg,
-                  repeticoesRealizadas: serie.repeticoesRealizadas,
-                  concluida: novoEstado,
-                );
-              });
+            onTap: !concluida && !_podeConcluirSerie(serieIdx, exIdx: ex)
+                ? null
+                : () {
+                    final novoEstado = !concluida;
+                    setState(() {
+                      _seriesPorExercicio[ex]![serieIdx] = SerieRegistroModel(
+                        numero: serie.numero,
+                        cargaRealKg: serie.cargaRealKg,
+                        repeticoesRealizadas: serie.repeticoesRealizadas,
+                        concluida: novoEstado,
+                      );
+                    });
 
-              _execucao.marcarSerie(ex, serieIdx, novoEstado);
-              _salvarRascunho();
-              if (novoEstado) {
-                final indiceConcluido = ex;
-                if (_biset.parceiros.containsKey(indiceConcluido)) {
-                  final proxima = _biset.proximaSerie(indiceConcluido, _seriesPorExercicio);
-                  if (_biset.segundos.contains(indiceConcluido)) {
-                    final primeiro = _biset.parceiros[indiceConcluido]!;
-                    _iniciarCronometroDescanso(_biset.exercicios[primeiro].descansoSegundos);
-                  } else {
-                    _pularDescanso();
-                  }
-                  if (proxima != null) {
-                    setState(() => _exercicioIndexAtual = proxima.indice);
-                    _carregarSugestaoParaExercicioAtual();
-                  }
-                  _salvarRascunho();
-                } else {
-                  _iniciarCronometroDescanso(descansoPadrao);
-                }
-              }
-            },
+                    _execucao.marcarSerie(ex, serieIdx, novoEstado);
+                    _salvarRascunho();
+                    if (novoEstado) {
+                      final indiceConcluido = ex;
+                      if (_biset.parceiros.containsKey(indiceConcluido)) {
+                        final proxima = _biset.proximaSerie(
+                            indiceConcluido, _seriesPorExercicio);
+                        if (_biset.segundos.contains(indiceConcluido)) {
+                          final primeiro = _biset.parceiros[indiceConcluido]!;
+                          _iniciarCronometroDescanso(
+                              _biset.exercicios[primeiro].descansoSegundos);
+                        } else {
+                          _pularDescanso();
+                        }
+                        if (proxima != null) {
+                          setState(() => _exercicioIndexAtual = proxima.indice);
+                          _carregarSugestaoParaExercicioAtual();
+                        }
+                        _salvarRascunho();
+                      } else {
+                        _iniciarCronometroDescanso(descansoPadrao);
+                      }
+                    }
+                  },
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color:
-                    concluida ? const Color(0xFF10B981) : Colors.transparent,
+                color: concluida ? const Color(0xFF10B981) : Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: concluida
@@ -1048,11 +1164,23 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
         : 0.0;
 
     final retaFinal = _descansoRestanteSegundos <= 10;
+    final corAlerta = _descansoFinalizado
+        ? const Color(0xFFDC2626)
+        : retaFinal
+            ? const Color(0xFFFACC15)
+            : Colors.white;
+    final textoAlerta = _descansoFinalizado
+        ? 'Descanso concluído!'
+        : retaFinal
+            ? 'Últimos segundos!'
+            : 'Intervalo de descanso...';
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F766E), // Teal Dark
+        color: _descansoFinalizado
+            ? const Color(0xFF7F1D1D)
+            : const Color(0xFF0F766E), // Teal Dark
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
@@ -1065,8 +1193,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
       child: Row(
         children: [
           SizedBox(
-            width: retaFinal ? 72 : 36,
-            height: 40,
+            width: retaFinal ? 96 : 36,
+            height: retaFinal ? 56 : 40,
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -1074,28 +1202,30 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                   value: progress,
                   strokeWidth: 3,
                   backgroundColor: Colors.white24,
-                  color: Colors.white,
+                  color: corAlerta,
                 ),
                 AnimatedDefaultTextStyle(
                   duration: const Duration(milliseconds: 180),
                   style: TextStyle(
-                    color: Colors.white,
+                    color: corAlerta,
                     fontWeight: FontWeight.w900,
-                    fontSize: retaFinal ? 24 : 13,
+                    fontSize: retaFinal ? 34 : 13,
                   ),
-                  child: Text('$_descansoRestanteSegundos${retaFinal ? 's' : ''}'),
+                  child:
+                      Text('$_descansoRestanteSegundos${retaFinal ? 's' : ''}'),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 14),
-          const Expanded(
+          Expanded(
             child: Text(
-              'Intervalo de descanso...',
+              textoAlerta,
               style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13),
+                color: corAlerta,
+                fontWeight: FontWeight.w800,
+                fontSize: retaFinal ? 16 : 13,
+              ),
             ),
           ),
           TextButton(
@@ -1116,8 +1246,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     final serie = _seriesPorExercicio[ex]![serieIdx];
     final novaCarga = (serie.cargaRealKg + delta).clamp(0.0, 500.0);
     setState(() {
-      _seriesPorExercicio[ex]![serieIdx] =
-          SerieRegistroModel(
+      _seriesPorExercicio[ex]![serieIdx] = SerieRegistroModel(
         numero: serie.numero,
         cargaRealKg: novaCarga,
         repeticoesRealizadas: serie.repeticoesRealizadas,
@@ -1132,8 +1261,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     final serie = _seriesPorExercicio[ex]![serieIdx];
     final novasReps = (serie.repeticoesRealizadas + delta).clamp(1, 100);
     setState(() {
-      _seriesPorExercicio[ex]![serieIdx] =
-          SerieRegistroModel(
+      _seriesPorExercicio[ex]![serieIdx] = SerieRegistroModel(
         numero: serie.numero,
         cargaRealKg: serie.cargaRealKg,
         repeticoesRealizadas: novasReps,
@@ -1146,12 +1274,14 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
   bool _podeConcluirSerie(int serieIdx, {int? exIdx}) {
     final ex = exIdx ?? _exercicioIndexAtual;
     if (!_biset.parceiros.containsKey(_exercicioIndexAtual)) return true;
-    final proxima = _biset.proximaSerie(_exercicioIndexAtual, _seriesPorExercicio);
+    final proxima =
+        _biset.proximaSerie(_exercicioIndexAtual, _seriesPorExercicio);
     return proxima?.indice == ex && proxima?.serie == serieIdx;
   }
 
   Future<bool> _confirmarConclusaoIncompleta() async {
-    final todas = _seriesPorExercicio.values.expand((series) => series).toList();
+    final todas =
+        _seriesPorExercicio.values.expand((series) => series).toList();
     final pendentes = todas.where((serie) => !serie.concluida).length;
     if (pendentes == 0) return true;
     final exerciciosPendentes = _seriesPorExercicio.values
@@ -1185,7 +1315,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     if (!mounted) return;
     int rpeSelecionado = 7;
     final feedbackCtrl = TextEditingController();
-    final duracaoInicial = DateTime.now().difference(_inicioSessao).inMinutes.clamp(1, 1440);
+    final duracaoInicial =
+        DateTime.now().difference(_inicioSessao).inMinutes.clamp(1, 1440);
     final duracaoCtrl = TextEditingController(text: '$duracaoInicial');
     final scrollCtrl = ScrollController();
     var fotos = <String>[];
@@ -1200,7 +1331,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             final duracaoMinutos =
-                int.tryParse(duracaoCtrl.text.trim())?.clamp(1, 1440) ?? duracaoInicial;
+                int.tryParse(duracaoCtrl.text.trim())?.clamp(1, 1440) ??
+                    duracaoInicial;
 
             // Calcula tonelagem total levantada (Volume Load)
             double tonelagemKg = 0;
@@ -1215,18 +1347,20 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
             });
 
             return AlertDialog(
-              insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               backgroundColor: const Color(0xFF1E293B),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
               title: const Row(
                 children: [
-                  Icon(Icons.emoji_events,
-                      color: Color(0xFFF59E0B), size: 28),
+                  Icon(Icons.emoji_events, color: Color(0xFFF59E0B), size: 28),
                   SizedBox(width: 10),
-                  Expanded(child: Text('Treino Finalizado!',
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.w800))),
+                  Expanded(
+                      child: Text('Treino Finalizado!',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800))),
                 ],
               ),
               content: SizedBox(
@@ -1238,131 +1372,153 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                   child: SingleChildScrollView(
                     controller: scrollCtrl,
                     padding: const EdgeInsets.only(right: 10),
-                    child: Form(key: formKey, child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Excelente sessão! Duração: $duracaoMinutos min • $totalSeriesConcluidas séries concluídas.',
-                      style: const TextStyle(
-                          color: Color(0xFF94A3B8), fontSize: 13),
-                    ),
-                    const SizedBox(height: 12),
+                    child: Form(
+                        key: formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Excelente sessão! Duração: $duracaoMinutos min • $totalSeriesConcluidas séries concluídas.',
+                              style: const TextStyle(
+                                  color: Color(0xFF94A3B8), fontSize: 13),
+                            ),
+                            const SizedBox(height: 12),
 
-                    TextFormField(
-                      controller: duracaoCtrl,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      style: const TextStyle(color: Color(0xFF0F172A)),
-                      decoration: const InputDecoration(
-                        labelText: 'Duração do treino',
-                        hintText: 'Informe o tempo realizado',
-                        suffixText: 'min',
-                        prefixIcon: Icon(Icons.timer_outlined),
-                        filled: true,
-                        fillColor: Colors.white,
-                      ),
-                      validator: (value) {
-                        final minutos = int.tryParse(value?.trim() ?? '');
-                        if (minutos == null || minutos < 1 || minutos > 1440) {
-                          return 'Informe uma duração entre 1 e 1440 minutos.';
-                        }
-                        return null;
-                      },
-                      onChanged: (_) => setDialogState(() {}),
-                    ),
-                    const SizedBox(height: 12),
+                            TextFormField(
+                              controller: duracaoCtrl,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly
+                              ],
+                              style: const TextStyle(color: Color(0xFF0F172A)),
+                              decoration: const InputDecoration(
+                                labelText: 'Duração do treino',
+                                hintText: 'Informe o tempo realizado',
+                                suffixText: 'min',
+                                prefixIcon: Icon(Icons.timer_outlined),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                              validator: (value) {
+                                final minutos =
+                                    int.tryParse(value?.trim() ?? '');
+                                if (minutos == null ||
+                                    minutos < 1 ||
+                                    minutos > 1440) {
+                                  return 'Informe uma duração entre 1 e 1440 minutos.';
+                                }
+                                return null;
+                              },
+                              onChanged: (_) => setDialogState(() {}),
+                            ),
+                            const SizedBox(height: 12),
 
-                    // Card de Métricas de Alta Performance
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0F172A),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFF334155)),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildMiniStat(
-                              'Tonelagem',
-                              '${(tonelagemKg / 1000).toStringAsFixed(1)} ton',
-                              Icons.fitness_center),
-                          _buildMiniStat('Duração', '$duracaoMinutos min',
-                              Icons.timer_outlined),
-                          _buildMiniStat('Séries', '$totalSeriesConcluidas',
-                              Icons.check_circle_outline),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                            // Card de Métricas de Alta Performance
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0F172A),
+                                borderRadius: BorderRadius.circular(14),
+                                border:
+                                    Border.all(color: const Color(0xFF334155)),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  _buildMiniStat(
+                                      'Tonelagem',
+                                      '${(tonelagemKg / 1000).toStringAsFixed(1)} ton',
+                                      Icons.fitness_center),
+                                  _buildMiniStat(
+                                      'Duração',
+                                      '$duracaoMinutos min',
+                                      Icons.timer_outlined),
+                                  _buildMiniStat(
+                                      'Séries',
+                                      '$totalSeriesConcluidas',
+                                      Icons.check_circle_outline),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
 
-                    const Text(
-                      'Percepção de Esforço (RPE 1 a 10):',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13),
-                    ),
-                    Slider(
-                      value: rpeSelecionado.toDouble(),
-                      min: 1,
-                      max: 10,
-                      divisions: 9,
-                      activeColor: const Color(0xFF10B981),
-                      inactiveColor: const Color(0xFF334155),
-                      label: '$rpeSelecionado',
-                      onChanged: (val) {
-                        setDialogState(() => rpeSelecionado = val.toInt());
-                      },
-                    ),
-                    Center(
-                      child: Text(
-                        'RPE $rpeSelecionado (${_descricaoRpe(rpeSelecionado)})',
-                        style: const TextStyle(
-                            color: Color(0xFF10B981),
-                            fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    TextField(
-                      controller: feedbackCtrl,
-                      style: const TextStyle(color: Color(0xFF0F172A)),
-                      maxLines: 3,
-                      minLines: 1,
-                      decoration: const InputDecoration(
-                        labelText: 'Observação sobre o treino (opcional)',
-                        labelStyle: TextStyle(color: Color(0xFF94A3B8)),
-                        hintText:
-                            'Ex: Treino muito bom, apliquei sobrecarga!',
-                        hintStyle: TextStyle(color: Color(0xFF64748B)),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: Colors.white,
-                        borderRadius: BorderRadius.circular(12)),
-                      child: MidiasSessaoTreinoEditor(
-                        fotosBase64: fotos, videosUrls: videos,
-                        onChanged: (novasFotos, novosVideos) {
-                          fotos = novasFotos;
-                          videos = novosVideos;
-                        },
-                      ),
-                    ),
-                    CheckboxListTile(
-                      contentPadding: EdgeInsets.zero,
-                      value: compartilhar,
-                      activeColor: const Color(0xFF10B981),
-                      title: const Text('Compartilhar meu treino com foto',
-                        style: TextStyle(color: Colors.white)),
-                      subtitle: const Text('Opcional: Instagram ou Facebook',
-                        style: TextStyle(color: Color(0xFF94A3B8))),
-                      onChanged: salvando ? null : (v) => setDialogState(() => compartilhar = v ?? false),
-                    ),
-                  ],
-                )),
+                            const Text(
+                              'Percepção de Esforço (RPE 1 a 10):',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13),
+                            ),
+                            Slider(
+                              value: rpeSelecionado.toDouble(),
+                              min: 1,
+                              max: 10,
+                              divisions: 9,
+                              activeColor: const Color(0xFF10B981),
+                              inactiveColor: const Color(0xFF334155),
+                              label: '$rpeSelecionado',
+                              onChanged: (val) {
+                                setDialogState(
+                                    () => rpeSelecionado = val.toInt());
+                              },
+                            ),
+                            Center(
+                              child: Text(
+                                'RPE $rpeSelecionado (${_descricaoRpe(rpeSelecionado)})',
+                                style: const TextStyle(
+                                    color: Color(0xFF10B981),
+                                    fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            TextField(
+                              controller: feedbackCtrl,
+                              style: const TextStyle(color: Color(0xFF0F172A)),
+                              maxLines: 3,
+                              minLines: 1,
+                              decoration: const InputDecoration(
+                                labelText:
+                                    'Observação sobre o treino (opcional)',
+                                labelStyle: TextStyle(color: Color(0xFF94A3B8)),
+                                hintText:
+                                    'Ex: Treino muito bom, apliquei sobrecarga!',
+                                hintStyle: TextStyle(color: Color(0xFF64748B)),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12)),
+                              child: MidiasSessaoTreinoEditor(
+                                fotosBase64: fotos,
+                                videosUrls: videos,
+                                onChanged: (novasFotos, novosVideos) {
+                                  fotos = novasFotos;
+                                  videos = novosVideos;
+                                },
+                              ),
+                            ),
+                            CheckboxListTile(
+                              contentPadding: EdgeInsets.zero,
+                              value: compartilhar,
+                              activeColor: const Color(0xFF10B981),
+                              title: const Text(
+                                  'Compartilhar meu treino com foto',
+                                  style: TextStyle(color: Colors.white)),
+                              subtitle: const Text(
+                                  'Opcional: Instagram ou Facebook',
+                                  style: TextStyle(color: Color(0xFF94A3B8))),
+                              onChanged: salvando
+                                  ? null
+                                  : (v) => setDialogState(
+                                      () => compartilhar = v ?? false),
+                            ),
+                          ],
+                        )),
                   ),
                 ),
               ),
@@ -1379,93 +1535,107 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                   ),
                   icon: const Icon(Icons.check, size: 18),
                   label: Text(salvando ? 'Salvando...' : 'Salvar treino'),
-                  onPressed: salvando ? null : () async {
-                    if (!formKey.currentState!.validate()) return;
-                    final erroMidias = validarMidiasSessaoTreino(fotos, videos);
-                    if (erroMidias != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(erroMidias)));
-                      return;
-                    }
-                    setDialogState(() => salvando = true);
-                    try {
-                    final fimSessao = DateTime.now();
-                    final inicioCorrigido =
-                        fimSessao.subtract(Duration(minutes: duracaoMinutos));
-                    // 1. Gravar sessão no repositório offline
-                    final sessao = SessaoTreinoRegistroModel(
-                      id: 'sessao_${_inicioSessao.microsecondsSinceEpoch}_${widget.divisao.id}',
-                      treinoId: widget.planoId,
-                      divisaoLetra: widget.divisao.letra,
-                      divisaoNome: widget.divisao.nome,
-                      alunoId: widget.alunoId,
-                      dataHoraInicio: inicioCorrigido.toIso8601String(),
-                      dataHoraFim: fimSessao.toIso8601String(),
-                      duracaoSegundos: duracaoMinutos * 60,
-                      rpe: rpeSelecionado,
-                      feedbackAluno: feedbackCtrl.text.trim().isNotEmpty
-                          ? feedbackCtrl.text.trim()
-                          : null,
-                      sincronizado: false,
-                      fotosBase64: fotos, videosUrls: videos,
-                      exerciciosExecutados: _execucao.historico(_seriesPorExercicio),
-                    );
+                  onPressed: salvando
+                      ? null
+                      : () async {
+                          if (!formKey.currentState!.validate()) return;
+                          final erroMidias =
+                              validarMidiasSessaoTreino(fotos, videos);
+                          if (erroMidias != null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(erroMidias)));
+                            return;
+                          }
+                          setDialogState(() => salvando = true);
+                          try {
+                            final fimSessao = DateTime.now();
+                            final inicioCorrigido = fimSessao
+                                .subtract(Duration(minutes: duracaoMinutos));
+                            // 1. Gravar sessão no repositório offline
+                            final sessao = SessaoTreinoRegistroModel(
+                              id: 'sessao_${_inicioSessao.microsecondsSinceEpoch}_${widget.divisao.id}',
+                              treinoId: widget.planoId,
+                              divisaoLetra: widget.divisao.letra,
+                              divisaoNome: widget.divisao.nome,
+                              alunoId: widget.alunoId,
+                              dataHoraInicio: inicioCorrigido.toIso8601String(),
+                              dataHoraFim: fimSessao.toIso8601String(),
+                              duracaoSegundos: duracaoMinutos * 60,
+                              rpe: rpeSelecionado,
+                              feedbackAluno: feedbackCtrl.text.trim().isNotEmpty
+                                  ? feedbackCtrl.text.trim()
+                                  : null,
+                              sincronizado: false,
+                              fotosBase64: fotos,
+                              videosUrls: videos,
+                              exerciciosExecutados:
+                                  _execucao.historico(_seriesPorExercicio),
+                            );
 
-                    final salvas = await _repository.getSessoesConcluidas(
-                        alunoId: widget.alunoId);
-                    // Uma tentativa após falha de limpeza não duplica a sessão.
-                    if (!salvas.any((s) => s.id == sessao.id)) {
-                      await _repository.registrarSessaoConcluida(sessao);
-                    }
-                    _concluido = true;
-                    await _filaRascunho;
-                    try {
-                      final prefs = await SharedPreferences.getInstance();
-                      if (!await prefs.remove(_chaveRascunho)) {
-                        throw StateError('Rascunho não removido.');
-                      }
-                    } catch (e, st) {
-                      // A sessão já está salva; não apresentar falha de conclusão.
-                      AppLogger.i.error('Treino salvo, mas falhou a limpeza do rascunho: $e', st);
-                    }
-                    final streak =
-                        await _repository.calcularStreakDias(alunoId: widget.alunoId);
+                            final salvas = await _repository
+                                .getSessoesConcluidas(alunoId: widget.alunoId);
+                            // Uma tentativa após falha de limpeza não duplica a sessão.
+                            if (!salvas.any((s) => s.id == sessao.id)) {
+                              await _repository
+                                  .registrarSessaoConcluida(sessao);
+                            }
+                            _concluido = true;
+                            await _filaRascunho;
+                            try {
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              if (!await prefs.remove(_chaveRascunho)) {
+                                throw StateError('Rascunho não removido.');
+                              }
+                            } catch (e, st) {
+                              // A sessão já está salva; não apresentar falha de conclusão.
+                              AppLogger.i.error(
+                                  'Treino salvo, mas falhou a limpeza do rascunho: $e',
+                                  st);
+                            }
+                            final streak = await _repository.calcularStreakDias(
+                                alunoId: widget.alunoId);
 
-                    // 2. Disparar notificação de meta batida
-                    await _pushService.notificarMetaBatida(
-                      streakDias: streak,
-                      tonelagemKg: tonelagemKg,
-                    );
+                            // 2. Disparar notificação de meta batida
+                            await _pushService.notificarMetaBatida(
+                              streakDias: streak,
+                              tonelagemKg: tonelagemKg,
+                            );
 
-                    if (!context.mounted || !mounted) return;
-                    Navigator.pop(context); // Fecha dialog
-                    if (!compartilhar) {
-                      ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(
-                        backgroundColor: Color(0xFF10B981),
-                        content: Text('Treino salvo no histórico.', style: TextStyle(color: Colors.white)),
-                      ));
-                      Navigator.of(this.context).pop(true);
-                      return;
-                    }
+                            if (!context.mounted || !mounted) return;
+                            Navigator.pop(context); // Fecha dialog
+                            if (!compartilhar) {
+                              ScaffoldMessenger.of(this.context)
+                                  .showSnackBar(const SnackBar(
+                                backgroundColor: Color(0xFF10B981),
+                                content: Text('Treino salvo no histórico.',
+                                    style: TextStyle(color: Colors.white)),
+                              ));
+                              Navigator.of(this.context).pop(true);
+                              return;
+                            }
 
-                    // 3. Exibir Card Visual Stories / Strava para compartilhamento
-                    _exibirModalStoriesCompartilhamento(
-                      sessao: sessao,
-                      duracaoMinutos: duracaoMinutos,
-                      tonelagemKg: tonelagemKg,
-                      totalSeries: totalSeriesConcluidas,
-                      streakDias: streak,
-                      rpe: rpeSelecionado,
-                    );
-                    } catch (error, stack) {
-                      AppLogger.i.error('Falha ao salvar conclusão do treino.', stack);
-                      if (context.mounted) {
-                        setDialogState(() => salvando = false);
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('Não foi possível finalizar o treino. Tente novamente.')));
-                      }
-                    }
-                  },
+                            // 3. Exibir Card Visual Stories / Strava para compartilhamento
+                            _exibirModalStoriesCompartilhamento(
+                              sessao: sessao,
+                              duracaoMinutos: duracaoMinutos,
+                              tonelagemKg: tonelagemKg,
+                              totalSeries: totalSeriesConcluidas,
+                              streakDias: streak,
+                              rpe: rpeSelecionado,
+                            );
+                          } catch (error, stack) {
+                            AppLogger.i.error(
+                                'Falha ao salvar conclusão do treino.', stack);
+                            if (context.mounted) {
+                              setDialogState(() => salvando = false);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text(
+                                          'Não foi possível finalizar o treino. Tente novamente.')));
+                            }
+                          }
+                        },
                 ),
               ],
             );
@@ -1512,12 +1682,14 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
         height: MediaQuery.sizeOf(sheetContext).height * 0.9,
         child: CompartilharTreinoSheet(
           treino: 'Treino ${widget.divisao.letra} - ${widget.divisao.nome}',
-          minutos: duracaoMinutos, tonelagemKg: tonelagemKg,
-          series: totalSeries, rpe: rpe,
+          minutos: duracaoMinutos,
+          tonelagemKg: tonelagemKg,
+          series: totalSeries,
+          rpe: rpe,
           fotosIniciais: sessao.fotosBase64,
           onFotosAlteradas: (fotos) async {
             await _repository.atualizarSessaoMidias(sessao.id,
-              fotosBase64: fotos, videosUrls: sessao.videosDoTreino);
+                fotosBase64: fotos, videosUrls: sessao.videosDoTreino);
           },
           onFechar: () {
             Navigator.pop(sheetContext);
