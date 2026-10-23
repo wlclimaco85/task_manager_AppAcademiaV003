@@ -39,6 +39,12 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
   int _notificacoesNaoLidas = 0;
   Timer? _atualizadorConta;
   bool _dialogPermissoesAberto = false;
+  bool? _conexaoOnline;
+
+  void _definirConexao(bool online) {
+    if (!mounted || _conexaoOnline == online) return;
+    setState(() => _conexaoOnline = online);
+  }
 
   String? _textoPerfil(Map<String, dynamic>? perfil, List<String> chaves) {
     if (perfil == null) return null;
@@ -100,9 +106,13 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
     if (_sessaoCarregada == chave) return;
     _sessaoCarregada = chave;
     PushRegistrationService().sincronizar();
-    PerfilContaService()
-        .carregar()
-        .catchError((Object _) => <String, dynamic>{});
+    PerfilContaService().carregar().then((_) {
+      _definirConexao(true);
+      return <String, dynamic>{};
+    }).catchError((Object _) {
+      _definirConexao(false);
+      return <String, dynamic>{};
+    });
     _verificarPermissoesAluno();
     _carregarIndicadores(chave);
   }
@@ -289,6 +299,7 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
                               'nomePersonal',
                               'personal_name',
                             ]),
+                            minhaConexaoOnline: _conexaoOnline,
                             personalOnline: _boolPerfil(perfilConta, const [
                               'personalOnline',
                               'personalEstaOnline',

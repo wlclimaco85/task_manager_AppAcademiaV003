@@ -13,6 +13,7 @@ class PerfilFitnessHeader extends StatelessWidget {
   final int notificacoesNaoLidas;
   final String? nomePersonal;
   final bool? personalOnline;
+  final bool? minhaConexaoOnline;
   final String? ultimoTreino;
   final DateTime? dataUltimoTreino;
   final VoidCallback? onEditar;
@@ -28,6 +29,7 @@ class PerfilFitnessHeader extends StatelessWidget {
     this.notificacoesNaoLidas = 0,
     this.nomePersonal,
     this.personalOnline,
+    this.minhaConexaoOnline,
     this.ultimoTreino,
     this.dataUltimoTreino,
     this.onEditar,
@@ -266,27 +268,34 @@ class PerfilFitnessHeader extends StatelessWidget {
                                       color: context.appText),
                                 ),
                               ),
-                              if (personalOnline != null) ...[
-                                const SizedBox(width: 7),
-                                Container(
-                                  width: 7,
-                                  height: 7,
-                                  decoration: BoxDecoration(
-                                    color: personalOnline!
-                                        ? GridColors.primary
-                                        : textoSecundario,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(personalOnline! ? 'Online' : 'Offline',
-                                    style: TextStyle(
-                                        fontSize: 10, color: textoSecundario)),
-                              ],
                             ],
                           ),
-                        if (_temUltimoTreino) ...[
+                        if (minhaConexaoOnline != null) ...[
                           if (_temPersonal) const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              Container(
+                                width: 7,
+                                height: 7,
+                                decoration: BoxDecoration(
+                                  color: minhaConexaoOnline!
+                                      ? GridColors.primary
+                                      : textoSecundario,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                  minhaConexaoOnline!
+                                      ? 'Você: Online'
+                                      : 'Você: Offline',
+                                  style: TextStyle(
+                                      fontSize: 11, color: textoSecundario)),
+                            ],
+                          ),
+                        ],
+                        if (_temUltimoTreino) ...[
+                          const SizedBox(height: 3),
                           Text(
                             'Último treino: ${ultimoTreino!.trim()}${dataUltimoTreino == null ? '' : ' · ${_dataFormatada(dataUltimoTreino!)}'}',
                             maxLines: 1,
