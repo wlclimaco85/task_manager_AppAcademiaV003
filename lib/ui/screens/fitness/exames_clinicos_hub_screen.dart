@@ -505,6 +505,13 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
       setModalState(() {
         pdfEscolhido = arquivo;
         itensLidos = itens;
+        // A data do exame passa a ser a data da coleta lida do laudo (nao a data de hoje).
+        for (final item in itens) {
+          if (item.dataExame != null) {
+            dataController.text = item.dataExame!;
+            break;
+          }
+        }
         avisoLeitura = itens.isEmpty
             ? 'Não encontrei o hemograma neste PDF.'
             : '${itens.length} itens lidos: '
