@@ -483,13 +483,21 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
         });
         return;
       }
+      // Le pagina por pagina: posicoes verticais se repetem entre paginas e misturariam os exames.
+      // So processa paginas do hemograma (cabecalho HEMOGRAMA).
       final documento = PdfDocument(inputBytes: bytes);
-      final pedacos = [
-        for (final linha in PdfTextExtractor(documento).extractTextLines())
-          (y: linha.bounds.top, x: linha.bounds.left, texto: linha.text),
-      ];
+      final itens = <ExameItemLido>[];
+      for (var pagina = 0; pagina < documento.pages.count; pagina++) {
+        final pedacos = [
+          for (final linha in PdfTextExtractor(documento)
+              .extractTextLines(startPageIndex: pagina, endPageIndex: pagina))
+            (y: linha.bounds.top, x: linha.bounds.left, texto: linha.text),
+        ];
+        final linhas = ExameLaudoParser.montarLinhas(pedacos);
+        if (!linhas.any((l) => l.contains('HEMOGRAMA'))) continue;
+        itens.addAll(ExameLaudoParser.lerHemograma(linhas));
+      }
       documento.dispose();
-      final itens = ExameLaudoParser.lerHemograma(ExameLaudoParser.montarLinhas(pedacos));
       final porGrupo = <String, int>{};
       for (final item in itens) {
         porGrupo[item.grupo] = (porGrupo[item.grupo] ?? 0) + 1;
