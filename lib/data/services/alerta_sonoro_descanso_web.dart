@@ -2,9 +2,12 @@
 
 import 'dart:js';
 
+import 'package:task_manager_flutter/data/utils/app_logger.dart';
+
 /// Sintetiza o bip no navegador sem depender do som do sistema operacional.
 class AlertaSonoroDescanso {
   static JsObject? _contexto;
+  static bool _falhaRegistrada = false;
 
   static void proximo() => _tocar(frequencia: 660, duracao: .16);
 
@@ -34,6 +37,10 @@ class AlertaSonoroDescanso {
       ganho.callMethod('connect', [contexto['destination']]);
     } catch (_) {
       // Alguns navegadores bloqueiam áudio até a primeira interação do usuário.
+      if (!_falhaRegistrada) {
+        _falhaRegistrada = true;
+        AppLogger.i.warn('O navegador bloqueou o alerta sonoro do descanso.');
+      }
     }
   }
 
