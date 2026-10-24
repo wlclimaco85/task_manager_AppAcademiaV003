@@ -81,6 +81,23 @@ void main() {
     expect(itens.single.status, 'verde');
   });
 
+  test('medica e laboratorio: convenio com laboratorio e unidade sem laboratorio', () {
+    final lamel = [
+      'Médico : ANA FLAVIA BOSCO SOUZA                              Atendimento : 24/10/2023 - 07:41',
+      'Convênio: UNIMED EXTERNO - LABORATORIO LAMEL - RDA 120009    Qtd. de exames : 25',
+    ];
+    expect(ExameLaudoParser.medicoDoLaudo(lamel), 'Ana Flavia Bosco Souza');
+    expect(ExameLaudoParser.laboratorioDoLaudo(lamel), 'Laboratório Lamel');
+
+    final desterro = [
+      'Médico : GEORGE HENRIQUE CALAPODOPULOS                     Atendimento : 17/10/2026 - 07:40',
+      'Convênio: UNIMED EXTERNO - CNPJ NOVO - RDA 120113          Qtd. de exames : 39',
+      'Unidade : NOSSA SENHORA DO DESTERRO- CNES 8469741          Página  : 1/37',
+    ];
+    expect(ExameLaudoParser.medicoDoLaudo(desterro), 'George Henrique Calapodopulos');
+    expect(ExameLaudoParser.laboratorioDoLaudo(desterro), 'Nossa Senhora do Desterro');
+  });
+
   test('observacao com ponto unico nao vira item', () {
     final itens = ExameLaudoParser.lerHemograma(linhas);
     expect(itens.where((e) => e.nome.contains('anisocitose')), isEmpty);

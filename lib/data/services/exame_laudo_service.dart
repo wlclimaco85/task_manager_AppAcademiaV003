@@ -23,6 +23,8 @@ class ExameLaudoService {
     required String nomeArquivo,
     required String pdfBase64,
     required List<Map<String, dynamic>> itens,
+    String? medico,
+    String? laboratorio,
   }) async {
     final resposta = await http
         .post(
@@ -33,6 +35,8 @@ class ExameLaudoService {
             'nomeArquivo': nomeArquivo,
             'pdfBase64': pdfBase64,
             'itens': itens,
+            'medico': medico,
+            'laboratorio': laboratorio,
           }),
         )
         .timeout(_tempoLimite);

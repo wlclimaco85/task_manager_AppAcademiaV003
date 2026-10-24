@@ -487,6 +487,8 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
       // So processa paginas do hemograma (cabecalho HEMOGRAMA).
       final documento = PdfDocument(inputBytes: bytes);
       final itens = <ExameItemLido>[];
+      String? medicoLido;
+      String? laboratorioLido;
       for (var pagina = 0; pagina < documento.pages.count; pagina++) {
         final pedacos = [
           for (final linha in PdfTextExtractor(documento)
@@ -496,6 +498,8 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
         final linhas = ExameLaudoParser.montarLinhas(pedacos);
         if (!linhas.any((l) => l.contains('HEMOGRAMA'))) continue;
         itens.addAll(ExameLaudoParser.lerHemograma(linhas));
+        medicoLido ??= ExameLaudoParser.medicoDoLaudo(linhas);
+        laboratorioLido ??= ExameLaudoParser.laboratorioDoLaudo(linhas);
       }
       documento.dispose();
       final porGrupo = <String, int>{};
@@ -512,6 +516,9 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
             break;
           }
         }
+        // Medica e laboratorio lidos do cabecalho do laudo.
+        if (medicoLido != null) medicoController.text = medicoLido;
+        if (laboratorioLido != null) labController.text = laboratorioLido;
         avisoLeitura = itens.isEmpty
             ? 'Não encontrei o hemograma neste PDF.'
             : '${itens.length} itens lidos: '
@@ -706,6 +713,8 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                             dataExame: dataController.text.trim(),
                             nomeArquivo: pdf.name,
                             pdfBase64: base64Encode(pdf.bytes!),
+                            medico: medicoController.text.trim(),
+                            laboratorio: labController.text.trim(),
                             itens: [
                               for (final item in itensLidos)
                                 {

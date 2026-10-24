@@ -45,6 +45,45 @@ class ExameLaudoParser {
     return double.tryParse(limpo);
   }
 
+  static final _regexMedico = RegExp(r'M[ée]dico\s*:\s*(.+?)\s{2,}');
+  static final _regexLaboratorioConvenio = RegExp(r'LABORATORIO\s+(.+?)\s*-\s*RDA', caseSensitive: false);
+  static final _regexUnidade = RegExp(r'Unidade\s*:\s*(.+?)\s*-\s*CNES', caseSensitive: false);
+
+  /// Nome da medica solicitante, a partir da linha "Medico : NOME  Atendimento : ...".
+  static String? medicoDoLaudo(List<String> linhas) {
+    for (final linha in linhas) {
+      final m = _regexMedico.firstMatch(linha);
+      if (m != null) return _titulo(m.group(1)!);
+    }
+    return null;
+  }
+
+  /// Laboratorio: o nome que aparece no convenio ("LABORATORIO LAMEL"); senao, o nome da unidade.
+  static String? laboratorioDoLaudo(List<String> linhas) {
+    for (final linha in linhas) {
+      final m = _regexLaboratorioConvenio.firstMatch(linha);
+      if (m != null) return 'Laboratório ${_titulo(m.group(1)!)}';
+    }
+    for (final linha in linhas) {
+      final m = _regexUnidade.firstMatch(linha);
+      if (m != null) return _titulo(m.group(1)!);
+    }
+    return null;
+  }
+
+  /// "ANA FLAVIA BOSCO SOUZA" -> "Ana Flavia Bosco Souza".
+  static const _preposicoes = {'de', 'do', 'da', 'dos', 'das', 'e'};
+
+  static String _titulo(String texto) {
+    final palavras = texto.trim().toLowerCase().split(RegExp(r'\s+'));
+    return [
+      for (var i = 0; i < palavras.length; i++)
+        (i > 0 && _preposicoes.contains(palavras[i]))
+            ? palavras[i]
+            : (palavras[i].isEmpty ? palavras[i] : palavras[i][0].toUpperCase() + palavras[i].substring(1)),
+    ].join(' ');
+  }
+
   /// Data da coleta no formato yyyy-MM-dd, a partir da primeira linha "Coleta:" a partir de [inicio].
   static String? dataColeta(List<String> linhas, int inicio) {
     for (var i = inicio; i < linhas.length; i++) {
