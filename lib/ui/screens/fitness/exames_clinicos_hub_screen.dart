@@ -484,23 +484,25 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
         return;
       }
       final documento = PdfDocument(inputBytes: bytes);
-      final texto = PdfTextExtractor(documento).extractText(layoutText: true);
+      final pedacos = [
+        for (final linha in PdfTextExtractor(documento).extractTextLines())
+          (y: linha.bounds.top, x: linha.bounds.left, texto: linha.text),
+      ];
       documento.dispose();
-      final linhas = texto.split('\n');
-      final inicio = linhas.indexWhere((l) => l.contains('Eritrograma'));
-      final fim = inicio < 0
-          ? -1
-          : linhas.indexWhere((l) => l.contains('Leucograma') || l.contains('Plaquet'), inicio + 1);
-      final secao = inicio < 0
-          ? <String>[]
-          : linhas.sublist(inicio, fim < 0 ? linhas.length : fim);
-      final itens = ExameLaudoParser.lerSecao(secao);
+      final itens = ExameLaudoParser.lerHemograma(ExameLaudoParser.montarLinhas(pedacos));
+      final porGrupo = <String, int>{};
+      for (final item in itens) {
+        porGrupo[item.grupo] = (porGrupo[item.grupo] ?? 0) + 1;
+      }
       setModalState(() {
         pdfEscolhido = arquivo;
         itensLidos = itens;
         avisoLeitura = itens.isEmpty
-            ? 'Não encontrei o eritrograma neste PDF.'
-            : '${itens.length} itens lidos do eritrograma. Leucograma e plaquetas ainda não são lidos automaticamente.';
+            ? 'Não encontrei o hemograma neste PDF.'
+            : '${itens.length} itens lidos: '
+                '${porGrupo['Eritrograma'] ?? 0} eritrograma, '
+                '${porGrupo['Leucograma'] ?? 0} leucograma, '
+                '${porGrupo['Plaquetas'] ?? 0} plaquetas.';
       });
     }
 
@@ -692,12 +694,13 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                             itens: [
                               for (final item in itensLidos)
                                 {
-                                  'grupo': 'Eritrograma',
+                                  'grupo': item.grupo,
                                   'nome': item.nome,
                                   'valor': item.valor,
                                   'unidade': item.unidade,
                                   'refMin': item.refMin,
                                   'refMax': item.refMax,
+                                  'dataExame': item.dataExame,
                                 },
                             ],
                           );

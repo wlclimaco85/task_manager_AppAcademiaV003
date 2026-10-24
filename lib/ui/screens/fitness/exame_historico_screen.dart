@@ -144,7 +144,8 @@ class _CartaoSerie extends StatelessWidget {
               height: 170,
               child: LineChart(
                 LineChartData(
-                  minY: minY - folga,
+                  // Valores nunca negativos: a margem nao deve mostrar eixo abaixo de zero.
+                  minY: minY >= 0 ? (minY - folga).clamp(0, double.infinity).toDouble() : minY - folga,
                   maxY: maxY + folga,
                   minX: -0.3,
                   maxX: (pontos.length - 1).toDouble() + 0.3,
