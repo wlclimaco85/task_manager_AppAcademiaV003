@@ -509,6 +509,8 @@ class ApiLinks {
   // Saúde / Fitness (Home Saúde)
   static String get fitnessResumo => '$_baseUrlNew/api/fitness/resumo';
   static String get fitnessHistorico => '$_baseUrlNew/api/fitness/historico';
+  static String get fitnessExameLaudos => '$_baseUrlNew/api/fitness/exames-laudos';
+  static String get fitnessExameLaudosSeries => '$_baseUrlNew/api/fitness/exames-laudos/series';
   static String get exerciciosUsuario => '$_baseUrlNew/api/exercicios/usuario';
   static String get fitnessMedidas => '$_baseUrlNew/api/fitness/medidas';
   static String get fitnessExames => '$_baseUrlNew/api/fitness/exames';

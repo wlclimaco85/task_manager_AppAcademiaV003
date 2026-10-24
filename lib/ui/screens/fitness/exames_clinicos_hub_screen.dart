@@ -1,5 +1,12 @@
+import 'dart:convert';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
+import 'package:task_manager_flutter/data/services/exame_laudo_service.dart';
+import 'package:task_manager_flutter/data/utils/exame_pdf_parser.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/exame_historico_screen.dart';
 import 'package:task_manager_flutter/data/models/fitness/exame_registro_model.dart';
 import 'package:task_manager_flutter/data/services/exames_offline_repository.dart';
 import 'package:task_manager_flutter/ui/screens/pdf_preview_dialog.dart';
@@ -79,6 +86,13 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: 'Gráficos por item',
+            icon: Icon(Icons.show_chart, color: GridColors.textSecondary),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ExameHistoricoScreen()),
+            ),
+          ),
           IconButton(
             icon: Icon(Icons.refresh, color: GridColors.textSecondary),
             onPressed: _carregarExames,
@@ -447,6 +461,48 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
         text: 'Dr. Roberto Endocrinologista');
     final resultadosController = TextEditingController();
     CategoriaExame categoriaSelecionada = CategoriaExame.hormonal;
+    PlatformFile? pdfEscolhido;
+    List<ExameItemLido> itensLidos = [];
+    String? avisoLeitura;
+
+    /// Escolhe o PDF do aparelho e le o eritrograma do texto do laudo.
+    Future<void> escolherPdf(void Function(void Function()) setModalState) async {
+      final resultado = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['pdf'],
+        withData: true,
+      );
+      final arquivo = resultado?.files.single;
+      final bytes = arquivo?.bytes;
+      if (arquivo == null || bytes == null) return;
+      if (bytes.length > 5 * 1024 * 1024) {
+        setModalState(() {
+          pdfEscolhido = null;
+          itensLidos = [];
+          avisoLeitura = 'O PDF deve ter até 5 MB.';
+        });
+        return;
+      }
+      final documento = PdfDocument(inputBytes: bytes);
+      final texto = PdfTextExtractor(documento).extractText(layoutText: true);
+      documento.dispose();
+      final linhas = texto.split('\n');
+      final inicio = linhas.indexWhere((l) => l.contains('Eritrograma'));
+      final fim = inicio < 0
+          ? -1
+          : linhas.indexWhere((l) => l.contains('Leucograma') || l.contains('Plaquet'), inicio + 1);
+      final secao = inicio < 0
+          ? <String>[]
+          : linhas.sublist(inicio, fim < 0 ? linhas.length : fim);
+      final itens = ExameLaudoParser.lerSecao(secao);
+      setModalState(() {
+        pdfEscolhido = arquivo;
+        itensLidos = itens;
+        avisoLeitura = itens.isEmpty
+            ? 'Não encontrei o eritrograma neste PDF.'
+            : '${itens.length} itens lidos do eritrograma. Leucograma e plaquetas ainda não são lidos automaticamente.';
+      });
+    }
 
     showModalBottomSheet(
       context: context,
@@ -582,7 +638,9 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Anexo: laudo_laboratorial.pdf (1.2 MB)',
+                          pdfEscolhido == null
+                              ? 'Nenhum PDF escolhido'
+                              : 'Anexo: ${pdfEscolhido!.name}',
                           style: TextStyle(
                             color: GridColors.textSecondary,
                             fontSize: 12,
@@ -590,8 +648,8 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                         ),
                       ),
                       TextButton(
-                        onPressed: () {},
-                        child: Text('Alterar',
+                        onPressed: () => escolherPdf(setModalState),
+                        child: Text(pdfEscolhido == null ? 'Escolher PDF' : 'Alterar',
                             style: TextStyle(
                                 color: CustomColors.primaryGreen,
                                 fontSize: 12)),
@@ -599,6 +657,12 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                     ],
                   ),
                 ),
+                if (avisoLeitura != null) ...[
+                  const SizedBox(height: 8),
+                  Text(avisoLeitura!,
+                      style: TextStyle(
+                          color: GridColors.textSecondary, fontSize: 12)),
+                ],
                 const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
@@ -618,8 +682,35 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                             resultadosController.text.trim(),
                         nomeArquivoPdf: 'laudo_${DateTime.now().millisecondsSinceEpoch}.pdf',
                       );
+                      final pdf = pdfEscolhido;
+                      if (pdf != null && pdf.bytes != null) {
+                        try {
+                          await ExameLaudoService().enviar(
+                            dataExame: dataController.text.trim(),
+                            nomeArquivo: pdf.name,
+                            pdfBase64: base64Encode(pdf.bytes!),
+                            itens: [
+                              for (final item in itensLidos)
+                                {
+                                  'grupo': 'Eritrograma',
+                                  'nome': item.nome,
+                                  'valor': item.valor,
+                                  'unidade': item.unidade,
+                                  'refMin': item.refMin,
+                                  'refMax': item.refMax,
+                                },
+                            ],
+                          );
+                        } on StateError catch (e) {
+                          if (ctx.mounted) {
+                            ScaffoldMessenger.of(ctx).showSnackBar(
+                                SnackBar(content: Text(e.message.toString())));
+                          }
+                          return;
+                        }
+                      }
                       await _repo.salvarExame(novo);
-                      Navigator.pop(ctx);
+                      if (ctx.mounted) Navigator.pop(ctx);
                       _carregarExames();
                     },
                     style: ElevatedButton.styleFrom(
