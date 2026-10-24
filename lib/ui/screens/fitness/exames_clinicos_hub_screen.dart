@@ -519,13 +519,14 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
         // Medica e laboratorio lidos do cabecalho do laudo.
         if (medicoLido != null) medicoController.text = medicoLido;
         if (laboratorioLido != null) labController.text = laboratorioLido;
-        // Titulo sugerido: medica e data da coleta, so se o usuario ainda nao digitou um.
-        final medicoTxt = medicoController.text.trim();
-        final dataTxt = dataController.text.trim();
-        if (tituloController.text.trim().isEmpty && medicoTxt.isNotEmpty) {
-          final partes = dataTxt.split('-');
-          final dataBr = partes.length == 3 ? '${partes[2]}/${partes[1]}/${partes[0]}' : dataTxt;
-          tituloController.text = '$medicoTxt - $dataBr';
+        // Titulo sugerido: medica lida do laudo + data da coleta, so se o usuario ainda nao digitou um.
+        // Nao usa o nome de exemplo pre-preenchido: so medico efetivamente lido do PDF.
+        if (tituloController.text.trim().isEmpty && medicoLido != null) {
+          final partes = dataController.text.trim().split('-');
+          final dataBr = partes.length == 3
+              ? '${partes[2]}/${partes[1]}/${partes[0]}'
+              : dataController.text.trim();
+          tituloController.text = '$medicoLido - $dataBr';
         }
         avisoLeitura = itens.isEmpty
             ? 'Não encontrei o hemograma neste PDF.'
