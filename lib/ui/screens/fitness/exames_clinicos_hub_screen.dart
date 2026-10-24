@@ -519,6 +519,14 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
         // Medica e laboratorio lidos do cabecalho do laudo.
         if (medicoLido != null) medicoController.text = medicoLido;
         if (laboratorioLido != null) labController.text = laboratorioLido;
+        // Titulo sugerido: medica e data da coleta, so se o usuario ainda nao digitou um.
+        final medicoTxt = medicoController.text.trim();
+        final dataTxt = dataController.text.trim();
+        if (tituloController.text.trim().isEmpty && medicoTxt.isNotEmpty) {
+          final partes = dataTxt.split('-');
+          final dataBr = partes.length == 3 ? '${partes[2]}/${partes[1]}/${partes[0]}' : dataTxt;
+          tituloController.text = '$medicoTxt - $dataBr';
+        }
         avisoLeitura = itens.isEmpty
             ? 'Não encontrei o hemograma neste PDF.'
             : '${itens.length} itens lidos: '
@@ -692,7 +700,11 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () async {
-                      if (tituloController.text.trim().isEmpty) return;
+                      if (tituloController.text.trim().isEmpty) {
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                            const SnackBar(content: Text('Informe o título do exame.')));
+                        return;
+                      }
                       final novo = ExameRegistroModel(
                         id: 'exame-${DateTime.now().millisecondsSinceEpoch}',
                         alunoId: widget.alunoIdFiltro ?? 'aluno-1',
