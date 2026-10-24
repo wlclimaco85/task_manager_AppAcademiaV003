@@ -5,6 +5,14 @@ import 'package:task_manager_flutter/data/models/auth_utility.dart';
 import 'package:task_manager_flutter/data/utils/api_links.dart';
 import 'package:task_manager_flutter/data/utils/tenant_context.dart';
 
+/// Resultado do envio: id do laudo salvo e os laudos anteriores que ele substituiu (mesmo PDF).
+class LaudoEnviado {
+  final int? id;
+  final List<int> substituidos;
+
+  const LaudoEnviado(this.id, this.substituidos);
+}
+
 /// Envia laudos (PDF + itens lidos no app) e le o historico por item.
 class ExameLaudoService {
   static const Duration _tempoLimite = Duration(seconds: 60);
@@ -18,7 +26,7 @@ class ExameLaudoService {
   }
 
   /// Grava o laudo: [pdfBase64] e os itens ja lidos no app (valor, referencia, cor).
-  Future<int?> enviar({
+  Future<LaudoEnviado> enviar({
     required String dataExame,
     required String nomeArquivo,
     required String pdfBase64,
@@ -44,7 +52,20 @@ class ExameLaudoService {
       throw StateError(_mensagemErro(resposta.statusCode, resposta.body));
     }
     final corpo = jsonDecode(utf8.decode(resposta.bodyBytes)) as Map<String, dynamic>;
-    return (corpo['id'] as num?)?.toInt();
+    final substituidos = [for (final s in (corpo['substituidos'] as List? ?? const [])) (s as num).toInt()];
+    return LaudoEnviado((corpo['id'] as num?)?.toInt(), substituidos);
+  }
+
+  /// Apaga todos os laudos desta conta no servidor. Retorna quantos foram removidos.
+  Future<int> limparTodos() async {
+    final resposta = await http
+        .delete(Uri.parse(TenantContext.applyToUrl('${ApiLinks.fitnessExameLaudos}/todos')), headers: _headers)
+        .timeout(_tempoLimite);
+    if (resposta.statusCode < 200 || resposta.statusCode >= 300) {
+      throw StateError(_mensagemErro(resposta.statusCode, resposta.body));
+    }
+    final corpo = jsonDecode(utf8.decode(resposta.bodyBytes)) as Map<String, dynamic>;
+    return (corpo['removidos'] as num?)?.toInt() ?? 0;
   }
 
   /// Laudos do aluno no servidor (id, dataExame, medico).

@@ -94,6 +94,52 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
             ),
           ),
           IconButton(
+            tooltip: 'Limpar todos os laudos',
+            icon: Icon(Icons.delete_sweep_outlined, color: GridColors.textSecondary),
+            onPressed: () async {
+              final navegador = Navigator.of(context, rootNavigator: true);
+              final messenger = ScaffoldMessenger.of(context);
+              final confirmou = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Limpar todos os laudos?'),
+                  content: const Text(
+                      'Apaga os laudos PDF e os exames desta conta, no servidor e neste aparelho. Os gráficos ficam zerados.'),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+                    TextButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('Apagar', style: TextStyle(color: GridColors.error))),
+                  ],
+                ),
+              );
+              if (confirmou != true || !context.mounted) return;
+              // Carregamento enquanto apaga no servidor e no aparelho.
+              showDialog<void>(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => const Center(child: CircularProgressIndicator()),
+              );
+              try {
+                await ExameLaudoService().limparTodos();
+                for (final exame in await _repo.getExames()) {
+                  await _repo.excluirExame(exame.id);
+                }
+                navegador.pop();
+                _carregarExames();
+                messenger.showSnackBar(const SnackBar(content: Text('Laudos apagados.')));
+              } catch (e) {
+                navegador.pop();
+                messenger.showSnackBar(SnackBar(
+                  content: Text(e is StateError
+                      ? e.message.toString()
+                      : 'Não foi possível limpar agora. Tente novamente.'),
+                ));
+              }
+            },
+          ),
+          IconButton(
             icon: Icon(Icons.refresh, color: GridColors.textSecondary),
             onPressed: _carregarExames,
           ),
@@ -510,6 +556,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
       // So processa paginas do hemograma (cabecalho HEMOGRAMA).
       final documento = PdfDocument(inputBytes: bytes);
       final itens = <ExameItemLido>[];
+      final todasLinhas = <String>[];
       String? medicoLido;
       String? laboratorioLido;
       for (var pagina = 0; pagina < documento.pages.count; pagina++) {
@@ -521,14 +568,10 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
         final linhas = ExameLaudoParser.montarLinhas(pedacos);
         medicoLido ??= ExameLaudoParser.medicoDoLaudo(linhas);
         laboratorioLido ??= ExameLaudoParser.laboratorioDoLaudo(linhas);
-        if (linhas.any((l) => l.contains('HEMOGRAMA'))) {
-          itens.addAll(ExameLaudoParser.lerHemograma(linhas));
-        } else {
-          // Outros laudos (paineis hormonais, lipidico...): resultados no formato "Resultado: valor unidade".
-          itens.addAll(ExameLaudoParser.lerResultados(linhas,
-              dataExame: ExameLaudoParser.dataColeta(linhas, 0)));
-        }
+        todasLinhas.addAll(linhas);
       }
+      // Le o documento inteiro: a data de cada exame pode estar em outra pagina que a do resultado.
+      itens.addAll(ExameLaudoParser.lerLaudo(todasLinhas));
       documento.dispose();
       final porGrupo = <String, int>{};
       for (final item in itens) {
@@ -747,9 +790,10 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                       );
                       final pdf = pdfEscolhido;
                       int? laudoId;
+                      List<int> substituidos = const [];
                       if (pdf != null && pdf.bytes != null) {
                         try {
-                          laudoId = await ExameLaudoService().enviar(
+                          final envio = await ExameLaudoService().enviar(
                             dataExame: dataController.text.trim(),
                             nomeArquivo: pdf.name,
                             pdfBase64: base64Encode(pdf.bytes!),
@@ -768,6 +812,8 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                                 },
                             ],
                           );
+                          laudoId = envio.id;
+                          substituidos = envio.substituidos;
                         } catch (e) {
                           // Falha de rede ou do servidor: mostra o motivo e mantem o modal aberto.
                           final mensagem = e is StateError
@@ -782,6 +828,15 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                       }
                       await _repo.salvarExame(
                           laudoId == null ? novo : novo.copyWith(laudoId: laudoId));
+                      // Reenvio do mesmo PDF: o servidor substituiu o laudo antigo; some tambem o exame local dele.
+                      if (substituidos.isNotEmpty) {
+                        for (final antigo in await _repo.getExames()) {
+                          if (antigo.id != novo.id && antigo.laudoId != null &&
+                              substituidos.contains(antigo.laudoId)) {
+                            await _repo.excluirExame(antigo.id);
+                          }
+                        }
+                      }
                       if (ctx.mounted) Navigator.pop(ctx);
                       _carregarExames();
                     },

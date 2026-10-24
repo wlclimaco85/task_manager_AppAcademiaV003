@@ -185,12 +185,15 @@ class ExameLaudoParser {
     return itens;
   }
 
-  static final _regexCabSiglaPrimeiro = RegExp(r'^([A-Z][A-Z0-9]{1,9})\s+-\s+[A-ZÀ-Ý]');
-  static final _regexCabSiglaUltima = RegExp(r'^[A-ZÀ-Ý][A-ZÀ-Ý ]+?\s+-\s+([A-Z][A-Z0-9]{1,9})$');
+  // Sigla curta (FSH, LH, DHT). Palavra longa depois do traco nao e sigla: vira parte do nome.
+  static final _regexCabSiglaPrimeiro = RegExp(r'^([A-Z][A-Z0-9]{1,4})\s+-\s+[A-ZÀ-Ý]');
+  static final _regexCabSiglaUltima = RegExp(r'^[A-ZÀ-Ý][A-ZÀ-Ý ]+?\s+-\s+([A-Z][A-Z0-9]{1,4})$');
+  static final _regexCabCaixaAlta = RegExp(r'^[A-ZÀ-Ý][A-ZÀ-Ý0-9 ]{2,60} - [A-ZÀ-Ý][A-ZÀ-Ý0-9 ]{1,60}$');
   static final _regexResultadoNumerico = RegExp(
       r'^Resultado:\s*(?:(?:Inferior|Menor|Superior|Maior)\s+(?:a|que)\s+)?'
       r'(-?\d{1,3}(?:\.\d{3})*(?:,\d+)?|-?\d+(?:,\d+)?)\s*(.*)$');
-  static final _regexRefFaixaUnica = RegExp(r'^Valor de Refer[eê]ncia:\s*(\d+(?:,\d+)?)\s+a\s+(\d+(?:,\d+)?)\b');
+  static final _regexRefFaixaUnica = RegExp(r'^Valor de Refer[eê]ncia:\s*(\d+(?:,\d+)?)\s+a\s+(\d+(?:,\d+)?)\b',
+      caseSensitive: false);
   static const _siglasHormonais = {'FSH', 'LH', 'TSH', 'T3', 'T4', 'ESTRADIOL', 'PROGESTERONA',
     'PROLACTINA', 'TESTOSTERONA', 'CORTISOL', 'INSULINA'};
 
@@ -198,7 +201,11 @@ class ExameLaudoParser {
   static String? _cabecalhoAnalito(String linha) {
     final primeiro = _regexCabSiglaPrimeiro.firstMatch(linha);
     if (primeiro != null) return primeiro.group(1);
-    return _regexCabSiglaUltima.firstMatch(linha)?.group(1);
+    final ultima = _regexCabSiglaUltima.firstMatch(linha);
+    if (ultima != null) return ultima.group(1);
+    // "TESTOSTERONA LIVRE - DILUIDA": sem sigla, o nome impresso no laudo e usado inteiro.
+    if (_regexCabCaixaAlta.hasMatch(linha)) return linha;
+    return null;
   }
 
   /// Grupo para os filtros da tela: Hormonal, Lipidico, Glicemia ou Outros (pela sigla/nome do analito).
@@ -215,20 +222,26 @@ class ExameLaudoParser {
   /// Resultados de laudos "SIGLA - NOME" + "Resultado: valor unidade" (paineis hormonais, lipidico etc.).
   /// Resultado qualitativo ("Inferior a 0,11") entra com o limite informado. Faixa de referencia so quando
   /// existe uma unica faixa na linha "Valor de Referencia"; faixas por sexo ficam sem referencia.
-  static List<ExameItemLido> lerResultados(List<String> linhas, {String? dataExame}) {
+  static List<ExameItemLido> lerResultados(List<String> linhas,
+      {String? dataExame, Set<int> ignorar = const {}}) {
     final itens = <ExameItemLido>[];
     String? nome;
-    ({String nome, double valor, String unidade})? pendente;
+    ({String nome, double valor, String unidade, String? data})? pendente;
 
     void fecharPendente() {
       final p = pendente;
       if (p == null) return;
       itens.add(ExameItemLido(
-          nome: p.nome, valor: p.valor, unidade: p.unidade, grupo: grupoDoAnalito(p.nome), dataExame: dataExame));
+          nome: p.nome, valor: p.valor, unidade: p.unidade, grupo: grupoDoAnalito(p.nome), dataExame: p.data));
       pendente = null;
     }
 
-    for (final linha in linhas) {
+    for (var i = 0; i < linhas.length; i++) {
+      if (ignorar.contains(i)) continue;
+      final linha = linhas[i].trim();
+      // Data da coleta que vem depois deste resultado (cada exame termina com "Coleta: ...").
+      final data = _coletaDoResultado(linhas, i) ?? dataExame;
+
       final cabecalho = _cabecalhoAnalito(linha);
       if (cabecalho != null) {
         fecharPendente();
@@ -245,21 +258,145 @@ class ExameLaudoParser {
           refMin: _numero(faixa.group(1)!),
           refMax: _numero(faixa.group(2)!),
           grupo: grupoDoAnalito(p.nome),
-          dataExame: dataExame,
+          dataExame: p.data,
         ));
         pendente = null;
         continue;
       }
       final resultado = _regexResultadoNumerico.firstMatch(linha);
-      if (resultado == null || nome == null) continue;
-      fecharPendente();
-      final valor = _numero(resultado.group(1)!);
-      if (valor == null) continue;
-      pendente = (nome: nome, valor: valor, unidade: (resultado.group(2) ?? '').trim());
-      nome = null;
+      if (resultado != null) {
+        fecharPendente();
+        final valor = _numero(resultado.group(1)!);
+        if (valor != null && nome != null) {
+          pendente = (nome: nome, valor: valor, unidade: (resultado.group(2) ?? '').trim(), data: data);
+        }
+        nome = null;
+        continue;
+      }
+      // "Nome: valor unidade" numa linha so, sem faixa (ex.: "Hb A1c: 5,4 %", "COLESTEROL TOTAL : 211 mg/dL").
+      final inline = _regexInlineValor.firstMatch(linha);
+      if (inline != null && !_regexFaixaNaLinha.hasMatch(linha)) {
+        fecharPendente();
+        final valor = _numero(inline.group(2)!);
+        if (valor != null) {
+          final nomeInline = inline.group(1)!.replaceAll(RegExp(r'[\s.:]+$'), '').trim();
+          itens.add(ExameItemLido(
+              nome: nomeInline,
+              valor: valor,
+              unidade: inline.group(3)!.trim(),
+              grupo: grupoDoAnalito(nomeInline),
+              dataExame: data));
+        }
+        nome = null;
+        continue;
+      }
+      // Varios pares "nome: valor unidade" numa linha so (ex.: espermograma: "Progressiva rapida: 54 % Imovel: 36 %").
+      final pares = _pares(linha);
+      if (pares.isNotEmpty && !_regexFaixaNaLinha.hasMatch(linha)) {
+        fecharPendente();
+        for (final p in pares) {
+          itens.add(ExameItemLido(
+              nome: p.nome, valor: p.valor, unidade: p.unidade, grupo: grupoDoAnalito(p.nome), dataExame: data));
+        }
+        nome = null;
+        continue;
+      }
+      // Nome do exame em linha propria, seguido de "Material:", "Método:" ou "Resultado:".
+      if (_regexNomeLinha.hasMatch(linha) && _seguidaPorDetalhe(linhas, i)) {
+        fecharPendente();
+        nome = linha;
+      }
     }
     fecharPendente();
     return itens;
+  }
+
+  /// Coleta do resultado da linha [i]: a seguinte; se nao houver, a anterior mais proxima.
+  static String? _coletaDoResultado(List<String> linhas, int i) {
+    final seguinte = dataColeta(linhas, i);
+    if (seguinte != null) return seguinte;
+    for (var j = i; j >= 0; j--) {
+      final m = _regexColeta.firstMatch(linhas[j]);
+      if (m != null) return '${m.group(3)}-${m.group(2)}-${m.group(1)}';
+    }
+    return null;
+  }
+
+  /// Nome em linha propria (so letras, sem ":" nem digitos) seguido de detalhe do exame.
+  static final _regexNomeLinha = RegExp(r'^[A-ZÀ-Ý][A-Za-zÀ-ÿ0-9 .,()/\-]{2,69}$');
+  static final _regexInlineValor = RegExp(
+      r'^([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9 .,()/\-]{1,60}?)\s*[:.]*\s*'
+      r'(-?\d{1,3}(?:\.\d{3})*(?:,\d+)?|-?\d+(?:,\d+)?)\s+'
+      r'(%|[A-Za-zµμ]+/[A-Za-zµμ0-9²]+)$');
+  /// Linha com faixa ou limite (De/a/Até/Inferior/Superior/sexo/idade): nao e um resultado isolado.
+  static final _regexFaixaNaLinha = RegExp(
+      r'(\bDe\b|\bde\b|\ba\b|Até|Inferior|Superior|Homens|Mulheres|anos|meses|trimestre|semanas)');
+
+  static final _regexPar = RegExp(r'([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ .\-]{1,40}?)[.:]+\s*(\d[\d.]*(?:,\d+)?)\s*(%|/mL|/uL)');
+
+  static List<({String nome, double valor, String unidade})> _pares(String linha) {
+    if (!RegExp(r'%|/mL|/uL').hasMatch(linha)) return const [];
+    return [
+      for (final m in _regexPar.allMatches(linha))
+        if (_numero(m.group(2)!) != null)
+          (
+            nome: m.group(1)!.replaceAll(RegExp(r'[\s.]+$'), '').trim(),
+            valor: _numero(m.group(2)!)!,
+            unidade: m.group(3)!,
+          ),
+    ];
+  }
+
+  static bool _seguidaPorDetalhe(List<String> linhas, int i) {
+    if (i + 1 >= linhas.length) return false;
+    final prox = linhas[i + 1].trimLeft();
+    return prox.startsWith('Material') ||
+        prox.startsWith('Resultado') ||
+        prox.startsWith('Método') ||
+        prox.startsWith('Metodo');
+  }
+
+  /// Le tudo de uma pagina: o hemograma (blocos Eritrograma..Coleta) e os demais exames fora desses blocos.
+  static List<ExameItemLido> lerLaudo(List<String> linhas) {
+    final hemograma = _indicesHemograma(linhas);
+    final itens = [
+      if (hemograma.isNotEmpty) ...lerHemograma(linhas),
+      ...lerResultados(linhas, ignorar: hemograma, dataExame: dataColeta(linhas, 0)),
+    ];
+    return _semDuplicados(itens);
+  }
+
+  /// O mesmo resultado impresso duas vezes (mesma data, valor, unidade e primeira palavra do nome) entra uma vez so.
+  static List<ExameItemLido> _semDuplicados(List<ExameItemLido> itens) {
+    final vistos = <String>{};
+    return [
+      for (final item in itens)
+        if (vistos.add('${item.dataExame}|${item.valor}|${item.unidade}|'
+            '${item.nome.toUpperCase().split(RegExp(r'[\s\-]+')).first}'))
+          item,
+    ];
+  }
+
+  /// Linhas ocupadas pelo bloco do hemograma: do primeiro "Eritrograma"/"HEMOGRAMA" ate o proximo "Coleta:".
+  static Set<int> _indicesHemograma(List<String> linhas) {
+    final usados = <int>{};
+    var i = 0;
+    while (i < linhas.length) {
+      if (!linhas[i].contains('Eritrograma') && !linhas[i].contains('HEMOGRAMA')) {
+        i++;
+        continue;
+      }
+      var fim = i;
+      while (fim < linhas.length && !_regexColeta.hasMatch(linhas[fim])) {
+        fim++;
+      }
+      fim = fim < linhas.length ? fim : linhas.length - 1;
+      for (var j = i; j <= fim; j++) {
+        usados.add(j);
+      }
+      i = fim + 1;
+    }
+    return usados;
   }
 
   /// Le o hemograma inteiro: eritrograma, leucograma e plaquetas, cada um com a data da sua coleta.
