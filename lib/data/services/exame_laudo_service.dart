@@ -18,7 +18,7 @@ class ExameLaudoService {
   }
 
   /// Grava o laudo: [pdfBase64] e os itens ja lidos no app (valor, referencia, cor).
-  Future<void> enviar({
+  Future<int?> enviar({
     required String dataExame,
     required String nomeArquivo,
     required String pdfBase64,
@@ -43,6 +43,47 @@ class ExameLaudoService {
     if (resposta.statusCode < 200 || resposta.statusCode >= 300) {
       throw StateError(_mensagemErro(resposta.statusCode, resposta.body));
     }
+    final corpo = jsonDecode(utf8.decode(resposta.bodyBytes)) as Map<String, dynamic>;
+    return (corpo['id'] as num?)?.toInt();
+  }
+
+  /// Laudos do aluno no servidor (id, dataExame, medico).
+  Future<List<Map<String, dynamic>>> listar() async {
+    final resposta = await http
+        .get(Uri.parse(TenantContext.applyToUrl(ApiLinks.fitnessExameLaudos)), headers: _headers)
+        .timeout(_tempoLimite);
+    if (resposta.statusCode != 200) {
+      throw StateError(_mensagemErro(resposta.statusCode, resposta.body));
+    }
+    final lista = jsonDecode(utf8.decode(resposta.bodyBytes)) as List<dynamic>;
+    return lista.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
+
+  /// Remove o laudo no servidor. Os itens saem junto, e o grafico deixa de mostra-los.
+  Future<void> excluir(int laudoId) async {
+    final resposta = await http
+        .delete(
+          Uri.parse(TenantContext.applyToUrl('${ApiLinks.fitnessExameLaudos}/$laudoId')),
+          headers: _headers,
+        )
+        .timeout(_tempoLimite);
+    if (resposta.statusCode == 404) return; // ja nao existe no servidor
+    if (resposta.statusCode < 200 || resposta.statusCode >= 300) {
+      throw StateError(_mensagemErro(resposta.statusCode, resposta.body));
+    }
+  }
+
+  /// Exame salvo antes do vinculo com o servidor: acha o laudo pela data e pela medica.
+  /// Nulo se nao existe laudo; erro se houver mais de um candidato (nao apaga nada por palpite).
+  Future<int?> localizarLaudoLegado({required String dataExame, String? medico}) async {
+    final candidatos = (await listar()).where((l) =>
+        l['dataExame']?.toString() == dataExame &&
+        (medico == null || l['medico']?.toString() == medico)).toList();
+    if (candidatos.isEmpty) return null;
+    if (candidatos.length > 1) {
+      throw StateError('Há mais de um laudo com esta data e médica. Exclua pelo servidor.');
+    }
+    return (candidatos.first['id'] as num).toInt();
   }
 
   /// Serie por item: cada exame com as datas, valores e cores.

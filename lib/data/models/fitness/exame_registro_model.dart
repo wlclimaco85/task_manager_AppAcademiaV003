@@ -26,6 +26,7 @@ class ExameRegistroModel {
   final String? observacoesResultados; // ex: "Testosterona Total: 850 ng/dL, E2: 28 pg/mL, HDL: 55 mg/dL"
   final bool alteracaoRelevante; // Alerta se houve marcador fora da referência
   final bool visualizadoPeloMedico;
+  final int? laudoId; // id do laudo guardado no servidor (exame_laudo.id); nulo em exames antigos
 
   const ExameRegistroModel({
     required this.id,
@@ -42,6 +43,7 @@ class ExameRegistroModel {
     this.observacoesResultados,
     this.alteracaoRelevante = false,
     this.visualizadoPeloMedico = true,
+    this.laudoId,
   });
 
   ExameRegistroModel copyWith({
@@ -59,6 +61,7 @@ class ExameRegistroModel {
     String? observacoesResultados,
     bool? alteracaoRelevante,
     bool? visualizadoPeloMedico,
+    int? laudoId,
   }) {
     return ExameRegistroModel(
       id: id ?? this.id,
@@ -77,6 +80,7 @@ class ExameRegistroModel {
       alteracaoRelevante: alteracaoRelevante ?? this.alteracaoRelevante,
       visualizadoPeloMedico:
           visualizadoPeloMedico ?? this.visualizadoPeloMedico,
+      laudoId: laudoId ?? this.laudoId,
     );
   }
 
@@ -96,6 +100,7 @@ class ExameRegistroModel {
       'observacoesResultados': observacoesResultados,
       'alteracaoRelevante': alteracaoRelevante,
       'visualizadoPeloMedico': visualizadoPeloMedico,
+      'laudoId': laudoId,
     };
   }
 
@@ -120,6 +125,7 @@ class ExameRegistroModel {
       observacoesResultados: map['observacoesResultados']?.toString(),
       alteracaoRelevante: map['alteracaoRelevante'] == true,
       visualizadoPeloMedico: map['visualizadoPeloMedico'] != false,
+      laudoId: (map['laudoId'] as num?)?.toInt(),
     );
   }
 }

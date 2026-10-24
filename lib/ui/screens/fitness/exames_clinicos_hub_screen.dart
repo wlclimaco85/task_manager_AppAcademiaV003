@@ -295,9 +295,32 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                 icon: Icon(Icons.more_vert, color: GridColors.textSecondary),
                 color: GridColors.card,
                 onSelected: (val) async {
-                  if (val == 'excluir') {
+                  if (val != 'excluir') return;
+                  final navegador = Navigator.of(context, rootNavigator: true);
+                  final messenger = ScaffoldMessenger.of(context);
+                  // Carregamento enquanto o laudo e apagado no servidor (os graficos saem dele).
+                  showDialog<void>(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (_) => const Center(child: CircularProgressIndicator()),
+                  );
+                  try {
+                    final laudoId = exame.laudoId ??
+                        await ExameLaudoService().localizarLaudoLegado(
+                          dataExame: exame.dataExame,
+                          medico: exame.medicoSolicitante,
+                        );
+                    if (laudoId != null) await ExameLaudoService().excluir(laudoId);
                     await _repo.excluirExame(exame.id);
+                    navegador.pop();
                     _carregarExames();
+                  } catch (e) {
+                    navegador.pop();
+                    messenger.showSnackBar(SnackBar(
+                      content: Text(e is StateError
+                          ? e.message.toString()
+                          : 'Não foi possível excluir o laudo agora. Tente novamente.'),
+                    ));
                   }
                 },
                 itemBuilder: (ctx) => const [
@@ -723,9 +746,10 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                         nomeArquivoPdf: 'laudo_${DateTime.now().millisecondsSinceEpoch}.pdf',
                       );
                       final pdf = pdfEscolhido;
+                      int? laudoId;
                       if (pdf != null && pdf.bytes != null) {
                         try {
-                          await ExameLaudoService().enviar(
+                          laudoId = await ExameLaudoService().enviar(
                             dataExame: dataController.text.trim(),
                             nomeArquivo: pdf.name,
                             pdfBase64: base64Encode(pdf.bytes!),
@@ -756,7 +780,8 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                           return;
                         }
                       }
-                      await _repo.salvarExame(novo);
+                      await _repo.salvarExame(
+                          laudoId == null ? novo : novo.copyWith(laudoId: laudoId));
                       if (ctx.mounted) Navigator.pop(ctx);
                       _carregarExames();
                     },
