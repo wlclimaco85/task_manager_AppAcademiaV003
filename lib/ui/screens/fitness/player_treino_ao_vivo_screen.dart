@@ -15,6 +15,7 @@ import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart
 import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
 import 'package:task_manager_flutter/data/services/fitness_push_notification_service.dart';
+import 'package:task_manager_flutter/data/services/alerta_sonoro_descanso.dart';
 import 'package:task_manager_flutter/data/models/fitness/exercicio_model.dart'
     as task_manager_flutter_models;
 
@@ -379,8 +380,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
       if (_descansoRestanteSegundos > 1) {
         final restante = _descansoRestanteSegundos - 1;
         setState(() => _descansoRestanteSegundos = restante);
-        if (restante == 10 || restante == 5) {
-          _tocarAlertaDescanso();
+        if (restante == 15 || restante == 5) {
+          _tocarAlertaDescanso(urgente: restante == 5);
         }
       } else {
         timer.cancel();
@@ -397,14 +398,18 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
     });
   }
 
-  void _tocarAlertaDescanso() {
+  void _tocarAlertaDescanso({required bool urgente}) {
     HapticFeedback.selectionClick();
-    SystemSound.play(SystemSoundType.alert);
+    if (urgente) {
+      AlertaSonoroDescanso.urgente();
+    } else {
+      AlertaSonoroDescanso.proximo();
+    }
   }
 
   void _tocarFimDescanso() {
     HapticFeedback.heavyImpact();
-    SystemSound.play(SystemSoundType.alert);
+    AlertaSonoroDescanso.finalizado();
   }
 
   void _pularDescanso() {
@@ -414,13 +419,6 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
       _descansoRestanteSegundos = 0;
       _descansoAtivo = false;
       _descansoFinalizado = false;
-    });
-  }
-
-  void _adicionarTempoDescanso(int segundos) {
-    setState(() {
-      _descansoRestanteSegundos += segundos;
-      _descansoTotalSegundos += segundos;
     });
   }
 
@@ -511,6 +509,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                 color: const Color(0xFF10B981),
                 minHeight: 4,
               ),
+
+              if (_descansoAtivo) _buildBarraDescanso(),
 
               // 2. Banner do Exercício Atual
               Container(
@@ -656,10 +656,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                 ),
               ),
 
-              // 5. Barra Inferior do Cronômetro de Descanso
-              if (_descansoAtivo) _buildBarraDescanso(),
-
-              // 6. Botões de Navegação Entre Exercícios
+              // 5. Botões de Navegação Entre Exercícios
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
@@ -1163,25 +1160,26 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
         ? _descansoRestanteSegundos / _descansoTotalSegundos
         : 0.0;
 
-    final retaFinal = _descansoRestanteSegundos <= 10;
-    final corAlerta = _descansoFinalizado
-        ? const Color(0xFFDC2626)
-        : retaFinal
-            ? const Color(0xFFFACC15)
-            : Colors.white;
+    final vermelho = _descansoFinalizado || _descansoRestanteSegundos <= 5;
+    final amarelo = !vermelho && _descansoRestanteSegundos <= 15;
+    final corFundo = vermelho
+        ? const Color(0xFFB91C1C)
+        : amarelo
+            ? const Color(0xFFA16207)
+            : const Color(0xFF0F766E);
     final textoAlerta = _descansoFinalizado
         ? 'Descanso concluído!'
-        : retaFinal
-            ? 'Últimos segundos!'
-            : 'Intervalo de descanso...';
+        : vermelho
+            ? 'Finalize a pausa!'
+            : amarelo
+                ? 'Últimos segundos!'
+                : 'Intervalo de descanso...';
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(14),
+      width: double.infinity,
+      height: 96,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: _descansoFinalizado
-            ? const Color(0xFF7F1D1D)
-            : const Color(0xFF0F766E), // Teal Dark
-        borderRadius: BorderRadius.circular(16),
+        color: corFundo,
         boxShadow: const [
           BoxShadow(
             color: Colors.black38,
@@ -1193,8 +1191,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
       child: Row(
         children: [
           SizedBox(
-            width: retaFinal ? 96 : 36,
-            height: retaFinal ? 56 : 40,
+            width: 72,
+            height: 72,
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -1202,17 +1200,16 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                   value: progress,
                   strokeWidth: 3,
                   backgroundColor: Colors.white24,
-                  color: corAlerta,
+                  color: Colors.white,
                 ),
                 AnimatedDefaultTextStyle(
                   duration: const Duration(milliseconds: 180),
-                  style: TextStyle(
-                    color: corAlerta,
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontWeight: FontWeight.w900,
-                    fontSize: retaFinal ? 34 : 13,
+                    fontSize: 48,
                   ),
-                  child:
-                      Text('$_descansoRestanteSegundos${retaFinal ? 's' : ''}'),
+                  child: Text('${_descansoRestanteSegundos}s'),
                 ),
               ],
             ),
@@ -1221,20 +1218,18 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
           Expanded(
             child: Text(
               textoAlerta,
-              style: TextStyle(
-                color: corAlerta,
+              style: const TextStyle(
+                color: Colors.white,
                 fontWeight: FontWeight.w800,
-                fontSize: retaFinal ? 16 : 13,
+                fontSize: 17,
               ),
             ),
           ),
-          TextButton(
-            onPressed: () => _adicionarTempoDescanso(15),
-            child: const Text('+15s', style: TextStyle(color: Colors.white)),
-          ),
-          TextButton(
+          IconButton(
+            tooltip: 'Fechar descanso',
             onPressed: _pularDescanso,
-            child: const Text('Pular', style: TextStyle(color: Colors.white70)),
+            icon:
+                const Icon(Icons.close_rounded, color: Colors.white, size: 30),
           ),
         ],
       ),
