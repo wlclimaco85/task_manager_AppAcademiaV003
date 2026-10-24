@@ -529,7 +529,7 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
           tituloController.text = '$medicoLido - $dataBr';
         }
         avisoLeitura = itens.isEmpty
-            ? 'Não encontrei o hemograma neste PDF.'
+            ? 'Não encontrei o hemograma neste PDF. Ao salvar, só o PDF será guardado.'
             : '${itens.length} itens lidos: '
                 '${porGrupo['Eritrograma'] ?? 0} eritrograma, '
                 '${porGrupo['Leucograma'] ?? 0} leucograma, '
