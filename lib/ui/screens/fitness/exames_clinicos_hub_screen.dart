@@ -496,10 +496,15 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
             (y: linha.bounds.top, x: linha.bounds.left, texto: linha.text),
         ];
         final linhas = ExameLaudoParser.montarLinhas(pedacos);
-        if (!linhas.any((l) => l.contains('HEMOGRAMA'))) continue;
-        itens.addAll(ExameLaudoParser.lerHemograma(linhas));
         medicoLido ??= ExameLaudoParser.medicoDoLaudo(linhas);
         laboratorioLido ??= ExameLaudoParser.laboratorioDoLaudo(linhas);
+        if (linhas.any((l) => l.contains('HEMOGRAMA'))) {
+          itens.addAll(ExameLaudoParser.lerHemograma(linhas));
+        } else {
+          // Outros laudos (paineis hormonais, lipidico...): resultados no formato "Resultado: valor unidade".
+          itens.addAll(ExameLaudoParser.lerResultados(linhas,
+              dataExame: ExameLaudoParser.dataColeta(linhas, 0)));
+        }
       }
       documento.dispose();
       final porGrupo = <String, int>{};
@@ -529,11 +534,9 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
           tituloController.text = '$medicoLido - $dataBr';
         }
         avisoLeitura = itens.isEmpty
-            ? 'Não encontrei o hemograma neste PDF. Ao salvar, só o PDF será guardado.'
+            ? 'Não encontrei resultados neste PDF. Ao salvar, só o PDF será guardado.'
             : '${itens.length} itens lidos: '
-                '${porGrupo['Eritrograma'] ?? 0} eritrograma, '
-                '${porGrupo['Leucograma'] ?? 0} leucograma, '
-                '${porGrupo['Plaquetas'] ?? 0} plaquetas.';
+                '${porGrupo.entries.map((e) => '${e.value} ${e.key.toLowerCase()}').join(', ')}.';
       });
     }
 

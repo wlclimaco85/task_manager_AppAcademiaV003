@@ -13,6 +13,8 @@ class ExameHistoricoScreen extends StatefulWidget {
 
 class _ExameHistoricoScreenState extends State<ExameHistoricoScreen> {
   late Future<List<Map<String, dynamic>>> _futuro;
+  // Grupos escolhidos nos filtros (um ou varios). Vazio = mostra todos.
+  final Set<String> _gruposSelecionados = {};
 
   @override
   void initState() {
@@ -47,11 +49,48 @@ class _ExameHistoricoScreenState extends State<ExameHistoricoScreen> {
               child: Text('Nenhum exame com itens ainda. Envie um laudo PDF para ver a evolução.'),
             );
           }
-          return ListView.separated(
+          final grupos = {for (final s in series) (s['grupo'] ?? 'Outros').toString()}.toList()..sort();
+          final visiveis = _gruposSelecionados.isEmpty
+              ? series
+              : series.where((s) => _gruposSelecionados.contains((s['grupo'] ?? 'Outros').toString())).toList();
+          return ListView(
             padding: const EdgeInsets.all(16),
-            itemCount: series.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, i) => _CartaoSerie(serie: series[i]),
+            children: [
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  FilterChip(
+                    label: Text('Todos (${series.length})'),
+                    selected: _gruposSelecionados.isEmpty,
+                    onSelected: (_) => setState(_gruposSelecionados.clear),
+                  ),
+                  for (final grupo in grupos)
+                    FilterChip(
+                      label: Text(grupo),
+                      selected: _gruposSelecionados.contains(grupo),
+                      onSelected: (selecionado) => setState(() {
+                        if (selecionado) {
+                          _gruposSelecionados.add(grupo);
+                        } else {
+                          _gruposSelecionados.remove(grupo);
+                        }
+                      }),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (visiveis.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text('Nenhum item neste filtro.', textAlign: TextAlign.center),
+                ),
+              for (final serie in visiveis)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _CartaoSerie(serie: serie),
+                ),
+            ],
           );
         },
       ),
@@ -73,11 +112,11 @@ Color corDoStatus(String? status) {
   }
 }
 
-/// Data ISO (2026-10-17) em dia/mes (17/10).
+/// Data ISO (2026-10-17) em dia/mes/ano (17/10/26), para nao confundir exames de anos diferentes.
 String _dataCurta(String iso) {
   final partes = iso.split('-');
   if (partes.length < 3) return iso;
-  return '${partes[2]}/${partes[1]}';
+  return '${partes[2]}/${partes[1]}/${partes[0].substring(2)}';
 }
 
 class _CartaoSerie extends StatelessWidget {
@@ -133,12 +172,14 @@ class _CartaoSerie extends StatelessWidget {
                   ),
               ],
             ),
-            if (refMin != null && refMax != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text('Referência: $refMin a $refMax $unidade',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey)),
-              ),
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                '${serie['grupo'] ?? 'Outros'} · '
+                '${refMin != null && refMax != null ? 'Referência: $refMin a $refMax $unidade' : 'Sem referência no laudo'}'
+                '${ultimo != null ? ' · Última: ${_dataCurta(ultimo['data'].toString())}' : ''}',
+                style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            ),
             const SizedBox(height: 12),
             SizedBox(
               height: 170,

@@ -185,6 +185,83 @@ class ExameLaudoParser {
     return itens;
   }
 
+  static final _regexCabSiglaPrimeiro = RegExp(r'^([A-Z][A-Z0-9]{1,9})\s+-\s+[A-ZÀ-Ý]');
+  static final _regexCabSiglaUltima = RegExp(r'^[A-ZÀ-Ý][A-ZÀ-Ý ]+?\s+-\s+([A-Z][A-Z0-9]{1,9})$');
+  static final _regexResultadoNumerico = RegExp(
+      r'^Resultado:\s*(?:(?:Inferior|Menor|Superior|Maior)\s+(?:a|que)\s+)?'
+      r'(-?\d{1,3}(?:\.\d{3})*(?:,\d+)?|-?\d+(?:,\d+)?)\s*(.*)$');
+  static final _regexRefFaixaUnica = RegExp(r'^Valor de Refer[eê]ncia:\s*(\d+(?:,\d+)?)\s+a\s+(\d+(?:,\d+)?)\b');
+  static const _siglasHormonais = {'FSH', 'LH', 'TSH', 'T3', 'T4', 'ESTRADIOL', 'PROGESTERONA',
+    'PROLACTINA', 'TESTOSTERONA', 'CORTISOL', 'INSULINA'};
+
+  /// Sigla do analito no cabecalho "FSH - HORMONIO ..." ou "HORMONIO ... - LH". Null se a linha nao for cabecalho.
+  static String? _cabecalhoAnalito(String linha) {
+    final primeiro = _regexCabSiglaPrimeiro.firstMatch(linha);
+    if (primeiro != null) return primeiro.group(1);
+    return _regexCabSiglaUltima.firstMatch(linha)?.group(1);
+  }
+
+  /// Grupo para os filtros da tela: Hormonal, Lipidico, Glicemia ou Outros (pela sigla/nome do analito).
+  static String grupoDoAnalito(String nome) {
+    final palavras = nome.toUpperCase().split(RegExp(r'[^A-ZÀ-Ý0-9]+'));
+    if (palavras.any((p) => p.startsWith('HORM') || _siglasHormonais.contains(p))) return 'Hormonal';
+    if (palavras.any((p) => p.startsWith('COLESTEROL') || p.startsWith('TRIGLICER') || p == 'LDL' || p == 'HDL')) {
+      return 'Lipídico';
+    }
+    if (palavras.any((p) => p.startsWith('GLIC'))) return 'Glicemia';
+    return 'Outros';
+  }
+
+  /// Resultados de laudos "SIGLA - NOME" + "Resultado: valor unidade" (paineis hormonais, lipidico etc.).
+  /// Resultado qualitativo ("Inferior a 0,11") entra com o limite informado. Faixa de referencia so quando
+  /// existe uma unica faixa na linha "Valor de Referencia"; faixas por sexo ficam sem referencia.
+  static List<ExameItemLido> lerResultados(List<String> linhas, {String? dataExame}) {
+    final itens = <ExameItemLido>[];
+    String? nome;
+    ({String nome, double valor, String unidade})? pendente;
+
+    void fecharPendente() {
+      final p = pendente;
+      if (p == null) return;
+      itens.add(ExameItemLido(
+          nome: p.nome, valor: p.valor, unidade: p.unidade, grupo: grupoDoAnalito(p.nome), dataExame: dataExame));
+      pendente = null;
+    }
+
+    for (final linha in linhas) {
+      final cabecalho = _cabecalhoAnalito(linha);
+      if (cabecalho != null) {
+        fecharPendente();
+        nome = cabecalho;
+        continue;
+      }
+      final faixa = _regexRefFaixaUnica.firstMatch(linha);
+      if (faixa != null && pendente != null) {
+        final p = pendente!;
+        itens.add(ExameItemLido(
+          nome: p.nome,
+          valor: p.valor,
+          unidade: p.unidade,
+          refMin: _numero(faixa.group(1)!),
+          refMax: _numero(faixa.group(2)!),
+          grupo: grupoDoAnalito(p.nome),
+          dataExame: dataExame,
+        ));
+        pendente = null;
+        continue;
+      }
+      final resultado = _regexResultadoNumerico.firstMatch(linha);
+      if (resultado == null || nome == null) continue;
+      fecharPendente();
+      final valor = _numero(resultado.group(1)!);
+      if (valor == null) continue;
+      pendente = (nome: nome, valor: valor, unidade: (resultado.group(2) ?? '').trim());
+      nome = null;
+    }
+    fecharPendente();
+    return itens;
+  }
+
   /// Le o hemograma inteiro: eritrograma, leucograma e plaquetas, cada um com a data da sua coleta.
   static List<ExameItemLido> lerHemograma(List<String> linhas) {
     final inicioEritro = linhas.indexWhere((l) => l.contains('Eritrograma'));
