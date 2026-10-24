@@ -728,10 +728,14 @@ class _ExamesClinicosHubScreenState extends State<ExamesClinicosHubScreen> {
                                 },
                             ],
                           );
-                        } on StateError catch (e) {
+                        } catch (e) {
+                          // Falha de rede ou do servidor: mostra o motivo e mantem o modal aberto.
+                          final mensagem = e is StateError
+                              ? e.message.toString()
+                              : 'Sem conexão com o servidor. Tente novamente.';
                           if (ctx.mounted) {
-                            ScaffoldMessenger.of(ctx).showSnackBar(
-                                SnackBar(content: Text(e.message.toString())));
+                            ScaffoldMessenger.of(ctx)
+                                .showSnackBar(SnackBar(content: Text(mensagem)));
                           }
                           return;
                         }
