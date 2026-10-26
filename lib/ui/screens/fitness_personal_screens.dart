@@ -1144,7 +1144,16 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                               lastDate: DateTime.now(),
                             );
                             if (escolhida != null) {
-                              setModalState(() => dataAtividade = escolhida);
+                              // Mantém a hora atual: o seletor devolve 00:00 e isso
+                              // tiraria a hora do registro (agrupamento por hora).
+                              setModalState(() => dataAtividade = DateTime(
+                                    escolhida.year,
+                                    escolhida.month,
+                                    escolhida.day,
+                                    dataAtividade.hour,
+                                    dataAtividade.minute,
+                                    dataAtividade.second,
+                                  ));
                             }
                           },
                           child: InputDecorator(
