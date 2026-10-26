@@ -1,6 +1,7 @@
 import 'package:task_manager_flutter/data/services/perfil_conta_service.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:http/http.dart' as http;
 import 'package:task_manager_flutter/data/models/auth_utility.dart';
 import 'package:task_manager_flutter/data/models/login_model.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
@@ -15,6 +16,11 @@ import 'package:task_manager_flutter/app.dart';
 import 'package:task_manager_flutter/data/utils/app_logger.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/cadastro_inicial_screen.dart';
 import 'package:task_manager_flutter/ui/widgets/fitness_notificacoes_sheet.dart';
+
+/// Só falha de transporte (sem rede, timeout) conta como offline. Resposta de erro do
+/// servidor (401, 403, 500) significa que o servidor foi alcançado, então está online.
+bool ehFalhaDeConexao(Object erro) =>
+    erro is http.ClientException || erro is TimeoutException;
 
 /// Acima do Navigator para permanecer visível também nas telas abertas por push.
 class AuthenticatedHeaderShell extends StatefulWidget {
@@ -86,6 +92,8 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
     FitnessPushNotificationService().mudancas.addListener(_atualizarContador);
     _atualizar();
     _atualizadorConta = Timer.periodic(const Duration(seconds: 15), (_) async {
+      // Enquanto offline, tenta de novo: uma falha isolada não pode prender o status.
+      if (_conexaoOnline != true) _atualizarConexao();
       await FitnessPushNotificationService().sincronizarRemotas();
       await _atualizarContador();
       await _verificarPermissoesAluno(forcar: true);
@@ -106,15 +114,17 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
     if (_sessaoCarregada == chave) return;
     _sessaoCarregada = chave;
     PushRegistrationService().sincronizar();
-    PerfilContaService().carregar().then((_) {
-      _definirConexao(true);
-      return <String, dynamic>{};
-    }).catchError((Object _) {
-      _definirConexao(false);
-      return <String, dynamic>{};
-    });
+    _atualizarConexao();
     _verificarPermissoesAluno();
     _carregarIndicadores(chave);
+  }
+
+  void _atualizarConexao() {
+    PerfilContaService().carregar().then((_) {
+      _definirConexao(true);
+    }).catchError((Object erro) {
+      _definirConexao(!ehFalhaDeConexao(erro));
+    });
   }
 
   Future<void> _carregarIndicadores(String chaveSessao) async {
