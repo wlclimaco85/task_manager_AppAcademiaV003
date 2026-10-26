@@ -38,6 +38,74 @@ class PlayerTreinoAoVivoScreen extends StatefulWidget {
       _PlayerTreinoAoVivoScreenState();
 }
 
+/// Mostra há quanto tempo o treino começou; atualiza sozinho a cada segundo.
+class _CronometroTreino extends StatefulWidget {
+  const _CronometroTreino({required this.inicio});
+
+  final DateTime inicio;
+
+  @override
+  State<_CronometroTreino> createState() => _CronometroTreinoState();
+}
+
+class _CronometroTreinoState extends State<_CronometroTreino> {
+  Timer? _timer;
+  late Duration _decorrido;
+
+  Duration _calcularDecorrido() => DateTime.now().difference(widget.inicio);
+
+  @override
+  void initState() {
+    super.initState();
+    _decorrido = _calcularDecorrido();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() => _decorrido = _calcularDecorrido());
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _CronometroTreino oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // O início pode ser trocado ao restaurar um rascunho de treino.
+    if (oldWidget.inicio != widget.inicio) {
+      _decorrido = _calcularDecorrido();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String _dois(int valor) => valor.toString().padLeft(2, '0');
+
+  @override
+  Widget build(BuildContext context) {
+    final horas = _decorrido.inHours;
+    final minutos = _decorrido.inMinutes.remainder(60);
+    final segundos = _decorrido.inSeconds.remainder(60);
+    final tempo = horas > 0
+        ? '${_dois(horas)}:${_dois(minutos)}:${_dois(segundos)}'
+        : '${_dois(minutos)}:${_dois(segundos)}';
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.timer_outlined, size: 18, color: Color(0xFF94A3B8)),
+        const SizedBox(width: 4),
+        Text(
+          tempo,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
   final _repository = FitnessOfflineRepository();
   final _pushService = FitnessPushNotificationService();
@@ -486,6 +554,9 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
           ],
         ),
         actions: [
+          // Cronômetro do tempo total de treino (desde o início da sessão).
+          Center(child: _CronometroTreino(inicio: _inicioSessao)),
+          const SizedBox(width: 8),
           TextButton.icon(
             style:
                 TextButton.styleFrom(foregroundColor: const Color(0xFF10B981)),
@@ -1207,7 +1278,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
-                    fontSize: 48,
+                    fontSize: 20,
                   ),
                   child: Text('${_descansoRestanteSegundos}s'),
                 ),

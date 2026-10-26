@@ -255,6 +255,7 @@ class Fitness360LocalStore {
     required String value,
     String note = '',
     List<String> fotosBase64 = const [],
+    DateTime? dataRegistro,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final current = await records();
@@ -265,7 +266,7 @@ class Fitness360LocalStore {
       title: title,
       value: value,
       note: note,
-      createdAt: DateTime.now(),
+      createdAt: dataRegistro ?? DateTime.now(),
       fotosBase64:
           fotosBase64.where((foto) => foto.trim().isNotEmpty).take(3).toList(),
     );

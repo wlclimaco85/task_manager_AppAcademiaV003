@@ -396,7 +396,12 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
   }
 
   @override
-  Widget build(BuildContext context) => SafeArea(
+  Widget build(BuildContext context) => Material(
+        // A rota do modal é transparente: sem fundo, os botões flutuavam sobre a tela.
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        clipBehavior: Clip.antiAlias,
+        child: SafeArea(
           child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -604,5 +609,5 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
                 child: const Text('Agora não / Fechar')),
           ],
         ),
-      ));
+      )));
 }

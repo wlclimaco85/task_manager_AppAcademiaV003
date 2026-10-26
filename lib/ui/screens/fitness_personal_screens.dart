@@ -98,6 +98,12 @@ const _kModalidadesAerobicas = <_ModalidadeAerobicaInfo>[
       kcalPorMinuto: 10.2),
 ];
 
+String _formatarDataAtividade(DateTime data) {
+  final dia = data.day.toString().padLeft(2, '0');
+  final mes = data.month.toString().padLeft(2, '0');
+  return '$dia/$mes/${data.year}';
+}
+
 class _AtividadeCompartilhavel {
   const _AtividadeCompartilhavel({
     required this.registro,
@@ -999,6 +1005,7 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
     final noteController =
         TextEditingController(text: 'Treino aeróbico diário');
     var fotos = <String>[];
+    var dataAtividade = DateTime.now();
 
     final saved = await showModalBottomSheet<_AtividadeCompartilhavel>(
       context: context,
@@ -1122,6 +1129,39 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                                   });
                                 }
                               },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        // Data da atividade (padrão: hoje)
+                        InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: () async {
+                            final escolhida = await showDatePicker(
+                              context: context,
+                              initialDate: dataAtividade,
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime.now(),
+                            );
+                            if (escolhida != null) {
+                              setModalState(() => dataAtividade = escolhida);
+                            }
+                          },
+                          child: InputDecorator(
+                            decoration: InputDecoration(
+                              labelText: 'Data da atividade',
+                              prefixIcon: Icon(Icons.calendar_today_outlined,
+                                  color: GridColors.primary),
+                              filled: true,
+                              fillColor: context.appSurfaceAlt,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                            child: Text(
+                              _formatarDataAtividade(dataAtividade),
+                              style: TextStyle(color: context.appText),
                             ),
                           ),
                         ),
@@ -1325,6 +1365,7 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                                     ? noteController.text.trim()
                                     : 'Atividade aeróbica • $caloriasCalculadas kcal calculadas',
                                 fotosBase64: fotos,
+                                dataRegistro: dataAtividade,
                               );
                               if (context.mounted) {
                                 Navigator.pop(
