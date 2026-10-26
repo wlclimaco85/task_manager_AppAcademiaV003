@@ -15,6 +15,15 @@ class _ExameHistoricoScreenState extends State<ExameHistoricoScreen> {
   late Future<List<Map<String, dynamic>>> _futuro;
   // Grupos escolhidos nos filtros (um ou varios). Vazio = mostra todos.
   final Set<String> _gruposSelecionados = {};
+  // Status da ultima medicao (verde, amarelo, vermelho). Vazio = mostra todos.
+  final Set<String> _statusSelecionados = {};
+
+  // Rotulos do filtro: Normal = verde (dentro), Atencao = amarelo (abaixo), Cuidado = vermelho (acima).
+  static const _opcoesStatus = [
+    (status: 'verde', rotulo: 'Normal'),
+    (status: 'amarelo', rotulo: 'Atenção'),
+    (status: 'vermelho', rotulo: 'Cuidado'),
+  ];
 
   @override
   void initState() {
@@ -50,9 +59,13 @@ class _ExameHistoricoScreenState extends State<ExameHistoricoScreen> {
             );
           }
           final grupos = {for (final s in series) (s['grupo'] ?? 'Outros').toString()}.toList()..sort();
-          final visiveis = _gruposSelecionados.isEmpty
-              ? series
-              : series.where((s) => _gruposSelecionados.contains((s['grupo'] ?? 'Outros').toString())).toList();
+          final visiveis = series.where((s) {
+            final grupoOk = _gruposSelecionados.isEmpty ||
+                _gruposSelecionados.contains((s['grupo'] ?? 'Outros').toString());
+            final statusOk = _statusSelecionados.isEmpty ||
+                _statusSelecionados.contains(statusDoUltimo(s));
+            return grupoOk && statusOk;
+          }).toList();
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -74,6 +87,29 @@ class _ExameHistoricoScreenState extends State<ExameHistoricoScreen> {
                           _gruposSelecionados.add(grupo);
                         } else {
                           _gruposSelecionados.remove(grupo);
+                        }
+                      }),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final opcao in _opcoesStatus)
+                    FilterChip(
+                      avatar: CircleAvatar(
+                        backgroundColor: corDoStatus(opcao.status),
+                        radius: 6,
+                      ),
+                      label: Text(opcao.rotulo),
+                      selected: _statusSelecionados.contains(opcao.status),
+                      onSelected: (selecionado) => setState(() {
+                        if (selecionado) {
+                          _statusSelecionados.add(opcao.status);
+                        } else {
+                          _statusSelecionados.remove(opcao.status);
                         }
                       }),
                     ),
@@ -110,6 +146,12 @@ Color corDoStatus(String? status) {
     default:
       return Colors.grey.shade500;
   }
+}
+
+/// Status do ultimo ponto da serie; null quando o item nao tem referencia no laudo.
+String? statusDoUltimo(Map<String, dynamic> serie) {
+  final pontos = (serie['pontos'] as List? ?? const []).cast<Map<String, dynamic>>();
+  return pontos.isEmpty ? null : pontos.last['status'] as String?;
 }
 
 /// Data ISO (2026-10-17) em dia/mes/ano (17/10/26), para nao confundir exames de anos diferentes.

@@ -192,7 +192,10 @@ class ExameLaudoParser {
   static final _regexResultadoNumerico = RegExp(
       r'^Resultado:\s*(?:(?:Inferior|Menor|Superior|Maior)\s+(?:a|que)\s+)?'
       r'(-?\d{1,3}(?:\.\d{3})*(?:,\d+)?|-?\d+(?:,\d+)?)\s*(.*)$');
-  static final _regexRefFaixaUnica = RegExp(r'^Valor de Refer[eê]ncia:\s*(\d+(?:,\d+)?)\s+a\s+(\d+(?:,\d+)?)\b',
+  static final _regexValorReferencia = RegExp(r'^Valor de Refer[eê]ncia:\s*(.*)$', caseSensitive: false);
+  static final _regexFaixaTexto = RegExp(r'(\d+(?:[.,]\d+)?)\s+a\s+(\d+(?:[.,]\d+)?)\b');
+  static final _regexLimiteSuperior = RegExp(
+      r'(?:Inferior(?:\s+ou\s+igual)?\s+a|Menor(?:\s+ou\s+igual)?\s+(?:que|a)|<)\s*(\d+(?:[.,]\d+)?)',
       caseSensitive: false);
   static const _siglasHormonais = {'FSH', 'LH', 'TSH', 'T3', 'T4', 'ESTRADIOL', 'PROGESTERONA',
     'PROLACTINA', 'TESTOSTERONA', 'CORTISOL', 'INSULINA'};
@@ -248,15 +251,15 @@ class ExameLaudoParser {
         nome = cabecalho;
         continue;
       }
-      final faixa = _regexRefFaixaUnica.firstMatch(linha);
-      if (faixa != null && pendente != null) {
+      if (_regexValorReferencia.hasMatch(linha) && pendente != null) {
         final p = pendente!;
+        final ref = _referenciaDoBloco(linhas, i);
         itens.add(ExameItemLido(
           nome: p.nome,
           valor: p.valor,
           unidade: p.unidade,
-          refMin: _numero(faixa.group(1)!),
-          refMax: _numero(faixa.group(2)!),
+          refMin: ref?.min,
+          refMax: ref?.max,
           grupo: grupoDoAnalito(p.nome),
           dataExame: p.data,
         ));
@@ -310,6 +313,38 @@ class ExameLaudoParser {
     fecharPendente();
     return itens;
   }
+
+  /// Faixa do bloco "Valor de Referencia" que comeca na linha [i]. So vale quando o bloco tem UMA
+  /// faixa (ou um limite "Inferior a X", tratado como 0 ate X). Blocos com varias faixas (sexo, idade,
+  /// fase do ciclo) ficam sem referencia: a faixa certa depende de dados que o app nao tem aqui.
+  static ({double? min, double? max})? _referenciaDoBloco(List<String> linhas, int i) {
+    final primeira = _regexValorReferencia.firstMatch(linhas[i].trim());
+    if (primeira == null) return null;
+    final trechos = [primeira.group(1)!];
+    for (var j = i + 1; j < linhas.length && j <= i + 12; j++) {
+      final l = linhas[j].trim();
+      if (l.isEmpty) continue;
+      if (_fronteiraDeItem(l)) break;
+      trechos.add(l);
+    }
+    final faixas = [for (final t in trechos) ..._regexFaixaTexto.allMatches(t)];
+    final limites = [for (final t in trechos) ..._regexLimiteSuperior.allMatches(t)];
+    if (faixas.length + limites.length != 1) return null;
+    if (faixas.length == 1) {
+      final f = faixas.single;
+      return (min: _numero(f.group(1)!), max: _numero(f.group(2)!));
+    }
+    final max = _numero(limites.single.group(1)!);
+    return max == null ? null : (min: 0.0, max: max);
+  }
+
+  /// Linha que inicia outro trecho do laudo (resultado, cabecalho de exame, material, coleta).
+  static bool _fronteiraDeItem(String linha) =>
+      _regexResultadoNumerico.hasMatch(linha) ||
+      _cabecalhoAnalito(linha) != null ||
+      linha.startsWith('Material:') ||
+      linha.startsWith('Método') ||
+      _regexColeta.hasMatch(linha);
 
   /// Coleta do resultado da linha [i]: a seguinte; se nao houver, a anterior mais proxima.
   static String? _coletaDoResultado(List<String> linhas, int i) {
