@@ -17,6 +17,8 @@ class _ExameHistoricoScreenState extends State<ExameHistoricoScreen> {
   final Set<String> _gruposSelecionados = {};
   // Status da ultima medicao (verde, amarelo, vermelho). Vazio = mostra todos.
   final Set<String> _statusSelecionados = {};
+  // Exame escolhido no dropdown (nome do item). Null = todos os exames.
+  String? _exameSelecionado;
 
   // Rotulos do filtro: Normal = verde (dentro), Atencao = amarelo (abaixo), Cuidado = vermelho (acima).
   static const _opcoesStatus = [
@@ -59,12 +61,14 @@ class _ExameHistoricoScreenState extends State<ExameHistoricoScreen> {
             );
           }
           final grupos = {for (final s in series) (s['grupo'] ?? 'Outros').toString()}.toList()..sort();
+          final nomes = {for (final s in series) s['nome'].toString()}.toList()..sort();
           final visiveis = series.where((s) {
             final grupoOk = _gruposSelecionados.isEmpty ||
                 _gruposSelecionados.contains((s['grupo'] ?? 'Outros').toString());
             final statusOk = _statusSelecionados.isEmpty ||
                 _statusSelecionados.contains(statusDoUltimo(s));
-            return grupoOk && statusOk;
+            final exameOk = _exameSelecionado == null || s['nome'].toString() == _exameSelecionado;
+            return grupoOk && statusOk && exameOk;
           }).toList();
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -114,6 +118,21 @@ class _ExameHistoricoScreenState extends State<ExameHistoricoScreen> {
                       }),
                     ),
                 ],
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String?>(
+                initialValue: _exameSelecionado,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Exame',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+                items: [
+                  const DropdownMenuItem<String?>(value: null, child: Text('Todos os exames')),
+                  for (final nome in nomes) DropdownMenuItem<String?>(value: nome, child: Text(nome)),
+                ],
+                onChanged: (valor) => setState(() => _exameSelecionado = valor),
               ),
               const SizedBox(height: 12),
               if (visiveis.isEmpty)
