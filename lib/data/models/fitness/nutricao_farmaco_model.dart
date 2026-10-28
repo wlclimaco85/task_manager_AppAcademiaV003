@@ -1,9 +1,9 @@
-
 /// Modelo de Alimento (com valores nutricionais para porção de 100g)
 class AlimentoModel {
   final String id;
   final String nome;
-  final String categoria; // 'proteinas', 'carboidratos', 'gorduras', 'frutas', 'vegetais', 'laticinios', 'suplementos'
+  final String
+      categoria; // 'proteinas', 'carboidratos', 'gorduras', 'frutas', 'vegetais', 'laticinios', 'suplementos'
   final double porcaoPadraoGramas; // ex: 100g
   final double calorias; // kcal por 100g
   final double proteinas; // g por 100g
@@ -131,6 +131,33 @@ class ItemRefeicaoModel {
       );
 }
 
+/// Quantidade consolidada de um alimento para a lista de compras da dieta.
+class ItemListaComprasDieta {
+  final String alimentoId;
+  final String alimentoNome;
+  final double quantidadeDiariaGramas;
+  final double quantidadeTotalGramas;
+
+  const ItemListaComprasDieta({
+    required this.alimentoId,
+    required this.alimentoNome,
+    required this.quantidadeDiariaGramas,
+    required this.quantidadeTotalGramas,
+  });
+}
+
+class _ItemCompraAcumulado {
+  final String alimentoId;
+  final String alimentoNome;
+  double quantidadeDiariaGramas;
+
+  _ItemCompraAcumulado({
+    required this.alimentoId,
+    required this.alimentoNome,
+    required this.quantidadeDiariaGramas,
+  });
+}
+
 /// Refeição (ex: Café da Manhã, Almoço, Jantar, Pré-Treino)
 class RefeicaoModel {
   final String id;
@@ -166,8 +193,8 @@ class RefeicaoModel {
         nome: map['nome']?.toString() ?? '',
         horario: map['horario']?.toString() ?? '12:00',
         itens: (map['itens'] as List<dynamic>?)
-                ?.map((e) =>
-                    ItemRefeicaoModel.fromMap(e as Map<String, dynamic>))
+                ?.map(
+                    (e) => ItemRefeicaoModel.fromMap(e as Map<String, dynamic>))
                 .toList() ??
             [],
       );
@@ -177,8 +204,10 @@ class RefeicaoModel {
 class DietaProtocoloModel {
   final String id;
   final String alunoId;
-  final String titulo; // ex: "Cutting Agressivo 2000kcal", "Bulking Limpo 3200kcal"
-  final String objetivo; // 'emagrecimento', 'hipertrofia', 'manutencao', 'recomposicao'
+  final String
+      titulo; // ex: "Cutting Agressivo 2000kcal", "Bulking Limpo 3200kcal"
+  final String
+      objetivo; // 'emagrecimento', 'hipertrofia', 'manutencao', 'recomposicao'
   final double caloriasMeta;
   final double proteinasMeta;
   final double carboidratosMeta;
@@ -213,6 +242,44 @@ class DietaProtocoloModel {
       refeicoes.fold(0.0, (acc, r) => acc + r.totalCarboidratos);
   double get totalGordurasReal =>
       refeicoes.fold(0.0, (acc, r) => acc + r.totalGorduras);
+
+  /// Consolida os alimentos de todas as refeições para o período informado.
+  List<ItemListaComprasDieta> gerarListaCompras(int dias) {
+    if (dias < 1) {
+      throw ArgumentError.value(
+          dias, 'dias', 'O período deve ter ao menos 1 dia.');
+    }
+    final totais = <String, _ItemCompraAcumulado>{};
+    for (final refeicao in refeicoes) {
+      for (final item in refeicao.itens) {
+        final chave = item.alimentoId.isNotEmpty
+            ? item.alimentoId
+            : item.alimentoNome.trim().toLowerCase();
+        final acumulado = totais.putIfAbsent(
+          chave,
+          () => _ItemCompraAcumulado(
+            alimentoId: item.alimentoId,
+            alimentoNome: item.alimentoNome,
+            quantidadeDiariaGramas: 0,
+          ),
+        );
+        acumulado.quantidadeDiariaGramas += item.quantidadeGramas;
+      }
+    }
+
+    final lista = totais.values
+        .map(
+          (item) => ItemListaComprasDieta(
+            alimentoId: item.alimentoId,
+            alimentoNome: item.alimentoNome,
+            quantidadeDiariaGramas: item.quantidadeDiariaGramas,
+            quantidadeTotalGramas: item.quantidadeDiariaGramas * dias,
+          ),
+        )
+        .toList();
+    lista.sort((a, b) => a.alimentoNome.compareTo(b.alimentoNome));
+    return lista;
+  }
 
   Map<String, dynamic> toMap() => {
         'id': id,
@@ -257,13 +324,19 @@ class DietaProtocoloModel {
 class MedicamentoProtocoloModel {
   final String id;
   final String alunoId;
-  final String nomeComposto; // ex: "Enantato de Testosterona", "Oxandrolona", "Anastrozol", "Silimarina"
-  final String dosagem; // texto exibido, ex: "2 ML", "250mg" (registros antigos)
-  final double? doseQuantidade; // quantidade por uso, ex: 2 (em ML, UI ou comprimido)
+  final String
+      nomeComposto; // ex: "Enantato de Testosterona", "Oxandrolona", "Anastrozol", "Silimarina"
+  final String
+      dosagem; // texto exibido, ex: "2 ML", "250mg" (registros antigos)
+  final double?
+      doseQuantidade; // quantidade por uso, ex: 2 (em ML, UI ou comprimido)
   final String? doseUnidade; // simbolo da unidade cadastrada: ML, UI, COMP
-  final String frequencia; // ex: "1x na semana", "DSDN", "12 em 12 horas", "TSD"
-  final String viaAdministracao; // 'Intramuscular', 'Oral', 'Subcutânea', 'Tópica'
-  final String categoria; // 'ergogenico_ciclo', 'tpc_protetor', 'manipulado_farmacia', 'geral'
+  final String
+      frequencia; // ex: "1x na semana", "DSDN", "12 em 12 horas", "TSD"
+  final String
+      viaAdministracao; // 'Intramuscular', 'Oral', 'Subcutânea', 'Tópica'
+  final String
+      categoria; // 'ergogenico_ciclo', 'tpc_protetor', 'manipulado_farmacia', 'geral'
   final String dataInicio; // 'YYYY-MM-DD'
   final String? dataFim; // 'YYYY-MM-DD'
   final bool ativo;
@@ -275,7 +348,8 @@ class MedicamentoProtocoloModel {
   final bool privado;
 
   /// Apenas ciclo anabolizante (hormônio) pode ser marcado como privado.
-  static bool permitePrivado(String categoria) => categoria == 'ergogenico_ciclo';
+  static bool permitePrivado(String categoria) =>
+      categoria == 'ergogenico_ciclo';
 
   /// Pode ser exibido para o personal do aluno?
   bool get visivelParaPersonal => !(privado && permitePrivado(categoria));
@@ -373,12 +447,14 @@ class MedicamentoProtocoloModel {
 class SuplementoProtocoloModel {
   final String id;
   final String alunoId;
-  final String nome; // ex: "Creatina Monohidratada", "Whey Protein Isolado", "Ômega 3", "Beta Alanina"
+  final String
+      nome; // ex: "Creatina Monohidratada", "Whey Protein Isolado", "Ômega 3", "Beta Alanina"
   final String marca;
   final double? quantidadePote;
   final String unidadePote;
   final String dosagem; // ex: "5g", "30g (1 scoop)", "2 cápsulas"
-  final String horario; // 'Pós-Treino', 'Jejum', 'Antes de Dormir', 'Pré-Treino'
+  final String
+      horario; // 'Pós-Treino', 'Jejum', 'Antes de Dormir', 'Pré-Treino'
   final String dataInicio; // 'YYYY-MM-DD'
   final String? dataFim; // 'YYYY-MM-DD'
   final bool ativo;
@@ -435,7 +511,8 @@ class SuplementoProtocoloModel {
 /// Evento na Linha do Tempo Unificada (Timeline Fitness 360)
 class TimelineFitnessEventModel {
   final DateTime data;
-  final String tipo; // 'avaliacao_fisica', 'inicio_dieta', 'fim_dieta', 'inicio_medicamento', 'fim_medicamento', 'inicio_suplemento'
+  final String
+      tipo; // 'avaliacao_fisica', 'inicio_dieta', 'fim_dieta', 'inicio_medicamento', 'fim_medicamento', 'inicio_suplemento'
   final String titulo;
   final String descricao;
   final double? pesoKg;

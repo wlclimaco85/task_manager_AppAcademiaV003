@@ -11,6 +11,7 @@ import 'package:task_manager_flutter/data/services/unidade_medida_catalogo.dart'
 import 'package:task_manager_flutter/data/services/permissoes_aluno_service.dart';
 import 'package:task_manager_flutter/data/utils/fitness_access.dart';
 import 'package:task_manager_flutter/data/services/background_sync_service.dart';
+import 'package:task_manager_flutter/ui/widgets/fechamento_modal_seguro.dart';
 
 /// Central de Nutrição, Farmacologia, Suplementação & Timeline Fitness 360
 class NutricaoProtocolosHubScreen extends StatefulWidget {
@@ -36,6 +37,7 @@ class _NutricaoProtocolosHubScreenState
   List<SuplementoProtocoloModel> _suplementos = [];
   List<TimelineFitnessEventModel> _timelineEventos = [];
   bool _loading = true;
+
   /// Permissoes do aluno visto pelo personal. Sem resposta, tudo bloqueado (fail-closed).
   Map<String, bool> _permissoesAluno = const {
     'treino': true,
@@ -50,7 +52,8 @@ class _NutricaoProtocolosHubScreenState
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     _carregarDados();
-    BackgroundSyncService.mudancas.addListener(_aoAtualizarSincronizacaoAutomatica);
+    BackgroundSyncService.mudancas
+        .addListener(_aoAtualizarSincronizacaoAutomatica);
   }
 
   void _aoAtualizarSincronizacaoAutomatica() {
@@ -66,7 +69,8 @@ class _NutricaoProtocolosHubScreenState
           : null);
 
   /// Personal vendo um aluno: a area so aparece se o aluno liberou.
-  bool _bloqueado(String area) => widget.alunoId != null && _permissoesAluno[area] != true;
+  bool _bloqueado(String area) =>
+      widget.alunoId != null && _permissoesAluno[area] != true;
 
   Widget _avisoBloqueado(String area) => Center(
         child: Padding(
@@ -88,7 +92,8 @@ class _NutricaoProtocolosHubScreenState
       if (mounted) setState(() => _permissoesAluno = permissoes);
     }
     final dietas = await _repository.getDietas(alunoId: _alunoFiltro);
-    final medicamentos = await _repository.getMedicamentos(alunoId: _alunoFiltro);
+    final medicamentos =
+        await _repository.getMedicamentos(alunoId: _alunoFiltro);
     final suplementos = await _repository.getSuplementos(alunoId: _alunoFiltro);
     final timeline = await _repository.getTimelineEventos();
 
@@ -105,7 +110,8 @@ class _NutricaoProtocolosHubScreenState
 
   @override
   void dispose() {
-    BackgroundSyncService.mudancas.removeListener(_aoAtualizarSincronizacaoAutomatica);
+    BackgroundSyncService.mudancas
+        .removeListener(_aoAtualizarSincronizacaoAutomatica);
     _tabController.dispose();
     super.dispose();
   }
@@ -191,7 +197,8 @@ class _NutricaoProtocolosHubScreenState
                 ),
                 Text(
                   '${_dietas.length} plano(s) cadastrado(s)',
-                  style: TextStyle(color: GridColors.textSecondary, fontSize: 12),
+                  style:
+                      TextStyle(color: GridColors.textSecondary, fontSize: 12),
                 ),
               ],
             ),
@@ -199,7 +206,8 @@ class _NutricaoProtocolosHubScreenState
               style: ElevatedButton.styleFrom(
                 backgroundColor: GridColors.primary,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Nova Dieta'),
@@ -210,7 +218,8 @@ class _NutricaoProtocolosHubScreenState
         const SizedBox(height: 16),
 
         if (_dietas.isEmpty)
-          _buildEmptyCard('Nenhuma dieta cadastrada.', Icons.restaurant_outlined)
+          _buildEmptyCard(
+              'Nenhuma dieta cadastrada.', Icons.restaurant_outlined)
         else
           for (final dieta in _dietas) _buildCardDieta(dieta),
       ],
@@ -226,7 +235,8 @@ class _NutricaoProtocolosHubScreenState
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: GridColors.inputBorder),
         boxShadow: [
-          BoxShadow(color: GridColors.shadow, blurRadius: 10, offset: Offset(0, 4)),
+          BoxShadow(
+              color: GridColors.shadow, blurRadius: 10, offset: Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -249,31 +259,52 @@ class _NutricaoProtocolosHubScreenState
                     const SizedBox(height: 4),
                     Text(
                       '📅 Vigência: ${dieta.dataInicio} ${dieta.dataFim != null ? 'até ${dieta.dataFim}' : '(Em andamento)'}',
-                      style: TextStyle(color: GridColors.textSecondary, fontSize: 12),
+                      style: TextStyle(
+                          color: GridColors.textSecondary, fontSize: 12),
                     ),
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: dieta.ativa ? GridColors.primarySubtle : const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  dieta.ativa ? 'Ativa' : 'Encerrada',
-                  style: TextStyle(
-                    color: dieta.ativa ? GridColors.primary : GridColors.textSecondary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    key: Key('btn_lista_compras_${dieta.id}'),
+                    tooltip: 'Gerar lista de compras',
+                    color: GridColors.primary,
+                    icon: const Icon(Icons.shopping_cart_outlined),
+                    onPressed: () => _abrirListaCompras(dieta),
                   ),
-                ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: dieta.ativa
+                          ? GridColors.primarySubtle
+                          : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      dieta.ativa ? 'Ativa' : 'Encerrada',
+                      style: TextStyle(
+                        color: dieta.ativa
+                            ? GridColors.primary
+                            : GridColors.textSecondary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          Align(alignment:Alignment.centerRight,child:TextButton.icon(
-            onPressed:()=>_abrirDialogCriarDieta(dieta),icon:const Icon(Icons.edit_outlined,size:16),
-            label:const Text('Editar refeições e alimentos'))),
+          Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                  onPressed: () => _abrirDialogCriarDieta(dieta),
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  label: const Text('Editar refeições e alimentos'))),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton.icon(
@@ -284,7 +315,9 @@ class _NutricaoProtocolosHubScreenState
                 context,
                 nomeArquivo: nomeArquivoPdf('Dieta', dieta.titulo),
                 gerar: () async {
-                  final alimentos = {for (final a in await _repository.getAlimentos()) a.id: a};
+                  final alimentos = {
+                    for (final a in await _repository.getAlimentos()) a.id: a
+                  };
                   return FichaDietaPdf.dieta(
                     dieta,
                     alunoNome: AuthUtility.userInfo.login?.nome ?? '',
@@ -310,10 +343,26 @@ class _NutricaoProtocolosHubScreenState
               spacing: 16,
               runSpacing: 12,
               children: [
-                _buildMacroItem('Calorias', _valorMacro(dieta.totalCaloriasReal, dieta.caloriasMeta, 'kcal'), const Color(0xFFEA580C)),
-                _buildMacroItem('Proteínas', _valorMacro(dieta.totalProteinasReal, dieta.proteinasMeta, 'g'), const Color(0xFF059669)),
-                _buildMacroItem('Carbos', _valorMacro(dieta.totalCarboidratosReal, dieta.carboidratosMeta, 'g'), const Color(0xFF2563EB)),
-                _buildMacroItem('Gorduras', _valorMacro(dieta.totalGordurasReal, dieta.gordurasMeta, 'g'), const Color(0xFFD97706)),
+                _buildMacroItem(
+                    'Calorias',
+                    _valorMacro(
+                        dieta.totalCaloriasReal, dieta.caloriasMeta, 'kcal'),
+                    const Color(0xFFEA580C)),
+                _buildMacroItem(
+                    'Proteínas',
+                    _valorMacro(
+                        dieta.totalProteinasReal, dieta.proteinasMeta, 'g'),
+                    const Color(0xFF059669)),
+                _buildMacroItem(
+                    'Carbos',
+                    _valorMacro(dieta.totalCarboidratosReal,
+                        dieta.carboidratosMeta, 'g'),
+                    const Color(0xFF2563EB)),
+                _buildMacroItem(
+                    'Gorduras',
+                    _valorMacro(
+                        dieta.totalGordurasReal, dieta.gordurasMeta, 'g'),
+                    const Color(0xFFD97706)),
               ],
             ),
           ),
@@ -321,7 +370,10 @@ class _NutricaoProtocolosHubScreenState
 
           // Refeições da Dieta
           Text('Refeições Prescritas:',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: GridColors.textPrimary)),
+              style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  color: GridColors.textPrimary)),
           const SizedBox(height: 8),
 
           for (final ref in dieta.refeicoes)
@@ -340,14 +392,19 @@ class _NutricaoProtocolosHubScreenState
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('${ref.nome} (${ref.horario})',
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 13)),
                     Text('${ref.totalCalorias.toStringAsFixed(0)} kcal',
-                        style: TextStyle(color: GridColors.primary, fontWeight: FontWeight.w700, fontSize: 12)),
+                        style: TextStyle(
+                            color: GridColors.primary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12)),
                   ],
                 ),
                 subtitle: Text(
                   '${ref.itens.length} alimento(s) • P: ${ref.totalProteinas.toStringAsFixed(0)}g C: ${ref.totalCarboidratos.toStringAsFixed(0)}g G: ${ref.totalGorduras.toStringAsFixed(0)}g',
-                  style: TextStyle(color: GridColors.textSecondary, fontSize: 11),
+                  style:
+                      TextStyle(color: GridColors.textSecondary, fontSize: 11),
                 ),
                 children: [
                   for (final item in ref.itens)
@@ -355,17 +412,20 @@ class _NutricaoProtocolosHubScreenState
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Row(
                         children: [
-                          Icon(Icons.circle, size: 6, color: GridColors.primary),
+                          Icon(Icons.circle,
+                              size: 6, color: GridColors.primary),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               '${item.alimentoNome} (${item.quantidadeGramas.toStringAsFixed(0)}g)',
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                  fontSize: 12, fontWeight: FontWeight.w600),
                             ),
                           ),
                           Text(
                             '${item.calorias.toStringAsFixed(0)} kcal (P:${item.proteinas.toStringAsFixed(0)}g C:${item.carboidratos.toStringAsFixed(0)}g G:${item.gorduras.toStringAsFixed(0)}g)',
-                            style: TextStyle(fontSize: 11, color: GridColors.textSecondary),
+                            style: TextStyle(
+                                fontSize: 11, color: GridColors.textSecondary),
                           ),
                         ],
                       ),
@@ -378,16 +438,156 @@ class _NutricaoProtocolosHubScreenState
     );
   }
 
-  String _valorMacro(double valor, double meta, String unidade) =>
-      meta > 0 ? valor.toStringAsFixed(0)+' / '+meta.toStringAsFixed(0)+' '+unidade
-          : valor.toStringAsFixed(0)+' '+unidade+' (sem meta)';
+  Future<void> _abrirListaCompras(DietaProtocoloModel dieta) async {
+    if (dieta.refeicoes.every((refeicao) => refeicao.itens.isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Adicione alimentos à dieta antes de gerar a lista.'),
+      ));
+      return;
+    }
+
+    var dias = 7;
+    const periodos = <int, String>{
+      7: '1 semana',
+      14: '2 semanas',
+      30: '1 mês',
+      60: '2 meses',
+      90: '3 meses',
+      180: '6 meses',
+    };
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => FechamentoModalSeguro(
+        child: StatefulBuilder(
+          builder: (context, setDialogState) {
+            final itens = dieta.gerarListaCompras(dias);
+            return AlertDialog(
+              backgroundColor: GridColors.dialogBackground,
+              title: Row(
+                children: [
+                  Icon(Icons.shopping_cart_outlined, color: GridColors.primary),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Lista de compras',
+                      style: TextStyle(
+                        color: GridColors.textPrimary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              content: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        dieta.titulo,
+                        style: TextStyle(color: GridColors.textSecondary),
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<int>(
+                        value: dias,
+                        decoration: const InputDecoration(
+                          labelText: 'Comprar para quanto tempo?',
+                          prefixIcon: Icon(Icons.calendar_month_outlined),
+                        ),
+                        items: periodos.entries
+                            .map(
+                              (periodo) => DropdownMenuItem<int>(
+                                value: periodo.key,
+                                child: Text(periodo.value),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (valor) {
+                          if (valor != null) {
+                            setDialogState(() => dias = valor);
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        '${itens.length} item(ns) para ${periodos[dias]}',
+                        style: TextStyle(
+                          color: GridColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      for (final item in itens)
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(Icons.shopping_basket_outlined,
+                              color: GridColors.primary),
+                          title: Text(
+                            item.alimentoNome,
+                            style: TextStyle(
+                              color: GridColors.textPrimary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          subtitle: Text(
+                            '${_formatarQuantidadeCompra(item.quantidadeDiariaGramas)} por dia',
+                            style: TextStyle(color: GridColors.textSecondary),
+                          ),
+                          trailing: Text(
+                            _formatarQuantidadeCompra(
+                                item.quantidadeTotalGramas),
+                            style: TextStyle(
+                              color: GridColors.primary,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Fechar'),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  String _formatarQuantidadeCompra(double gramas) {
+    if (gramas < 1000) return '${gramas.toStringAsFixed(0)} g';
+    final quilos = gramas / 1000;
+    final casas = quilos == quilos.roundToDouble() ? 0 : 1;
+    return '${quilos.toStringAsFixed(casas)} kg';
+  }
+
+  String _valorMacro(double valor, double meta, String unidade) => meta > 0
+      ? valor.toStringAsFixed(0) +
+          ' / ' +
+          meta.toStringAsFixed(0) +
+          ' ' +
+          unidade
+      : valor.toStringAsFixed(0) + ' ' + unidade + ' (sem meta)';
 
   Widget _buildMacroItem(String label, String valor, Color color) {
     return Column(
       children: [
-        Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w700)),
+        Text(label,
+            style: TextStyle(
+                color: color, fontSize: 11, fontWeight: FontWeight.w700)),
         const SizedBox(height: 2),
-        Text(valor, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: GridColors.textPrimary)),
+        Text(valor,
+            style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: GridColors.textPrimary)),
       ],
     );
   }
@@ -415,7 +615,8 @@ class _NutricaoProtocolosHubScreenState
                 ),
                 Text(
                   '${_medicamentos.length} protocolo(s) de compostos',
-                  style: TextStyle(color: GridColors.textSecondary, fontSize: 12),
+                  style:
+                      TextStyle(color: GridColors.textSecondary, fontSize: 12),
                 ),
               ],
             ),
@@ -423,7 +624,8 @@ class _NutricaoProtocolosHubScreenState
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFEF4444), // Red
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Novo Protocolo'),
@@ -432,9 +634,9 @@ class _NutricaoProtocolosHubScreenState
           ],
         ),
         const SizedBox(height: 16),
-
         if (_medicamentos.isEmpty)
-          _buildEmptyCard('Nenhum medicamento ou composto em uso.', Icons.medication_outlined)
+          _buildEmptyCard('Nenhum medicamento ou composto em uso.',
+              Icons.medication_outlined)
         else
           for (final med in _medicamentos) _buildCardMedicamento(med),
       ],
@@ -443,7 +645,8 @@ class _NutricaoProtocolosHubScreenState
 
   Widget _buildCardMedicamento(MedicamentoProtocoloModel med) {
     final isErgogenico = med.categoria == 'ergogenico_ciclo';
-    final corDestaque = isErgogenico ? const Color(0xFFEF4444) : const Color(0xFF3B82F6);
+    final corDestaque =
+        isErgogenico ? const Color(0xFFEF4444) : const Color(0xFF3B82F6);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -453,7 +656,8 @@ class _NutricaoProtocolosHubScreenState
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: corDestaque.withValues(alpha: 0.3)),
         boxShadow: [
-          BoxShadow(color: GridColors.shadow, blurRadius: 10, offset: Offset(0, 4)),
+          BoxShadow(
+              color: GridColors.shadow, blurRadius: 10, offset: Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -471,7 +675,8 @@ class _NutricaoProtocolosHubScreenState
                         color: corDestaque.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.medication, color: corDestaque, size: 20),
+                      child:
+                          Icon(Icons.medication, color: corDestaque, size: 20),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -487,17 +692,24 @@ class _NutricaoProtocolosHubScreenState
                           ),
                           Text(
                             '${med.dosagem} • ${med.frequencia} (${med.viaAdministracao})',
-                            style: TextStyle(color: corDestaque, fontSize: 12, fontWeight: FontWeight.w700),
+                            style: TextStyle(
+                                color: corDestaque,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700),
                           ),
                           if (!med.visivelParaPersonal)
                             Padding(
                               padding: EdgeInsets.only(top: 4),
                               child: Row(
                                 children: [
-                                  Icon(Icons.lock_outline, size: 13, color: GridColors.textSecondary),
+                                  Icon(Icons.lock_outline,
+                                      size: 13,
+                                      color: GridColors.textSecondary),
                                   SizedBox(width: 4),
                                   Text('Privado • oculto para o personal',
-                                      style: TextStyle(fontSize: 11, color: GridColors.textSecondary)),
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: GridColors.textSecondary)),
                                 ],
                               ),
                             ),
@@ -508,9 +720,12 @@ class _NutricaoProtocolosHubScreenState
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: med.ativo ? corDestaque.withValues(alpha: 0.1) : const Color(0xFFF1F5F9),
+                  color: med.ativo
+                      ? corDestaque.withValues(alpha: 0.1)
+                      : const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -529,7 +744,8 @@ class _NutricaoProtocolosHubScreenState
           const SizedBox(height: 10),
           Row(
             children: [
-              Icon(Icons.calendar_today, size: 14, color: GridColors.textSecondary),
+              Icon(Icons.calendar_today,
+                  size: 14, color: GridColors.textSecondary),
               const SizedBox(width: 6),
               Text(
                 'Período: ${med.dataInicio} ${med.dataFim != null ? 'até ${med.dataFim}' : '(Contínuo)'}',
@@ -537,16 +753,20 @@ class _NutricaoProtocolosHubScreenState
               ),
               if (med.horario != null) ...[
                 const SizedBox(width: 12),
-                Icon(Icons.access_time, size: 14, color: GridColors.textSecondary),
+                Icon(Icons.access_time,
+                    size: 14, color: GridColors.textSecondary),
                 const SizedBox(width: 4),
-                Text(med.horario!, style: TextStyle(color: GridColors.textSecondary, fontSize: 12)),
+                Text(med.horario!,
+                    style: TextStyle(
+                        color: GridColors.textSecondary, fontSize: 12)),
               ],
               const Spacer(),
               TextButton.icon(
                 key: Key('editar_medicamento_${med.id}'),
                 onPressed: () => _abrirDialogMedicamento(med),
                 icon: const Icon(Icons.edit_outlined, size: 16),
-                label: Text(med.ativo ? 'Editar / finalizar' : 'Editar / reabrir'),
+                label:
+                    Text(med.ativo ? 'Editar / finalizar' : 'Editar / reabrir'),
               ),
             ],
           ),
@@ -554,7 +774,10 @@ class _NutricaoProtocolosHubScreenState
             const SizedBox(height: 8),
             Text(
               'Obs: ${med.observacoes}',
-              style: const TextStyle(color: Color(0xFF64748B), fontSize: 11, fontStyle: FontStyle.italic),
+              style: const TextStyle(
+                  color: Color(0xFF64748B),
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic),
             ),
           ],
         ],
@@ -586,7 +809,8 @@ class _NutricaoProtocolosHubScreenState
                 ),
                 Text(
                   '${_suplementos.length} item(ns) em uso',
-                  style: TextStyle(color: GridColors.textSecondary, fontSize: 12),
+                  style:
+                      TextStyle(color: GridColors.textSecondary, fontSize: 12),
                 ),
               ],
             ),
@@ -594,7 +818,8 @@ class _NutricaoProtocolosHubScreenState
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2563EB), // Blue
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Novo Suplemento'),
@@ -603,9 +828,9 @@ class _NutricaoProtocolosHubScreenState
           ],
         ),
         const SizedBox(height: 16),
-
         if (_suplementos.isEmpty)
-          _buildEmptyCard('Nenhum suplemento cadastrado.', Icons.science_outlined)
+          _buildEmptyCard(
+              'Nenhum suplemento cadastrado.', Icons.science_outlined)
         else
           for (final sup in _suplementos) _buildCardSuplemento(sup),
       ],
@@ -629,7 +854,8 @@ class _NutricaoProtocolosHubScreenState
               color: const Color(0xFF2563EB).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.science, color: Color(0xFF2563EB), size: 22),
+            child:
+                const Icon(Icons.science, color: Color(0xFF2563EB), size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -638,21 +864,40 @@ class _NutricaoProtocolosHubScreenState
               children: [
                 Text(
                   sup.nome,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: GridColors.textPrimary),
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: GridColors.textPrimary),
                 ),
-                if(sup.marca.isNotEmpty)Text(sup.marca,style:TextStyle(color:GridColors.textSecondary)),
-                if(sup.quantidadePote!=null)Text('Pote: '+sup.quantidadePote!.toString()+' '+sup.unidadePote,style:TextStyle(color:GridColors.textSecondary)),
+                if (sup.marca.isNotEmpty)
+                  Text(sup.marca,
+                      style: TextStyle(color: GridColors.textSecondary)),
+                if (sup.quantidadePote != null)
+                  Text(
+                      'Pote: ' +
+                          sup.quantidadePote!.toString() +
+                          ' ' +
+                          sup.unidadePote,
+                      style: TextStyle(color: GridColors.textSecondary)),
                 const SizedBox(height: 2),
                 Text(
                   '${sup.dosagem} • Horário: ${sup.horario}',
-                  style: const TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.w700, fontSize: 12),
+                  style: const TextStyle(
+                      color: Color(0xFF2563EB),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12),
                 ),
                 if (sup.observacoes != null)
-                  Text(sup.observacoes!, style: TextStyle(color: GridColors.textSecondary, fontSize: 11)),
+                  Text(sup.observacoes!,
+                      style: TextStyle(
+                          color: GridColors.textSecondary, fontSize: 11)),
               ],
             ),
           ),
-          IconButton(tooltip: 'Editar suplemento', onPressed:()=>_abrirDialogCriarSuplemento(sup),icon:Icon(Icons.edit_outlined,color:GridColors.primary)),
+          IconButton(
+              tooltip: 'Editar suplemento',
+              onPressed: () => _abrirDialogCriarSuplemento(sup),
+              icon: Icon(Icons.edit_outlined, color: GridColors.primary)),
         ],
       ),
     );
@@ -663,14 +908,18 @@ class _NutricaoProtocolosHubScreenState
   // ─────────────────────────────────────────────────────────────────────────────
 
   Widget _buildTabTimeline360() {
-    if (_bloqueado('metas')) return _avisoBloqueado('metas e evolução do corpo');
+    if (_bloqueado('metas'))
+      return _avisoBloqueado('metas e evolução do corpo');
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         // Header
         Text(
           'Timeline de Evolução 360°',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: GridColors.textPrimary),
+          style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: GridColors.textPrimary),
         ),
         Text(
           'Cruzamento temporal de Peso, % de Gordura, Dietas, Medicamentos e Suplementos',
@@ -686,7 +935,10 @@ class _NutricaoProtocolosHubScreenState
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: GridColors.inputBorder),
             boxShadow: [
-              BoxShadow(color: GridColors.shadow, blurRadius: 12, offset: Offset(0, 4)),
+              BoxShadow(
+                  color: GridColors.shadow,
+                  blurRadius: 12,
+                  offset: Offset(0, 4)),
             ],
           ),
           child: Column(
@@ -717,8 +969,8 @@ class _NutricaoProtocolosHubScreenState
                       show: true,
                       drawVerticalLine: false,
                       horizontalInterval: 10,
-                      getDrawingHorizontalLine: (value) =>
-                          FlLine(color: const Color(0xFFF1F5F9), strokeWidth: 1),
+                      getDrawingHorizontalLine: (value) => FlLine(
+                          color: const Color(0xFFF1F5F9), strokeWidth: 1),
                     ),
                     titlesData: FlTitlesData(
                       leftTitles: AxisTitles(
@@ -727,21 +979,35 @@ class _NutricaoProtocolosHubScreenState
                           reservedSize: 34,
                           interval: 20,
                           getTitlesWidget: (val, _) => Text('${val.toInt()}',
-                              style: TextStyle(color: GridColors.textSecondary, fontSize: 10)),
+                              style: TextStyle(
+                                  color: GridColors.textSecondary,
+                                  fontSize: 10)),
                         ),
                       ),
-                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false)),
+                      topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false)),
                       bottomTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
                           interval: 1,
                           getTitlesWidget: (val, _) {
                             final idx = val.toInt();
-                            if (idx == 0) return const Text('Mês -3', style: TextStyle(fontSize: 10));
-                            if (idx == 1) return const Text('Mês -2', style: TextStyle(fontSize: 10));
-                            if (idx == 2) return const Text('Mês -1', style: TextStyle(fontSize: 10));
-                            if (idx == 3) return const Text('Atual', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold));
+                            if (idx == 0)
+                              return const Text('Mês -3',
+                                  style: TextStyle(fontSize: 10));
+                            if (idx == 1)
+                              return const Text('Mês -2',
+                                  style: TextStyle(fontSize: 10));
+                            if (idx == 2)
+                              return const Text('Mês -1',
+                                  style: TextStyle(fontSize: 10));
+                            if (idx == 3)
+                              return const Text('Atual',
+                                  style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold));
                             return const Text('');
                           },
                         ),
@@ -791,7 +1057,10 @@ class _NutricaoProtocolosHubScreenState
         // Lista Cronológica de Eventos e Protocolos
         Text(
           'Marcos & Linha do Tempo',
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: GridColors.textPrimary),
+          style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 15,
+              color: GridColors.textPrimary),
         ),
         const SizedBox(height: 12),
 
@@ -803,9 +1072,16 @@ class _NutricaoProtocolosHubScreenState
   Widget _buildLegendaDot(String label, Color color) {
     return Row(
       children: [
-        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 4),
-        Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: GridColors.textSecondary)),
+        Text(label,
+            style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: GridColors.textSecondary)),
       ],
     );
   }
@@ -842,14 +1118,17 @@ class _NutricaoProtocolosHubScreenState
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(ev.titulo,
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w800, fontSize: 13)),
                     Text(dataFormatada,
-                        style: TextStyle(color: GridColors.textSecondary, fontSize: 11)),
+                        style: TextStyle(
+                            color: GridColors.textSecondary, fontSize: 11)),
                   ],
                 ),
                 const SizedBox(height: 2),
                 Text(ev.descricao,
-                    style: TextStyle(color: GridColors.textSecondary, fontSize: 12)),
+                    style: TextStyle(
+                        color: GridColors.textSecondary, fontSize: 12)),
               ],
             ),
           ),
@@ -906,8 +1185,10 @@ class _NutricaoProtocolosHubScreenState
   // ─────────────────────────────────────────────────────────────────────────────
 
   Future<void> _abrirDialogCriarDieta([DietaProtocoloModel? dieta]) async {
-    final salvo=await showDialog<bool>(context:context,builder:(_)=>DietaEditor(dieta:dieta,alunoId:_alunoFiltro));
-    if(salvo==true && mounted) {
+    final salvo = await showDialog<bool>(
+        context: context,
+        builder: (_) => DietaEditor(dieta: dieta, alunoId: _alunoFiltro));
+    if (salvo == true && mounted) {
       await _carregarDados();
     }
   }
@@ -920,8 +1201,11 @@ class _NutricaoProtocolosHubScreenState
     if (!mounted) return;
     final nomeCtrl = TextEditingController(text: med?.nomeComposto ?? '');
     final quantidadeCtrl = TextEditingController(
-        text: med?.doseQuantidade != null ? _formatarQuantidade(med!.doseQuantidade!) : '');
-    final freqCtrl = TextEditingController(text: med?.frequencia ?? '1x por semana');
+        text: med?.doseQuantidade != null
+            ? _formatarQuantidade(med!.doseQuantidade!)
+            : '');
+    final freqCtrl =
+        TextEditingController(text: med?.frequencia ?? '1x por semana');
     String categoria = med?.categoria ?? 'ergogenico_ciclo';
     bool privado = med?.privado ?? false;
     String? unidade = med?.doseUnidade ?? (med == null ? unidades.first : null);
@@ -935,8 +1219,12 @@ class _NutricaoProtocolosHubScreenState
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              title: Text(med == null ? 'Cadastrar Medicamento / Ciclo' : 'Editar Medicamento / Ciclo',
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              title: Text(
+                  med == null
+                      ? 'Cadastrar Medicamento / Ciclo'
+                      : 'Editar Medicamento / Ciclo',
                   style: const TextStyle(fontWeight: FontWeight.w800)),
               content: SingleChildScrollView(
                 child: Column(
@@ -954,12 +1242,20 @@ class _NutricaoProtocolosHubScreenState
                       value: categoria,
                       decoration: const InputDecoration(labelText: 'Categoria'),
                       items: const [
-                        DropdownMenuItem(value: 'ergogenico_ciclo', child: Text('Hormônio / Ciclo')),
-                        DropdownMenuItem(value: 'tpc_protetor', child: Text('Protetor / TPC')),
-                        DropdownMenuItem(value: 'manipulado_farmacia', child: Text('Manipulado / Farmácia')),
-                        DropdownMenuItem(value: 'geral', child: Text('Geral / Contínuo')),
+                        DropdownMenuItem(
+                            value: 'ergogenico_ciclo',
+                            child: Text('Hormônio / Ciclo')),
+                        DropdownMenuItem(
+                            value: 'tpc_protetor',
+                            child: Text('Protetor / TPC')),
+                        DropdownMenuItem(
+                            value: 'manipulado_farmacia',
+                            child: Text('Manipulado / Farmácia')),
+                        DropdownMenuItem(
+                            value: 'geral', child: Text('Geral / Contínuo')),
                       ],
-                      onChanged: (val) => setDialogState(() => categoria = val ?? 'ergogenico_ciclo'),
+                      onChanged: (val) => setDialogState(
+                          () => categoria = val ?? 'ergogenico_ciclo'),
                     ),
                     const SizedBox(height: 10),
                     Row(
@@ -967,8 +1263,10 @@ class _NutricaoProtocolosHubScreenState
                         Expanded(
                           child: TextField(
                             controller: quantidadeCtrl,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            decoration: const InputDecoration(labelText: 'Quantidade por uso (ex: 2)'),
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
+                            decoration: const InputDecoration(
+                                labelText: 'Quantidade por uso (ex: 2)'),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -978,12 +1276,14 @@ class _NutricaoProtocolosHubScreenState
                             key: const Key('dropdown_unidade_medicamento'),
                             initialValue: unidade,
                             isExpanded: true,
-                            decoration: const InputDecoration(labelText: 'Unidade'),
+                            decoration:
+                                const InputDecoration(labelText: 'Unidade'),
                             items: [
                               for (final u in opcoesUnidade)
                                 DropdownMenuItem(value: u, child: Text(u)),
                             ],
-                            onChanged: (val) => setDialogState(() => unidade = val),
+                            onChanged: (val) =>
+                                setDialogState(() => unidade = val),
                           ),
                         ),
                       ],
@@ -991,7 +1291,8 @@ class _NutricaoProtocolosHubScreenState
                     const SizedBox(height: 10),
                     TextField(
                       controller: freqCtrl,
-                      decoration: const InputDecoration(labelText: 'Frequência (ex: 1x semana, DSDN)'),
+                      decoration: const InputDecoration(
+                          labelText: 'Frequência (ex: 1x semana, DSDN)'),
                     ),
                     ListTile(
                       key: const Key('data_inicio_medicamento'),
@@ -1000,8 +1301,10 @@ class _NutricaoProtocolosHubScreenState
                       title: const Text('Data de início'),
                       subtitle: Text(_formatarDataBr(dataInicio)),
                       onTap: () async {
-                        final escolhida = await _escolherData(context, dataInicio);
-                        if (escolhida != null) setDialogState(() => dataInicio = escolhida);
+                        final escolhida =
+                            await _escolherData(context, dataInicio);
+                        if (escolhida != null)
+                          setDialogState(() => dataInicio = escolhida);
                       },
                     ),
                     if (dataFim != null)
@@ -1012,8 +1315,10 @@ class _NutricaoProtocolosHubScreenState
                         title: const Text('Data de fim'),
                         subtitle: Text(_formatarDataBr(dataFim!)),
                         onTap: () async {
-                          final escolhida = await _escolherData(context, dataFim!);
-                          if (escolhida != null) setDialogState(() => dataFim = escolhida);
+                          final escolhida =
+                              await _escolherData(context, dataFim!);
+                          if (escolhida != null)
+                            setDialogState(() => dataFim = escolhida);
                         },
                         trailing: IconButton(
                           tooltip: 'Reabrir uso (remove a data de fim)',
@@ -1021,7 +1326,8 @@ class _NutricaoProtocolosHubScreenState
                           onPressed: () => setDialogState(() => dataFim = null),
                         ),
                       ),
-                    if (MedicamentoProtocoloModel.permitePrivado(categoria)) ...[
+                    if (MedicamentoProtocoloModel.permitePrivado(
+                        categoria)) ...[
                       const SizedBox(height: 6),
                       SwitchListTile(
                         key: const Key('switch_ciclo_privado'),
@@ -1030,14 +1336,17 @@ class _NutricaoProtocolosHubScreenState
                         onChanged: (val) => setDialogState(() => privado = val),
                         secondary: const Icon(Icons.lock_outline),
                         title: const Text('Privado'),
-                        subtitle: const Text('Não compartilhar este ciclo com o personal'),
+                        subtitle: const Text(
+                            'Não compartilhar este ciclo com o personal'),
                       ),
                     ],
                   ],
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+                TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancelar')),
                 if (med != null && dataFim == null)
                   OutlinedButton(
                     key: const Key('finalizar_uso_medicamento'),
@@ -1045,10 +1354,13 @@ class _NutricaoProtocolosHubScreenState
                     child: const Text('Finalizar uso'),
                   ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444), foregroundColor: Colors.white),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF4444),
+                      foregroundColor: Colors.white),
                   onPressed: () async {
                     final nome = nomeCtrl.text.trim();
-                    final quantidade = double.tryParse(quantidadeCtrl.text.trim().replaceAll(',', '.'));
+                    final quantidade = double.tryParse(
+                        quantidadeCtrl.text.trim().replaceAll(',', '.'));
                     String? erro;
                     if (nome.isEmpty) {
                       erro = 'Informe o nome do medicamento.';
@@ -1056,16 +1368,22 @@ class _NutricaoProtocolosHubScreenState
                       erro = 'Informe a quantidade por uso.';
                     } else if (unidade == null) {
                       erro = 'Escolha a unidade de medida.';
-                    } else if (dataFim != null && dataFim!.compareTo(dataInicio) < 0) {
+                    } else if (dataFim != null &&
+                        dataFim!.compareTo(dataInicio) < 0) {
                       erro = 'A data de fim não pode ser anterior ao início.';
                     }
                     if (erro != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(erro)));
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(SnackBar(content: Text(erro)));
                       return;
                     }
                     final salvo = MedicamentoProtocoloModel(
-                      id: med?.id ?? 'med_${DateTime.now().millisecondsSinceEpoch}',
-                      alunoId: med?.alunoId ?? _alunoFiltro ?? AuthUtility.userInfo.login?.id?.toString() ?? '',
+                      id: med?.id ??
+                          'med_${DateTime.now().millisecondsSinceEpoch}',
+                      alunoId: med?.alunoId ??
+                          _alunoFiltro ??
+                          AuthUtility.userInfo.login?.id?.toString() ??
+                          '',
                       nomeComposto: nome,
                       dosagem: '${_formatarQuantidade(quantidade!)} $unidade',
                       doseQuantidade: quantidade,
@@ -1078,7 +1396,8 @@ class _NutricaoProtocolosHubScreenState
                       ativo: dataFim == null,
                       horario: med?.horario,
                       observacoes: med?.observacoes,
-                      privado: privado && MedicamentoProtocoloModel.permitePrivado(categoria),
+                      privado: privado &&
+                          MedicamentoProtocoloModel.permitePrivado(categoria),
                     );
                     await _repository.salvarMedicamento(salvo);
                     if (!context.mounted) return;
@@ -1120,9 +1439,13 @@ class _NutricaoProtocolosHubScreenState
     return escolhida?.toIso8601String().substring(0, 10);
   }
 
-  Future<void> _abrirDialogCriarSuplemento([SuplementoProtocoloModel? suplemento]) async {
-    final salvo=await showDialog<bool>(context:context,builder:(_)=>SuplementoEditor(suplemento:suplemento,alunoId:_alunoFiltro));
-    if(salvo==true && mounted) {
+  Future<void> _abrirDialogCriarSuplemento(
+      [SuplementoProtocoloModel? suplemento]) async {
+    final salvo = await showDialog<bool>(
+        context: context,
+        builder: (_) =>
+            SuplementoEditor(suplemento: suplemento, alunoId: _alunoFiltro));
+    if (salvo == true && mounted) {
       await _carregarDados();
     }
   }
