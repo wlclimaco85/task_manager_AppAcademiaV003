@@ -152,4 +152,45 @@ void main() {
     expect(avisos.where((a) => a.toLowerCase().contains('font')), isEmpty, reason: avisos.join('\n'));
     File('build/pdf_teste/dieta.pdf').writeAsBytesSync(bytes);
   });
+
+  test('gera PDF da lista de compras consolidada', () async {
+    const dieta = DietaProtocoloModel(
+      id: 'dieta_lista',
+      alunoId: 'aluno_1',
+      titulo: 'Dieta da semana',
+      objetivo: 'manutencao',
+      caloriasMeta: 0,
+      proteinasMeta: 0,
+      carboidratosMeta: 0,
+      gordurasMeta: 0,
+      dataInicio: '2026-10-28',
+      refeicoes: [
+        RefeicaoModel(
+          id: 'cafe',
+          nome: 'CafÃ©',
+          horario: '07:00',
+          itens: [
+            ItemRefeicaoModel(
+              alimentoId: 'aveia',
+              alimentoNome: 'Aveia',
+              quantidadeGramas: 80,
+              calorias: 0,
+              proteinas: 0,
+              carboidratos: 0,
+              gorduras: 0,
+            ),
+          ],
+        ),
+      ],
+    );
+
+    final bytes = await FichaDietaPdf.listaCompras(
+      dieta,
+      dias: 14,
+      alunoNome: 'Ana Aluna',
+      emissao: DateTime(2026, 10, 28),
+    );
+
+    expect(String.fromCharCodes(bytes.take(5)), '%PDF-');
+  });
 }

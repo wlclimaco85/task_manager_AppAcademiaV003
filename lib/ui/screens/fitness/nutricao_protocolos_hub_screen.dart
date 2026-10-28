@@ -281,7 +281,7 @@ class _NutricaoProtocolosHubScreenState
                     decoration: BoxDecoration(
                       color: dieta.ativa
                           ? GridColors.primarySubtle
-                          : const Color(0xFFF1F5F9),
+                          : GridColors.filterBackground,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
@@ -334,9 +334,9 @@ class _NutricaoProtocolosHubScreenState
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: GridColors.inputBackground,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: GridColors.inputBorder),
             ),
             child: Wrap(
               alignment: WrapAlignment.spaceAround,
@@ -381,9 +381,9 @@ class _NutricaoProtocolosHubScreenState
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFFFFF),
+                color: GridColors.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFF1F5F9)),
+                border: Border.all(color: GridColors.inputBorder),
               ),
               child: ExpansionTile(
                 tilePadding: EdgeInsets.zero,
@@ -392,8 +392,10 @@ class _NutricaoProtocolosHubScreenState
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('${ref.nome} (${ref.horario})',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 13)),
+                        style: TextStyle(
+                            color: GridColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13)),
                     Text('${ref.totalCalorias.toStringAsFixed(0)} kcal',
                         style: TextStyle(
                             color: GridColors.primary,
@@ -418,8 +420,10 @@ class _NutricaoProtocolosHubScreenState
                           Expanded(
                             child: Text(
                               '${item.alimentoNome} (${item.quantidadeGramas.toStringAsFixed(0)}g)',
-                              style: const TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                  color: GridColors.textPrimary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600),
                             ),
                           ),
                           Text(
@@ -492,9 +496,23 @@ class _NutricaoProtocolosHubScreenState
                       const SizedBox(height: 16),
                       DropdownButtonFormField<int>(
                         value: dias,
-                        decoration: const InputDecoration(
+                        dropdownColor: GridColors.dialogBackground,
+                        style: TextStyle(color: GridColors.textPrimary),
+                        decoration: InputDecoration(
                           labelText: 'Comprar para quanto tempo?',
-                          prefixIcon: Icon(Icons.calendar_month_outlined),
+                          labelStyle: TextStyle(color: GridColors.textSecondary),
+                          prefixIcon: Icon(Icons.calendar_month_outlined,
+                              color: GridColors.primary),
+                          filled: true,
+                          fillColor: GridColors.inputBackground,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: GridColors.inputBorder),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: GridColors.primary, width: 1.5),
+                          ),
                         ),
                         items: periodos.entries
                             .map(
@@ -551,7 +569,21 @@ class _NutricaoProtocolosHubScreenState
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(dialogContext).pop(),
+                  style: TextButton.styleFrom(foregroundColor: GridColors.textSecondary),
                   child: const Text('Fechar'),
+                ),
+                FilledButton.icon(
+                  onPressed: () => imprimirPdf(
+                    this.context,
+                    nomeArquivo: nomeArquivoPdf('Lista de compras', dieta.titulo),
+                    gerar: () => FichaDietaPdf.listaCompras(
+                      dieta,
+                      dias: dias,
+                      alunoNome: AuthUtility.userInfo.login?.nome ?? '',
+                    ),
+                  ),
+                  icon: const Icon(Icons.picture_as_pdf_outlined),
+                  label: const Text('Gerar PDF'),
                 ),
               ],
             );

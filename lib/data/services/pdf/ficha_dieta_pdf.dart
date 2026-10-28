@@ -443,6 +443,75 @@ class FichaDietaPdf {
     return doc.save();
   }
 
+  /// Lista consolidada dos alimentos necessarios para o periodo selecionado.
+  static Future<Uint8List> listaCompras(
+    DietaProtocoloModel dieta, {
+    required int dias,
+    String alunoNome = '',
+    DateTime? emissao,
+  }) async {
+    final tema = await _tema();
+    final quando = emissao ?? DateTime.now();
+    final itens = dieta.gerarListaCompras(dias);
+    final doc = pw.Document(title: 'Lista de compras - ${dieta.titulo}', author: 'Eu Atleta');
+    final direita = [if (alunoNome.isNotEmpty) alunoNome, dieta.titulo].join(' Â· ');
+
+    doc.addPage(pw.MultiPage(
+      pageTheme: _pagina(tema),
+      header: (_) => _cabecalho(direita),
+      footer: (ctx) => _rodape(ctx, avisoDieta, quando),
+      build: (_) => [
+        _titulo('Lista de compras', size: 18),
+        pw.Text(
+          '${dieta.titulo} Â· PerÃ­odo: $dias dia${dias == 1 ? '' : 's'}',
+          style: const pw.TextStyle(fontSize: 10),
+        ),
+        pw.SizedBox(height: 14),
+        pw.Table(
+          border: _bordaTabela,
+          columnWidths: const {
+            0: pw.FlexColumnWidth(3),
+            1: pw.FlexColumnWidth(1.25),
+            2: pw.FlexColumnWidth(1.25),
+          },
+          children: [
+            _cabecalhoTabela(
+              ['Alimento', 'Por dia', 'Total'],
+              alinhamentos: const [
+                pw.TextAlign.left,
+                pw.TextAlign.right,
+                pw.TextAlign.right,
+              ],
+            ),
+            for (var i = 0; i < itens.length; i++)
+              pw.TableRow(
+                decoration: pw.BoxDecoration(color: i.isOdd ? _faixa : PdfColors.white),
+                children: [
+                  _cel(itens[i].alimentoNome, bold: true),
+                  _cel(
+                    _quantidadeCompra(itens[i].quantidadeDiariaGramas),
+                    align: pw.TextAlign.right,
+                  ),
+                  _cel(
+                    _quantidadeCompra(itens[i].quantidadeTotalGramas),
+                    bold: true,
+                    align: pw.TextAlign.right,
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ],
+    ));
+    return doc.save();
+  }
+
+  static String _quantidadeCompra(double gramas) {
+    if (gramas < 1000) return '${gramas.toStringAsFixed(0)} g';
+    final quilos = gramas / 1000;
+    return '${quilos.toStringAsFixed(quilos == quilos.roundToDouble() ? 0 : 1)} kg';
+  }
+
   static pw.Widget _tabelaMeta(List<List<Object>> linhas) {
     const largura = 110.0;
     return pw.Table(
