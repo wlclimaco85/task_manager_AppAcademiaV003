@@ -27,17 +27,17 @@ void main() {
     expect(aluno.copyWith(cadastroInicialCompleto: true).cadastroInicialCompleto, isTrue);
   });
 
-  test('o cadastro inicial tem foto mais as 7 medidas', () {
-    expect(CadastroInicialService.totalCampos, 8);
+  test('o cadastro inicial tem fotos por regiao e medidas laterais', () {
+    expect(CadastroInicialService.totalCampos, CadastroInicialService.medidas.length + CadastroInicialService.fotos.length);
   });
 
   test('pendencias listam foto e medidas faltantes e somem quando completo', () {
     final vazio = CadastroInicialService.pendencias({});
-    expect(vazio, hasLength(8));
-    expect(vazio.first, 'Foto');
+    expect(vazio, hasLength(CadastroInicialService.totalCampos));
+    expect(vazio.first, 'Foto: Cintura');
 
     final completo = <String, dynamic>{
-      'foto': 'data:image/jpeg;base64,AAAA',
+      'fotos': {for (final foto in CadastroInicialService.fotos) foto.chave: 'data:image/jpeg;base64,AAAA'},
       for (final m in CadastroInicialService.medidas) m.chave: 10.0,
     };
     expect(CadastroInicialService.pendencias(completo), isEmpty);

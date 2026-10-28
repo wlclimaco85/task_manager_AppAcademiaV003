@@ -15,24 +15,51 @@ class CadastroInicialService {
   static const String _chaveBase = 'cadastro_inicial_v1';
 
   /// Campos de medida que o aluno pode informar (chave, rotulo, unidade).
+  /// Braços, coxas e panturrilhas são registrados por lado para a evolução
+  /// fazer sentido na comparação futura.
   static const List<({String chave, String rotulo, String unidade})> medidas = [
     (chave: 'peso', rotulo: 'Peso', unidade: 'kg'),
     (chave: 'altura', rotulo: 'Altura', unidade: 'cm'),
     (chave: 'cintura', rotulo: 'Cintura', unidade: 'cm'),
     (chave: 'quadril', rotulo: 'Quadril', unidade: 'cm'),
-    (chave: 'braco', rotulo: 'Braço', unidade: 'cm'),
-    (chave: 'coxa', rotulo: 'Coxa', unidade: 'cm'),
-    (chave: 'panturrilha', rotulo: 'Panturrilha', unidade: 'cm'),
+    (chave: 'braco_direito', rotulo: 'Braço direito', unidade: 'cm'),
+    (chave: 'braco_esquerdo', rotulo: 'Braço esquerdo', unidade: 'cm'),
+    (chave: 'coxa_direita', rotulo: 'Coxa direita', unidade: 'cm'),
+    (chave: 'coxa_esquerda', rotulo: 'Coxa esquerda', unidade: 'cm'),
+    (chave: 'panturrilha_direita', rotulo: 'Panturrilha direita', unidade: 'cm'),
+    (chave: 'panturrilha_esquerda', rotulo: 'Panturrilha esquerda', unidade: 'cm'),
   ];
 
-  /// Total de campos do cadastro: foto + todas as medidas.
-  static int get totalCampos => medidas.length + 1;
+  /// Fotos da jornada. Peso e altura não precisam de foto.
+  static const List<({String chave, String rotulo})> fotos = [
+    (chave: 'cintura', rotulo: 'Cintura'),
+    (chave: 'braco_direito', rotulo: 'Braço direito'),
+    (chave: 'braco_esquerdo', rotulo: 'Braço esquerdo'),
+    (chave: 'coxa_direita', rotulo: 'Coxa direita'),
+    (chave: 'coxa_esquerda', rotulo: 'Coxa esquerda'),
+    (chave: 'panturrilha_direita', rotulo: 'Panturrilha direita'),
+    (chave: 'panturrilha_esquerda', rotulo: 'Panturrilha esquerda'),
+  ];
+
+  /// Total de campos da jornada: todas as fotos e medidas.
+  static int get totalCampos => medidas.length + fotos.length;
 
   /// Itens que ainda faltam para o cadastro ficar completo (lista vazia = completo).
   /// Nao bloqueia nada: serve so para o lembrete.
   static List<String> pendencias(Map<String, dynamic> dados) {
     final faltando = <String>[];
-    if (!_preenchido(dados['foto'])) faltando.add('Foto');
+    final fotosInformadas = dados['fotos'] is Map
+        ? Map<String, dynamic>.from(dados['fotos'] as Map)
+        : <String, dynamic>{};
+    // Cadastro antigo tinha uma única foto; ela passa a ser a foto da cintura.
+    if (!_preenchido(fotosInformadas['cintura']) && _preenchido(dados['foto'])) {
+      fotosInformadas['cintura'] = dados['foto'];
+    }
+    for (final foto in fotos) {
+      if (!_preenchido(fotosInformadas[foto.chave])) {
+        faltando.add('Foto: ${foto.rotulo}');
+      }
+    }
     for (final m in medidas) {
       if (!_preenchido(dados[m.chave])) faltando.add(m.rotulo);
     }
@@ -78,8 +105,14 @@ class CadastroInicialService {
       final data = resposta.body?['data'];
       if (!resposta.isSuccess || data is! Map) return null;
       final medidasRemotas = data['medidas'] is Map ? data['medidas'] as Map : const {};
+      final fotosRemotas = data['fotos'] is Map
+          ? Map<String, dynamic>.from(data['fotos'] as Map)
+          : <String, dynamic>{};
+      if (!_preenchido(fotosRemotas['cintura']) && _preenchido(data['foto'])) {
+        fotosRemotas['cintura'] = data['foto'];
+      }
       final dados = <String, dynamic>{
-        'foto': data['foto'],
+        'fotos': fotosRemotas,
         for (final m in medidas) m.chave: medidasRemotas[m.chave],
       };
       await _gravarCopia(dados);
@@ -93,8 +126,13 @@ class CadastroInicialService {
   /// Envia foto e medidas ao servidor. Devolve false se o servidor recusar ou a rede falhar.
   static Future<bool> enviar(Map<String, dynamic> dados) async {
     try {
+      final fotosInformadas = dados['fotos'] is Map
+          ? Map<String, dynamic>.from(dados['fotos'] as Map)
+          : <String, dynamic>{};
       final corpo = <String, dynamic>{
-        'foto': dados['foto'],
+        // Mantém o campo antigo enquanto houver versões antigas do backend.
+        'foto': fotosInformadas['cintura'],
+        'fotos': fotosInformadas,
         'medidas': {for (final m in medidas) m.chave: dados[m.chave]},
       };
       final resposta = await NetworkCaller().putRequest(ApiLinks.cadastroInicialMeu, corpo);

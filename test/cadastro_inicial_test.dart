@@ -4,23 +4,25 @@ import 'package:task_manager_flutter/data/services/cadastro_inicial_service.dart
 
 void main() {
   group('pendencias', () {
-    test('cadastro vazio pede foto e todas as medidas', () {
+    test('cadastro vazio pede fotos por regiao e todas as medidas', () {
       final faltando = CadastroInicialService.pendencias({});
 
-      expect(faltando.first, 'Foto');
+      expect(faltando.first, 'Foto: Cintura');
       expect(faltando, contains('Peso'));
       expect(faltando, contains('Cintura'));
-      expect(faltando.length, 1 + CadastroInicialService.medidas.length);
+      expect(faltando.length, CadastroInicialService.totalCampos);
     });
 
     test('texto so com espacos conta como nao preenchido', () {
-      final faltando = CadastroInicialService.pendencias({'foto': '   '});
+      final faltando = CadastroInicialService.pendencias({'fotos': {'cintura': '   '}});
 
-      expect(faltando, contains('Foto'));
+      expect(faltando, contains('Foto: Cintura'));
     });
 
     test('preenchendo tudo nao sobra pendencia', () {
-      final completo = <String, dynamic>{'foto': 'data:image/jpeg;base64,AAAA'};
+      final completo = <String, dynamic>{
+        'fotos': {for (final foto in CadastroInicialService.fotos) foto.chave: 'data:image/jpeg;base64,AAAA'},
+      };
       for (final m in CadastroInicialService.medidas) {
         completo[m.chave] = 10.0;
       }
