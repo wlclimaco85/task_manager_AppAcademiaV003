@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_flutter/data/services/recuperacao_senha_service.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
-import 'package:task_manager_flutter/data/models/network_response.dart';
-import 'package:task_manager_flutter/data/services/network_caller.dart';
-import 'package:task_manager_flutter/data/utils/api_links.dart';
 import 'package:task_manager_flutter/ui/screens/auth_screens/login_screen.dart';
 import 'package:task_manager_flutter/ui/screens/auth_screens/reset_screen.dart';
 import 'package:task_manager_flutter/ui/widgets/custom_button.dart';
@@ -31,13 +29,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     _isLoading = true;
     setState(() {});
 
-    NetworkResponse response = await NetworkCaller().getRequest(
-        ApiLinks.recoverVerifyOTP(widget.email, _otpTEController.text.trim()));
+    final resultado = await RecuperacaoSenhaService.validarCodigo(
+        widget.email, _otpTEController.text.trim());
 
     _isLoading = false;
     setState(() {});
     final BuildContext context = this.context;
-    if (response.statusCode == 200 && response.body?['status'] == 'success') {
+    if (resultado.ok) {
       if (mounted) {
         Navigator.push(
           context,
@@ -52,8 +50,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Please enter valid OTP"),
+          SnackBar(
+            content: Text(resultado.mensagem),
             backgroundColor: Colors.red,
           ),
         );
@@ -75,12 +73,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               children: [
                 const SizedBox(height: 80),
                 Text(
-                  "PIN VERIFICATION",
+                  "VERIFICAÇÃO DO CÓDIGO",
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "A 6 digit code has been sent to your email address. Please enter it below to continue.",
+                  "Enviamos um código de 6 dígitos para o seu e-mail. Digite-o abaixo para continuar.",
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.grey,
                       ),
@@ -120,20 +118,20 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                         onPresse: () {
                           otpVerify();
                         },
-                        labels: "teste",
+                        labels: "Validar código",
                       ),
                 const SizedBox(
                   height: 16,
                 ),
                 SignUpButton(
-                  text: "Have An Account?",
+                  text: "Já tem conta?",
                   onPresse: () {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
                             builder: (context) => const LoginScreen()));
                   },
-                  buttonText: 'Login',
+                  buttonText: 'Entrar',
                 ),
               ],
             ),

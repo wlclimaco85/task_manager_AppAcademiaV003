@@ -59,6 +59,9 @@ class ApiLinks {
       '$_baseUrlNew/suplemento/findByIdAluno';
   static const String insertAluno = '$_baseUrlNew/rest/auth/inserirAluno';
   static const String registrarAluno = '$_baseUrlNew/rest/auth/registrar-aluno';
+  static const String recuperarSenha = '$_baseUrlNew/rest/auth/recuperar-senha';
+  static const String validarCodigo = '$_baseUrlNew/rest/auth/validar-codigo';
+  static const String redefinirSenha = '$_baseUrlNew/rest/auth/redefinir-senha';
   static const String personaisDisponiveis =
       '$_baseUrlNew/rest/auth/personais-disponiveis';
   static const String registrarPersonal =
@@ -85,11 +88,6 @@ class ApiLinks {
     'APP_PERSONAL',
     'APP_ACADEMIA'
   ];
-  static String recoverVerifyEmail(String email) =>
-      '$_baseUrl/RecoverVerifyEmail/$email';
-  static String recoverVerifyOTP(String email, String otp) =>
-      '$_baseUrl/RecoverVerifyOTP/$email/$otp';
-  static String recoverResetPassword = '$_baseUrl/RecoverResetPass';
 
   static String createTask = '$_baseUrl/createTask';
   static String newTaskStatus = '$_baseUrl/listTaskByStatus/New';
