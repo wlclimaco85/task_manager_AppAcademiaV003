@@ -44,6 +44,7 @@ class _PrivacidadeAparenciaScreenState extends State<PrivacidadeAparenciaScreen>
     TemaApp.padrao: 'Padrão (visual atual)',
     TemaApp.branco: 'Branco',
     TemaApp.preto: 'Preto',
+    TemaApp.barby: 'Barby (rosa)',
   };
 
   bool get _ehAluno => !podeGerenciarAlunos(AuthUtility.userInfo);

@@ -14,7 +14,7 @@ void main() {
     AuthUtility.userInfo = LoginModel();
   });
 
-  testWidgets('mostra as tres opcoes de tema', (tester) async {
+  testWidgets('mostra as quatro opcoes de tema', (tester) async {
     tester.view.physicalSize = const Size(390, 1200);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -27,6 +27,7 @@ void main() {
     expect(find.byKey(const Key('tema_padrao')), findsOneWidget);
     expect(find.byKey(const Key('tema_branco')), findsOneWidget);
     expect(find.byKey(const Key('tema_preto')), findsOneWidget);
+    expect(find.byKey(const Key('tema_barby')), findsOneWidget);
   });
 
   testWidgets('escolher preto troca o tema do app', (tester) async {

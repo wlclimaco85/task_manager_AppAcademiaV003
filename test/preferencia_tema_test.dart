@@ -12,6 +12,10 @@ void main() {
       expect(PreferenciaTema.modoDe(TemaApp.branco), ThemeMode.light);
     });
 
+    test('barby e sempre claro', () {
+      expect(PreferenciaTema.modoDe(TemaApp.barby), ThemeMode.light);
+    });
+
     test('preto e sempre escuro', () {
       expect(PreferenciaTema.modoDe(TemaApp.preto), ThemeMode.dark);
     });
@@ -21,6 +25,7 @@ void main() {
     test('le cada opcao pelo nome salvo', () {
       expect(PreferenciaTema.lerSalvo('branco'), TemaApp.branco);
       expect(PreferenciaTema.lerSalvo('preto'), TemaApp.preto);
+      expect(PreferenciaTema.lerSalvo('barby'), TemaApp.barby);
     });
 
     test('valor ausente ou desconhecido cai no padrao', () {

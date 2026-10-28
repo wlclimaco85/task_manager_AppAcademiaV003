@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Tema escolhido pelo usuario no perfil.
-/// padrao = o visual atual do app (claro, nao segue o aparelho); branco = claro; preto = escuro com fundo preto.
-enum TemaApp { padrao, branco, preto }
+/// padrao = o visual atual do app; branco e barby = claros; preto = escuro.
+enum TemaApp { padrao, branco, preto, barby }
 
 /// Preferencia de tema guardada no aparelho (nao depende de conta nem de servidor).
 class PreferenciaTema {
@@ -20,6 +20,7 @@ class PreferenciaTema {
       TemaApp.padrao => ThemeMode.light,
       TemaApp.branco => ThemeMode.light,
       TemaApp.preto => ThemeMode.dark,
+      TemaApp.barby => ThemeMode.light,
     };
   }
 

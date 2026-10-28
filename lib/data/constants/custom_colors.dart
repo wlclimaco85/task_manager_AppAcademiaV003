@@ -8,34 +8,41 @@ class GridColors {
   // Marca / Ações principais (Emerald Pro)
   // Padrao e Preto: Emerald. Branco: roxo (blusa do desenho) como cor principal.
   static Color get primary => switch (PreferenciaTema.tema.value) {
+        TemaApp.barby => const Color(0xFFC2185B),
         TemaApp.branco => const Color(0xFF7828A8), // Roxo da blusa do desenho
         _ => const Color(0xFF047857), // Emerald 700 (contraste >= 4.5:1 sobre branco)
       };
   static Color get primaryDark => switch (PreferenciaTema.tema.value) {
+        TemaApp.barby => const Color(0xFF880E4F),
         TemaApp.branco => const Color(0xFF581C87),
         _ => const Color(0xFF065F46), // Emerald 800
       };
   static Color get primaryLight => switch (PreferenciaTema.tema.value) {
+        TemaApp.barby => const Color(0xFFEC407A),
         TemaApp.branco => const Color(0xFF9333EA),
         _ => const Color(0xFF10B981), // Emerald 500
       };
 
   static Color get primarySubtle => switch (PreferenciaTema.tema.value) {
         TemaApp.preto => const Color(0xFF064E3B), // Emerald 900 escuro para contraste no preto
+        TemaApp.barby => const Color(0xFFFCE4EC),
         TemaApp.branco => const Color(0xFFF3E8FF), // Roxo claro
         _ => const Color(0xFFECFDF5), // Emerald 50
       };
 
   // Acentos e Metas. Branco: laranja do fundo do desenho.
   static Color get secondary => switch (PreferenciaTema.tema.value) {
+        TemaApp.barby => const Color(0xFF7B1FA2),
         TemaApp.branco => const Color(0xFFE87848), // Laranja do desenho
         _ => const Color(0xFFF59E0B), // Amber 500 (metas, conquistas)
       };
   static Color get secondaryLight => switch (PreferenciaTema.tema.value) {
+        TemaApp.barby => const Color(0xFFF3E5F5),
         TemaApp.branco => const Color(0xFFFBD3BD),
         _ => const Color(0xFFFDE68A),
       };
   static Color get secondaryDark => switch (PreferenciaTema.tema.value) {
+        TemaApp.barby => const Color(0xFF4A148C),
         TemaApp.branco => const Color(0xFFC2562A),
         _ => const Color(0xFFD97706),
       };
@@ -43,24 +50,28 @@ class GridColors {
   // Superfícies e Fundos (Adaptativos aos 3 temas)
   static Color get background => switch (PreferenciaTema.tema.value) {
         TemaApp.preto => Colors.black,
+        TemaApp.barby => const Color(0xFFFFF0F6),
         TemaApp.branco => Colors.white,
         TemaApp.padrao => const Color(0xFFF8FAFC), // Slate 50
       };
 
   static Color get card => switch (PreferenciaTema.tema.value) {
         TemaApp.preto => const Color(0xFF111827), // Slate 900 escuro
+        TemaApp.barby => const Color(0xFFFFFFFF),
         TemaApp.branco => Colors.white,
         TemaApp.padrao => const Color(0xFFFFFFFF),
       };
 
   static Color get filterBackground => switch (PreferenciaTema.tema.value) {
         TemaApp.preto => const Color(0xFF1E293B),
+        TemaApp.barby => const Color(0xFFFFE4EF),
         TemaApp.branco => const Color(0xFFF8FAFC),
         TemaApp.padrao => const Color(0xFFF1F5F9),
       };
 
   static Color get dialogBackground => switch (PreferenciaTema.tema.value) {
         TemaApp.preto => const Color(0xFF111827),
+        TemaApp.barby => const Color(0xFFFFFFFF),
         TemaApp.branco => Colors.white,
         TemaApp.padrao => const Color(0xFFFFFFFF),
       };
@@ -68,18 +79,21 @@ class GridColors {
   // Tipografia (Alto contraste WCAG AAA para cada tema)
   static Color get textPrimary => switch (PreferenciaTema.tema.value) {
         TemaApp.preto => const Color(0xFFF8FAFC), // Slate 50 (quase branco)
+        TemaApp.barby => const Color(0xFF3B0A24),
         TemaApp.branco => const Color(0xFF0F172A),
         TemaApp.padrao => const Color(0xFF0F172A), // Slate 900
       };
 
   static Color get textSecondary => switch (PreferenciaTema.tema.value) {
         TemaApp.preto => const Color(0xFF94A3B8), // Slate 400
+        TemaApp.barby => const Color(0xFF5A233F),
         TemaApp.branco => const Color(0xFF475569), // Slate 600
         TemaApp.padrao => const Color(0xFF475569), // Slate 600
       };
 
   static Color get textMuted => switch (PreferenciaTema.tema.value) {
         TemaApp.preto => const Color(0xFFA1A1AA), // Zinc 400
+        TemaApp.barby => const Color(0xFF683046),
         TemaApp.branco => const Color(0xFF475569), // Slate 600
         TemaApp.padrao => const Color(0xFF475569), // Slate 600
       };
@@ -89,12 +103,14 @@ class GridColors {
   // Inputs e Controles
   static Color get inputBackground => switch (PreferenciaTema.tema.value) {
         TemaApp.preto => const Color(0xFF18212F),
+        TemaApp.barby => const Color(0xFFFFF7FB),
         TemaApp.branco => const Color(0xFFF8FAFC),
         TemaApp.padrao => const Color(0xFFF8FAFC),
       };
 
   static Color get inputBorder => switch (PreferenciaTema.tema.value) {
         TemaApp.preto => const Color(0xFF334155),
+        TemaApp.barby => const Color(0xFFF1B6CC),
         TemaApp.branco => const Color(0xFFE2E8F0),
         TemaApp.padrao => const Color(0xFFE2E8F0),
       };
@@ -113,22 +129,26 @@ class GridColors {
   // Estrutura
   static Color get divider => switch (PreferenciaTema.tema.value) {
         TemaApp.preto => const Color(0xFF334155),
+        TemaApp.barby => const Color(0xFFF1B6CC),
         TemaApp.branco => const Color(0xFFE2E8F0),
         TemaApp.padrao => const Color(0xFFE2E8F0),
       };
 
   static Color get hover => switch (PreferenciaTema.tema.value) {
         TemaApp.preto => const Color(0x1AFFFFFF),
+        TemaApp.barby => const Color(0x14000000),
         _ => const Color(0x0A000000),
       };
 
   static Color get selectedRow => switch (PreferenciaTema.tema.value) {
         TemaApp.preto => const Color(0xFF064E3B),
+        TemaApp.barby => const Color(0xFFFCE4EC),
         _ => const Color(0xFFECFDF5),
       };
 
   static Color get shadow => switch (PreferenciaTema.tema.value) {
         TemaApp.preto => const Color(0x40000000),
+        TemaApp.barby => const Color(0x1A9D174D),
         _ => const Color(0x0D000000),
       };
 
