@@ -4,7 +4,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
+import 'package:task_manager_flutter/data/models/medida_corporal_model.dart';
+import 'package:task_manager_flutter/data/models/saude_diaria_model.dart';
 import 'package:task_manager_flutter/data/services/cadastro_inicial_service.dart';
+import 'package:task_manager_flutter/data/services/medida_corporal_caller.dart';
+import 'package:task_manager_flutter/data/services/saude_diaria_caller.dart';
+import 'package:task_manager_flutter/data/utils/app_logger.dart';
 import 'package:task_manager_flutter/ui/widgets/edit_form_helpers.dart';
 
 /// Jornada de fotos e medidas. Peso e altura nao pedem foto; cada lado do
@@ -113,7 +118,55 @@ class _CadastroInicialScreenState extends State<CadastroInicialScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sem conexao agora. Sua jornada ficou salva neste aparelho.')));
       return;
     }
+    await _registrarEvolucao(novos);
+    if (!mounted) return;
     Navigator.pop(context, true);
+  }
+
+  /// O cadastro inicial tambem e o primeiro marco da evolucao corporal.
+  /// Sem este registro, Corpo e Exames nao teria ponto algum para o grafico.
+  Future<void> _registrarEvolucao(Map<String, dynamic> dados) async {
+    final peso = dados['peso'] as double?;
+    final altura = dados['altura'] as double?;
+    final circunferencias = <String, double>{
+      for (final medida in CadastroInicialService.medidas)
+        if (medida.chave != 'peso' && medida.chave != 'altura')
+          if (dados[medida.chave] is double) medida.chave: dados[medida.chave] as double,
+    };
+    try {
+      final resumoAtual = await SaudeDiariaCaller().fetchResumo();
+      final base = resumoAtual ?? ResumoSaudeDiaria(
+        data: DateTime.now(), passos: 0, treinoMinutos: 0, batimentos: null,
+        sonoMinutos: 0, pesoKg: null, pesoMetaKg: null, historicoSemanal: const [],
+      );
+      final resumoSalvo = await SaudeDiariaCaller().salvarResumo(ResumoSaudeDiaria(
+        data: DateTime.now(), passos: base.passos, treinoMinutos: base.treinoMinutos,
+        batimentos: base.batimentos, sonoMinutos: base.sonoMinutos,
+        pesoKg: peso ?? base.pesoKg, pesoMetaKg: base.pesoMetaKg,
+        alturaCm: altura?.round() ?? base.alturaCm, distanciaKm: base.distanciaKm,
+        caloriasAtivas: base.caloriasAtivas, historicoSemanal: base.historicoSemanal,
+      ));
+      final medidaSalva = circunferencias.isEmpty
+          ? true
+          : await MedidaCorporalCaller().registrarMedida(MedidaCorporal(
+              data: DateTime.now(), circunferencias: circunferencias,
+            )) != null;
+      if (resumoSalvo == null || !medidaSalva) {
+        AppLogger.i.warn('[CadastroInicial] Cadastro salvo, mas a evolucao corporal nao sincronizou.');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Cadastro salvo. O grafico sera atualizado ao sincronizar.'),
+          ));
+        }
+      }
+    } catch (error, stackTrace) {
+      AppLogger.i.error('[CadastroInicial] Falha ao criar o primeiro registro corporal: $error', stackTrace);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Cadastro salvo. O grafico sera atualizado ao sincronizar.'),
+        ));
+      }
+    }
   }
 
   void _proximaEtapa() {
