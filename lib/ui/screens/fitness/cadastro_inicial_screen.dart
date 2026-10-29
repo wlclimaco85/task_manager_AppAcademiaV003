@@ -114,8 +114,13 @@ class _CadastroInicialScreenState extends State<CadastroInicialScreen> {
     final enviado = await CadastroInicialService.enviar(await CadastroInicialService.carregar());
     if (!mounted) return;
     if (!enviado) {
-      setState(() => _salvando = false);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sem conexao agora. Sua jornada ficou salva neste aparelho.')));
+      // O preenchimento local ja foi concluido. Nao manter o aluno preso na
+      // ultima etapa por uma falha temporaria de rede; o aviso deixa claro
+      // que a copia sera sincronizada quando houver conexao.
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Jornada salva neste aparelho. Ela sera sincronizada quando houver conexao.'),
+      ));
+      Navigator.pop(context, true);
       return;
     }
     await _registrarEvolucao(novos);
