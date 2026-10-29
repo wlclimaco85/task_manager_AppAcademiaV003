@@ -100,12 +100,25 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
     });
   }
 
+  bool _contadorInicializado = false;
+
   Future<void> _atualizarContador() async {
     final notificacoes =
         await FitnessPushNotificationService().getNotificacoes();
     if (!mounted) return;
-    setState(() => _notificacoesNaoLidas =
-        notificacoes.where((item) => !item.lida).length);
+    final naoLidas = notificacoes.where((item) => !item.lida).toList();
+    final chegouNova =
+        _contadorInicializado && naoLidas.length > _notificacoesNaoLidas;
+    _contadorInicializado = true;
+    setState(() => _notificacoesNaoLidas = naoLidas.length);
+    if (!chegouNova) return;
+    // Aviso dentro do app: no navegador o push do sistema nao aparece sozinho.
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Nova notificação: ${naoLidas.first.titulo}'),
+      behavior: SnackBarBehavior.floating,
+      action: SnackBarAction(
+          label: 'Ver', onPressed: () => _abrirNotificacoes()),
+    ));
   }
 
   void _atualizar() {
