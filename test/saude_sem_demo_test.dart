@@ -28,6 +28,10 @@ void main() {
     await tester.tap(find.text('Abrir'));
     await tester.pumpAndSettle();
     expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
+    final hoje = DateTime.now();
+    final dataDeHoje =
+        '${hoje.day.toString().padLeft(2, '0')}/${hoje.month.toString().padLeft(2, '0')}/${hoje.year}';
+    expect(find.text('Data: $dataDeHoje'), findsOneWidget);
     await tester.enterText(find.widgetWithText(TextFormField, 'Valor'), '100,5');
     await tester.tap(find.text('Salvar'));
     await tester.pumpAndSettle();

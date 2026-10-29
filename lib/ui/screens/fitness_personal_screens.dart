@@ -2211,93 +2211,20 @@ class _CorpoActionsCardState extends State<_CorpoActionsCard> {
   }
 
   Future<void> _showAlturaSheet() async {
-    final controller = TextEditingController(
-      text: widget.resumo?.alturaCm?.toString() ?? '',
-    );
-
-    final saved = await _showBottomSheet(
+    final saved = await showModalBottomSheet<bool>(
       context: context,
-      title: 'Informar altura',
-      child: _TextField(controller: controller, label: 'Altura (cm)'),
-      onSave: () async {
-        final alturaCm = int.tryParse(controller.text.trim());
-        if (alturaCm == null) return false;
-        final base = widget.resumo ??
-            ResumoSaudeDiaria(
-              data: DateTime.now(),
-              passos: 0,
-              treinoMinutos: 0,
-              batimentos: null,
-              sonoMinutos: 0,
-              pesoKg: null,
-              pesoMetaKg: null,
-              historicoSemanal: const [],
-            );
-        final atualizado = base.copyWith(alturaCm: alturaCm);
-        final resultado = await SaudeDiariaCaller().salvarResumo(atualizado);
-        return resultado != null;
-      },
+      isScrollControlled: true,
+      builder: (_) => const RegistroMedidaSheet(tipoInicial: 'Altura'),
     );
-
-    controller.dispose();
     if (saved == true) widget.onAlturaSalva();
   }
 
   Future<void> _showMedidaSheet() async {
-    final gordura = TextEditingController();
-    final massaMuscular = TextEditingController();
-    final agua = TextEditingController();
-    final braco = TextEditingController();
-    final cintura = TextEditingController();
-    final quadril = TextEditingController();
-
-    final saved = await _showBottomSheet(
+    final saved = await showModalBottomSheet<bool>(
       context: context,
-      title: 'Registrar medida corporal',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _TextField(controller: gordura, label: '% Gordura'),
-          const SizedBox(height: 12),
-          _TextField(controller: massaMuscular, label: '% Massa muscular'),
-          const SizedBox(height: 12),
-          _TextField(controller: agua, label: '% Agua'),
-          const SizedBox(height: 12),
-          _TextField(controller: braco, label: 'Braco (cm)'),
-          const SizedBox(height: 12),
-          _TextField(controller: cintura, label: 'Cintura (cm)'),
-          const SizedBox(height: 12),
-          _TextField(controller: quadril, label: 'Quadril (cm)'),
-        ],
-      ),
-      onSave: () async {
-        final circunferencias = <String, double>{};
-        final bracoVal = _parseDouble(braco.text);
-        final cinturaVal = _parseDouble(cintura.text);
-        final quadrilVal = _parseDouble(quadril.text);
-        if (bracoVal != null) circunferencias['braco'] = bracoVal;
-        if (cinturaVal != null) circunferencias['cintura'] = cinturaVal;
-        if (quadrilVal != null) circunferencias['quadril'] = quadrilVal;
-
-        final medida = MedidaCorporal(
-          data: DateTime.now(),
-          percentualGordura: _parseDouble(gordura.text),
-          percentualMassaMuscular: _parseDouble(massaMuscular.text),
-          percentualAgua: _parseDouble(agua.text),
-          circunferencias: circunferencias,
-        );
-        final resultado = await MedidaCorporalCaller().registrarMedida(medida);
-        return resultado != null;
-      },
+      isScrollControlled: true,
+      builder: (_) => const RegistroMedidaSheet(),
     );
-
-    gordura.dispose();
-    massaMuscular.dispose();
-    agua.dispose();
-    braco.dispose();
-    cintura.dispose();
-    quadril.dispose();
-
     if (saved == true) widget.onMedidaRegistrada();
   }
 
@@ -2334,12 +2261,6 @@ class _CorpoActionsCardState extends State<_CorpoActionsCard> {
     observacao.dispose();
 
     if (saved == true) widget.onExameRegistrado();
-  }
-
-  double? _parseDouble(String text) {
-    final trimmed = text.trim();
-    if (trimmed.isEmpty) return null;
-    return double.tryParse(trimmed.replaceAll(',', '.'));
   }
 }
 
