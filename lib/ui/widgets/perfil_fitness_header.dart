@@ -12,6 +12,7 @@ class PerfilFitnessHeader extends StatelessWidget {
   final bool cadastroIncompleto;
   final int notificacoesNaoLidas;
   final String? nomePersonal;
+final VoidCallback? onDeixarPersonal;
   final bool? personalOnline;
   final bool? minhaConexaoOnline;
   final String? ultimoTreino;
@@ -28,6 +29,7 @@ class PerfilFitnessHeader extends StatelessWidget {
     this.cadastroIncompleto = false,
     this.notificacoesNaoLidas = 0,
     this.nomePersonal,
+this.onDeixarPersonal,
     this.personalOnline,
     this.minhaConexaoOnline,
     this.ultimoTreino,
@@ -268,6 +270,18 @@ class PerfilFitnessHeader extends StatelessWidget {
                                       color: context.appText),
                                 ),
                               ),
+                              if (onDeixarPersonal != null)
+                                TextButton(
+                                  key: const Key('deixar_personal_header'),
+                                  style: TextButton.styleFrom(
+                                    minimumSize: const Size(44, 44),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                    tapTargetSize: MaterialTapTargetSize.padded,
+                                  ),
+                                  onPressed: onDeixarPersonal,
+                                  child: const Text('Deixar',
+                                      style: TextStyle(fontSize: 12)),
+                                ),
                             ],
                           ),
                         if (minhaConexaoOnline != null) ...[

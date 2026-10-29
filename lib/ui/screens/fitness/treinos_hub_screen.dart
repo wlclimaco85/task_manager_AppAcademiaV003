@@ -217,8 +217,11 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
       );
     }
 
-    final filtrados =
-        _planos.where((p) => p.isTemplate == apenasTemplates).toList();
+    // Aluno nao ve ficha desativada (ex.: de um personal que ele deixou); o personal ve todas.
+    final verTodas = podeGerenciarAlunos(AuthUtility.session.value);
+    final filtrados = _planos
+        .where((p) => p.isTemplate == apenasTemplates && (verTodas || p.ativo))
+        .toList();
 
     if (filtrados.isEmpty) {
       return Center(

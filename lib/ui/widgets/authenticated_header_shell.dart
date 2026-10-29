@@ -1,4 +1,5 @@
 import 'package:task_manager_flutter/data/services/perfil_conta_service.dart';
+import 'package:task_manager_flutter/data/services/personal_vinculo_service.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:http/http.dart' as http;
@@ -233,6 +234,51 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
     }
   }
 
+  /// Confirma e deixa o personal: as fichas dele ficam inativas e o personal e avisado.
+  Future<void> _confirmarDeixarPersonal() async {
+    final nome = _textoPerfil(AuthUtility.userInfo.perfilConta, const [
+          'personalNome',
+          'nomePersonal',
+          'personal_name',
+        ]) ??
+        'seu personal';
+    final confirmou = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Deixar o personal?'),
+        content: Text(
+            'As fichas de treino que $nome montou para você serão desativadas e ele será avisado. '
+            'O personal pode publicar treinos de novo depois para voltar a acompanhar você.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Voltar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Deixar personal'),
+          ),
+        ],
+      ),
+    );
+    if (confirmou != true || !mounted) return;
+    final ok = await PersonalVinculoService.deixarPersonal();
+    if (!mounted) return;
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Não foi possível deixar o personal agora. Tente novamente.'),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
+    _atualizarConexao();
+    setState(() {});
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Você deixou o personal. As fichas dele foram desativadas.'),
+    ));
+  }
+
   String? _permissoesVerificadasPara;
 
   /// Aluno vinculado por um personal que ainda nao respondeu as permissoes: mostra o popup.
@@ -322,6 +368,16 @@ class _AuthenticatedHeaderShellState extends State<AuthenticatedHeaderShell> {
                               'nomePersonal',
                               'personal_name',
                             ]),
+                            // So o aluno com personal vinculado pode deixar o personal.
+                            onDeixarPersonal: podeGerenciarAlunos(sessao) ||
+                                    _textoPerfil(perfilConta, const [
+                                          'personalNome',
+                                          'nomePersonal',
+                                          'personal_name',
+                                        ]) ==
+                                        null
+                                ? null
+                                : _confirmarDeixarPersonal,
                             minhaConexaoOnline: _conexaoOnline,
                             personalOnline: _boolPerfil(perfilConta, const [
                               'personalOnline',

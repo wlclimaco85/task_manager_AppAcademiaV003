@@ -463,6 +463,7 @@ class ApiLinks {
 
   /// Permissoes do aluno para o personal (GET le, PUT responde o popup).
   static const String permissoesMeu = '$_baseUrlNew/api/fitness/permissoes/meu';
+static const String permissoesDeixarPersonal = '$_baseUrlNew/api/fitness/permissoes/deixar-personal';
   static const String alertasMeu = '$_baseUrlNew/api/alert/me';
 
   /// Permissoes de um aluno vinculado, lidas pelo personal.
