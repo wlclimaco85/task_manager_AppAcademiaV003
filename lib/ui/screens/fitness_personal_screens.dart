@@ -22,6 +22,7 @@ import 'package:task_manager_flutter/data/services/hidratacao_caller.dart';
 import 'package:task_manager_flutter/data/services/lembrete_caller.dart';
 import 'package:task_manager_flutter/data/services/medida_corporal_caller.dart';
 import 'package:task_manager_flutter/data/services/mural_caller.dart';
+import 'package:task_manager_flutter/data/services/cadastro_inicial_service.dart';
 import 'package:task_manager_flutter/data/services/saude_diaria_caller.dart';
 import 'package:task_manager_flutter/data/services/health_connect_service.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
@@ -498,11 +499,14 @@ class _CorpoScreenData {
     required this.resumo,
     required this.medidas,
     required this.exames,
+    this.alturaCadastroCm,
   });
 
   final ResumoSaudeDiaria? resumo;
   final List<MedidaCorporal> medidas;
   final List<ExameRegistro> exames;
+  // Altura informada no cadastro inicial (copia local), usada se o resumo nao tiver altura.
+  final int? alturaCadastroCm;
 }
 
 class _CorpoScreenState extends State<CorpoScreen> {
@@ -518,12 +522,15 @@ class _CorpoScreenState extends State<CorpoScreen> {
     final resumo = await SaudeDiariaCaller().fetchResumo();
     final medidas = await MedidaCorporalCaller().fetchMedidas();
     final exames = await ExameRegistroCaller().fetchExames();
+    final cadastro = await CadastroInicialService.carregar();
+    final altura = cadastro['altura'];
     return _CorpoScreenData(
       resumo: resumo,
       // Fallback gracioso: sem mock previo para medida/exame -> lista vazia
       // (nao inventar dado clinico ficticio).
       medidas: medidas ?? const <MedidaCorporal>[],
       exames: exames ?? const <ExameRegistro>[],
+      alturaCadastroCm: altura is num && altura > 0 ? altura.round() : null,
     );
   }
 
@@ -559,7 +566,8 @@ class _CorpoScreenState extends State<CorpoScreen> {
             );
 
         final pesoKg = data.resumo?.pesoKg;
-        final alturaCm = data.resumo?.alturaCm;
+        // Sem altura no resumo do dia, usa a do cadastro inicial: o IMC precisa so de peso e altura.
+        final alturaCm = data.resumo?.alturaCm ?? data.alturaCadastroCm;
         final imc = _calcularImc(pesoKg, alturaCm);
         final ultimaMedida = data.medidas.isEmpty ? null : data.medidas.first;
 

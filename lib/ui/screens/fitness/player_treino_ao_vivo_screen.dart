@@ -125,6 +125,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
 
   // Sobrecarga inteligente (Algoritmo MyFitCoach)
   Map<String, dynamic>? _sugestaoSobrecargaAtual;
+  // Exercicios em que o banner de sobrecarga foi aplicado ou fechado nesta sessao.
+  final Set<String> _sobrecargaFechadaExercicios = {};
   bool _carregandoSugestao = false;
 
   // Cronômetro de descanso
@@ -407,6 +409,9 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
 
     HapticFeedback.lightImpact();
     setState(() {
+      // Aplicada: o banner fecha para este exercicio e nao volta nesta sessao.
+      _sobrecargaFechadaExercicios
+          .add(_execucao.atual(_exercicioIndexAtual).exercicioId);
       final series = _seriesPorExercicio[_exercicioIndexAtual] ?? [];
       _seriesPorExercicio[_exercicioIndexAtual] = series
           .map((s) => s.concluida
@@ -687,7 +692,10 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
               ),
 
               // 3. Banner de Sobrecarga Inteligente (MyFitCoach Overload Engine)
-              if (!_carregandoSugestao && _sugestaoSobrecargaAtual != null)
+              if (!_carregandoSugestao &&
+                  _sugestaoSobrecargaAtual != null &&
+                  !_sobrecargaFechadaExercicios.contains(
+                      _execucao.atual(_exercicioIndexAtual).exercicioId))
                 _buildBannerSobrecargaInteligente(),
 
               // 4. Tabela de Séries com Checkbox e Ajustes Rápidos
@@ -1000,7 +1008,7 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
               ],
             ),
           ),
-          if (temSugestao && cargaSugerida > 0)
+          if (temSugestao && cargaSugerida > 0) ...[
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF10B981),
@@ -1017,6 +1025,15 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                     const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
               ),
             ),
+            const SizedBox(width: 4),
+            IconButton(
+              tooltip: 'Fechar sugestão',
+              visualDensity: VisualDensity.compact,
+              onPressed: () => setState(() => _sobrecargaFechadaExercicios
+                  .add(_execucao.atual(_exercicioIndexAtual).exercicioId)),
+              icon: const Icon(Icons.close, color: Color(0xFF94A3B8), size: 20),
+            ),
+          ],
         ],
       ),
     );
@@ -1262,8 +1279,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
       child: Row(
         children: [
           SizedBox(
-            width: 72,
-            height: 72,
+            width: 80,
+            height: 80,
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -1413,6 +1430,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
             });
 
             return AlertDialog(
+              // Rola titulo e conteudo juntos; os botoes ficam fixos embaixo.
+              scrollable: true,
               insetPadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               backgroundColor: const Color(0xFF1E293B),
@@ -1429,16 +1448,9 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                               fontWeight: FontWeight.w800))),
                 ],
               ),
-              content: SizedBox(
-                width: 460,
-                height: MediaQuery.sizeOf(context).height * 0.64,
-                child: Scrollbar(
-                  controller: scrollCtrl,
-                  thumbVisibility: true,
-                  child: SingleChildScrollView(
-                    controller: scrollCtrl,
-                    padding: const EdgeInsets.only(right: 10),
-                    child: Form(
+              // Sem altura fixa nem scroll aninhado: o AlertDialog ja rola o conteudo
+              // e se adapta a celular pequeno (antes 460 x 64% da tela, com dois scrolls).
+              content: Form(
                         key: formKey,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -1585,9 +1597,6 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
                             ),
                           ],
                         )),
-                  ),
-                ),
-              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
