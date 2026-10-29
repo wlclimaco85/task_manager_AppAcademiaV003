@@ -601,6 +601,7 @@ class _CorpoScreenState extends State<CorpoScreen> {
               Icons.water_drop_outlined,
             ),
           ],
+          onCorpoAtualizado: _reload,
           extraCards: [
             _BodyCompositionCard(medida: ultimaMedida, pesoKg: pesoKg),
             _CorpoEvolutionChartCard(
@@ -734,6 +735,7 @@ class FitnessRecordScreen extends StatefulWidget {
     this.tips = const [],
     this.liveWorkout = false,
     this.includeStrengthWorkouts = false,
+    this.onCorpoAtualizado,
   });
 
   final String type;
@@ -750,6 +752,7 @@ class FitnessRecordScreen extends StatefulWidget {
   final List<String> tips;
   final bool liveWorkout;
   final bool includeStrengthWorkouts;
+  final VoidCallback? onCorpoAtualizado;
 
   @override
   State<FitnessRecordScreen> createState() => _FitnessRecordScreenState();
@@ -910,7 +913,10 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
           context: context,
           isScrollControlled: true,
           builder: (_) => const RegistroMedidaSheet());
-      if (salvo == true && mounted) setState(_reload);
+      if (salvo == true && mounted) {
+        setState(_reload);
+        widget.onCorpoAtualizado?.call();
+      }
       return;
     }
     if (widget.type == 'atividade') {
