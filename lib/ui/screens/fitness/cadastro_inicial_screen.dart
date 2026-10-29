@@ -111,16 +111,18 @@ class _CadastroInicialScreenState extends State<CadastroInicialScreen> {
       novos[medida.chave] = double.tryParse(_controllers[medida.chave]!.text.trim().replaceAll(',', '.'));
     }
     await CadastroInicialService.salvar(novos);
-    final enviado = await CadastroInicialService.enviar(await CadastroInicialService.carregar());
+    final envio = await CadastroInicialService.enviar(await CadastroInicialService.carregar());
     if (!mounted) return;
-    if (!enviado) {
-      // O preenchimento local ja foi concluido. Nao manter o aluno preso na
-      // ultima etapa por uma falha temporaria de rede; o aviso deixa claro
-      // que a copia sera sincronizada quando houver conexao.
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Jornada salva neste aparelho. Ela sera sincronizada quando houver conexao.'),
-      ));
-      Navigator.pop(context, true);
+    if (!envio.sucesso) {
+      setState(() => _salvando = false);
+      final mensagem = switch (envio.statusCode) {
+        401 || 403 => 'Sua sessao nao tem permissao para salvar. Entre novamente e tente outra vez.',
+        404 => 'O recurso de cadastro nao esta disponivel no servidor.',
+        500 => 'O servidor encontrou um erro ao salvar. Seus dados ficaram guardados neste aparelho.',
+        final int status => 'Nao foi possivel salvar no servidor (HTTP $status). Seus dados ficaram guardados neste aparelho.',
+        null => 'Nao foi possivel falar com o servidor. Seus dados ficaram guardados neste aparelho.',
+      };
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensagem)));
       return;
     }
     await _registrarEvolucao(novos);

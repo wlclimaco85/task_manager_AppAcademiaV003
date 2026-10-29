@@ -123,8 +123,9 @@ class CadastroInicialService {
     }
   }
 
-  /// Envia foto e medidas ao servidor. Devolve false se o servidor recusar ou a rede falhar.
-  static Future<bool> enviar(Map<String, dynamic> dados) async {
+  /// Envia foto e medidas ao servidor, preservando o status para a tela
+  /// diferenciar sessao/permissao/erro do servidor de uma falha de rede.
+  static Future<CadastroInicialEnvio> enviar(Map<String, dynamic> dados) async {
     try {
       final fotosInformadas = dados['fotos'] is Map
           ? Map<String, dynamic>.from(dados['fotos'] as Map)
@@ -138,12 +139,12 @@ class CadastroInicialService {
       final resposta = await NetworkCaller().putRequest(ApiLinks.cadastroInicialMeu, corpo);
       if (!resposta.isSuccess) {
         AppLogger.i.warn('[CadastroInicial] Servidor recusou o cadastro (status ${resposta.statusCode}).');
-        return false;
+        return CadastroInicialEnvio.falha(resposta.statusCode);
       }
-      return true;
+      return const CadastroInicialEnvio.sucesso();
     } catch (e) {
       AppLogger.i.warn('[CadastroInicial] Falha ao enviar o cadastro: $e');
-      return false;
+      return const CadastroInicialEnvio.falhaSemStatus();
     }
   }
 
@@ -155,4 +156,15 @@ class CadastroInicialService {
       AppLogger.i.warn('[CadastroInicial] Nao foi possivel gravar a copia local: $e');
     }
   }
+}
+
+class CadastroInicialEnvio {
+  const CadastroInicialEnvio._(this.sucesso, this.statusCode);
+
+  const CadastroInicialEnvio.sucesso() : this._(true, 200);
+  const CadastroInicialEnvio.falhaSemStatus() : this._(false, null);
+  const CadastroInicialEnvio.falha(int statusCode) : this._(false, statusCode);
+
+  final bool sucesso;
+  final int? statusCode;
 }
