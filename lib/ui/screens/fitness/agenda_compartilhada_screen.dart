@@ -293,25 +293,23 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
                         fontSize: 11)),
             ]),
           ),
-          if (evento.podeEditar && !evento.cancelado)
+          if (!evento.cancelado && (evento.podeEditar || evento.compartilhado))
             PopupMenuButton<String>(
               color: context.appSurface,
-              onSelected: (acao) => acao == 'editar'
-                  ? _abrirFormulario(evento: evento)
-                  : _cancelar(evento),
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'editar', child: Text('Editar')),
-                PopupMenuItem(value: 'cancelar', child: Text('Cancelar')),
+              tooltip: 'Opções do evento',
+              onSelected: (acao) => switch (acao) {
+                'editar' => _abrirFormulario(evento: evento),
+                'remarcar' => _remarcar(evento),
+                _ => _cancelar(evento),
+              },
+              itemBuilder: (_) => [
+                if (evento.podeEditar)
+                  const PopupMenuItem(value: 'editar', child: Text('Editar')),
+                if (evento.inicio.isAfter(DateTime.now())) ...const [
+                  PopupMenuItem(value: 'remarcar', child: Text('Remarcar')),
+                  PopupMenuItem(value: 'cancelar', child: Text('Cancelar')),
+                ],
               ],
-            ),
-          if (!_personal &&
-              evento.compartilhado &&
-              !evento.cancelado &&
-              evento.inicio.isAfter(DateTime.now()))
-            IconButton(
-              icon: const Icon(Icons.cancel_outlined, color: Colors.red, size: 20),
-              tooltip: 'Cancelar aula',
-              onPressed: () => _cancelarComoAluno(evento),
             ),
         ]),
       ),
@@ -326,45 +324,22 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
         label: const Text('Novo evento'),
       );
 
+  /// Cancelamento com justificativa obrigatoria, para aluno e personal. Quem participa
+  /// do evento (aluno ou personal) recebe o aviso com o motivo.
   Future<void> _cancelar(AgendaEventoModel evento) async {
-    final confirmar = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Cancelar evento?'),
-        content: Text(evento.compartilhado
-            ? 'O aluno e o personal serão notificados.'
-            : 'O evento continuará no histórico como cancelado.'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Voltar')),
-          FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Cancelar evento')),
-        ],
-      ),
-    );
-    if (confirmar != true) return;
-    try {
-      await _repo.cancelar(evento.id);
-      await _carregar();
-    } catch (e) {
-      if (mounted) _erro('$e');
-    }
-  }
-
-  Future<void> _cancelarComoAluno(AgendaEventoModel evento) async {
     final justificativaCtrl = TextEditingController();
     final confirmar = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Cancelar aula'),
+        title: const Text('Cancelar evento?'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Cancelar "${evento.titulo}"?\nO personal será notificado.',
+              evento.compartilhado
+                  ? 'Cancelar "${evento.titulo}"? O aluno e o personal serão avisados com a justificativa.'
+                  : 'Cancelar "${evento.titulo}"? O evento continuará no histórico como cancelado.',
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 12),
@@ -396,20 +371,57 @@ class _AgendaCompartilhadaScreenState extends State<AgendaCompartilhadaScreen> {
         ],
       ),
     );
-    if (confirmar != true) return;
     final motivo = justificativaCtrl.text.trim();
-    if (motivo.isEmpty) return;
+    justificativaCtrl.dispose();
+    if (confirmar != true || motivo.isEmpty) return;
     try {
-      await _repo.cancelar(evento.id, motivo: motivo);
+      final sincronizado = await _repo.cancelar(
+        evento.id,
+        motivo: motivo,
+        quem: _personal ? 'personal' : 'aluno',
+      );
       await _carregar();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Aula cancelada. O personal foi notificado.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(!sincronizado
+            ? 'Sem conexão: o cancelamento ficou só neste aparelho.'
+            : evento.compartilhado
+                ? 'Evento cancelado. Aluno e personal foram avisados.'
+                : 'Evento cancelado.'),
+        backgroundColor: sincronizado ? Colors.red : Colors.orange,
+      ));
+    } catch (e) {
+      if (mounted) _erro('$e');
+    }
+  }
+
+  /// Remarca mantendo a duracao. Participante muda so data e horario; o backend avisa os envolvidos.
+  Future<void> _remarcar(AgendaEventoModel evento) async {
+    final data = await showDatePicker(
+      context: context,
+      initialDate: evento.inicio.isBefore(DateTime.now()) ? DateTime.now() : evento.inicio,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (data == null || !mounted) return;
+    final hora = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(evento.inicio),
+    );
+    if (hora == null || !mounted) return;
+    final novoInicio = DateTime(data.year, data.month, data.day, hora.hour, hora.minute);
+    final novoFim = novoInicio.add(evento.fim.difference(evento.inicio));
+    final formato = DateFormat("yyyy-MM-dd'T'HH:mm:ss");
+    try {
+      await _repo.atualizar(evento.id, {
+        'inicio': formato.format(novoInicio),
+        'fim': formato.format(novoFim),
+      });
+      await _carregar();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Evento remarcado. Os participantes foram avisados.'),
+      ));
     } catch (e) {
       if (mounted) _erro('$e');
     }

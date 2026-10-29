@@ -140,11 +140,20 @@ class AgendaRepository {
     return atualizado;
   }
 
-  Future<void> cancelar(String id, {String? motivo}) async {
-    try {
-      await _network.deleteRequest('${ApiLinks.fitnessAgenda}/$id');
-    } catch (_) {
-      // segue para marcar no cache local
+  /// Cancela com justificativa obrigatoria. Devolve false quando nao houve conexao e o
+  /// cancelamento ficou so no aparelho. Rejeicao do servidor (ex.: 403) vira erro visivel.
+  Future<bool> cancelar(String id,
+      {required String motivo, String quem = 'aluno'}) async {
+    final justificativa = motivo.trim();
+    var sincronizado = false;
+    final resposta = await _network.deleteRequest(
+      '${ApiLinks.fitnessAgenda}/$id',
+      queryParams: {'motivo': justificativa},
+    );
+    if (resposta.isSuccess) {
+      sincronizado = true;
+    } else if (resposta.statusCode > 0) {
+      throw StateError('Não foi possível cancelar agora. Tente novamente.');
     }
 
     final lista = await _lerCache();
@@ -159,8 +168,8 @@ class AgendaRepository {
         inicio: item.inicio,
         fim: item.fim,
         local: item.local,
-        observacao: motivo != null && motivo.trim().isNotEmpty
-            ? 'Cancelado pelo aluno: ${motivo.trim()}'
+        observacao: justificativa.isNotEmpty
+            ? 'Cancelado pelo $quem: $justificativa'
             : item.observacao,
         status: 'CANCELADO',
         compartilhado: item.compartilhado,
@@ -172,6 +181,7 @@ class AgendaRepository {
       );
       await _salvarCache(lista);
     }
+    return sincronizado;
   }
 
   List<AgendaEventoModel> _filtrarPorPeriodo(
