@@ -123,19 +123,8 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
   }
 
   bool _ocupado = false;
-  // TODO: substituir os links de teste pelos links publicados do AppAcademia.
-  // Pode configurar sem alterar o fonte por --dart-define APP_PLAYSTORE_URL e APP_APPSTORE_URL.
-  static const _play = String.fromEnvironment('APP_PLAYSTORE_URL',
-      defaultValue: 'https://play.google.com/store/apps');
-  static const _apple = String.fromEnvironment('APP_APPSTORE_URL',
-      defaultValue: 'https://apps.apple.com/br/');
-  static String _linkLoja(String valor, String host) {
-    final uri = Uri.tryParse(valor);
-    return uri?.scheme == 'https' && uri?.host == host ? valor : '';
-  }
-
-  String get _playUrl => _linkLoja(_play, 'play.google.com');
-  String get _appleUrl => _linkLoja(_apple, 'apps.apple.com');
+  static const _siteOficialUrl =
+      'https://eu-atleta-web-production.up.railway.app/';
 
   String get _legenda {
     final sb = StringBuffer();
@@ -153,6 +142,7 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
     sb.writeln();
     sb.writeln(_instagramOficialArroba);
     sb.writeln(_instagramOficialUrl);
+    sb.writeln('Conheca o Eu Atleta: $_siteOficialUrl');
 
     final personalTag = _personalArrobaFormatado;
     if (personalTag.isNotEmpty) {
@@ -160,14 +150,6 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
     }
 
     sb.writeln();
-    if (_playUrl.isNotEmpty) {
-      sb.writeln(
-          '${_playUrl == 'https://play.google.com/store/apps' ? 'Android (link de teste)' : 'Baixe para Android'}: $_playUrl');
-    }
-    if (_appleUrl.isNotEmpty) {
-      sb.writeln(
-          '${_appleUrl == 'https://apps.apple.com/br/' ? 'iPhone (link de teste)' : 'Baixe para iPhone'}: $_appleUrl');
-    }
     sb.write('#EuAtleta #euatletafitnes');
     return sb.toString();
   }
@@ -260,7 +242,7 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text(
-                  'Imagem do treino baixada e legenda copiada marcando @euatletafitnes! Abra o Instagram para publicar.'),
+                  'Imagem do treino baixada e legenda copiada com @euatletafitnes. Abra o Instagram para publicar.'),
               duration: Duration(seconds: 4),
             ),
           );
@@ -488,21 +470,15 @@ class _CompartilharTreinoSheetState extends State<CompartilharTreinoSheet> {
                       ),
                     ],
                     const SizedBox(height: 6),
-                    if (_playUrl.isNotEmpty)
-                      Text('Android: $_playUrl',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 11)),
-                    if (_appleUrl.isNotEmpty)
-                      Text('iPhone: $_appleUrl',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 11)),
-                    if (_playUrl == 'https://play.google.com/store/apps')
-                      const Text(
-                          'Links de teste • App em preparação para publicação',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.white, fontSize: 10)),
+                    const Text('Conheca o Eu Atleta:',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white, fontSize: 11)),
+                    const Text(_siteOficialUrl,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            decoration: TextDecoration.underline)),
                   ]),
                 )),
             if (_fotos.isNotEmpty)

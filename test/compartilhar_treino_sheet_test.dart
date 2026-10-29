@@ -20,8 +20,8 @@ void main() {
     expect(find.text('Tirar foto'), findsOneWidget);
     expect(find.text('Compartilhar foto do treino'), findsOneWidget);
     expect(find.text('500 kg de volume total'), findsOneWidget);
-    expect(find.text('Android: https://play.google.com/store/apps'), findsOneWidget);
-    expect(find.text('iPhone: https://apps.apple.com/br/'), findsOneWidget);
+    expect(find.text('Conheca o Eu Atleta:'), findsOneWidget);
+    expect(find.text('https://eu-atleta-web-production.up.railway.app/'), findsOneWidget);
     await tester.tap(find.text('Agora não / Fechar'));
     expect(fechou, isTrue);
     expect(tester.takeException(), isNull);
@@ -135,6 +135,8 @@ void main() {
     expect(textoCopiado, isNotNull);
     expect(textoCopiado, contains('@euatletafitnes'));
     expect(textoCopiado, contains('https://www.instagram.com/euatletafitnes/'));
+    expect(textoCopiado,
+        contains('https://eu-atleta-web-production.up.railway.app/'));
     // Sem personal informado, não adiciona linha de personal
     expect(textoCopiado, isNot(contains('Personal:')));
   });
