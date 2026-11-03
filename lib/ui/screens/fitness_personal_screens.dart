@@ -13,6 +13,7 @@ import 'package:task_manager_flutter/data/models/hidratacao_model.dart';
 import 'package:task_manager_flutter/data/models/lembrete_model.dart';
 import 'package:task_manager_flutter/data/models/medida_corporal_model.dart';
 import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_model.dart';
+import 'package:task_manager_flutter/data/models/fitness/graficos_fitness_dados.dart';
 import 'package:task_manager_flutter/data/models/mural_model.dart';
 import 'package:task_manager_flutter/data/models/saude_diaria_model.dart';
 import 'package:task_manager_flutter/data/services/exame_registro_caller.dart';
@@ -500,6 +501,7 @@ class _CorpoScreenData {
     required this.medidas,
     required this.exames,
     this.alturaCadastroCm,
+    this.historico = const [],
   });
 
   final ResumoSaudeDiaria? resumo;
@@ -507,6 +509,7 @@ class _CorpoScreenData {
   final List<ExameRegistro> exames;
   // Altura informada no cadastro inicial (copia local), usada se o resumo nao tiver altura.
   final int? alturaCadastroCm;
+  final List<DiaResumoSaude> historico;
 }
 
 class _CorpoScreenState extends State<CorpoScreen> {
@@ -522,15 +525,47 @@ class _CorpoScreenState extends State<CorpoScreen> {
     final resumo = await SaudeDiariaCaller().fetchResumo();
     final medidas = await MedidaCorporalCaller().fetchMedidas();
     final exames = await ExameRegistroCaller().fetchExames();
-    final cadastro = await CadastroInicialService.carregar();
-    final altura = cadastro['altura'];
+    final registros = await Fitness360LocalStore.records(type: 'corpo');
+    final diario = await GraficosFitnessDados.carregarDiario(dias: 365);
+    final historico = <DateTime, DiaResumoSaude>{};
+    DateTime dia(DateTime d) => DateTime(d.year, d.month, d.day);
+    for (final item in [...diario.map(DiaResumoSaude.fromJson), ...?resumo?.historicoSemanal]) {
+      final anterior = historico[dia(item.data)];
+      historico[dia(item.data)] = DiaResumoSaude(data: item.data,
+        passos: item.passos, treinoMinutos: item.treinoMinutos, sonoMinutos: item.sonoMinutos,
+        pesoKg: item.pesoKg ?? anterior?.pesoKg,
+        alturaCm: _alturaCorporalCm(item.alturaCm) ?? anterior?.alturaCm);
+    }
+    // Os registros são salvos também offline; não dependem do resumo dos últimos sete dias.
+    for (final registro in registros.reversed) {
+      final tipo = registro.title.trim().toLowerCase();
+      if (tipo != 'peso' && tipo != 'altura') continue;
+      final match = RegExp(r'^\s*(\d+(?:[.,]\d+)?)').firstMatch(registro.value);
+      final valor = double.tryParse((match?.group(1) ?? '').replaceAll(',', '.'));
+      if (valor == null || !valor.isFinite || valor <= 0) continue;
+      final data = dia(registro.createdAt);
+      final anterior = historico[data];
+      historico[data] = DiaResumoSaude(data: data, passos: anterior?.passos ?? 0,
+        treinoMinutos: anterior?.treinoMinutos ?? 0, sonoMinutos: anterior?.sonoMinutos ?? 0,
+        pesoKg: tipo == 'peso' ? valor : anterior?.pesoKg,
+        alturaCm: tipo == 'altura' ? valor.round() : anterior?.alturaCm);
+    }
+    final ordenado = historico.values.toList()..sort((a, b) => b.data.compareTo(a.data));
+    var cadastro = await CadastroInicialService.carregar();
+    if (_alturaCorporalCm(resumo?.alturaCm) == null &&
+        _alturaCorporalCm(cadastro['altura']) == null &&
+        !ordenado.any((d) => _alturaCorporalCm(d.alturaCm) != null)) {
+      cadastro = (await CadastroInicialService.buscarRemoto())?.dados ?? cadastro;
+    }
+    final altura = _alturaCorporalCm(cadastro['altura']);
     return _CorpoScreenData(
       resumo: resumo,
       // Fallback gracioso: sem mock previo para medida/exame -> lista vazia
       // (nao inventar dado clinico ficticio).
       medidas: medidas ?? const <MedidaCorporal>[],
       exames: exames ?? const <ExameRegistro>[],
-      alturaCadastroCm: altura is num && altura > 0 ? altura.round() : null,
+      alturaCadastroCm: altura,
+      historico: ordenado,
     );
   }
 
@@ -565,9 +600,15 @@ class _CorpoScreenState extends State<CorpoScreen> {
               exames: <ExameRegistro>[],
             );
 
-        final pesoKg = data.resumo?.pesoKg;
+        final pesos = data.historico.where((d) => d.pesoKg != null && d.pesoKg! > 0);
+        final alturas = data.historico.where((d) => d.alturaCm != null && d.alturaCm! > 0);
+        final pesoRecente = pesos.isEmpty ? null : pesos.first;
+        final pesoKg = pesoRecente != null && (data.resumo == null ||
+            !pesoRecente.data.isBefore(DateUtils.dateOnly(data.resumo!.data)))
+            ? pesoRecente.pesoKg : data.resumo?.pesoKg ?? pesoRecente?.pesoKg;
         // Sem altura no resumo do dia, usa a do cadastro inicial: o IMC precisa so de peso e altura.
-        final alturaCm = data.resumo?.alturaCm ?? data.alturaCadastroCm;
+        final alturaCm = _alturaCorporalCm(data.resumo?.alturaCm) ??
+            (alturas.isEmpty ? data.alturaCadastroCm : alturas.first.alturaCm);
         final imc = _calcularImc(pesoKg, alturaCm);
         final ultimaMedida = data.medidas.isEmpty ? null : data.medidas.first;
 
@@ -613,7 +654,7 @@ class _CorpoScreenState extends State<CorpoScreen> {
           extraCards: [
             _BodyCompositionCard(medida: ultimaMedida, pesoKg: pesoKg),
             _CorpoEvolutionChartCard(
-              historico: data.resumo?.historicoSemanal ?? const [],
+              historico: data.historico,
               medidas: data.medidas,
             ),
             _CorpoActionsCard(
@@ -623,7 +664,7 @@ class _CorpoScreenState extends State<CorpoScreen> {
               onExameRegistrado: _reload,
             ),
             _CorpoTimelineCard(
-              historico: data.resumo?.historicoSemanal ?? const [],
+              historico: data.historico,
               medidas: data.medidas,
               exames: data.exames,
             ),
@@ -638,10 +679,17 @@ class _CorpoScreenState extends State<CorpoScreen> {
   }
 }
 
-/// Calcula o IMC no client: peso / (altura_m)^2. Retorna null se peso ou
-/// altura nao estiverem disponiveis (nunca um valor ficticio).
+int? _alturaCorporalCm(Object? valor) {
+  final altura = double.tryParse('$valor'.replaceAll(',', '.'));
+  if (altura == null || !altura.isFinite || altura <= 0) return null;
+  final cm = altura.round();
+  return cm > 0 ? cm : null;
+}
+
+/// Calcula o IMC real; sem peso ou altura válidos, não inventa um valor.
 double? _calcularImc(double? pesoKg, int? alturaCm) {
-  if (pesoKg == null || alturaCm == null || alturaCm <= 0) return null;
+  if (pesoKg == null || !pesoKg.isFinite || pesoKg <= 0 ||
+      alturaCm == null || alturaCm <= 0) return null;
   final alturaM = alturaCm / 100;
   return pesoKg / (alturaM * alturaM);
 }
@@ -887,7 +935,7 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                 if (widget.metricCards.isNotEmpty)
                   _MetricGrid(metrics: _metricasReais(records)),
                 const SizedBox(height: 14),
-                _WeeklyInsightCard(
+                if (widget.type != 'corpo') _WeeklyInsightCard(
                   type: widget.type,
                   includeStrengthWorkouts: widget.includeStrengthWorkouts,
                 ),

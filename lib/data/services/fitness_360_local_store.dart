@@ -222,10 +222,25 @@ class Fitness360LocalStore {
   ];
 
   static Future<List<Fitness360Record>> records({String? type}) async {
-    final prefs = await SharedPreferences.getInstance();
     final key = FitnessContaSync.chave(_recordsKey);
+    final prefs = await SharedPreferences.getInstance();
+    if (FitnessContaSync.chave(_recordsKey) != key) return [];
+    final anteriores = {
+      for (final r in _decodeRecords(prefs.getString(key))) '${r['id']}': jsonEncode(r),
+    };
     final remoto = await FitnessContaSync.carregar('registros');
-    if (remoto != null) await prefs.setString(key, jsonEncode(remoto));
+    if (FitnessContaSync.chave(_recordsKey) != key) return [];
+    if (remoto != null) {
+      final porId = {for (final r in remoto) '${r['id']}': r};
+      // Preserva só alterações feitas durante a leitura; exclusões remotas continuam valendo.
+      for (final r in _decodeRecords(prefs.getString(key))) {
+        if (anteriores['${r['id']}'] != jsonEncode(r)) {
+          porId['${r['id']}'] = Map<String, dynamic>.from(r);
+        }
+      }
+      await prefs.setString(key, jsonEncode(porId.values.toList()));
+    }
+    if (FitnessContaSync.chave(_recordsKey) != key) return [];
     final raw = prefs.getString(key);
     final parsed = _decodeRecords(raw);
     final list = parsed
@@ -257,8 +272,12 @@ class Fitness360LocalStore {
     List<String> fotosBase64 = const [],
     DateTime? dataRegistro,
   }) async {
+    final key = FitnessContaSync.chave(_recordsKey);
     final prefs = await SharedPreferences.getInstance();
     final current = await records();
+    if (FitnessContaSync.chave(_recordsKey) != key) {
+      throw StateError('A conta mudou. Registre a medida novamente.');
+    }
     final nextId = DateTime.now().microsecondsSinceEpoch;
     final novo = Fitness360Record(
       id: nextId,
@@ -275,18 +294,24 @@ class Fitness360LocalStore {
       ...current,
     ];
     await prefs.setString(
-      FitnessContaSync.chave(_recordsKey),
+      key,
       jsonEncode(updated.map((item) => item.toJson()).toList()),
     );
 
-    await FitnessContaSync.salvar('registros', novo.toJson());
+    if (FitnessContaSync.chave(_recordsKey) == key) {
+      await FitnessContaSync.salvar('registros', novo.toJson());
+    }
     return novo;
   }
 
   static Future<void> atualizarFotosRegistro(
       int id, List<String> fotosBase64) async {
+    final key = FitnessContaSync.chave(_recordsKey);
     final prefs = await SharedPreferences.getInstance();
     final atuais = await records();
+    if (FitnessContaSync.chave(_recordsKey) != key) {
+      throw StateError('A conta mudou. Abra o registro novamente.');
+    }
     final fotos =
         fotosBase64.where((foto) => foto.trim().isNotEmpty).take(3).toList();
     Fitness360Record? atualizado;
@@ -305,10 +330,12 @@ class Fitness360LocalStore {
     }).toList();
     if (atualizado == null) return;
     await prefs.setString(
-      FitnessContaSync.chave(_recordsKey),
+      key,
       jsonEncode(registros.map((item) => item.toJson()).toList()),
     );
-    await FitnessContaSync.salvar('registros', atualizado!.toJson());
+    if (FitnessContaSync.chave(_recordsKey) == key) {
+      await FitnessContaSync.salvar('registros', atualizado!.toJson());
+    }
   }
 
   static Future<List<String>> homeCardOrder() async {

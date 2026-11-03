@@ -332,8 +332,9 @@ class FitnessOfflineRepository {
 
   Future<List<SessaoTreinoRegistroModel>> getSessoesConcluidas(
       {String? alunoId}) async {
-    final prefs = await SharedPreferences.getInstance();
     final key = FitnessContaSync.chave(_kSessoesKey);
+    final prefs = await SharedPreferences.getInstance();
+    if (FitnessContaSync.chave(_kSessoesKey) != key) return [];
 
     // 1. Migração de sessões legadas locais
     if (FitnessContaSync.autenticado && !prefs.containsKey(key) && prefs.containsKey(_kSessoesKey)) {
@@ -343,6 +344,7 @@ class FitnessOfflineRepository {
       }
     }
 
+    if (FitnessContaSync.chave(_kSessoesKey) != key) return [];
     // 2. Lê sessões locais
     final rawLocal = prefs.getString(key) ?? (FitnessContaSync.autenticado ? null : prefs.getString(_kSessoesKey));
     List<SessaoTreinoRegistroModel> locais = [];
@@ -375,20 +377,41 @@ class FitnessOfflineRepository {
     }
 
     // 4. Carrega remotos e mescla com as locais
+    if (FitnessContaSync.chave(_kSessoesKey) != key) return [];
+    final anteriores = {for (final s in locais) s.id: jsonEncode(s.toMap())};
     final remotos = await FitnessContaSync.carregar('sessoes');
+    if (FitnessContaSync.chave(_kSessoesKey) != key) return [];
     if (remotos != null) {
       final porId = <String, SessaoTreinoRegistroModel>{};
       for (final m in remotos) {
         final s = SessaoTreinoRegistroModel.fromMap(m);
         porId[s.id] = s;
       }
-      for (final l in locais) {
-        porId.putIfAbsent(l.id, () => l);
+      // Uma sessão pode ser concluída/editada enquanto a resposta remota chega.
+      var atuais = <SessaoTreinoRegistroModel>[];
+      try {
+        atuais = (jsonDecode(prefs.getString(key) ?? '[]') as List)
+            .map((m) => SessaoTreinoRegistroModel.fromMap(Map<String, dynamic>.from(m)))
+            .toList();
+      } catch (e) {
+        debugPrint('[FitnessOfflineRepository] Cache inválido; recuperando sessões remotas: $e');
+      }
+      for (final l in atuais) {
+        if (anteriores[l.id] != jsonEncode(l.toMap())) {
+          porId[l.id] = l;
+        } else {
+          porId.putIfAbsent(l.id, () => l);
+        }
       }
       locais = porId.values.toList();
       await prefs.setString(key, jsonEncode(locais.map((e) => e.toMap()).toList()));
     }
 
+    if (FitnessContaSync.chave(_kSessoesKey) != key) return [];
+    DateTime data(SessaoTreinoRegistroModel s) =>
+        DateTime.tryParse(s.dataHoraFim) ?? DateTime.tryParse(s.dataHoraInicio) ??
+        DateTime.fromMillisecondsSinceEpoch(0);
+    locais.sort((a, b) => data(b).compareTo(data(a)));
     if (alunoId != null && alunoId.isNotEmpty) {
       return locais.where((s) => s.alunoId == alunoId).toList();
     }
@@ -397,12 +420,21 @@ class FitnessOfflineRepository {
 
   Future<void> registrarSessaoConcluida(
       SessaoTreinoRegistroModel sessao) async {
+    final key = FitnessContaSync.chave(_kSessoesKey);
     final sessoes = await getSessoesConcluidas();
+    if (FitnessContaSync.chave(_kSessoesKey) != key) {
+      throw StateError('A conta mudou. Abra o treino novamente.');
+    }
     sessoes.insert(0, sessao);
     final prefs = await SharedPreferences.getInstance();
+    if (FitnessContaSync.chave(_kSessoesKey) != key) {
+      throw StateError('A conta mudou. Abra o treino novamente.');
+    }
     final jsonStr = json.encode(sessoes.map((s) => s.toMap()).toList());
-    await prefs.setString(FitnessContaSync.chave(_kSessoesKey), jsonStr);
-    await FitnessContaSync.salvar('sessoes', sessao.toMap());
+    await prefs.setString(key, jsonStr);
+    if (FitnessContaSync.chave(_kSessoesKey) == key) {
+      await FitnessContaSync.salvar('sessoes', sessao.toMap());
+    }
   }
 
   /// Atualiza somente mídias de uma sessão real, sem duplicar o histórico.
