@@ -1,4 +1,5 @@
 {
+    "dart.flutterSdkPath": ".fvm/flutter_sdk",
     "java.configuration.updateBuildConfiguration": "interactive",
     "local-history.browser.descending": true
 }

@@ -2,7 +2,7 @@
 
 A new Task Manager Flutter project.
 
-**_In this Apps, i use fvm. flutter version 3.10.6. kindly check the fvm config file_**
+**Flutter 3.47.9 stable via FVM (versão fixada em `.fvmrc`).**
 
 To get this app, run this command in your terminal:
 
@@ -10,11 +10,12 @@ To get this app, run this command in your terminal:
 git clone https://github.com/mostafejur21/task-manager-flutter.git 
 ```
 
-## Remember to run fvm command to get the flutter version 3.10.6
+## SDK e execução local
 
 ```bash
-fvm use 3.10.6
-flutter pub get
+fvm use 3.47.9
+fvm flutter pub get
+fvm flutter run -d chrome
 ```
 
 ## Problems
