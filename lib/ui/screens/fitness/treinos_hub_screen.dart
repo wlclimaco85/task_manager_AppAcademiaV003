@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/models/auth_utility.dart';
+import 'package:task_manager_flutter/data/models/login_model.dart';
 import 'package:task_manager_flutter/data/utils/fitness_access.dart';
 import 'package:task_manager_flutter/ui/widgets/detalhes_sessao_treino.dart';
 import 'package:task_manager_flutter/ui/widgets/midias_sessao_treino.dart';
@@ -38,7 +39,8 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: podeGerenciarAlunos(AuthUtility.session.value) ? 3 : 2,
+      length: podeGerenciarAlunos(AuthUtility.session.value) ||
+          AuthUtility.session.value.login?.tipoLogin == LoginEnum.APP_ALUNO ? 3 : 2,
       vsync: this,
     );
     _carregarDados();
@@ -107,6 +109,8 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
     final width = MediaQuery.sizeOf(context).width;
     final isDesktopOrWeb = width >= 800;
     final podePrescrever = podeGerenciarAlunos(AuthUtility.session.value);
+    final podeMontarTreino = podePrescrever ||
+        AuthUtility.session.value.login?.tipoLogin == LoginEnum.APP_ALUNO;
 
     return Scaffold(
       backgroundColor: GridColors.background,
@@ -140,7 +144,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
               const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
           tabs: [
             const Tab(text: 'Fichas Ativas'),
-            if (podePrescrever) const Tab(text: 'Modelos / Templates'),
+            if (podeMontarTreino) const Tab(text: 'Modelos / Templates'),
             const Tab(text: 'Histórico Offline'),
           ],
         ),
@@ -156,21 +160,21 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                   controller: _tabController,
                   children: [
                     _buildListaFichas(apenasTemplates: false),
-                    if (podePrescrever)
+                    if (podeMontarTreino)
                       _buildListaFichas(apenasTemplates: true),
                     _buildHistoricoOffline(),
                   ],
                 ),
         ),
       ),
-      floatingActionButton: !podePrescrever
+      floatingActionButton: !podeMontarTreino
           ? null
           : FloatingActionButton.extended(
               backgroundColor: GridColors.buttonBackground,
               foregroundColor: GridColors.buttonText,
               icon: const Icon(Icons.add),
-              label: const Text('Prescrever Treino',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
+              label: Text(podePrescrever ? 'Prescrever Treino' : 'Montar meu treino',
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
               onPressed: () async {
                 final res = await Navigator.push(
                   context,
@@ -219,6 +223,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
 
     // Aluno nao ve ficha desativada (ex.: de um personal que ele deixou); o personal ve todas.
     final verTodas = podeGerenciarAlunos(AuthUtility.session.value);
+    final rotuloCriar = verTodas ? 'Prescrever Treino' : 'Montar meu treino';
     final filtrados = _planos
         .where((p) => p.isTemplate == apenasTemplates && (verTodas || p.ativo))
         .toList();
@@ -243,8 +248,10 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
               const SizedBox(height: 6),
               Text(
                 apenasTemplates
-                    ? 'Salve uma ficha como modelo para reutilizá-la com outros alunos.'
-                    : 'Toque em "Prescrever Treino" para criar uma nova rotina.',
+                    ? (verTodas
+                        ? 'Salve uma ficha como modelo para reutilizá-la com outros alunos.'
+                        : 'Seus modelos salvos aparecem aqui e também podem ser usados para treinar.')
+                    : 'Toque em "$rotuloCriar" para criar uma nova rotina.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 13, color: GridColors.textSecondary),
               ),
@@ -404,45 +411,52 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                         ),
                       ),
                     ),
-                    OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: GridColors.primary,
-                        side: BorderSide(color: GridColors.primary),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 8),
-                        textStyle: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w700),
-                      ),
-                      icon: const Icon(Icons.visibility_outlined, size: 16),
-                      label: const Text('Ver Ficha'),
-                      onPressed: () =>
-                          _modalVisualizarFichaDivisao(context, div, plano),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: GridColors.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        textStyle: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w700),
-                      ),
-                      icon: const Icon(Icons.play_arrow, size: 16),
-                      label: const Text('Treinar'),
-                      onPressed: () async {
-                        final concluiu = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => PlayerTreinoAoVivoScreen(
-                              divisao: div,
-                              planoId: plano.id,
-                              alunoId: plano.alunoId,
+                    Flexible(
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: GridColors.primary,
+                              side: BorderSide(color: GridColors.primary),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 8),
+                              textStyle: const TextStyle(
+                                  fontSize: 12, fontWeight: FontWeight.w700),
                             ),
+                            icon: const Icon(Icons.visibility_outlined, size: 16),
+                            label: const Text('Ver Ficha'),
+                            onPressed: () =>
+                                _modalVisualizarFichaDivisao(context, div, plano),
                           ),
-                        );
-                        if (concluiu == true) _carregarDados();
-                      },
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: GridColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              textStyle: const TextStyle(
+                                  fontSize: 12, fontWeight: FontWeight.w700),
+                            ),
+                            icon: const Icon(Icons.play_arrow, size: 16),
+                            label: const Text('Treinar'),
+                            onPressed: () async {
+                              final concluiu = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => PlayerTreinoAoVivoScreen(
+                                    divisao: div,
+                                    planoId: plano.id,
+                                    alunoId: plano.alunoId,
+                                  ),
+                                ),
+                              );
+                              if (concluiu == true) _carregarDados();
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

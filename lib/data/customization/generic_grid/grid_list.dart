@@ -788,13 +788,14 @@ class _GridListScreenState extends State<GridListScreen> {
 
   Widget _cardAcademia(Map<String, dynamic> item, String id, bool selected) {
     final nome = _texto(item,
-        const ['nome', 'fantasia', 'razaoSocial', 'descricao', 'titulo'],
+        const ['codDadosPessoal.nome', 'nome', 'fantasia', 'razaoSocial', 'descricao', 'titulo'],
         'Academia #$id');
     final descricao = _texto(item, const ['observacao', 'descricao', 'endereco'],
         'Academia parceira da sua jornada fitness');
     final local = _texto(item,
-        const ['cidade', 'endereco.cidade', 'bairro', 'endereco.bairro'], 'Uberaba');
-    final foto = _texto(item, const ['foto', 'photo', 'imagem', 'image', 'urlFoto']);
+        const ['codDadosPessoal.cidade', 'cidade', 'endereco.cidade',
+          'codDadosPessoal.bairro', 'bairro', 'endereco.bairro'], 'Local não informado');
+    final foto = _texto(item, const ['codDadosPessoal.photo', 'foto', 'photo', 'imagem', 'image', 'urlFoto']);
     return _catalogoCard(
       item: item, id: id, selected: selected,
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

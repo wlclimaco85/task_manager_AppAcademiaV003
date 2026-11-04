@@ -73,7 +73,7 @@ void main() {
     addTearDown(t.view.resetDevicePixelRatio);
     await t.pumpWidget(MaterialApp(home: MontadorTreinoScreen(planoParaEditar: plano)));
     await t.pumpAndSettle();
-    await t.tap(find.text('Adicionar Exercício no Treino A'));
+    await t.tap(find.text('Adicionar exercício em A'));
     await t.pumpAndSettle();
     await t.tap(find.text('Remover').first);
     await t.pumpAndSettle();

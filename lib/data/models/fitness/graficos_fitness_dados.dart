@@ -37,7 +37,7 @@ class GraficosFitnessDados {
     final resultados = await Future.wait<dynamic>([
       FitnessOfflineRepository().getSessoesConcluidas(),
       Fitness360LocalStore.records(),
-      _carregarDiario(),
+      carregarDiario(),
       FitnessOfflineRepository().getPlanosTreino(),
     ]);
     return GraficosFitnessDados(
@@ -47,34 +47,48 @@ class GraficosFitnessDados {
         planos: resultados[3]);
   }
 
-  static Future<List<Map<String, dynamic>>> _carregarDiario() async {
+  static Future<List<Map<String, dynamic>>> carregarDiario({int dias = 90}) async {
+    final baseKey = dias == 90
+        ? 'fitness_graficos_diario' : 'fitness_graficos_diario_$dias';
+    final key = FitnessContaSync.chave(baseKey);
+    final headers = Map<String, String>.from(TenantContext.headers);
+    bool mesmaConta() => FitnessContaSync.chave(baseKey) == key;
     final prefs = await SharedPreferences.getInstance();
-    final key = FitnessContaSync.chave('fitness_graficos_diario');
+    if (!mesmaConta()) return [];
     try {
       if (FitnessContaSync.autenticado) {
         final hoje = DateTime.now();
         String dia(DateTime d) => d.toIso8601String().split('T').first;
-        final url = Uri.parse(
-                ApiLinks.fitnessResumo.replaceFirst('/resumo', '/historico'))
-            .replace(queryParameters: {
-          'inicio': dia(hoje.subtract(const Duration(days: 89))),
-          'fim': dia(hoje)
-        });
-        final resposta = await http
-            .get(url, headers: TenantContext.headers)
-            .timeout(const Duration(seconds: 10));
-        if (resposta.statusCode == 200 && jsonDecode(resposta.body) is List) {
-          await prefs.setString(key, resposta.body);
-        } else {
-          AppLogger.i.warn(
-              'Gráficos: histórico diário indisponível; usando cache real.');
+        final historico = <Map<String, dynamic>>[];
+        // O backend aceita no máximo 60 dias por consulta.
+        for (var inicio = hoje.subtract(Duration(days: dias - 1));
+            !inicio.isAfter(hoje);
+            inicio = inicio.add(const Duration(days: 60))) {
+          final limite = inicio.add(const Duration(days: 59));
+          final fim = limite.isAfter(hoje) ? hoje : limite;
+          final url = Uri.parse(
+                  ApiLinks.fitnessResumo.replaceFirst('/resumo', '/historico'))
+              .replace(queryParameters: {'inicio': dia(inicio), 'fim': dia(fim)});
+          final resposta = await http
+              .get(url, headers: headers)
+              .timeout(const Duration(seconds: 10));
+          if (!mesmaConta()) return [];
+          if (resposta.statusCode == 200 && jsonDecode(resposta.body) is List) {
+            historico.addAll((jsonDecode(resposta.body) as List)
+                .map((e) => Map<String, dynamic>.from(e)));
+          } else {
+            throw StateError('Histórico diário indisponível: HTTP ${resposta.statusCode}');
+          }
         }
+        await prefs.setString(key, jsonEncode(historico));
       }
+      if (!mesmaConta()) return [];
       return (jsonDecode(prefs.getString(key) ?? '[]') as List)
           .map((e) => Map<String, dynamic>.from(e))
           .toList();
     } catch (error, stack) {
       AppLogger.i.error('Gráficos: falha ao carregar histórico diário.', stack);
+      if (!mesmaConta()) return [];
       try {
         return (jsonDecode(prefs.getString(key) ?? '[]') as List)
             .map((e) => Map<String, dynamic>.from(e))

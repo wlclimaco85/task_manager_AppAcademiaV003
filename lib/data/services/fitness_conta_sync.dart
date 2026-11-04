@@ -48,12 +48,14 @@ class FitnessContaSync {
 
   static Future<void> salvar(String tipo, Map<String, dynamic> documento) async {
     if (!autenticado) return;
-    final prefs = await SharedPreferences.getInstance();
     final chaveFila = chave('fitness_pendentes_$tipo');
+    final prefs = await SharedPreferences.getInstance();
     final fila = Map<String, dynamic>.from(jsonDecode(prefs.getString(chaveFila) ?? '{}'));
     fila[documento['id'].toString()] = documento;
     await prefs.setString(chaveFila, jsonEncode(fila));
-    await carregar(tipo);
+    if (autenticado && chave('fitness_pendentes_$tipo') == chaveFila) {
+      await carregar(tipo);
+    }
   }
 
   static Future<List<Map<String, dynamic>>?> carregar(String tipo) async {

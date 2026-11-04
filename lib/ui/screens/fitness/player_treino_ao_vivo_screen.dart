@@ -336,19 +336,18 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
   /// A ficha continua definindo as repetições e o aluno pode ajustar por +/-.
   Future<void> _preencherCargasDaUltimaExecucao() async {
     try {
-      final ultimas = await Future.wait(
-        List.generate(_biset.exercicios.length, (indice) async {
-          final exercicio = _biset.exercicios[indice];
-          final ultima = await _repository.getUltimaExecucaoExercicio(
-            exercicio.exercicioId,
-            alunoId: widget.alunoId,
-          );
-          return MapEntry(indice, ultima);
-        }),
-      );
+      final sessoes = await _repository.getSessoesConcluidas(alunoId: widget.alunoId);
+      final ultimas = <String, ExercicioExecutadoRegistroModel>{};
+      for (final sessao in sessoes) {
+        for (final exercicio in sessao.exerciciosExecutados) {
+          if (exercicio.series.any((serie) => serie.concluida)) {
+            ultimas.putIfAbsent(exercicio.exercicioId, () => exercicio);
+          }
+        }
+      }
       if (!mounted) return;
-      for (final entrada in ultimas) {
-        final ultima = entrada.value;
+      for (var indice = 0; indice < _biset.exercicios.length; indice++) {
+        final ultima = ultimas[_biset.exercicios[indice].exercicioId];
         if (ultima == null) continue;
         final concluidas =
             ultima.series.where((serie) => serie.concluida).toList();
@@ -358,8 +357,8 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
         };
         final cargaPadrao = concluidas.last.cargaRealKg;
         final atuais =
-            _seriesPorExercicio[entrada.key] ?? const <SerieRegistroModel>[];
-        _seriesPorExercicio[entrada.key] = atuais
+            _seriesPorExercicio[indice] ?? const <SerieRegistroModel>[];
+        _seriesPorExercicio[indice] = atuais
             .map((serie) => SerieRegistroModel(
                   numero: serie.numero,
                   cargaRealKg: porNumero[serie.numero] ?? cargaPadrao,
