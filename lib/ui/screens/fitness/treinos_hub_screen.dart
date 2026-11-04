@@ -39,7 +39,8 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: podeGerenciarAlunos(AuthUtility.session.value) ? 3 : 2,
+      length: podeGerenciarAlunos(AuthUtility.session.value) ||
+          AuthUtility.session.value.login?.tipoLogin == LoginEnum.APP_ALUNO ? 3 : 2,
       vsync: this,
     );
     _carregarDados();
@@ -143,7 +144,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
               const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
           tabs: [
             const Tab(text: 'Fichas Ativas'),
-            if (podePrescrever) const Tab(text: 'Modelos / Templates'),
+            if (podeMontarTreino) const Tab(text: 'Modelos / Templates'),
             const Tab(text: 'Histórico Offline'),
           ],
         ),
@@ -159,7 +160,7 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
                   controller: _tabController,
                   children: [
                     _buildListaFichas(apenasTemplates: false),
-                    if (podePrescrever)
+                    if (podeMontarTreino)
                       _buildListaFichas(apenasTemplates: true),
                     _buildHistoricoOffline(),
                   ],
@@ -247,7 +248,9 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
               const SizedBox(height: 6),
               Text(
                 apenasTemplates
-                    ? 'Salve uma ficha como modelo para reutilizá-la com outros alunos.'
+                    ? (verTodas
+                        ? 'Salve uma ficha como modelo para reutilizá-la com outros alunos.'
+                        : 'Seus modelos salvos aparecem aqui e também podem ser usados para treinar.')
                     : 'Toque em "$rotuloCriar" para criar uma nova rotina.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 13, color: GridColors.textSecondary),

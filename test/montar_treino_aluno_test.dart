@@ -11,6 +11,7 @@ import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/montador_treino_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/treinos_hub_screen.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/player_treino_ao_vivo_screen.dart';
 
 MockClient servidor({List<PlanoTreinoModel> planos = const []}) {
   final fichas = {for (final p in planos) p.id: p.toMap()};
@@ -52,7 +53,7 @@ void main() {
         await tester.pumpWidget(const MaterialApp(home: TreinosHubScreen()));
         await tester.pumpAndSettle();
         expect(find.text('Montar meu treino'), findsOneWidget);
-        expect(find.text('Modelos / Templates'), findsNothing);
+        expect(find.text('Modelos / Templates'), findsOneWidget);
         await tester.tap(find.text('Montar meu treino'));
         await tester.pumpAndSettle();
         expect(find.byType(MontadorTreinoScreen), findsOneWidget);
@@ -82,6 +83,45 @@ void main() {
       expect(find.text('Modelos / Templates'), findsOneWidget);
       expect(find.text('Montar meu treino'), findsNothing);
     }, () => servidor());
+  });
+
+  testWidgets('aluno encontra ficha salva como template e inicia treino sem perder prescrição', (tester) async {
+    tester.view.physicalSize = const Size(1200, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    const plano = PlanoTreinoModel(id: 'proprio', alunoId: '10',
+      alunoNome: 'Aluno Teste', personalId: '', titulo: 'Meu treino salvo',
+      dataInicio: '2026-11-03', divisoes: [DivisaoTreinoModel(id: 'a',
+        letra: 'A', nome: 'Treino A', exercicios: [ItemTreinoModel(id: 'item',
+          exercicioId: 'supino', exercicioNome: 'Supino reto', grupoMuscular: 'Peitoral',
+          series: 4, repeticoes: '8 a 12', cargaSugeridaKg: 10)])]);
+    final cliente = servidor(planos: const [plano]);
+    await http.runWithClient(() async {
+      await tester.pumpWidget(const MaterialApp(home: TreinosHubScreen()));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Editar Prescrição'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(Checkbox));
+      await tester.pumpAndSettle();
+      expect(tester.widget<Checkbox>(find.byType(Checkbox)).value, isTrue);
+      await tester.tap(find.byTooltip('Salvar Ficha'));
+      await tester.pumpAndSettle();
+      final salvo = (await FitnessOfflineRepository().getPlanosTreino()).single;
+      expect(salvo.isTemplate, isTrue);
+      await tester.tap(find.text('Modelos / Templates'));
+      await tester.pumpAndSettle();
+      expect(find.text('Meu treino salvo'), findsOneWidget);
+      expect(salvo.divisoes.single.exercicios.single.toMap(),
+          plano.divisoes.single.exercicios.single.toMap());
+      await tester.tap(find.text('Treinar'));
+      await tester.pumpAndSettle();
+      expect(find.byType(PlayerTreinoAoVivoScreen), findsOneWidget);
+      expect(find.text('Supino reto'), findsWidgets);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+      await tester.pumpAndSettle();
+    }, () => cliente);
   });
 
   testWidgets('aluno continua sem editar ficha prescrita pelo personal', (tester) async {
