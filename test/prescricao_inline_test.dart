@@ -20,6 +20,9 @@ void main() {
     await tester.tap(find.text('Supino Reto com Barra').first);
     await tester.pumpAndSettle();
     await tester.enterText(find.widgetWithText(TextFormField, 'Observação para o aluno'), 'Movimento controlado');
+    await tester.ensureVisible(find.text('Se a máquina estiver ocupada'));
+    await tester.tap(find.text('Se a máquina estiver ocupada'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Supino Inclinado com Halteres').last);
@@ -38,6 +41,8 @@ void main() {
     expect(find.text('Observação para o aluno'), findsNothing);
     expect(itens.single.series, 4);
     expect(itens.single.repeticoes, '8 a 12');
+    await tester.ensureVisible(find.text('Supino Inclinado com Halteres').first);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Supino Inclinado com Halteres').first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Adicionar ao treino'));
@@ -71,6 +76,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Adicionar ao treino'), findsNothing);
     await tester.tap(find.text(outra.nome));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Se a máquina estiver ocupada'));
+    await tester.tap(find.text('Se a máquina estiver ocupada'));
     await tester.pumpAndSettle();
     final menus = tester.widgetList<DropdownButtonFormField<String>>(
       find.byType(DropdownButtonFormField<String>)).toList();

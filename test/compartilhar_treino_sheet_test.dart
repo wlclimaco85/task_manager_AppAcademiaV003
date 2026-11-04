@@ -18,7 +18,7 @@ void main() {
       onFechar: () => fechou = true))));
     expect(find.text('Adicionar foto'), findsOneWidget);
     expect(find.text('Tirar foto'), findsOneWidget);
-    expect(find.text('Compartilhar foto do treino'), findsOneWidget);
+    expect(find.text('Compartilhar foto'), findsOneWidget);
     expect(find.text('500 kg de volume total'), findsOneWidget);
     expect(find.text('Conheca o Eu Atleta:'), findsOneWidget);
     expect(find.text('https://eu-atleta-web-production.up.railway.app/'), findsOneWidget);
@@ -57,14 +57,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(salvas.length, i + 1);
     }
-    expect(find.text('Fotos do treino: 3/3'), findsOneWidget);
+    expect(find.text('Fotos: 3/3'), findsOneWidget);
     final botao = tester.widget<TextButton>(find.widgetWithText(TextButton, 'Adicionar foto'));
     expect(botao.onPressed, isNull);
     await tester.ensureVisible(find.text('Remover foto'));
     await tester.tap(find.text('Remover foto'));
     await tester.pumpAndSettle();
     expect(salvas.length, 2);
-    expect(find.text('Fotos do treino: 2/3'), findsOneWidget);
+    expect(find.text('Fotos: 2/3'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
   testWidgets('foto inicial e renderizada no card antes do compartilhamento', (tester) async {

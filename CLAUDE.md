@@ -46,3 +46,7 @@ produto distinto dos apps contábeis, com base de código própria (estrutura `d
   inclui e2e) só antes de push pra `main`. `analyze` é só apoio.
 - NUNCA find-replace em massa `const`→`final` (quebra `*.fromEnvironment` em runtime).
 - **Push para `main` → code review OBRIGATÓRIO.** Branch base: `desenv`. Encoding UTF-8.
+
+ fazer  seguindo tudo descrito em C:\App_Academia\claude.md e sempre sem redundancia e sem startar agests e skills desnecessarias e o comit e apenas em desenv e verifique nos bugs.md se ja foi 
+ solicitado essas correção e se foi o que ele fez e porque nao funcionou sem alucinar sem viajar so focar no que foi solicitado e antes de implementar qualquer coisa verifique o fonte atual e veja como pode 
+ ser feito com o menor impacto no fonte que ja funciona sem estragar nada ja feito 
