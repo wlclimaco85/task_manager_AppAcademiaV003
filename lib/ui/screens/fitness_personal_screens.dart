@@ -24,6 +24,7 @@ import 'package:task_manager_flutter/data/services/lembrete_caller.dart';
 import 'package:task_manager_flutter/data/services/medida_corporal_caller.dart';
 import 'package:task_manager_flutter/data/services/mural_caller.dart';
 import 'package:task_manager_flutter/data/services/cadastro_inicial_service.dart';
+import 'package:task_manager_flutter/data/services/meta_catalogo_service.dart';
 import 'package:task_manager_flutter/data/services/saude_diaria_caller.dart';
 import 'package:task_manager_flutter/data/services/health_connect_service.dart';
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
@@ -703,7 +704,8 @@ class MetasScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const FitnessRecordScreen(
+    return FitnessRecordScreen(
+      opcoesTitulo: MetaCatalogoService.listarTitulos,
       type: 'meta',
       title: 'Metas e Conquistas',
       subtitle: 'Metas, lembretes, streaks, badges e ranking opcional',
@@ -792,7 +794,11 @@ class FitnessRecordScreen extends StatefulWidget {
     this.liveWorkout = false,
     this.includeStrengthWorkouts = false,
     this.onCorpoAtualizado,
+    this.opcoesTitulo,
   });
+
+  /// Quando informado e nao vazio, o titulo vira um dropdown com essas opcoes (ex.: catalogo de metas).
+  final Future<List<String>> Function()? opcoesTitulo;
 
   final String type;
   final String title;
@@ -980,7 +986,9 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
       return;
     }
 
+    final opcoes = widget.opcoesTitulo == null ? const <String>[] : await widget.opcoesTitulo!();
     final title = TextEditingController(text: widget.defaultTitle);
+    if (opcoes.isNotEmpty && !opcoes.contains(title.text)) title.text = opcoes.first;
     final value = TextEditingController(text: widget.defaultValue);
     final note = TextEditingController(text: widget.defaultNote);
 
@@ -1014,7 +1022,20 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _TextField(controller: title, label: 'Titulo'),
+                    if (opcoes.isEmpty)
+                      _TextField(controller: title, label: 'Titulo')
+                    else
+                      DropdownButtonFormField<String>(
+                        initialValue: title.text,
+                        isExpanded: true,
+                        decoration: const InputDecoration(labelText: 'Meta', border: OutlineInputBorder()),
+                        items: [
+                          for (final t in opcoes) DropdownMenuItem<String>(value: t, child: Text(t)),
+                        ],
+                        onChanged: (v) {
+                          if (v != null) title.text = v;
+                        },
+                      ),
                     const SizedBox(height: 12),
                     _TextField(controller: value, label: 'Valor'),
                     const SizedBox(height: 12),

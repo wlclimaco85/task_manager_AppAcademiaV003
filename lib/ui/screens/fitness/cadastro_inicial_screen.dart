@@ -24,13 +24,10 @@ class CadastroInicialScreen extends StatefulWidget {
 class _CadastroInicialScreenState extends State<CadastroInicialScreen> {
   static const _etapas = <_EtapaCadastro>[
     _EtapaCadastro('Dados basicos', 'Comece pelo ponto de partida. Peso e altura nao precisam de foto.', Icons.monitor_weight_outlined, ['peso', 'altura']),
-    _EtapaCadastro('Cintura e quadril', 'Registre a medida e uma foto da cintura para acompanhar sua evolucao.', Icons.accessibility_new_outlined, ['cintura', 'quadril'], foto: 'cintura'),
-    _EtapaCadastro('Braco direito', 'Foto e medida do braco direito.', Icons.fitness_center_outlined, ['braco_direito'], foto: 'braco_direito'),
-    _EtapaCadastro('Braco esquerdo', 'Foto e medida do braco esquerdo.', Icons.fitness_center_outlined, ['braco_esquerdo'], foto: 'braco_esquerdo'),
-    _EtapaCadastro('Coxa direita', 'Foto e medida da coxa direita.', Icons.directions_walk_outlined, ['coxa_direita'], foto: 'coxa_direita'),
-    _EtapaCadastro('Coxa esquerda', 'Foto e medida da coxa esquerda.', Icons.directions_walk_outlined, ['coxa_esquerda'], foto: 'coxa_esquerda'),
-    _EtapaCadastro('Panturrilha direita', 'Foto e medida da panturrilha direita.', Icons.directions_run_outlined, ['panturrilha_direita'], foto: 'panturrilha_direita'),
-    _EtapaCadastro('Panturrilha esquerda', 'Foto e medida da panturrilha esquerda.', Icons.directions_run_outlined, ['panturrilha_esquerda'], foto: 'panturrilha_esquerda'),
+    _EtapaCadastro('Cintura e quadril', 'Registre a medida e uma foto da cintura para acompanhar sua evolucao.', Icons.accessibility_new_outlined, ['cintura', 'quadril'], fotos: ['cintura']),
+    _EtapaCadastro('Bracos', 'Foto e medida do braco direito e do esquerdo.', Icons.fitness_center_outlined, ['braco_direito', 'braco_esquerdo'], fotos: ['braco_direito', 'braco_esquerdo']),
+    _EtapaCadastro('Coxas', 'Foto e medida da coxa direita e da esquerda.', Icons.directions_walk_outlined, ['coxa_direita', 'coxa_esquerda'], fotos: ['coxa_direita', 'coxa_esquerda']),
+    _EtapaCadastro('Panturrilhas', 'Foto e medida da panturrilha direita e da esquerda.', Icons.directions_run_outlined, ['panturrilha_direita', 'panturrilha_esquerda'], fotos: ['panturrilha_direita', 'panturrilha_esquerda']),
   ];
 
   final _controllers = <String, TextEditingController>{
@@ -192,8 +189,7 @@ class _CadastroInicialScreenState extends State<CadastroInicialScreen> {
         : null;
   }
 
-  Widget _foto() {
-    final chave = _etapa.foto!;
+  Widget _foto(String chave) {
     final imagem = _imagem(chave);
     return InkWell(
       key: Key('cadastro_foto_$chave'),
@@ -287,7 +283,7 @@ class _CadastroInicialScreenState extends State<CadastroInicialScreen> {
                             Text(_etapa.titulo, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                             const SizedBox(height: 6),
                             Text(_etapa.descricao, style: TextStyle(color: GridColors.textSecondary)),
-                            if (_etapa.foto != null) ...[const SizedBox(height: 20), _foto()],
+                            for (final chave in _etapa.fotos) ...[const SizedBox(height: 20), _foto(chave)],
                             const SizedBox(height: 20),
                             for (final chave in _etapa.medidas) ...[_campo(chave), const SizedBox(height: 12)],
                           ]),
@@ -312,7 +308,7 @@ class _EtapaCadastro {
   final String descricao;
   final IconData icone;
   final List<String> medidas;
-  final String? foto;
+  final List<String> fotos;
 
-  const _EtapaCadastro(this.titulo, this.descricao, this.icone, this.medidas, {this.foto});
+  const _EtapaCadastro(this.titulo, this.descricao, this.icone, this.medidas, {this.fotos = const []});
 }
