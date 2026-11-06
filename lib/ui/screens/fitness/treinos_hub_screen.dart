@@ -84,12 +84,14 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
       });
       if (manual) {
         final sincronizados = sessoes.where((s) => s.sincronizado).length;
+        final pendentes = sessoes.length - sincronizados;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: GridColors.success,
-            content: Text(
-                'Sincronização concluída! ${planos.length} ficha(s) e $sincronizados treino(s) na nuvem.'),
-            duration: const Duration(seconds: 3),
+            backgroundColor: pendentes > 0 ? Colors.orange.shade700 : GridColors.success,
+            content: Text(pendentes > 0
+                ? '$pendentes treino(s) ainda não foram enviados. Ficam salvos neste aparelho.'
+                : 'Sincronização concluída! ${planos.length} ficha(s) e $sincronizados treino(s) na nuvem.'),
+            duration: const Duration(seconds: 4),
           ),
         );
       }
