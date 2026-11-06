@@ -94,5 +94,9 @@ void main() {
 
     comSessao(101);
     expect(await lerIds(), contains('sessao_logout'));
+
+    // Depois de sair de novo, quem esta no aparelho sem login nao ve os treinos do ultimo dono.
+    await AuthUtility.clearUserInfo();
+    expect(await lerIds(), isNot(contains('sessao_logout')));
   });
 }

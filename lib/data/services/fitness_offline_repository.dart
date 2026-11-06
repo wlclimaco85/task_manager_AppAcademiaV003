@@ -410,7 +410,8 @@ class FitnessOfflineRepository {
     }
 
     // Sem login valido, mostra tambem os treinos guardados para esse login (sem enviar nada agora).
-    final donoSemSessao = await _donoSemSessao(prefs);
+    // Leitura so mostra o login ativo: quem saiu nao expoe seus treinos a quem estiver no aparelho.
+    final donoSemSessao = FitnessContaSync.autenticado ? null : AuthUtility.userInfo.login?.id;
     if (donoSemSessao != null) {
       try {
         final extras = _lerMapas(prefs.getString(chavePendenteSessoes(donoSemSessao)));
