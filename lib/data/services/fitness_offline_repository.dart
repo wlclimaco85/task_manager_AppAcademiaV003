@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:task_manager_flutter/data/services/exercicio_conta_sync.dart';
+import 'package:task_manager_flutter/data/models/auth_utility.dart';
 import 'package:task_manager_flutter/data/services/fitness_conta_sync.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -330,6 +331,15 @@ class FitnessOfflineRepository {
   // 3. Registro de Sessões de Treino (Execução Offline)
   // ─────────────────────────────────────────────────────────────────────────────
 
+  /// Chave dos treinos guardados sem sessao valida, de um login especifico.
+  static String chavePendenteSessoes(int loginId) => '${_kSessoesKey}_pendente_$loginId';
+
+  /// Mapas de treinos de um valor salvo. Lanca se estiver corrompido, para nunca sobrescrever o que nao foi lido.
+  static List<Map<String, dynamic>> _lerMapas(String? raw) {
+    if (raw == null || raw.isEmpty) return [];
+    return (json.decode(raw) as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
+
   /// Junta os treinos guardados sem conta (chave generica) aos da conta, sem duplicar pelo id.
   /// Os da conta prevalecem. Devolve null se algum dos dois estiver ilegivel: nada e apagado nesse caso.
   static String? mesclarSessoesOrfas(String? contaJson, String genericoJson) {
@@ -358,16 +368,20 @@ class FitnessOfflineRepository {
     final prefs = await SharedPreferences.getInstance();
     if (FitnessContaSync.chave(_kSessoesKey) != key) return [];
 
-    // 1. Treinos salvos sem sessao valida ficam na chave generica. Com login, sao juntados
-    // aos da conta (antes so eram copiados se a conta nao tinha nenhum treino, e se perdiam).
+    // 1. Com login, junta a conta os treinos guardados sem sessao valida: os do proprio login
+    // (chave pendente) e os legados sem dono (chave generica, migrados uma unica vez).
     if (FitnessContaSync.autenticado) {
-      final generico = prefs.getString(_kSessoesKey);
-      if (generico != null && generico.isNotEmpty) {
-        final mesclado = mesclarSessoesOrfas(prefs.getString(key), generico);
-        if (mesclado != null) {
-          if (await prefs.setString(key, mesclado)) {
-            await prefs.remove(_kSessoesKey);
-          }
+      final donoId = AuthUtility.userInfo.login?.id;
+      final origens = [
+        if (donoId != null) chavePendenteSessoes(donoId),
+        _kSessoesKey,
+      ];
+      for (final origem in origens) {
+        final raw = prefs.getString(origem);
+        if (raw == null || raw.isEmpty) continue;
+        final mesclado = mesclarSessoesOrfas(prefs.getString(key), raw);
+        if (mesclado != null && await prefs.setString(key, mesclado)) {
+          await prefs.remove(origem);
         }
       }
     }
@@ -385,6 +399,22 @@ class FitnessOfflineRepository {
             .toList();
       } catch (e) {
         debugPrint('[FitnessOfflineRepository] Erro decode sessoes: $e');
+      }
+    }
+
+    // Sem login valido, mostra tambem os treinos guardados para esse login (sem enviar nada agora).
+    final donoSemSessao = FitnessContaSync.autenticado ? null : AuthUtility.userInfo.login?.id;
+    if (donoSemSessao != null) {
+      try {
+        final extras = _lerMapas(prefs.getString(chavePendenteSessoes(donoSemSessao)));
+        final ids = {for (final s in locais) s.id};
+        locais = [
+          ...locais,
+          for (final m in extras)
+            if (ids.add(m['id'].toString())) SessaoTreinoRegistroModel.fromMap(m),
+        ];
+      } catch (e) {
+        debugPrint('[FitnessOfflineRepository] Treinos pendentes ilegiveis: $e');
       }
     }
 
@@ -448,6 +478,18 @@ class FitnessOfflineRepository {
 
   Future<void> registrarSessaoConcluida(
       SessaoTreinoRegistroModel sessao) async {
+    // Sem sessao valida, o treino fica guardado para o login que o fez (nunca para outra conta).
+    final donoSemSessao = FitnessContaSync.autenticado ? null : AuthUtility.userInfo.login?.id;
+    if (donoSemSessao != null) {
+      final prefs = await SharedPreferences.getInstance();
+      final chavePendente = chavePendenteSessoes(donoSemSessao);
+      final lista = _lerMapas(prefs.getString(chavePendente));
+      final mapa = sessao.toMap();
+      lista.removeWhere((m) => m['id'] == mapa['id']);
+      lista.insert(0, mapa);
+      await prefs.setString(chavePendente, json.encode(lista));
+      return;
+    }
     final key = FitnessContaSync.chave(_kSessoesKey);
     final sessoes = await getSessoesConcluidas();
     if (FitnessContaSync.chave(_kSessoesKey) != key) {
