@@ -79,4 +79,20 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString('appacademia_sessoes_treino_v1'), isNull);
   });
+
+  test('treino feito depois do logout fica com quem saiu, nunca sem dono nem com outra conta', () async {
+    comSessao(101);
+    await AuthUtility.clearUserInfo();
+    await FitnessOfflineRepository().registrarSessaoConcluida(sessao('sessao_logout'));
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('appacademia_sessoes_treino_v1_pendente_101'), contains('sessao_logout'));
+    expect(prefs.getString('appacademia_sessoes_treino_v1'), isNull);
+
+    comSessao(102);
+    expect(await lerIds(), isNot(contains('sessao_logout')));
+
+    comSessao(101);
+    expect(await lerIds(), contains('sessao_logout'));
+  });
 }

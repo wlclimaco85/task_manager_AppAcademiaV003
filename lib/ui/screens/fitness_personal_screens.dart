@@ -987,6 +987,7 @@ class _FitnessRecordScreenState extends State<FitnessRecordScreen> {
     }
 
     final opcoes = widget.opcoesTitulo == null ? const <String>[] : await widget.opcoesTitulo!();
+    if (!mounted) return;
     final title = TextEditingController(text: widget.defaultTitle);
     if (opcoes.isNotEmpty && !opcoes.contains(title.text)) title.text = opcoes.first;
     final value = TextEditingController(text: widget.defaultValue);

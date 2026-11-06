@@ -331,6 +331,13 @@ class FitnessOfflineRepository {
   // 3. Registro de Sessões de Treino (Execução Offline)
   // ─────────────────────────────────────────────────────────────────────────────
 
+  /// Dono dos treinos quando nao ha sessao valida: o login ativo ou, depois do logout, quem saiu por ultimo.
+  /// Null so em aparelho que nunca teve login.
+  static Future<int?> _donoSemSessao(SharedPreferences prefs) async {
+    if (FitnessContaSync.autenticado) return null;
+    return AuthUtility.userInfo.login?.id ?? prefs.getInt(AuthUtility.ultimoDonoFitnessKey);
+  }
+
   /// Chave dos treinos guardados sem sessao valida, de um login especifico.
   static String chavePendenteSessoes(int loginId) => '${_kSessoesKey}_pendente_$loginId';
 
@@ -403,7 +410,7 @@ class FitnessOfflineRepository {
     }
 
     // Sem login valido, mostra tambem os treinos guardados para esse login (sem enviar nada agora).
-    final donoSemSessao = FitnessContaSync.autenticado ? null : AuthUtility.userInfo.login?.id;
+    final donoSemSessao = await _donoSemSessao(prefs);
     if (donoSemSessao != null) {
       try {
         final extras = _lerMapas(prefs.getString(chavePendenteSessoes(donoSemSessao)));
@@ -414,7 +421,7 @@ class FitnessOfflineRepository {
             if (ids.add(m['id'].toString())) SessaoTreinoRegistroModel.fromMap(m),
         ];
       } catch (e) {
-        debugPrint('[FitnessOfflineRepository] Treinos pendentes ilegiveis: $e');
+        AppLogger.i.warn('[FitnessOfflineRepository] Treinos pendentes ilegiveis: $e');
       }
     }
 
@@ -479,9 +486,9 @@ class FitnessOfflineRepository {
   Future<void> registrarSessaoConcluida(
       SessaoTreinoRegistroModel sessao) async {
     // Sem sessao valida, o treino fica guardado para o login que o fez (nunca para outra conta).
-    final donoSemSessao = FitnessContaSync.autenticado ? null : AuthUtility.userInfo.login?.id;
+    final prefs = await SharedPreferences.getInstance();
+    final donoSemSessao = await _donoSemSessao(prefs);
     if (donoSemSessao != null) {
-      final prefs = await SharedPreferences.getInstance();
       final chavePendente = chavePendenteSessoes(donoSemSessao);
       final lista = _lerMapas(prefs.getString(chavePendente));
       final mapa = sessao.toMap();
@@ -496,7 +503,6 @@ class FitnessOfflineRepository {
       throw StateError('A conta mudou. Abra o treino novamente.');
     }
     sessoes.insert(0, sessao);
-    final prefs = await SharedPreferences.getInstance();
     if (FitnessContaSync.chave(_kSessoesKey) != key) {
       throw StateError('A conta mudou. Abra o treino novamente.');
     }

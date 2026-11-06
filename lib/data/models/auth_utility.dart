@@ -6,6 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/models/login_model.dart';
 
 class AuthUtility {
+  /// Id do ultimo login que saiu do aparelho (dono dos treinos feitos sem sessao depois do logout).
+  static const String ultimoDonoFitnessKey = 'fitness_ultimo_dono';
+
   // Mantém não-nullable com valor padrão para compatibilidade com código legado
   static final ValueNotifier<LoginModel> session = ValueNotifier(LoginModel());
   static LoginModel get userInfo => session.value;
@@ -54,9 +57,12 @@ class AuthUtility {
   }
 
   static Future<void> clearUserInfo() {
+    // Guarda quem saiu: treinos feitos sem login depois disso ficam com esse aluno, nunca sem dono.
+    final ultimoDono = userInfo.login?.id;
     userInfo = LoginModel();
     return _serializar(() async {
       final prefs = await SharedPreferences.getInstance();
+      if (ultimoDono != null) await prefs.setInt(ultimoDonoFitnessKey, ultimoDono);
       await prefs.remove("user_data");
     });
   }
