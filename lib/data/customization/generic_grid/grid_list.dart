@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/models/network_response.dart';
 import 'package:task_manager_flutter/data/services/network_caller.dart';
 import 'package:task_manager_flutter/data/utils/app_logger.dart'; // L.d/L.i/L.w/L.e
+import 'package:task_manager_flutter/data/constants/custom_colors.dart' show AppThemeColors;
 import 'package:task_manager_flutter/ui/widgets/user_banners.dart';
 
 import 'grid_form.dart';
@@ -762,6 +763,7 @@ class _GridListScreenState extends State<GridListScreen> {
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         child: Card(
           clipBehavior: Clip.antiAlias,
+          color: context.appSurface,
           elevation: selected ? 4 : 1,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
@@ -803,14 +805,9 @@ class _GridListScreenState extends State<GridListScreen> {
           height: 128,
           width: double.infinity,
           child: Stack(fit: StackFit.expand, children: [
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF351062), Color(0xFF7928B8), Color(0xFF08A078)],
-                  begin: Alignment.topLeft, end: Alignment.bottomRight,
-                ),
-              ),
-              child: Center(child: Icon(Icons.fitness_center_rounded, size: 52, color: Colors.white54)),
+            DecoratedBox(
+              decoration: BoxDecoration(color: GridColors.primarySubtle),
+              child: Center(child: Icon(Icons.fitness_center_rounded, size: 52, color: GridColors.primary)),
             ),
             if (foto.startsWith('http'))
               Image.network(foto, fit: BoxFit.cover,
@@ -829,17 +826,17 @@ class _GridListScreenState extends State<GridListScreen> {
           padding: const EdgeInsets.fromLTRB(15, 13, 10, 8),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              Expanded(child: Text(nome, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800))),
+              Expanded(child: Text(nome, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: context.appText))),
               if (_hasStatusField(item)) _statusBadge(item),
             ]),
             const SizedBox(height: 5),
             Row(children: [
               const Icon(Icons.location_on_outlined, size: 15, color: GridColors.primary),
               const SizedBox(width: 4),
-              Expanded(child: Text(local, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: Colors.black.withOpacity(.62)))),
+              Expanded(child: Text(local, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: context.appTextSecondary))),
             ]),
             const SizedBox(height: 7),
-            Text(descricao, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: Colors.black.withOpacity(.64))),
+            Text(descricao, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: context.appTextSecondary)),
             _cardActions(item),
           ]),
         ),
