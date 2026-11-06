@@ -189,14 +189,14 @@ class _CadastroInicialScreenState extends State<CadastroInicialScreen> {
         : null;
   }
 
-  Widget _foto(String chave) {
+  Widget _foto(String chave, {double altura = 190}) {
     final imagem = _imagem(chave);
     return InkWell(
       key: Key('cadastro_foto_$chave'),
       onTap: () => _abrirSeletorFoto(chave),
       borderRadius: BorderRadius.circular(22),
       child: Ink(
-        height: 190,
+        height: altura,
         decoration: BoxDecoration(
           color: GridColors.primarySubtle,
           borderRadius: BorderRadius.circular(22),
@@ -237,6 +237,8 @@ class _CadastroInicialScreenState extends State<CadastroInicialScreen> {
       ),
     );
   }
+
+  String _rotuloDe(String chave) => CadastroInicialService.medidas.firstWhere((item) => item.chave == chave).rotulo;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -283,19 +285,27 @@ class _CadastroInicialScreenState extends State<CadastroInicialScreen> {
                             Text(_etapa.titulo, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                             const SizedBox(height: 6),
                             Text(_etapa.descricao, style: TextStyle(color: GridColors.textSecondary)),
-                            for (final chave in _etapa.fotos) ...[const SizedBox(height: 20), _foto(chave)],
-                            const SizedBox(height: 20),
-                            for (final chave in _etapa.medidas) ...[_campo(chave), const SizedBox(height: 12)],
+                            // Cada lado sai com seu rotulo, sua foto e sua medida juntos.
+                            for (var i = 0; i < _etapa.medidas.length; i++) ...[
+                              if (i < _etapa.fotos.length) ...[
+                                const SizedBox(height: 20),
+                                Text(_rotuloDe(_etapa.fotos[i]), style: TextStyle(color: GridColors.textPrimary, fontWeight: FontWeight.w700)),
+                                const SizedBox(height: 8),
+                                _foto(_etapa.fotos[i], altura: _etapa.fotos.length > 1 ? 140 : 190),
+                              ],
+                              const SizedBox(height: 12),
+                              _campo(_etapa.medidas[i]),
+                            ],
                           ]),
                         ),
                       ),
                       const SizedBox(height: 20),
                       Row(children: [
-                        if (_etapaAtual > 0) Expanded(child: OutlinedButton.icon(onPressed: () => setState(() => _etapaAtual--), icon: const Icon(Icons.arrow_back), label: const Text('Voltar'))),
+                        if (_etapaAtual > 0) Expanded(child: OutlinedButton.icon(style: OutlinedButton.styleFrom(minimumSize: const Size(64, 44)), onPressed: () => setState(() => _etapaAtual--), icon: const Icon(Icons.arrow_back), label: const Text('Voltar'))),
                         if (_etapaAtual > 0) const SizedBox(width: 12),
-                        Expanded(child: FilledButton.icon(onPressed: _salvando ? null : _proximaEtapa, icon: Icon(_etapaAtual == _etapas.length - 1 ? Icons.emoji_events_outlined : Icons.arrow_forward), label: Text(_salvando ? 'Salvando...' : _etapaAtual == _etapas.length - 1 ? 'Concluir jornada' : 'Proxima etapa'))),
+                        Expanded(child: FilledButton.icon(style: FilledButton.styleFrom(minimumSize: const Size(64, 44)), onPressed: _salvando ? null : _proximaEtapa, icon: Icon(_etapaAtual == _etapas.length - 1 ? Icons.emoji_events_outlined : Icons.arrow_forward), label: Text(_salvando ? 'Salvando...' : _etapaAtual == _etapas.length - 1 ? 'Concluir jornada' : 'Proxima etapa'))),
                       ]),
-                      TextButton(onPressed: _salvando ? null : () => Navigator.pop(context, false), child: const Text('Fazer depois')),
+                      TextButton(style: TextButton.styleFrom(minimumSize: const Size(64, 44)), onPressed: _salvando ? null : () => Navigator.pop(context, false), child: const Text('Fazer depois')),
                     ]),
                   ),
                 ),
