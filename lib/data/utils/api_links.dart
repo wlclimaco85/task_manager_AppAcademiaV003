@@ -465,6 +465,9 @@ class ApiLinks {
   static const String permissoesMeu = '$_baseUrlNew/api/fitness/permissoes/meu';
 static const String permissoesDeixarPersonal = '$_baseUrlNew/api/fitness/permissoes/deixar-personal';
 static const String fitnessMetasCatalogo = '$_baseUrlNew/api/fitness/metas-catalogo';
+  /// Dashboard do personal (alunos vinculados) e da academia (alunos matriculados). `mes` no formato AAAA-MM.
+  static String fitnessPersonalDashboard(String mes) => '$_baseUrlNew/api/fitness/personal/dashboard?mes=$mes';
+  static String fitnessAcademiaDashboard(String mes) => '$_baseUrlNew/api/fitness/academia/dashboard?mes=$mes';
   static const String alertasMeu = '$_baseUrlNew/api/alert/me';
 
   /// Permissoes de um aluno vinculado, lidas pelo personal.

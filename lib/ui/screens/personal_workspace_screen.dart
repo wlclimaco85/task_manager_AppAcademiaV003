@@ -18,6 +18,7 @@ import 'package:task_manager_flutter/ui/screens/fitness/avaliacao_fisica_pro_scr
 import 'package:task_manager_flutter/ui/screens/fitness/agenda_compartilhada_screen.dart';
 import 'package:task_manager_flutter/ui/widgets/personal_qr_code_pix_dialog.dart';
 import 'package:task_manager_flutter/ui/widgets/personal_desempenho_dialog.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/dashboard_fitness_screen.dart';
 
 /// Workspace Completo do Personal Trainer (MFIT Pro Standard)
 /// 4 Abas Especializadas:
@@ -149,6 +150,14 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
           ],
         ),
         actions: [
+          IconButton(
+            icon: Icon(Icons.dashboard_outlined, color: GridColors.textSecondary),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DashboardFitnessScreen(academia: false)),
+            ),
+            tooltip: 'Dashboard',
+          ),
           IconButton(
             icon: Icon(Icons.refresh, color: GridColors.textSecondary),
             onPressed: _carregarDados,
