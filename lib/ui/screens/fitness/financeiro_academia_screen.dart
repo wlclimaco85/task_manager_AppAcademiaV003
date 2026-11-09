@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/constants/custom_colors.dart';
 import 'package:task_manager_flutter/data/models/fitness/financeiro_academia_model.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/cadastro_academia_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/dashboard_fitness_screen.dart';
 import 'package:task_manager_flutter/data/services/financeiro_academia_service.dart';
 
@@ -170,6 +171,14 @@ class _FinanceiroAcademiaScreenState extends State<FinanceiroAcademiaScreen> {
       appBar: AppBar(
         title: const Text('Financeiro da academia'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.storefront_outlined),
+            tooltip: 'Cadastro da academia',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CadastroAcademiaScreen()),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.dashboard_outlined),
             tooltip: 'Dashboard',
