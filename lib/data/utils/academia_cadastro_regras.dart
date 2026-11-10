@@ -55,9 +55,12 @@ class AcademiaCadastroRegras {
     return email.contains('@') ? null : 'E-mail invalido';
   }
 
+  /// Hora no formato HH:mm (00:00 a 23:59).
+  static bool horaValida(String texto) => _hora.hasMatch(texto);
+
   /// Horario HH:mm com fechamento depois da abertura. Retorna null quando valido.
   static String? horario(String abertura, String fechamento) {
-    if (!_hora.hasMatch(abertura) || !_hora.hasMatch(fechamento)) return 'Use o formato HH:mm';
+    if (!horaValida(abertura) || !horaValida(fechamento)) return 'Use o formato HH:mm';
     if (fechamento.compareTo(abertura) <= 0) return 'O fechamento deve ser depois da abertura';
     return null;
   }

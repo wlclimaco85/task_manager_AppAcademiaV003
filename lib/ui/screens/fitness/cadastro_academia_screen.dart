@@ -184,7 +184,7 @@ class _CadastroAcademiaScreenState extends State<CadastroAcademiaScreen> {
   }
 
   static TimeOfDay? _hm(String? texto) {
-    if (texto == null || !RegExp(r'^\d{2}:\d{2}$').hasMatch(texto)) return null;
+    if (texto == null || !AcademiaCadastroRegras.horaValida(texto)) return null;
     final partes = texto.split(':');
     return TimeOfDay(hour: int.parse(partes[0]), minute: int.parse(partes[1]));
   }

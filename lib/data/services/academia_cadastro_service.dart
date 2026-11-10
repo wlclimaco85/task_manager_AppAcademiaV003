@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:task_manager_flutter/data/models/network_response.dart';
 import 'package:task_manager_flutter/data/services/network_caller.dart';
 import 'package:task_manager_flutter/data/utils/api_links.dart';
@@ -8,31 +9,35 @@ import 'package:task_manager_flutter/data/utils/app_logger.dart';
 class AcademiaCadastroService {
   AcademiaCadastroService._();
 
+  /// Fabrica do cliente HTTP. Trocavel apenas em testes (widget test sem rede).
+  @visibleForTesting
+  static NetworkCaller Function() fabricaRede = () => fabricaRede();
+
   static Future<Map<String, dynamic>> obter() async {
-    final r = await _executar(() => NetworkCaller().getRequest(ApiLinks.fitnessAcademiaCadastro), 'carregar o cadastro');
+    final r = await _executar(() => fabricaRede().getRequest(ApiLinks.fitnessAcademiaCadastro), 'carregar o cadastro');
     final dados = r.body?['data'];
     return dados is Map ? Map<String, dynamic>.from(dados) : <String, dynamic>{'cadastrada': false};
   }
 
   static Future<void> salvarDados(Map<String, dynamic> dados) => _executar(
-      () => NetworkCaller().putRequest(ApiLinks.fitnessAcademiaCadastroDados, dados), 'salvar os dados da academia');
+      () => fabricaRede().putRequest(ApiLinks.fitnessAcademiaCadastroDados, dados), 'salvar os dados da academia');
 
   static Future<void> salvarHorarios(List<Map<String, dynamic>> horarios) => _executar(
-      () => NetworkCaller().putRequest(ApiLinks.fitnessAcademiaCadastroHorarios, {'horarios': horarios}),
+      () => fabricaRede().putRequest(ApiLinks.fitnessAcademiaCadastroHorarios, {'horarios': horarios}),
       'salvar os horários');
 
   static Future<void> criarPlano(Map<String, dynamic> plano) =>
-      _executar(() => NetworkCaller().postRequest(ApiLinks.fitnessAcademiaCadastroPlanos, plano), 'criar o plano');
+      _executar(() => fabricaRede().postRequest(ApiLinks.fitnessAcademiaCadastroPlanos, plano), 'criar o plano');
 
   static Future<void> atualizarPlano(int id, Map<String, dynamic> plano) =>
-      _executar(() => NetworkCaller().putRequest(ApiLinks.fitnessAcademiaCadastroPlano(id), plano), 'atualizar o plano');
+      _executar(() => fabricaRede().putRequest(ApiLinks.fitnessAcademiaCadastroPlano(id), plano), 'atualizar o plano');
 
   static Future<void> excluirPlano(int id) =>
-      _executar(() => NetworkCaller().deleteRequest(ApiLinks.fitnessAcademiaCadastroPlano(id)), 'excluir o plano');
+      _executar(() => fabricaRede().deleteRequest(ApiLinks.fitnessAcademiaCadastroPlano(id)), 'excluir o plano');
 
   static Future<List<Map<String, dynamic>>> buscarPersonais(String termo) async {
     final r = await _executar(
-      () => NetworkCaller().getRequest(
+      () => fabricaRede().getRequest(
           '${ApiLinks.fitnessAcademiaCadastroPersonaisBusca}?q=${Uri.encodeQueryComponent(termo)}'),
       'buscar personais',
     );
@@ -40,11 +45,11 @@ class AcademiaCadastroService {
   }
 
   static Future<void> vincularPersonal(int personalId) => _executar(
-      () => NetworkCaller().postRequest(ApiLinks.fitnessAcademiaCadastroPersonal(personalId), null),
+      () => fabricaRede().postRequest(ApiLinks.fitnessAcademiaCadastroPersonal(personalId), null),
       'vincular o personal');
 
   static Future<void> desvincularPersonal(int personalId) => _executar(
-      () => NetworkCaller().deleteRequest(ApiLinks.fitnessAcademiaCadastroPersonal(personalId)),
+      () => fabricaRede().deleteRequest(ApiLinks.fitnessAcademiaCadastroPersonal(personalId)),
       'remover o personal');
 
   /// Executa a chamada, valida a resposta e traduz falhas. Erro do servidor propaga como esta;
