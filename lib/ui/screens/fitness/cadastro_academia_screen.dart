@@ -76,9 +76,9 @@ class _CadastroAcademiaScreenState extends State<CadastroAcademiaScreen> {
         _personais = personais is List ? [for (final p in personais) if (p is Map) Map<String, dynamic>.from(p)] : const [];
       });
     } catch (e) {
-      setState(() => _erroCarregamento = e.toString().replaceFirst('Exception: ', ''));
+      if (mounted) setState(() => _erroCarregamento = e.toString().replaceFirst('Exception: ', ''));
     } finally {
-      setState(() => _carregando = false);
+      if (mounted) setState(() => _carregando = false);
     }
   }
 
@@ -481,11 +481,11 @@ class _BuscaPersonalDialogState extends State<_BuscaPersonalDialog> {
     });
     try {
       final lista = await AcademiaCadastroService.buscarPersonais(termo);
-      setState(() => _resultados = lista);
+      if (mounted) setState(() => _resultados = lista);
     } catch (e) {
-      setState(() => _erro = e.toString().replaceFirst('Exception: ', ''));
+      if (mounted) setState(() => _erro = e.toString().replaceFirst('Exception: ', ''));
     } finally {
-      setState(() => _buscando = false);
+      if (mounted) setState(() => _buscando = false);
     }
   }
 

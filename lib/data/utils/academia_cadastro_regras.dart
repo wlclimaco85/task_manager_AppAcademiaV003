@@ -64,7 +64,7 @@ class AcademiaCadastroRegras {
 
   static String? valorPlano(String? valor) {
     final numero = double.tryParse((valor ?? '').replaceAll(',', '.'));
-    if (numero == null || numero < 0) return 'Informe um valor valido';
+    if (numero == null || numero.isNaN || numero.isInfinite || numero < 0) return 'Informe um valor valido';
     return null;
   }
 

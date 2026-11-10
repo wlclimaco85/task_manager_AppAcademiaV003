@@ -33,6 +33,8 @@ void main() {
     expect(AcademiaCadastroRegras.valorPlano('99,90'), isNull);
     expect(AcademiaCadastroRegras.valorPlano('-1'), 'Informe um valor valido');
     expect(AcademiaCadastroRegras.valorPlano(''), 'Informe um valor valido');
+    expect(AcademiaCadastroRegras.valorPlano('NaN'), 'Informe um valor valido');
+    expect(AcademiaCadastroRegras.valorPlano('Infinity'), 'Informe um valor valido');
   });
 
   test('nome do plano e obrigatorio', () {
