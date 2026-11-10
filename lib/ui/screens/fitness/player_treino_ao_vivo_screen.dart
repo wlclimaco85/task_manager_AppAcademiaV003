@@ -1025,14 +1025,14 @@ class _PlayerTreinoAoVivoScreenState extends State<PlayerTreinoAoVivoScreen> {
               ),
             ),
             const SizedBox(width: 4),
-            IconButton(
-              tooltip: 'Fechar sugestão',
-              visualDensity: VisualDensity.compact,
-              onPressed: () => setState(() => _sobrecargaFechadaExercicios
-                  .add(_execucao.atual(_exercicioIndexAtual).exercicioId)),
-              icon: const Icon(Icons.close, color: Color(0xFF94A3B8), size: 20),
-            ),
           ],
+          IconButton(
+            tooltip: 'Fechar',
+            visualDensity: VisualDensity.compact,
+            onPressed: () => setState(() => _sobrecargaFechadaExercicios
+                .add(_execucao.atual(_exercicioIndexAtual).exercicioId)),
+            icon: const Icon(Icons.close, color: Color(0xFF94A3B8), size: 20),
+          ),
         ],
       ),
     );
