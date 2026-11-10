@@ -127,7 +127,8 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                   color: CustomColors.primaryGreen, size: 22),
             ),
             const SizedBox(width: 12),
-            Column(
+            Flexible(
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -146,6 +147,7 @@ class _PersonalWorkspaceScreenState extends State<PersonalWorkspaceScreen>
                   ),
                 ),
               ],
+            ),
             ),
           ],
         ),
