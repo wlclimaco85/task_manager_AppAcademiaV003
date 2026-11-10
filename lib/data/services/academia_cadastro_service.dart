@@ -11,7 +11,7 @@ class AcademiaCadastroService {
 
   /// Fabrica do cliente HTTP. Trocavel apenas em testes (widget test sem rede).
   @visibleForTesting
-  static NetworkCaller Function() fabricaRede = () => fabricaRede();
+  static NetworkCaller Function() fabricaRede = () => NetworkCaller();
 
   static Future<Map<String, dynamic>> obter() async {
     final r = await _executar(() => fabricaRede().getRequest(ApiLinks.fitnessAcademiaCadastro), 'carregar o cadastro');

@@ -56,6 +56,10 @@ String _valorCampo(WidgetTester tester, String rotulo) =>
     tester.widget<TextFormField>(find.widgetWithText(TextFormField, rotulo)).controller!.text;
 
 void main() {
+  test('fabrica padrao cria o cliente HTTP real (sem recursao)', () {
+    expect(AcademiaCadastroService.fabricaRede(), isA<NetworkCaller>());
+  });
+
   final cliente = _ClienteFalso(cadastro: _cadastro());
 
   setUp(() {
