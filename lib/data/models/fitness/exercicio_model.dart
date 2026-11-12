@@ -18,6 +18,9 @@ class ExercicioModel {
   final int? nivel;
   final bool isCustom; // Criado pelo personal
 
+  /// Ate 3 fotos do exercicio, como data URI (data:image/jpeg;base64,...).
+  final List<String> fotos;
+
   const ExercicioModel({
     required this.id,
     required this.nome,
@@ -30,6 +33,7 @@ class ExercicioModel {
     this.descricao = '',
     this.nivel,
     this.isCustom = false,
+    this.fotos = const [],
   });
 
   /// Mídia exibida: vídeo cadastrado ou, sem vídeo, a imagem demonstrativa.
@@ -57,6 +61,7 @@ class ExercicioModel {
       'descricao': descricao,
       'nivel': nivel,
       'isCustom': isCustom,
+      'fotos': fotos,
     };
   }
 
@@ -73,6 +78,9 @@ class ExercicioModel {
       descricao: map['descricao']?.toString() ?? '',
       nivel: map['nivel'] is int ? map['nivel'] as int : int.tryParse('${map['nivel']}'),
       isCustom: map['isCustom'] == true,
+      fotos: map['fotos'] is List
+          ? [for (final f in map['fotos'] as List) if (f is String && f.isNotEmpty) f]
+          : const [],
     );
   }
 

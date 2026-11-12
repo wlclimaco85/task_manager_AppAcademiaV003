@@ -77,6 +77,19 @@ class FitnessOfflineRepository {
     }
   }
 
+  /// Altera as fotos (ate 3) de um exercicio so para esta conta. O catalogo geral nao muda.
+  Future<void> atualizarFotosExercicio(String id, List<String> fotos) async {
+    final atuais = await getExercicios();
+    final index = atuais.indexWhere((ex) => ex.id == id);
+    if (index < 0) throw StateError('Exercicio nao encontrado.');
+    final ex = atuais[index];
+    if (ex.isCustom) {
+      await _salvarPersonalizacao(id, origem: 'CUSTOM', dados: ex.toMap()..['fotos'] = fotos);
+    } else {
+      await _salvarPersonalizacao(id, origem: 'BASE', dados: {'id': id, 'fotos': fotos});
+    }
+  }
+
   /// Volta a esta conta o cadastro geral (ou o do personal). A exclusao fica na
   /// fila ate o servidor confirmar. Retorna false se ainda nao foi confirmada.
   Future<bool> restaurarExercicio(String id) {

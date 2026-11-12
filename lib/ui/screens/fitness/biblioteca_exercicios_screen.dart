@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:task_manager_flutter/data/services/tela_ativa_service.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/meu_perfil_screen.dart';
 import 'package:task_manager_flutter/data/services/exercicio_conta_sync.dart';
 import 'package:task_manager_flutter/data/models/fitness/plano_treino_model.dart';
 import 'package:task_manager_flutter/ui/widgets/prescricao_exercicio_inline.dart';
@@ -561,6 +565,11 @@ class _BibliotecaExerciciosScreenState
                   label: Text(ex.videoUrl == null ? 'Adicionar vídeo' : 'Alterar vídeo'),
                   onPressed: () { Navigator.pop(context); _editarVideoExercicio(ex); },
                 ),
+                TextButton.icon(
+                  icon: const Icon(Icons.photo_library_outlined),
+                  label: Text('Fotos (${ex.fotos.length}/3)'),
+                  onPressed: () { Navigator.pop(context); _editarFotosExercicio(ex); },
+                ),
               ]),
               if (ex.midiaUrl == null)
                 Padding(
@@ -743,6 +752,95 @@ class _BibliotecaExerciciosScreenState
     route.completed.then((_) {
       nomeCtrl.dispose(); equipCtrl.dispose(); instrucaoCtrl.dispose(); videoCtrl.dispose();
     });
+  }
+
+  /// Ate 3 fotos do exercicio. Salva so para esta conta; o catalogo geral nao muda.
+  Future<void> _editarFotosExercicio(ExercicioModel ex) async {
+    final fotos = List<String>.from(ex.fotos);
+    bool salvando = false;
+    final route = DialogRoute<void>(context: context, builder: (dialogContext) => StatefulBuilder(
+      builder: (dialogContext, setModalState) => AlertDialog(
+        title: Text('Fotos: ${ex.nome}'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (fotos.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 12),
+                  child: Text('Nenhuma foto cadastrada.'),
+                ),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (var i = 0; i < fotos.length; i++)
+                    Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.memory(base64Decode(fotos[i].split(',').last),
+                              width: 96, height: 96, fit: BoxFit.cover),
+                        ),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: InkWell(
+                            onTap: salvando ? null : () => setModalState(() => fotos.removeAt(i)),
+                            child: const CircleAvatar(
+                              radius: 13,
+                              child: Icon(Icons.close, size: 16),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+              if (fotos.length < 3) ...[
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.add_a_photo_outlined),
+                  label: Text('Adicionar foto (${fotos.length}/3)'),
+                  onPressed: salvando ? null : () async {
+                    final arquivo = await ImagePicker().pickImage(
+                      source: ImageSource.gallery, maxWidth: 1200, maxHeight: 1200);
+                    if (arquivo == null) return;
+                    try {
+                      final foto = prepararFotoPerfil(await arquivo.readAsBytes());
+                      setModalState(() => fotos.add(foto));
+                    } on FormatException catch (erro) {
+                      if (dialogContext.mounted) {
+                        ScaffoldMessenger.of(dialogContext).showSnackBar(SnackBar(content: Text(erro.message)));
+                      }
+                    }
+                  },
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: salvando ? null : () => Navigator.pop(dialogContext), child: const Text('Cancelar')),
+          FilledButton(onPressed: salvando ? null : () async {
+            setModalState(() => salvando = true);
+            try {
+              await _repository.atualizarFotosExercicio(ex.id, fotos);
+              if (dialogContext.mounted) Navigator.pop(dialogContext);
+              if (mounted) await _carregarExercicios();
+            } catch (error, stack) {
+              AppLogger.i.error('Falha ao atualizar fotos do exercicio.', stack);
+              if (dialogContext.mounted) {
+                setModalState(() => salvando = false);
+                ScaffoldMessenger.of(dialogContext).showSnackBar(const SnackBar(content: Text('Não foi possível salvar as fotos. Tente novamente.')));
+              }
+            }
+          }, child: Text(salvando ? 'Salvando...' : 'Salvar')),
+        ],
+      ),
+    ));
+    await Navigator.of(context).push(route);
+    await route.completed;
   }
 
   Future<void> _editarVideoExercicio(ExercicioModel ex) async {
