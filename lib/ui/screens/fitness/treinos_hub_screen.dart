@@ -12,6 +12,7 @@ import 'package:task_manager_flutter/data/models/fitness/sessao_treino_registro_
 import 'package:task_manager_flutter/data/services/fitness_offline_repository.dart';
 import 'package:task_manager_flutter/data/services/fitness_push_notification_service.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/biblioteca_exercicios_screen.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/dashboard_aluno_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/montador_treino_screen.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/player_treino_ao_vivo_screen.dart';
 import 'package:task_manager_flutter/data/services/personal_gestao_offline_repository.dart';
@@ -120,6 +121,17 @@ class _TreinosHubScreenState extends State<TreinosHubScreen>
         title: const Text('Treinos & Prescrição',
             style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [
+          if (AuthUtility.session.value.login?.tipoLogin == LoginEnum.APP_ALUNO)
+            IconButton(
+              tooltip: 'Meu dashboard',
+              icon: Icon(Icons.insights_outlined, color: GridColors.primary),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const DashboardAlunoScreen()),
+                );
+              },
+            ),
           IconButton(
             tooltip: 'Biblioteca de Exercícios',
             icon: Icon(Icons.fitness_center, color: GridColors.primary),

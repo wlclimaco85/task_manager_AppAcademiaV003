@@ -468,6 +468,8 @@ static const String fitnessMetasCatalogo = '$_baseUrlNew/api/fitness/metas-catal
   /// Dashboard do personal (alunos vinculados) e da academia (alunos matriculados). `mes` no formato AAAA-MM.
   static String fitnessPersonalDashboard(String mes) => '$_baseUrlNew/api/fitness/personal/dashboard?mes=$mes';
   static String fitnessAcademiaDashboard(String mes) => '$_baseUrlNew/api/fitness/academia/dashboard?mes=$mes';
+  /// Dashboard do proprio aluno logado (so a conta dele). `mes` no formato AAAA-MM.
+  static String fitnessAlunoDashboard(String mes) => '$_baseUrlNew/api/fitness/aluno/dashboard?mes=$mes';
   /// Cadastro da academia feito pelo dono: dados, horarios, planos e personais vinculados.
   static String get fitnessAcademiaCadastro => '$_baseUrlNew/api/fitness/academia/cadastro';
   static String get fitnessAcademiaCadastroDados => '$fitnessAcademiaCadastro/dados';

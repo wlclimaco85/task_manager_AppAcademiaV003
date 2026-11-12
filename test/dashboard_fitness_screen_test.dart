@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager_flutter/data/models/fitness/dashboard_fitness_model.dart';
 import 'package:task_manager_flutter/ui/screens/fitness/dashboard_fitness_screen.dart';
 
@@ -34,6 +35,9 @@ Map<String, dynamic> _respostaPersonal() => {
     };
 
 void main() {
+  // Este arquivo cobre o layout clássico; o layout novo tem testes proprios.
+  setUp(() => SharedPreferences.setMockInitialValues({'dashboard_layout_v1': 'classico'}));
+
   test('modelo lê indicadores e listas da resposta do backend', () {
     final modelo = DashboardFitnessModel.fromJson(_respostaPersonal());
 

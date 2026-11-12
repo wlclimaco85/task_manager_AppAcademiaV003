@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:task_manager_flutter/data/models/fitness/dashboard_fitness_model.dart';
 import 'package:task_manager_flutter/data/services/dashboard_fitness_service.dart';
+import 'package:task_manager_flutter/data/services/dashboard_layout_preferencia.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/dashboard_novo_conteudo.dart';
+import 'package:task_manager_flutter/ui/screens/fitness/dashboard_novo_widgets.dart';
 
 const _meses = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -23,6 +26,7 @@ class DashboardFitnessScreen extends StatefulWidget {
 class _DashboardFitnessScreenState extends State<DashboardFitnessScreen> {
   late DateTime _mes;
   late Future<DashboardFitnessModel> _future;
+  DashboardLayout _layout = DashboardLayout.novo;
 
   @override
   void initState() {
@@ -30,6 +34,14 @@ class _DashboardFitnessScreenState extends State<DashboardFitnessScreen> {
     final agora = DateTime.now();
     _mes = DateTime(agora.year, agora.month);
     _future = _buscar();
+    DashboardLayoutPreferencia.carregar().then((layout) {
+      if (mounted) setState(() => _layout = layout);
+    });
+  }
+
+  void _trocarLayout(DashboardLayout layout) {
+    setState(() => _layout = layout);
+    DashboardLayoutPreferencia.salvar(layout);
   }
 
   String get _mesIso => '${_mes.year}-${_mes.month.toString().padLeft(2, '0')}';
@@ -63,6 +75,7 @@ class _DashboardFitnessScreenState extends State<DashboardFitnessScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.academia ? 'Dashboard da academia' : 'Dashboard do personal'),
+        actions: [DashboardLayoutBotao(atual: _layout, onMudou: _trocarLayout)],
       ),
       body: RefreshIndicator(
         onRefresh: _recarregar,
@@ -99,6 +112,13 @@ class _DashboardFitnessScreenState extends State<DashboardFitnessScreen> {
                     ),
                   ),
                 ],
+              );
+            }
+            if (_layout == DashboardLayout.novo) {
+              return DashboardNovoPersonalAcademia(
+                modelo: snapshot.data!,
+                academia: widget.academia,
+                cabecalho: seletor,
               );
             }
             return _Conteudo(modelo: snapshot.data!, seletor: seletor);
